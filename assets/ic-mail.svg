@@ -1,0 +1,7 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="MailIcon">
+<path id="Vector" d="M39 10H9C6.23858 10 4 12.2386 4 15V35C4 37.7614 6.23858 40 9 40H39C41.7614 40 44 37.7614 44 35V15C44 12.2386 41.7614 10 39 10Z" stroke="var(--stroke-0, white)" stroke-width="1.5"/>
+<path id="Vector_2" d="M4 16L24 28L44 16" stroke="var(--stroke-0, white)" stroke-width="1.5" stroke-linejoin="round"/>
+<path id="Vector_3" d="M36 16C38.2091 16 40 14.2091 40 12C40 9.79086 38.2091 8 36 8C33.7909 8 32 9.79086 32 12C32 14.2091 33.7909 16 36 16Z" fill="var(--fill-0, white)"/>
+</g>
+</svg>

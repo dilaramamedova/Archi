@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Təmir kalkulyatoru — ARCHİ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="archi.css">
+<style>
+  /* ===== Kalkulyator səhifəsinə xas ===== */
+  .calc-page{padding:48px 0 80px}
+  .calc-page>.inner{display:flex;flex-direction:column;gap:40px;max-width:1384px;margin:0 auto}
+  .crumbs{display:flex;align-items:center;gap:4px;line-height:1.5}
+  .crumbs .c1{font-size:14px;color:rgba(0,0,0,.5)}
+  .crumbs .sep{font-size:16px;color:rgba(0,0,0,.55)}
+  .crumbs .c2{font-size:14px;color:rgba(0,0,0,.9)}
+  .chead{display:flex;flex-direction:column;gap:8px;max-width:700px}
+  .chead .tag{display:flex;align-items:center;gap:12px}
+  .chead .tag .line{width:32px;height:4px;border-radius:2px;background:var(--yellow)}
+  .chead .tag p{font-weight:500;font-size:14px;color:rgba(0,0,0,.55);text-transform:uppercase;letter-spacing:1.4px}
+  .chead h1{font-weight:600;font-size:40px;color:rgba(0,0,0,.9);letter-spacing:-.4px;line-height:1.2}
+  .chead .sub{font-size:18px;color:rgba(0,0,0,.55);line-height:1.5}
+  .calc-card{border:1px solid rgba(0,0,0,.5);box-shadow:-4px 4px 4px rgba(0,0,0,.06);padding:32px;display:flex;flex-direction:column;gap:24px}
+
+  /* nəticəyə uyğun məhsullar — homepage .pcard üslubu, örtmə şəkillə */
+  .calc-products .pcard{cursor:pointer}
+  .calc-products .pcard:hover{cursor:pointer}
+  .calc-products .pcard .ph{height:220px}
+  .calc-products .pcard .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
+  .calc-products .pcard:hover .ph img{transform:scale(1.06)}
+
+  @media(max-width:640px){ .chead h1{font-size:28px} .calc-card{padding:20px} }
+</style>
+</head>
+<body>
+
+<div data-archi="nav"></div>
+
+<section class="calc-page wrap">
+  <div class="inner">
+    <nav class="crumbs">
+      <a class="c1" href="index.html">Ana səhifə</a>
+      <span class="sep">/</span>
+      <span class="c2">Təmir kalkulyatoru</span>
+    </nav>
+
+    <div class="chead">
+      <div class="tag"><span class="line"></span><p>Təmir kalkulyatoru</p></div>
+      <h1>Nə qədər material lazımdır?</h1>
+      <p class="sub">Material seç, otağın ölçülərini yaz — miqdar və təxmini qiymət dərhal hesablansın, aşağıda uyğun məhsulları gör.</p>
+    </div>
+
+    <div class="calc-card">
+      <div class="fcalc-tabs" id="calcTabs"></div>
+      <div class="fcalc-body">
+        <div class="fcalc-fields" id="calcFields"></div>
+        <div class="fcalc-result" id="calcResult"></div>
+      </div>
+    </div>
+
+    <div class="calc-products-sec">
+      <div class="sec-head">
+        <div>
+          <div class="sec-tag"><span class="line"></span><p>Tövsiyə</p></div>
+          <div class="sec-title">Uyğun məhsullar</div>
+        </div>
+        <a class="sec-more"><p>Hamısına bax</p><img src="assets/ic-arrow.svg" alt=""></a>
+      </div>
+      <div class="grid4 calc-products" id="calcProducts"></div>
+    </div>
+  </div>
+</section>
+
+<div data-archi="footer"></div>
+
+<script>
+  // ---- Sahə qrupları ----
+  const GROUPS = {
+    room:  { label:"Otağın ölçüsü", fields:[{id:"L",t:"Uzunluq",u:"m",v:4},{id:"W",t:"En",u:"m",v:3},{id:"H",t:"Hündürlük",u:"m",v:2.7}] },
+    floor: { label:"Sahə ölçüsü",   fields:[{id:"L",t:"Uzunluq",u:"m",v:4},{id:"W",t:"En",u:"m",v:3}] },
+    door:  { label:"Qapı",          fields:[{id:"dC",t:"Say",u:"",v:1},{id:"dW",t:"En",u:"m",v:0.9},{id:"dH",t:"Hündürlük",u:"m",v:2.1}] },
+    win:   { label:"Pəncərə",       fields:[{id:"wC",t:"Say",u:"",v:1},{id:"wW",t:"En",u:"m",v:1.5},{id:"wH",t:"Hündürlük",u:"m",v:1.4}] }
+  };
+
+  // ---- Materiallar: hesablama + uyğun məhsullar ----
+  const MATS = [
+    { key:"boya", name:"Boya", groups:["room","door","win"], extra:[{id:"coats",t:"Qat sayı",u:"",v:2}],
+      calc(v){ const wall=2*(v.L+v.W)*v.H, op=v.dC*v.dW*v.dH+v.wC*v.wW*v.wH, area=Math.max(0,wall-op);
+        const litr=Math.ceil(area*v.coats/10), banka=Math.ceil(litr/10), price=litr*12;
+        return {qty:litr,unit:"litr",rows:[["Boyanacaq sahə",Math.round(area)+" m²"],["Qat sayı",v.coats],["10L banka",banka+" əd"]],price}; },
+      products:[
+        {cat:"Boya & emal",name:"Daxili divar boyası, mat 10L",price:"59.00 ₼",rate:"4.7",rev:"(932 rəy)",img:"assets/hero-main.jpg"},
+        {cat:"Boya & emal",name:"Akril fasad boyası 10L",price:"72.00 ₼",rate:"4.6",rev:"(410 rəy)",img:"assets/blog-hero.jpg"},
+        {cat:"Boya & emal",name:"Tavan boyası, ağ 5L",price:"34.00 ₼",rate:"4.5",rev:"(286 rəy)",img:"assets/blog.png"},
+        {cat:"Alət",name:"Boya valikləri dəsti",price:"18.00 ₼",rate:"4.8",rev:"(640 rəy)",img:"assets/hero-promo.png"}
+      ] },
+    { key:"oboy", name:"Divar kağızı", groups:["room","door","win"], extra:[],
+      calc(v){ const wall=2*(v.L+v.W)*v.H, op=v.dC*v.dW*v.dH+v.wC*v.wW*v.wH, area=Math.max(0,wall-op);
+        const cov=5.3, rolls=Math.ceil(area*1.1/cov), price=rolls*22;
+        return {qty:rolls,unit:"rulon",rows:[["Divar sahəsi",Math.round(area)+" m²"],["1 rulon",cov+" m²"],["Ehtiyatla","+10%"]],price}; },
+      products:[
+        {cat:"Divar kağızı",name:"Vinil divar kağızı, rulon",price:"28.00 ₼",rate:"4.6",rev:"(512 rəy)",img:"assets/hero-promo.png"},
+        {cat:"Divar kağızı",name:"Flizelin əsaslı oboy",price:"35.00 ₼",rate:"4.7",rev:"(348 rəy)",img:"assets/blog.png"},
+        {cat:"Divar kağızı",name:"Tekstil divar kağızı",price:"49.00 ₼",rate:"4.8",rev:"(190 rəy)",img:"assets/hero-main.jpg"},
+        {cat:"Alət",name:"Oboy yapışqanı 500q",price:"9.00 ₼",rate:"4.5",rev:"(820 rəy)",img:"assets/cat-cement.png"}
+      ] },
+    { key:"laminant", name:"Laminant", groups:["floor"], extra:[{id:"waste",t:"Ehtiyat",u:"%",v:7}],
+      calc(v){ const area=v.L*v.W, need=area*(1+v.waste/100), cov=2.13, packs=Math.ceil(need/cov), price=Math.round(need*18);
+        return {qty:packs,unit:"paket",rows:[["Döşəmə sahəsi",Math.round(area)+" m²"],["Ehtiyatla",Math.round(need)+" m²"],["1 paket",cov+" m²"]],price}; },
+      products:[
+        {cat:"Laminant & parket",name:"Laminat 32-ci sinif, palıd",price:"21.90 ₼",rate:"4.7",rev:"(1,204 rəy)",img:"assets/cat-laminant.png"},
+        {cat:"Laminant & parket",name:"Su davamlı laminat 33-cü sinif",price:"29.90 ₼",rate:"4.8",rev:"(640 rəy)",img:"assets/cat-laminant.png"},
+        {cat:"Laminant & parket",name:"SPC laminat, kvars-vinil",price:"34.00 ₼",rate:"4.9",rev:"(312 rəy)",img:"assets/cat-laminant.png"},
+        {cat:"Aksesuar",name:"Laminat altlığı 3mm",price:"6.50 ₼",rate:"4.6",rev:"(508 rəy)",img:"assets/cat-cement.png"}
+      ] },
+    { key:"kafel", name:"Kafel", groups:["floor"], extra:[{id:"waste",t:"Ehtiyat",u:"%",v:10}],
+      calc(v){ const area=v.L*v.W, need=area*(1+v.waste/100), cov=1.44, boxes=Math.ceil(need/cov), price=Math.round(need*23);
+        return {qty:boxes,unit:"qutu",rows:[["Sahə",Math.round(area)+" m²"],["Ehtiyatla",Math.round(need)+" m²"],["1 qutu",cov+" m²"]],price}; },
+      products:[
+        {cat:"Kafel & metlax",name:"Keramik kafel 60×60, mat",price:"23.90 ₼",rate:"4.4",rev:"(1,876 rəy)",img:"assets/prod-kafel.png"},
+        {cat:"Kafel & metlax",name:"Mətbəx üçün kafel 30×60",price:"19.50 ₼",rate:"4.6",rev:"(742 rəy)",img:"assets/cat-bathroom.png"},
+        {cat:"Kafel & metlax",name:"Hamam metlaxı 20×20",price:"27.00 ₼",rate:"4.7",rev:"(388 rəy)",img:"assets/cat-sink.png"},
+        {cat:"Tikinti qarışıqları",name:"Plitə yapışqanı 25kg",price:"11.00 ₼",rate:"4.8",rev:"(1,030 rəy)",img:"assets/cat-cement.png"}
+      ] },
+    { key:"dam", name:"Dam örtüyü", groups:["floor"], extra:[{id:"slope",t:"Maillik",u:"%",v:30}],
+      calc(v){ const base=v.L*v.W, area=base*(1+v.slope/100), cov=2.1, sheets=Math.ceil(area/cov), price=Math.round(area*15);
+        return {qty:sheets,unit:"vərəq",rows:[["Bina sahəsi",Math.round(base)+" m²"],["Dam sahəsi",Math.round(area)+" m²"],["1 vərəq",cov+" m²"]],price}; },
+      products:[
+        {cat:"Dam örtüyü",name:"Metal kirəmit, qırmızı",price:"16.50 ₼",rate:"4.7",rev:"(420 rəy)",img:"assets/cat-roof.png"},
+        {cat:"Dam örtüyü",name:"Bitum çərpici (qontçərpic)",price:"22.00 ₼",rate:"4.6",rev:"(214 rəy)",img:"assets/cat-roof.png"},
+        {cat:"İzolyasiya",name:"Damüstü buxar izolyasiyası",price:"8.00 ₼",rate:"4.5",rev:"(360 rəy)",img:"assets/cat-brick.png"},
+        {cat:"Bərkidici",name:"Dam vintləri dəsti (250 əd)",price:"14.00 ₼",rate:"4.8",rev:"(180 rəy)",img:"assets/cat-cement.png"}
+      ] }
+  ];
+
+  const tabsEl = document.getElementById("calcTabs");
+  const fieldsEl = document.getElementById("calcFields");
+  const resultEl = document.getElementById("calcResult");
+  const productsEl = document.getElementById("calcProducts");
+  let current = MATS[0];
+
+  tabsEl.innerHTML = MATS.map((m,i)=>'<button data-i="'+i+'"'+(i===0?' class="on"':'')+'>'+m.name+'</button>').join('');
+
+  function fieldHTML(f){
+    return '<div class="fc-field"><span>'+f.t+'</span><div class="ip"><input type="number" id="fc_'+f.id+'" value="'+f.v+'" min="0" step="any">'+(f.u?'<span class="u">'+f.u+'</span>':'')+'</div></div>';
+  }
+  function renderFields(m){
+    let html="";
+    m.groups.forEach(g=>{ const G=GROUPS[g]; html+='<div class="fc-group"><label>'+G.label+'</label><div class="fc-inputs">'+G.fields.map(fieldHTML).join('')+'</div></div>'; });
+    if(m.extra.length) html+='<div class="fc-group"><label>Əlavə</label><div class="fc-inputs">'+m.extra.map(fieldHTML).join('')+'</div></div>';
+    fieldsEl.innerHTML=html;
+    fieldsEl.querySelectorAll("input").forEach(i=>i.addEventListener("input",compute));
+  }
+  function readVals(m){
+    const v={}, ids=new Set();
+    m.groups.forEach(g=>GROUPS[g].fields.forEach(f=>ids.add(f.id)));
+    m.extra.forEach(f=>ids.add(f.id));
+    ids.forEach(id=>{ const el=document.getElementById("fc_"+id); v[id]=el?(parseFloat(el.value)||0):0; });
+    return v;
+  }
+  function compute(){
+    const r=current.calc(readVals(current));
+    resultEl.innerHTML =
+      '<div class="big"><b>'+r.qty+'</b><span>'+r.unit+'</span></div>'+
+      '<div class="rows">'+r.rows.map(row=>'<div class="r"><span>'+row[0]+'</span><b>'+row[1]+'</b></div>').join('')+'</div>'+
+      '<div class="fcalc-price"><span class="l">Təxmini qiymət</span><span class="v">~ '+r.price+' ₼</span></div>'+
+      '<div class="fcalc-note">* Hesablama təxminidir; real ehtiyac materiala və səthə görə dəyişə bilər.</div>';
+  }
+  function renderProducts(m){
+    productsEl.innerHTML = m.products.map(p=>`
+      <div class="pcard">
+        <div class="ph"><img src="${p.img}" alt=""></div>
+        <div class="rating"><img src="assets/ic-star.svg" alt=""><p>${p.rate} <span>${p.rev}</span></p></div>
+        <div class="cat">${p.cat}</div>
+        <div class="name">${p.name}</div>
+        <div class="price"><span class="now">${p.price}</span></div>
+      </div>`).join('');
+  }
+  function select(i){
+    current=MATS[i];
+    tabsEl.querySelectorAll("button").forEach((b,bi)=>b.classList.toggle("on",bi===i));
+    renderFields(current); compute(); renderProducts(current);
+  }
+  tabsEl.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>select(+b.dataset.i)));
+
+  // ?mat=boya|oboy|laminant|kafel|dam ilə açıla bilər
+  const want=new URLSearchParams(location.search).get("mat");
+  const startIdx=Math.max(0, MATS.findIndex(m=>m.key===want));
+  select(startIdx<0?0:startIdx);
+</script>
+<script src="archi.js"></script>
+</body>
+</html>

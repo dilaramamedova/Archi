@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bloq — ARCHİ | Təmir bələdçisi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="archi.css">
+<style>
+  /* ===== Bloq səhifəsinə xas stillər (paylaşılan archi.css-i tamamlayır) ===== */
+  .blog-hero{padding:48px 0 0}
+  .blog-hero .inner{display:flex;flex-direction:column;gap:40px;max-width:1384px}
+  .crumbs{display:flex;align-items:center;gap:4px;line-height:1.5}
+  .crumbs .c1{font-size:14px;color:rgba(0,0,0,.5)}
+  .crumbs .sep{font-size:16px;color:rgba(0,0,0,.55)}
+  .crumbs .c2{font-size:14px;color:rgba(0,0,0,.9)}
+  .blog-hero .head{max-width:688px;display:flex;flex-direction:column}
+  .blog-hero .tag{display:flex;align-items:center;gap:12px}
+  .blog-hero .tag .line{width:32px;height:4px;border-radius:2px;background:var(--yellow)}
+  .blog-hero .tag p{font-weight:500;font-size:14px;color:rgba(0,0,0,.55);text-transform:uppercase;letter-spacing:1.4px}
+  .blog-hero h1{font-weight:600;font-size:48px;color:rgba(0,0,0,.9);letter-spacing:-.4px;line-height:1.25;max-width:600px;padding-top:16px}
+  .blog-hero .sub{font-weight:400;font-size:20px;color:rgba(0,0,0,.55);line-height:1.5;max-width:560px;padding-top:8px}
+
+  .blog-main{padding:48px 0 80px}
+  .blog-main .inner{display:flex;flex-direction:column;gap:80px;max-width:1384px}
+  .filter-bar{border-top:1px solid rgba(0,0,0,.3);border-bottom:1px solid rgba(0,0,0,.3)}
+  .filter-row{display:flex;align-items:center;height:60px;overflow-x:auto}
+  .filter-row::-webkit-scrollbar{display:none}
+  .fchip{display:flex;align-items:center;justify-content:center;height:60px;padding:0 40px;font-weight:400;font-size:16px;color:rgba(0,0,0,.5);white-space:nowrap;cursor:pointer;transition:color .2s,border-color .2s}
+  .fchip.active{width:180px;padding:0 12px;color:#000;border-bottom:1px solid rgba(0,0,0,.8)}
+  .fchip:hover{color:#000}
+
+  .featured{display:flex;gap:40px;align-items:flex-start}
+  .featured .ph{width:680px;height:516px;flex-shrink:0;overflow:hidden;border-radius:4px}
+  .featured .ph img{width:100%;height:100%;object-fit:cover;transition:transform .6s ease}
+  .featured .ph:hover img{transform:scale(1.05)}
+  .featured .body{flex:1;display:flex;flex-direction:column;gap:20px}
+  .featured .tag{display:flex;align-items:center;gap:12px}
+  .featured .tag .line{width:32px;height:4px;border-radius:2px;background:var(--yellow)}
+  .featured .tag p{font-weight:500;font-size:14px;color:rgba(0,0,0,.55);text-transform:uppercase;letter-spacing:1.4px}
+  .featured .tag .dot{width:4px;height:4px;border-radius:14px;background:#5c5c5c}
+  .featured h2{font-weight:600;font-size:40px;color:#141414;letter-spacing:-.21px;line-height:1.25}
+  .featured .ex{font-weight:400;font-size:20px;color:rgba(0,0,0,.55);line-height:1.5;max-width:560px}
+  .featured .meta{display:flex;align-items:center;gap:6px}
+  .featured .meta p{font-size:16px;color:rgba(0,0,0,.4);line-height:1.5}
+  .featured .meta .dot{width:4px;height:4px;border-radius:14px;background:#5c5c5c}
+  .featured .read{align-self:flex-start;display:flex;align-items:center;gap:4px;background:#111;padding:12px 24px;color:#efefef;font-size:16px;transition:background .25s ease}
+  .featured .read img{width:20px;height:20px;filter:brightness(0) invert(1);transition:transform .25s ease}
+  .featured .read:hover{background:#000}
+  .featured .read:hover img{transform:translateX(4px)}
+
+  /* bloq kartlarına kiçik düzəliş */
+  .blog-grid .post{border-radius:4px}
+
+  @media(max-width:1200px){
+    .featured{flex-direction:column}
+    .featured .ph{width:100%;height:420px}
+    .featured .body{width:100%}
+    .featured .ex,.blog-hero .sub,.blog-hero h1{max-width:100%}
+    .blog-grid{flex-wrap:wrap}
+    .post{min-width:260px}
+  }
+  @media(max-width:640px){
+    .blog-grid{flex-direction:column}
+    .blog-hero h1{font-size:32px}
+    .featured h2{font-size:28px}
+  }
+</style>
+</head>
+<body>
+
+<div data-archi="nav"></div>
+
+<!-- ===================== BLOG HERO ===================== -->
+<section class="blog-hero wrap">
+  <div class="inner">
+    <nav class="crumbs">
+      <a class="c1" href="index.html">Ana səhifə</a>
+      <span class="sep">/</span>
+      <span class="c2">Bloq</span>
+    </nav>
+    <div class="head">
+      <div class="tag"><span class="line"></span><p>Məqalələr</p></div>
+      <h1>Təmir bələdçisi</h1>
+      <p class="sub">Materialları seçməkdən büdcə planlamağa, etibarlı usta tapmaqdan ən çox edilən səhvlərə qədər — təmirinin hər mərhələsi üçün praktik məqalələr.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== MAIN ===================== -->
+<div class="blog-main wrap">
+  <div class="inner">
+
+    <div class="filter-block">
+      <div class="filter-bar">
+        <div class="filter-row">
+          <a class="fchip active">Bütün məqalələr</a>
+          <a class="fchip">Təmir</a>
+          <a class="fchip">Materiallar</a>
+          <a class="fchip">Büdcə</a>
+          <a class="fchip">Dizayn</a>
+          <a class="fchip">Ustalar</a>
+          <a class="fchip">San texnika</a>
+          <a class="fchip">İzolyasiya</a>
+        </div>
+      </div>
+      <div class="featured" style="margin-top:80px">
+        <a class="ph"><img src="assets/blog-hero.jpg" alt=""></a>
+        <div class="body">
+          <div class="tag"><span class="line"></span><p>Təmir</p><span class="dot"></span><p>Bələdçi</p></div>
+          <h2>Təmirə hardan başlamaq lazımdır? Tam yol xəritəsi</h2>
+          <p class="ex">İlk addımlar, büdcə planı, ardıcıllıq və yeni başlayanların ən çox etdiyi səhvlər. Divarlardan tutmuş son təmizliyə qədər — başlamazdan əvvəl bilməli olduğun hər şeyi bir məqalədə topladıq.</p>
+          <div class="meta">
+            <p>Aysel Həsənova</p><span class="dot"></span>
+            <p>6 dəq oxu</p><span class="dot"></span>
+            <p>12 İyun 2026</p>
+          </div>
+          <a class="read">Ətraflı oxu <img src="assets/ic-arrow.svg" alt=""></a>
+        </div>
+      </div>
+    </div>
+
+    <div class="blog-section">
+      <div class="sec-head">
+        <div><div class="sec-tag"><span class="line"></span><p>Bloq</p></div><div class="sec-title">Faydalı məqalələr</div></div>
+        <a class="sec-more"><p>Ətraflı bax</p><img src="assets/ic-arrow.svg" alt=""></a>
+      </div>
+      <div class="blog-grid" id="blogGrid"></div>
+    </div>
+
+  </div>
+</div>
+
+<div data-archi="footer"></div>
+
+<script>
+  // ---- Bloq grid (4 kart) ----
+  const posts = [
+    {time:"6 dəq oxu", title:"Təmirə hardan başlamaq lazımdır?", ex:"İlk addımlar, büdcə planı və ən çox edilən səhvlər — başlamazdan əvvəl bilməli olduqlar."},
+    {time:"4 dəq oxu", title:"Düzgün laminant necə seçilir?", ex:"Sinif, qalınlıq, su davamlılığı — otağa görə hansını seçmək lazımdır."},
+    {time:"5 dəq oxu", title:"Fasad boyası: tam bələdçi", ex:"Hava şəraitinə davamlılıq, örtmə hesabı və tətbiq qaydaları bir məqalədə."},
+    {time:"6 dəq oxu", title:"Təmirə hardan başlamaq lazımdır?", ex:"İlk addımlar, büdcə planı və ən çox edilən səhvlər — başlamazdan əvvəl bilməli olduqlar."},
+  ];
+  document.getElementById('blogGrid').innerHTML = posts.map(p=>`
+    <a class="post">
+      <div class="ph"><img src="assets/blog.png" alt=""></div>
+      <div class="body">
+        <div class="time">${p.time}</div>
+        <h3>${p.title}</h3>
+        <p class="ex">${p.ex}</p>
+        <span class="read">Oxu →</span>
+      </div>
+    </a>`).join('');
+
+  // ---- Filtr tabları ----
+  document.querySelectorAll('.fchip').forEach(c=>c.addEventListener('click',e=>{
+    e.preventDefault();
+    document.querySelectorAll('.fchip').forEach(x=>x.classList.remove('active'));
+    c.classList.add('active');
+  }));
+
+  // ---- Scroll reveal ----
+  document.querySelectorAll('.featured, .sec-head').forEach(el=>el.classList.add('reveal'));
+  document.querySelectorAll('#blogGrid .post').forEach((el,i)=>el.classList.add('reveal','d'+((i%3)+1)));
+  const io = new IntersectionObserver(entries=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  },{threshold:.12, rootMargin:'0px 0px -40px 0px'});
+  document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+</script>
+<script src="archi.js"></script>
+</body>
+</html>

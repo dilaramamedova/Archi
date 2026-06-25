@@ -1,0 +1,345 @@
+<!doctype html>
+<html lang="az">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ARCHI — Component Library</title>
+<link rel="stylesheet" href="./design-system.css">
+<style>
+  /* styleguide-only helpers (NOT part of the design system) */
+  body { background: #fafafa; }
+  .sg-wrap { max-width: var(--container-max); margin: 0 auto; padding: 48px var(--gutter) 0; }
+  .sg-label { font-size: var(--fs-caption); text-transform: uppercase; letter-spacing: var(--tracking-eyebrow); color: var(--text-faint); margin: 64px 0 16px; }
+  .sg-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--space-2); }
+  .ph { display: grid; place-items: center; color: var(--text-faint); font-size: var(--fs-caption); width: 100%; height: 100%; }
+  .ico { width: 20px; height: 20px; display: inline-block; vertical-align: middle; }
+  .nav, .footer { border: 1px solid var(--card-border); }
+</style>
+</head>
+<body>
+
+<!-- ============================ NAVBAR ============================ -->
+<header class="nav">
+  <div class="nav__top">
+    <div class="nav__logo ph" style="width:132px;height:50px;border:1px dashed var(--card-border)">ARCHI</div>
+    <div class="search">
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input placeholder="Məhsul, marka və ya mütəxəssis axtarın">
+    </div>
+    <div class="nav__actions">
+      <span class="nav__lang">AZ
+        <svg class="ico" style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m6 9 6 6 6-6"/></svg>
+      </span>
+      <a class="nav__signin" href="#">Daxil ol</a>
+      <button class="btn btn--primary">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 5v14M5 12h14"/></svg>
+        Məhsul yerləşdir
+      </button>
+    </div>
+  </div>
+  <nav class="nav__row">
+    <div class="nav__row-inner">
+      <span class="nav__item nav__item--catalog">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        Kataloq
+      </span>
+      <span class="nav__item">Məhsullar
+        <svg class="ico" style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m6 9 6 6 6-6"/></svg>
+      </span>
+      <span class="nav__item">Mütəxəssislər
+        <svg class="ico" style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m6 9 6 6 6-6"/></svg>
+      </span>
+      <span class="nav__item">Bloq</span>
+      <span class="nav__item">Haqqımızda</span>
+      <span class="nav__item nav__item--calc">
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="3" width="14" height="18" rx="1"/><path d="M9 7h6M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01"/></svg>
+        Təmir kalkulyatoru
+      </span>
+    </div>
+  </nav>
+</header>
+
+<div class="sg-wrap">
+
+  <!-- ====================== SECTION HEADER ====================== -->
+  <p class="sg-label">Section header</p>
+  <div class="section-head">
+    <div class="section-head__titles">
+      <span class="eyebrow">Seçilmiş satışlar</span>
+      <h2 class="h2">Seçilmiş məhsullar</h2>
+    </div>
+    <a class="section-head__link" href="#">Ətraflı bax
+      <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </a>
+  </div>
+
+  <!-- ====================== PRODUCT CARDS ====================== -->
+  <p class="sg-label">Product card · .card-product</p>
+  <div class="sg-grid">
+    <!-- repeated x4 -->
+    <article class="card card-product">
+      <div class="card__media">
+        <div class="card__badges">
+          <span class="badge">Yeni məhsul</span>
+          <span class="badge">Stokda var</span>
+        </div>
+        <span class="card__fav">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>
+        </span>
+        <div class="ph">şəkil</div>
+      </div>
+      <div class="card-product__body">
+        <span class="rating">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="m12 3 2.6 5.6 6 .7-4.5 4 1.3 6L12 16.8 6.6 19.3l1.3-6-4.5-4 6-.7z"/></svg>
+          4.4 <span class="rating__count">(1,876 rəy)</span>
+        </span>
+        <p class="card-product__cat">Kafel &amp; metlax</p>
+        <h3 class="card-product__title">Keramik kafel 60x60, mat</h3>
+        <div class="card-product__price">
+          <span class="price">23.90 ₼</span>
+          <span class="price--old">45,99 ₼</span>
+          <span class="badge badge--sale">-48%</span>
+        </div>
+      </div>
+    </article>
+
+    <article class="card card-product">
+      <div class="card__media">
+        <div class="card__badges"><span class="badge">Stokda var</span></div>
+        <span class="card__fav"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg></span>
+        <div class="ph">şəkil</div>
+      </div>
+      <div class="card-product__body">
+        <span class="rating"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="m12 3 2.6 5.6 6 .7-4.5 4 1.3 6L12 16.8 6.6 19.3l1.3-6-4.5-4 6-.7z"/></svg> 4.7 <span class="rating__count">(932 rəy)</span></span>
+        <p class="card-product__cat">Boya &amp; emal</p>
+        <h3 class="card-product__title">Akril fasad boyası, 10L</h3>
+        <div class="card-product__price"><span class="price">59.00 ₼</span></div>
+      </div>
+    </article>
+
+    <article class="card card-product">
+      <div class="card__media">
+        <div class="card__badges"><span class="badge">Yeni məhsul</span></div>
+        <span class="card__fav"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg></span>
+        <div class="ph">şəkil</div>
+      </div>
+      <div class="card-product__body">
+        <span class="rating"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="m12 3 2.6 5.6 6 .7-4.5 4 1.3 6L12 16.8 6.6 19.3l1.3-6-4.5-4 6-.7z"/></svg> 4.5 <span class="rating__count">(1,204 rəy)</span></span>
+        <p class="card-product__cat">İzolyasiya</p>
+        <h3 class="card-product__title">Mineral yun izolyasiya</h3>
+        <div class="card-product__price"><span class="price">23.90 ₼</span><span class="price--old">29,90 ₼</span><span class="badge badge--sale">-20%</span></div>
+      </div>
+    </article>
+
+    <article class="card card-product">
+      <div class="card__media">
+        <div class="card__badges"><span class="badge">Stokda var</span></div>
+        <span class="card__fav"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg></span>
+        <div class="ph">şəkil</div>
+      </div>
+      <div class="card-product__body">
+        <span class="rating"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="m12 3 2.6 5.6 6 .7-4.5 4 1.3 6L12 16.8 6.6 19.3l1.3-6-4.5-4 6-.7z"/></svg> 4.8 <span class="rating__count">(540 rəy)</span></span>
+        <p class="card-product__cat">Santexnika</p>
+        <h3 class="card-product__title">Qarışdırıcı, xrom</h3>
+        <div class="card-product__price"><span class="price">89.00 ₼</span></div>
+      </div>
+    </article>
+  </div>
+
+  <!-- ====================== SPECIALIST CARDS ====================== -->
+  <p class="sg-label">Specialist card · .card-specialist</p>
+  <div class="sg-grid">
+    <article class="card card-specialist">
+      <div class="card__media">
+        <div class="card__badges">
+          <span class="badge">
+            <svg class="ico" viewBox="0 0 24 24" fill="currentColor"><path d="M5 19h14l1-9-4 3-4-6-4 6-4-3z"/></svg> Top usta
+          </span>
+          <span class="badge badge--verified">
+            <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5 9-11"/></svg> Təsdiqlənmiş
+          </span>
+        </div>
+        <span class="card__fav"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg></span>
+        <span class="avatar">
+          <svg class="ico" style="width:30px;height:30px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+        </span>
+        <p class="card-specialist__role">Kafel &amp; metlax ustası</p>
+        <span class="rating"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="m12 3 2.6 5.6 6 .7-4.5 4 1.3 6L12 16.8 6.6 19.3l1.3-6-4.5-4 6-.7z"/></svg> 4.9 <span class="rating__count">(416 rəy)</span></span>
+      </div>
+      <div class="card-specialist__body">
+        <p class="card-specialist__name">Rəşad Məmmədov</p>
+        <div class="card-specialist__meta"><span>12 illik təcrübə</span><span>320 layihə</span></div>
+      </div>
+    </article>
+
+    <article class="card card-specialist">
+      <div class="card__media">
+        <div class="card__badges"><span class="badge badge--verified"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5 9-11"/></svg> Təsdiqlənmiş</span></div>
+        <span class="card__fav"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg></span>
+        <span class="avatar"><svg class="ico" style="width:30px;height:30px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span>
+        <p class="card-specialist__role">Santexnik</p>
+        <span class="rating"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="m12 3 2.6 5.6 6 .7-4.5 4 1.3 6L12 16.8 6.6 19.3l1.3-6-4.5-4 6-.7z"/></svg> 4.7 <span class="rating__count">(208 rəy)</span></span>
+      </div>
+      <div class="card-specialist__body">
+        <p class="card-specialist__name">Elçin Əliyev</p>
+        <div class="card-specialist__meta"><span>8 illik təcrübə</span><span>190 layihə</span></div>
+      </div>
+    </article>
+
+    <article class="card card-specialist">
+      <div class="card__media">
+        <div class="card__badges"><span class="badge"><svg class="ico" viewBox="0 0 24 24" fill="currentColor"><path d="M5 19h14l1-9-4 3-4-6-4 6-4-3z"/></svg> Top usta</span></div>
+        <span class="card__fav"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg></span>
+        <span class="avatar"><svg class="ico" style="width:30px;height:30px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span>
+        <p class="card-specialist__role">Elektrik</p>
+        <span class="rating"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="m12 3 2.6 5.6 6 .7-4.5 4 1.3 6L12 16.8 6.6 19.3l1.3-6-4.5-4 6-.7z"/></svg> 5.0 <span class="rating__count">(312 rəy)</span></span>
+      </div>
+      <div class="card-specialist__body">
+        <p class="card-specialist__name">Tural Hüseynov</p>
+        <div class="card-specialist__meta"><span>15 illik təcrübə</span><span>450 layihə</span></div>
+      </div>
+    </article>
+
+    <article class="card card-specialist">
+      <div class="card__media">
+        <div class="card__badges"><span class="badge badge--verified"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m5 12 5 5 9-11"/></svg> Təsdiqlənmiş</span></div>
+        <span class="card__fav"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0 1 12 6a5 5 0 0 1 9.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg></span>
+        <span class="avatar"><svg class="ico" style="width:30px;height:30px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg></span>
+        <p class="card-specialist__role">Boyaçı</p>
+        <span class="rating"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"><path d="m12 3 2.6 5.6 6 .7-4.5 4 1.3 6L12 16.8 6.6 19.3l1.3-6-4.5-4 6-.7z"/></svg> 4.6 <span class="rating__count">(154 rəy)</span></span>
+      </div>
+      <div class="card-specialist__body">
+        <p class="card-specialist__name">Kamran Quliyev</p>
+        <div class="card-specialist__meta"><span>6 illik təcrübə</span><span>120 layihə</span></div>
+      </div>
+    </article>
+  </div>
+
+  <!-- ====================== ARTICLE CARDS ====================== -->
+  <p class="sg-label">Article card · .card-article</p>
+  <div class="sg-grid">
+    <article class="card card-article">
+      <div class="card__media"><div class="ph">şəkil</div></div>
+      <div class="card-article__body">
+        <p class="card-article__time">6 dəq oxu</p>
+        <h3 class="card-article__title">Təmirə hardan başlamaq lazımdır?</h3>
+        <p class="card-article__excerpt">İlk addımlar, büdcə planı və ən çox edilən səhvlər — başlamazdan əvvəl bilməli olduqların.</p>
+        <a class="card-article__more" href="#">Oxu →</a>
+      </div>
+    </article>
+    <article class="card card-article">
+      <div class="card__media"><div class="ph">şəkil</div></div>
+      <div class="card-article__body">
+        <p class="card-article__time">4 dəq oxu</p>
+        <h3 class="card-article__title">Düzgün laminant necə seçilir?</h3>
+        <p class="card-article__excerpt">Sinif, qalınlıq və su davamlılığı — otağa görə hansını seçmək lazımdır.</p>
+        <a class="card-article__more" href="#">Oxu →</a>
+      </div>
+    </article>
+    <article class="card card-article">
+      <div class="card__media"><div class="ph">şəkil</div></div>
+      <div class="card-article__body">
+        <p class="card-article__time">5 dəq oxu</p>
+        <h3 class="card-article__title">Fasad boyası: tam bələdçi</h3>
+        <p class="card-article__excerpt">Hava şəraitinə davamlılıq, örtmə hesabı və tətbiq qaydaları bir məqalədə.</p>
+        <a class="card-article__more" href="#">Oxu →</a>
+      </div>
+    </article>
+    <article class="card card-article">
+      <div class="card__media"><div class="ph">şəkil</div></div>
+      <div class="card-article__body">
+        <p class="card-article__time">8 dəq oxu</p>
+        <h3 class="card-article__title">Mənzil təmirinin büdcəsi necə planlanır?</h3>
+        <p class="card-article__excerpt">Ehtiyat fondu, mərhələ bölgüsü və gözlənilməz xərclərdən qorunma yolları.</p>
+        <a class="card-article__more" href="#">Oxu →</a>
+      </div>
+    </article>
+  </div>
+</div>
+
+<!-- ============================ FOOTER ============================ -->
+<footer class="footer" style="margin-top:96px">
+  <div class="footer__inner">
+    <div class="footer__top">
+      <div class="footer__logo ph" style="width:144px;height:58px;border:1px dashed var(--on-dark-border)">ARCHI</div>
+      <button class="btn btn--on-dark">Məhsullara keç
+        <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </div>
+    <div class="footer__divider"></div>
+    <div class="footer__cols">
+      <div class="footer__col">
+        <p class="footer__heading">Məhsullar</p>
+        <div class="footer__links">
+          <a class="footer__link" href="#">Kafel &amp; metlax</a>
+          <a class="footer__link" href="#">Boya &amp; emal</a>
+          <a class="footer__link" href="#">Santexnika</a>
+          <a class="footer__link" href="#">İzolyasiya &amp; istilik</a>
+          <a class="footer__link" href="#">Bütün kateqoriyalara keç</a>
+        </div>
+      </div>
+      <div class="footer__col">
+        <p class="footer__heading">Mütəxəssislər</p>
+        <div class="footer__links">
+          <a class="footer__link" href="#">Usta tap</a>
+          <a class="footer__link" href="#">Top reytinqli ustalar</a>
+          <a class="footer__link" href="#">Bütün mütəxəssislərə bax</a>
+        </div>
+      </div>
+      <div class="footer__col">
+        <p class="footer__heading">ARCHİ-yə qoşul</p>
+        <div class="footer__links">
+          <a class="footer__link" href="#">Satıcı ol</a>
+          <a class="footer__link" href="#">Usta ol</a>
+          <a class="footer__link" href="#">Tərəfdaşlıq proqramı</a>
+          <a class="footer__link" href="#">Bizneslə əməkdaşlıq</a>
+        </div>
+      </div>
+      <div class="footer__col">
+        <p class="footer__heading">Şirkət &amp; dəstək</p>
+        <div class="footer__links">
+          <a class="footer__link" href="#">Haqqımızda</a>
+          <a class="footer__link" href="#">Pulsuz konsultasiya</a>
+          <a class="footer__link" href="#">Məqalələr</a>
+          <a class="footer__link" href="#">Yardım mərkəzi</a>
+          <a class="footer__link" href="#">Əlaqə</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer__divider"></div>
+    <div class="footer__news">
+      <div class="footer__news-text">
+        <svg class="ico" style="width:48px;height:48px;color:var(--on-dark-muted)" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><rect x="3" y="5" width="18" height="14" rx="1"/><path d="m3 6 9 7 9-7"/></svg>
+        <div>
+          <p class="footer__news-title">Təmir dünyasında yeniliklərdən xəbərdar olun</p>
+          <p class="footer__news-sub">Endirimlər, yeni məhsullar, faydalı məqalələr və yeniliklər barədə ilk siz məlumat alın.</p>
+        </div>
+      </div>
+      <div class="footer__news-form">
+        <input class="footer__email" placeholder="E-poçt ünvanın">
+        <button class="btn btn--accent btn--lg">Abunə ol</button>
+      </div>
+    </div>
+    <div class="footer__divider"></div>
+    <div class="footer__bottom">
+      <div>
+        <div class="footer__legal">
+          <a href="#">İstifadə şərtləri</a><span class="sep">|</span>
+          <a href="#">Məxfilik siyasəti</a><span class="sep">|</span>
+          <a href="#">Çatdırılma &amp; qaytarılma</a><span class="sep">|</span>
+          <a href="#">Cookie siyasəti</a><span class="sep">|</span>
+          <a href="#">Sayt xəritəsi</a>
+        </div>
+        <p class="footer__copy">©2026 ARCHI - Bütün hüquqlar qorunur.</p>
+      </div>
+      <div class="footer__social">
+        <a href="#" aria-label="Instagram">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

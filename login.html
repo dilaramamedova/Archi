@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Daxil ol — ARCHİ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="archi.css">
+<style>
+  .auth{background:var(--gray-soft2);padding:64px 0;min-height:60vh}
+  .auth .inner{max-width:460px;margin:0 auto;padding:0 28px}
+  .auth-card{background:#fff;border:1px solid rgba(0,0,0,.12);box-shadow:-4px 4px 4px rgba(0,0,0,.05);padding:40px;display:flex;flex-direction:column;gap:24px}
+  .auth-head{display:flex;flex-direction:column;gap:8px}
+  .auth-head .tag{display:flex;align-items:center;gap:12px}
+  .auth-head .tag .line{width:32px;height:4px;border-radius:2px;background:var(--yellow)}
+  .auth-head .tag p{font-weight:500;font-size:13px;color:rgba(0,0,0,.55);text-transform:uppercase;letter-spacing:1.4px}
+  .auth-head h1{font-weight:600;font-size:32px;color:rgba(0,0,0,.9);letter-spacing:-.4px}
+  .auth-head .sub{font-size:16px;color:rgba(0,0,0,.55);line-height:1.5}
+  .form{display:flex;flex-direction:column;gap:18px}
+  .field{display:flex;flex-direction:column;gap:8px}
+  .field label{font-weight:500;font-size:14px;color:rgba(0,0,0,.7)}
+  .field input{border:1px solid rgba(0,0,0,.2);padding:14px 16px;font-size:16px;color:#000;outline:none;transition:border-color .2s}
+  .field input:focus{border-color:#000}
+  .field input::placeholder{color:rgba(0,0,0,.4)}
+  .row{display:flex;align-items:center;justify-content:space-between;font-size:14px}
+  .row .rem{display:flex;align-items:center;gap:8px;color:rgba(0,0,0,.7)}
+  .row .rem input{width:18px;height:18px;accent-color:var(--yellow)}
+  .row a{color:rgba(0,0,0,.7);border-bottom:1px solid var(--yellow-line)}
+  .submit{height:54px;background:var(--yellow);font-weight:600;font-size:18px;color:#111;border:none;cursor:pointer;transition:filter .2s}
+  .submit:hover{filter:brightness(.93)}
+  .alt{text-align:center;font-size:15px;color:rgba(0,0,0,.6)}
+  .alt a{font-weight:600;color:#111;border-bottom:2px solid var(--yellow-line)}
+  .ok-msg{display:none;background:#eafce9;border:1px solid var(--green);color:#0a7a14;padding:14px 16px;font-size:15px}
+  .ok-msg.show{display:block}
+  @media(max-width:640px){ .auth-card{padding:24px} .auth-head h1{font-size:26px} }
+</style>
+</head>
+<body>
+
+<div data-archi="nav"></div>
+
+<section class="auth">
+  <div class="inner">
+    <div class="auth-card">
+      <div class="auth-head">
+        <div class="tag"><span class="line"></span><p>Xoş gəlmisən</p></div>
+        <h1>Daxil ol</h1>
+        <p class="sub">Hesabına gir — alıcı, satıcı və ya usta kabinetinə davam et.</p>
+      </div>
+
+      <div class="ok-msg" id="okMsg">Giriş uğurlu oldu! (demo — backend qoşulmayıb)</div>
+
+      <form class="form" id="loginForm" onsubmit="return false">
+        <div class="field"><label>E-poçt və ya telefon</label><input type="text" placeholder="email@example.com" required></div>
+        <div class="field"><label>Şifrə</label><input type="password" placeholder="Şifrə" required></div>
+        <div class="row">
+          <label class="rem"><input type="checkbox"> Məni xatırla</label>
+          <a href="#">Şifrəni unutmusan?</a>
+        </div>
+        <button class="submit" type="submit">Daxil ol</button>
+        <p class="alt">Hesabın yoxdur? <a href="register.html">Qeydiyyatdan keç</a></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<div data-archi="footer"></div>
+
+<script>
+  document.getElementById('loginForm').addEventListener('submit',()=>{
+    document.getElementById('okMsg').classList.add('show');
+  });
+</script>
+<script src="archi.js"></script>
+</body>
+</html>

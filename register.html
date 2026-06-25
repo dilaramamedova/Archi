@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qeydiyyatdan keç — ARCHİ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="archi.css">
+<style>
+  /* ===== Auth (qeydiyyat / giriş) — ARCHİ stilində ===== */
+  .auth{background:var(--gray-soft2);padding:56px 0}
+  .auth .inner{max-width:760px;margin:0 auto;padding:0 28px}
+  .auth-card{background:#fff;border:1px solid rgba(0,0,0,.12);box-shadow:-4px 4px 4px rgba(0,0,0,.05);padding:40px;display:flex;flex-direction:column;gap:28px}
+  .auth-head{display:flex;flex-direction:column;gap:8px}
+  .auth-head .tag{display:flex;align-items:center;gap:12px}
+  .auth-head .tag .line{width:32px;height:4px;border-radius:2px;background:var(--yellow)}
+  .auth-head .tag p{font-weight:500;font-size:13px;color:rgba(0,0,0,.55);text-transform:uppercase;letter-spacing:1.4px}
+  .auth-head h1{font-weight:600;font-size:32px;color:rgba(0,0,0,.9);letter-spacing:-.4px}
+  .auth-head .sub{font-size:16px;color:rgba(0,0,0,.55);line-height:1.5}
+
+  .group-label{font-weight:600;font-size:16px;color:#000;margin-bottom:-8px}
+
+  .roles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .role{position:relative;border:1px solid rgba(0,0,0,.2);padding:20px;display:flex;flex-direction:column;gap:10px;cursor:pointer;transition:border-color .2s,background .2s;text-align:left}
+  .role:hover{border-color:#000}
+  .role.sel{border-color:var(--yellow);box-shadow:inset 0 0 0 1px var(--yellow);background:#fffdf0}
+  .role .ic{width:46px;height:46px;border-radius:100px;background:var(--gray-soft);display:flex;align-items:center;justify-content:center}
+  .role.sel .ic{background:var(--yellow)}
+  .role .ic img{width:24px;height:24px}
+  .role h4{font-weight:600;font-size:16px;color:#111}
+  .role p{font-size:13px;color:rgba(0,0,0,.55);line-height:1.35}
+  .role .tick{position:absolute;top:14px;right:14px;width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s}
+  .role .tick img{width:12px;height:12px;filter:brightness(0)}
+  .role.sel .tick{opacity:1;background:var(--yellow);border-color:var(--yellow)}
+
+  .form{display:flex;flex-direction:column;gap:18px}
+  .frow{display:flex;gap:14px}
+  .frow .field{flex:1}
+  .field{display:flex;flex-direction:column;gap:8px}
+  .field label{font-weight:500;font-size:14px;color:rgba(0,0,0,.7)}
+  .field input,.field select{border:1px solid rgba(0,0,0,.2);padding:14px 16px;font-size:16px;color:#000;outline:none;background:#fff;transition:border-color .2s}
+  .field input:focus,.field select:focus{border-color:#000}
+  .field input::placeholder{color:rgba(0,0,0,.4)}
+  .field[hidden]{display:none}
+
+  .terms{display:flex;align-items:center;gap:10px;font-size:14px;color:rgba(0,0,0,.7)}
+  .terms input{width:18px;height:18px;accent-color:var(--yellow)}
+  .terms a{border-bottom:1px solid var(--yellow-line)}
+  .submit{height:54px;background:var(--yellow);font-weight:600;font-size:18px;color:#111;border:none;cursor:pointer;transition:filter .2s}
+  .submit:hover{filter:brightness(.93)}
+  .alt{text-align:center;font-size:15px;color:rgba(0,0,0,.6)}
+  .alt a{font-weight:600;color:#111;border-bottom:2px solid var(--yellow-line)}
+  .ok-msg{display:none;background:#eafce9;border:1px solid var(--green);color:#0a7a14;padding:14px 16px;font-size:15px}
+  .ok-msg.show{display:block}
+
+  @media(max-width:640px){
+    .auth-card{padding:24px}
+    .roles{grid-template-columns:1fr}
+    .frow{flex-direction:column}
+    .auth-head h1{font-size:26px}
+  }
+</style>
+</head>
+<body>
+
+<div data-archi="nav"></div>
+
+<section class="auth">
+  <div class="inner">
+    <div class="auth-card">
+      <div class="auth-head">
+        <div class="tag"><span class="line"></span><p>ARCHİ-yə qoşul</p></div>
+        <h1>Qeydiyyatdan keç</h1>
+        <p class="sub">Hesab növünü seç — alıcı, satıcı, yoxsa usta/mütəxəssis kimi davam et.</p>
+      </div>
+
+      <div class="ok-msg" id="okMsg">Qeydiyyat uğurla tamamlandı! (demo — backend qoşulmayıb)</div>
+
+      <!-- Rol seçimi -->
+      <div>
+        <div class="group-label" style="margin-bottom:12px">Hesab növü</div>
+        <div class="roles" id="roles">
+          <button type="button" class="role" data-role="alici">
+            <span class="tick"><img src="assets/ic-check.svg" alt=""></span>
+            <span class="ic"><img src="assets/ic-cart.svg" alt=""></span>
+            <h4>Alıcı</h4>
+            <p>Material al, usta tap, sifariş ver.</p>
+          </button>
+          <button type="button" class="role" data-role="satici">
+            <span class="tick"><img src="assets/ic-check.svg" alt=""></span>
+            <span class="ic"><img src="assets/spec-ic-sirket.svg" alt=""></span>
+            <h4>Satıcı</h4>
+            <p>Məhsullarını yerləşdir və sat.</p>
+          </button>
+          <button type="button" class="role" data-role="usta">
+            <span class="tick"><img src="assets/ic-check.svg" alt=""></span>
+            <span class="ic"><img src="assets/spec-ic-usta.svg" alt=""></span>
+            <h4>Usta / Mütəxəssis</h4>
+            <p>Xidmət göstər, müştəri qazan.</p>
+          </button>
+        </div>
+      </div>
+
+      <!-- Form -->
+      <form class="form" id="regForm" onsubmit="return false">
+        <div class="frow">
+          <div class="field"><label>Ad</label><input type="text" placeholder="Adınız" required></div>
+          <div class="field"><label>Soyad</label><input type="text" placeholder="Soyadınız" required></div>
+        </div>
+
+        <!-- satıcıya xas -->
+        <div class="field" data-for="satici" hidden><label>Şirkət / marka adı</label><input type="text" placeholder="Məsələn: ARCHI Build MMC"></div>
+
+        <!-- ustaya xas -->
+        <div class="frow" data-for="usta" hidden>
+          <div class="field"><label>İxtisas</label>
+            <select>
+              <option value="">Seçin</option>
+              <option>Kafelçi</option><option>Elektrik</option><option>Santexnik</option>
+              <option>Boyaçı</option><option>Gips-kartonçu</option><option>Memar</option>
+              <option>İnteryer dizayner</option><option>Digər</option>
+            </select>
+          </div>
+          <div class="field"><label>Şəhər</label>
+            <select>
+              <option value="">Seçin</option>
+              <option>Bakı</option><option>Sumqayıt</option><option>Gəncə</option>
+              <option>Mingəçevir</option><option>Şirvan</option><option>Digər</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="frow">
+          <div class="field"><label>E-poçt</label><input type="email" placeholder="email@example.com" required></div>
+          <div class="field"><label>Telefon</label><input type="tel" placeholder="+994 50 000 00 00" required></div>
+        </div>
+        <div class="frow">
+          <div class="field"><label>Şifrə</label><input type="password" placeholder="Ən azı 6 simvol" required></div>
+          <div class="field"><label>Şifrəni təkrarla</label><input type="password" placeholder="Şifrəni təkrarla" required></div>
+        </div>
+
+        <label class="terms"><input type="checkbox" required> <span><a href="#">İstifadə şərtləri</a> və <a href="#">Məxfilik siyasəti</a> ilə razıyam</span></label>
+
+        <button class="submit" type="submit">Qeydiyyatdan keç</button>
+        <p class="alt">Artıq hesabın var? <a href="login.html" data-login>Daxil ol</a></p>
+      </form>
+    </div>
+  </div>
+</section>
+
+<div data-archi="footer"></div>
+
+<script>
+  const roles = document.querySelectorAll('.role');
+  function pick(role){
+    roles.forEach(r=>r.classList.toggle('sel', r.dataset.role===role));
+    document.querySelectorAll('[data-for]').forEach(el=>{ el.hidden = (el.dataset.for !== role); });
+  }
+  roles.forEach(r=>r.addEventListener('click',()=>pick(r.dataset.role)));
+
+  // ?role= ilə öncədən seç (default: alıcı)
+  const want=new URLSearchParams(location.search).get('role');
+  pick(['alici','satici','usta'].includes(want)?want:'alici');
+
+  document.getElementById('regForm').addEventListener('submit',()=>{
+    try{ localStorage.setItem('archi-auth','1'); }catch(e){}
+    const ok=document.getElementById('okMsg'); ok.classList.add('show');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+</script>
+<script src="archi.js"></script>
+</body>
+</html>
