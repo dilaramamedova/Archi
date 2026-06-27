@@ -146,11 +146,20 @@
       <p class="p">Otağın ölçüsünü yaz — boya, kafel, laminant və dam örtüyü üçün miqdar və təxmini qiymət dərhal çıxsın.</p>
       <a class="open" id="openCalc2">Kalkulyatoru aç →</a>
     </div>
-    <div class="card">
-      <div class="lbl">Boya · 3 otaq</div>
-      <div class="big"><b>26</b><span> litr</span></div>
-      <div class="est">≈ 312 ₼ · 3 banka (10 litr)</div>
-      <div class="chips"><span class="c on">Boya</span><span class="c">Dam örtüyü</span><span class="c">Kafel</span><span class="c">Laminant</span></div>
+    <div class="card" id="miniCalc">
+      <div class="lbl">Təmir kalkulyatoru</div>
+      <div class="chips" id="mcChips">
+        <span class="c on" data-mat="boya">Boya</span>
+        <span class="c" data-mat="dam">Dam örtüyü</span>
+        <span class="c" data-mat="kafel">Kafel</span>
+        <span class="c" data-mat="laminant">Laminant</span>
+      </div>
+      <div class="mc-fields" id="mcFields"></div>
+      <div class="mc-result">
+        <div class="big"><b id="mcQty">8</b><span id="mcUnit"> litr</span></div>
+        <div class="mc-price" id="mcPrice">≈ 96 ₼</div>
+      </div>
+      <a class="mc-open" id="mcOpen" href="calculator.html?mat=boya">Tam kalkulyatoru aç →</a>
     </div>
   </div>
 </div>
@@ -305,9 +314,42 @@
   document.querySelectorAll('.lead .opt').forEach(o=>o.addEventListener('click',()=>{
     document.querySelectorAll('.lead .opt').forEach(x=>x.classList.remove('sel')); o.classList.add('sel');
   }));
-  document.querySelectorAll('.calc-cta .chips .c').forEach(c=>c.addEventListener('click',()=>{
-    document.querySelectorAll('.calc-cta .chips .c').forEach(x=>x.classList.remove('on')); c.classList.add('on');
-  }));
+  // ---- Mini kalkulyator (calc-cta kartı) — calculator.html məntiqinin yığcam versiyası ----
+  (function(){
+    const MINI = {
+      boya:     {unit:"litr",  fields:[["L","Uzunluq","m",4],["W","En","m",3],["H","Hünd.","m",2.7]],
+                 calc:v=>{const wall=2*(v.L+v.W)*v.H, litr=Math.ceil(wall*2/10); return {qty:litr, price:litr*12};}},
+      dam:      {unit:"vərəq", fields:[["L","Uzunluq","m",4],["W","En","m",3]],
+                 calc:v=>{const area=v.L*v.W*1.3, sheets=Math.ceil(area/2.1); return {qty:sheets, price:Math.round(area*15)};}},
+      kafel:    {unit:"qutu",  fields:[["L","Uzunluq","m",4],["W","En","m",3]],
+                 calc:v=>{const need=v.L*v.W*1.1, boxes=Math.ceil(need/1.44); return {qty:boxes, price:Math.round(need*23)};}},
+      laminant: {unit:"paket", fields:[["L","Uzunluq","m",4],["W","En","m",3]],
+                 calc:v=>{const need=v.L*v.W*1.07, packs=Math.ceil(need/2.13); return {qty:packs, price:Math.round(need*18)};}}
+    };
+    const chipsEl=document.getElementById("mcChips"), fieldsEl=document.getElementById("mcFields");
+    const qtyEl=document.getElementById("mcQty"), unitEl=document.getElementById("mcUnit");
+    const priceEl=document.getElementById("mcPrice"), openEl=document.getElementById("mcOpen");
+    if(!chipsEl) return;
+    let cur="boya";
+    function renderFields(){
+      fieldsEl.innerHTML = MINI[cur].fields.map(f=>
+        '<div class="mc-field"><span>'+f[1]+'</span><div class="ip"><input type="number" id="mc_'+f[0]+'" value="'+f[3]+'" min="0" step="any"><span class="u">'+f[2]+'</span></div></div>'
+      ).join("");
+      fieldsEl.querySelectorAll("input").forEach(i=>i.addEventListener("input", compute));
+    }
+    function compute(){
+      const m=MINI[cur], v={};
+      m.fields.forEach(f=>{ const el=document.getElementById("mc_"+f[0]); v[f[0]]=el?(parseFloat(el.value)||0):0; });
+      const r=m.calc(v);
+      qtyEl.textContent=r.qty; unitEl.textContent=" "+m.unit;
+      priceEl.textContent="≈ "+r.price+" ₼"; openEl.href="calculator.html?mat="+cur;
+    }
+    chipsEl.querySelectorAll(".c").forEach(c=>c.addEventListener("click",()=>{
+      chipsEl.querySelectorAll(".c").forEach(x=>x.classList.remove("on"));
+      c.classList.add("on"); cur=c.dataset.mat; renderFields(); compute();
+    }));
+    renderFields(); compute();
+  })();
 
   // ---- "Məhsula keç" dairəsi kursor kimi kartın içində hərəkət edir ----
   document.querySelectorAll('.pcard').forEach(card=>{

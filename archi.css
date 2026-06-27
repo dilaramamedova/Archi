@@ -290,6 +290,22 @@
   .calc-cta .card .chips{display:flex;gap:4px;padding-top:24px}
   .calc-cta .card .chips .c{height:32px;display:flex;align-items:center;padding:0 13px;border-radius:4px;font-weight:500;font-size:12px;background:var(--gray-soft);border:1px solid rgba(0,0,0,.1);color:rgba(0,0,0,.52)}
   .calc-cta .card .chips .c.on{background:var(--yellow);border-color:var(--yellow);font-weight:600;color:#2c2c2c}
+  /* mini kalkulyator */
+  .calc-cta .card .chips{flex-wrap:wrap;padding-top:16px;cursor:default}
+  .calc-cta .card .chips .c{cursor:pointer;transition:all .18s ease}
+  .calc-cta .card .mc-fields{display:flex;gap:8px;margin:18px 0}
+  .calc-cta .card .mc-field{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+  .calc-cta .card .mc-field>span{font-weight:500;font-size:12px;color:rgba(0,0,0,.5)}
+  .calc-cta .card .mc-field .ip{display:flex;align-items:center;gap:4px;border:1px solid rgba(0,0,0,.18);padding:9px 10px}
+  .calc-cta .card .mc-field .ip input{border:none;outline:none;width:100%;min-width:0;font-size:16px;color:#000}
+  .calc-cta .card .mc-field .ip .u{font-size:13px;color:rgba(0,0,0,.4)}
+  .calc-cta .card .mc-result{display:flex;align-items:flex-end;justify-content:space-between;padding-bottom:18px;border-bottom:1px solid rgba(0,0,0,.08)}
+  .calc-cta .card .mc-result .big{margin-top:0}
+  .calc-cta .card .mc-result .big b{font-size:44px}
+  .calc-cta .card .mc-result .big span{font-size:20px}
+  .calc-cta .card .mc-price{font-weight:600;font-size:20px;color:#111}
+  .calc-cta .card .mc-open{display:flex;align-items:center;justify-content:center;height:46px;margin-top:18px;background:var(--yellow);font-weight:500;font-size:16px;color:rgba(0,0,0,.9);transition:filter .2s ease}
+  .calc-cta .card .mc-open:hover{filter:brightness(.92)}
 
   /* ============ LEAD FORM ============ */
   .lead .inner{display:flex;align-items:flex-start;justify-content:space-between;padding:0 28px}
