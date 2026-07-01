@@ -42,6 +42,21 @@
   .lang-menu li{padding:10px 14px;font-size:15px;font-weight:500;border-radius:6px;transition:background .15s}
   .lang-menu li:hover{background:var(--gray-soft)}
   .lang-menu li.active{background:var(--yellow)}
+  .nav-cart{position:relative;display:inline-flex;align-items:center;justify-content:center}
+  .nav-cart>img{width:24px;height:24px;display:block;transition:transform .2s}
+  .nav-cart:hover>img{transform:scale(1.15);cursor:pointer}
+  .nav-cart:focus-visible{outline-offset:4px}
+  .cart-badge{position:absolute;top:-6px;right:-8px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:var(--yellow);color:#111;font-size:10px;font-weight:700;display:none;align-items:center;justify-content:center;line-height:1;pointer-events:none}
+  /* ---- Kampaniya ---- */
+  .promo-banner{display:flex;align-items:center;justify-content:space-between;gap:20px;background:#111;border-radius:4px;padding:22px 28px;margin-bottom:28px}
+  .promo-banner .pb-l{display:flex;align-items:center;gap:18px}
+  .pb-badge{background:var(--yellow);color:#111;font-weight:700;font-size:12px;letter-spacing:1px;padding:6px 12px;border-radius:4px;white-space:nowrap}
+  .promo-banner h3{color:#fff;font-weight:700;font-size:22px;letter-spacing:-.2px}
+  .promo-banner p{color:rgba(255,255,255,.7);font-size:14px;margin-top:4px}
+  .promo-banner p b{color:var(--yellow)}
+  .pb-copy{background:var(--yellow);color:#111;border:none;font-weight:700;font-size:14px;padding:13px 22px;border-radius:4px;cursor:pointer;font-family:inherit;white-space:nowrap;transition:filter .2s}
+  .pb-copy:hover{filter:brightness(.93)}
+  @media(max-width:640px){ .promo-banner{flex-direction:column;align-items:flex-start} }
   .nav-icons>img{width:24px;height:24px}
   .signin{display:flex;align-items:center;gap:24px}
   .divider{width:1px;height:28px;background:rgba(0,0,0,.2)}
@@ -137,11 +152,16 @@
   .hero-promo .cta-white p{font-size:14px;color:#000}
   .hero-promo .cta-white img{width:16px;height:16px}
   .hero-promo .dots{position:absolute;left:193px;top:214px;display:flex;gap:2px;align-items:center}
-  .hero-promo .dots i{width:6px;height:6px;border-radius:17px;background:rgba(0,0,0,.3)}
+  .hero-promo .dots i{width:6px;height:6px;border-radius:17px;background:rgba(0,0,0,.3);cursor:pointer;transition:width .3s ease}
   .hero-promo .dots i.on{width:18px;background:rgba(91,91,91,.8)}
+  .hero-promo>img{transition:opacity .35s ease}
   .hero-usta{position:relative;height:303px;overflow:hidden;display:flex;align-items:center;padding:20px 12px}
-  .hero-usta>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-  .hero-usta .box{position:relative;z-index:2;width:200px;display:flex;flex-direction:column;gap:36px;height:100%}
+  .hero-usta>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .35s ease}
+  .hero-usta::before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(255,255,255,.93),rgba(255,255,255,.6) 45%,rgba(255,255,255,0) 80%)}
+  .hero-usta .box{position:relative;z-index:2;width:200px;display:flex;flex-direction:column;gap:24px;height:100%}
+  .hero-usta .box .dots{margin-top:auto;display:flex;gap:4px;align-items:center}
+  .hero-usta .box .dots i{width:6px;height:6px;border-radius:17px;background:rgba(0,0,0,.3);cursor:pointer;transition:width .3s ease}
+  .hero-usta .box .dots i.on{width:18px;background:rgba(0,0,0,.6)}
   .hero-usta .tag{display:flex;align-items:center;gap:10px}
   .hero-usta .tag .line{width:32px;height:2px;background:var(--yellow)}
   .hero-usta .tag p{font-weight:500;font-size:14px;color:rgba(0,0,0,.55);text-transform:uppercase}

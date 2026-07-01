@@ -3,72 +3,125 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Təmir kalkulyatoru — ARCHİ</title>
+<title>Sürətli təmir kalkulyatoru — ARCHİ</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="archi.css">
 <style>
-  /* ===== Kalkulyator səhifəsinə xas ===== */
-  .calc-page{padding:48px 0 80px}
-  .calc-page>.inner{display:flex;flex-direction:column;gap:40px;max-width:1384px;margin:0 auto}
-  .crumbs{display:flex;align-items:center;gap:4px;line-height:1.5}
-  .crumbs .c1{font-size:14px;color:rgba(0,0,0,.5)}
-  .crumbs .sep{font-size:16px;color:rgba(0,0,0,.55)}
-  .crumbs .c2{font-size:14px;color:rgba(0,0,0,.9)}
-  .chead{display:flex;flex-direction:column;gap:8px;max-width:700px}
-  .chead .tag{display:flex;align-items:center;gap:12px}
-  .chead .tag .line{width:32px;height:4px;border-radius:2px;background:var(--yellow)}
-  .chead .tag p{font-weight:500;font-size:14px;color:rgba(0,0,0,.55);text-transform:uppercase;letter-spacing:1.4px}
-  .chead h1{font-weight:600;font-size:40px;color:rgba(0,0,0,.9);letter-spacing:-.4px;line-height:1.2}
-  .chead .sub{font-size:18px;color:rgba(0,0,0,.55);line-height:1.5}
-  .calc-card{border:1px solid rgba(0,0,0,.5);box-shadow:-4px 4px 4px rgba(0,0,0,.06);padding:32px;display:flex;flex-direction:column;gap:24px}
-
-  /* nəticəyə uyğun məhsullar — homepage .pcard üslubu, örtmə şəkillə */
-  .calc-products .pcard{cursor:pointer}
-  .calc-products .pcard:hover{cursor:pointer}
-  .calc-products .pcard .ph{height:220px}
-  .calc-products .pcard .ph img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .4s ease}
-  .calc-products .pcard:hover .ph img{transform:scale(1.06)}
-
-  @media(max-width:640px){ .chead h1{font-size:28px} .calc-card{padding:20px} }
+  /* ===== Sürətli kalkulyator ===== */
+  .qc-page{background:var(--gray-soft2);padding:48px 0 80px;min-height:60vh}
+  .qc-page>.inner{max-width:1384px;margin:0 auto}
+  .qc-crumbs{display:flex;align-items:center;gap:6px;font-size:14px;color:rgba(0,0,0,.5);margin-bottom:28px}
+  .qc-crumbs a{color:rgba(0,0,0,.5)} .qc-crumbs .c2{color:rgba(0,0,0,.9)}
+  .qc-card{background:#fff;border:1px solid rgba(0,0,0,.1);border-radius:4px;max-width:620px;margin:0 auto;padding:28px;display:flex;flex-direction:column;gap:20px}
+  .qc-tag{display:flex;align-items:center;gap:10px}
+  .qc-tag .line{width:28px;height:4px;border-radius:4px;background:var(--yellow-line)}
+  .qc-tag p{font-weight:600;font-size:12px;letter-spacing:1px;color:rgba(0,0,0,.5);text-transform:uppercase}
+  .qc-card h1{font-weight:700;font-size:24px;color:#111;letter-spacing:-.3px}
+  .qc-card .qc-sub{font-size:14px;color:rgba(0,0,0,.5);margin-top:2px}
+  .qc-group{display:flex;flex-direction:column;gap:10px}
+  .qc-group>label{font-weight:600;font-size:13px;color:#111}
+  .qc-chips{display:flex;flex-wrap:wrap;gap:8px}
+  .qc-chip{padding:9px 14px;border-radius:4px;border:1px solid rgba(0,0,0,.1);background:#fff;font-weight:500;font-size:13px;color:rgba(0,0,0,.7);cursor:pointer;transition:all .15s;white-space:nowrap}
+  .qc-chip:hover{border-color:rgba(0,0,0,.35)}
+  .qc-chip.on{background:#111;border-color:#111;color:#fff;font-weight:600}
+  .qc-field{display:flex;align-items:center;gap:6px;border:1px solid rgba(0,0,0,.14);border-radius:4px;padding:12px 16px;transition:border-color .2s}
+  .qc-field:focus-within{border-color:#111}
+  .qc-field input{border:none;outline:none;width:100%;font-size:20px;font-weight:700;color:#111;background:none;font-family:inherit}
+  .qc-field .u{font-size:14px;color:rgba(0,0,0,.5)}
+  .qc-div{height:1px;background:rgba(0,0,0,.1);margin:2px 0}
+  .qc-rlbl{font-weight:600;font-size:13px;color:rgba(0,0,0,.5)}
+  .qc-tiers{display:flex;gap:12px}
+  .qc-tier{flex:1;min-width:0;border-radius:4px;border:1px solid rgba(0,0,0,.1);background:#f9f9fb;padding:16px;display:flex;flex-direction:column;gap:4px;cursor:pointer;transition:all .15s}
+  .qc-tier:hover{border-color:rgba(0,0,0,.3)}
+  .qc-tier.on{background:#fffdd9;border:2px solid var(--yellow-line);padding:15px}
+  .qc-tier .tn{font-weight:600;font-size:13px;color:#111}
+  .qc-tier .tp{display:flex;align-items:baseline;gap:3px}
+  .qc-tier .tp b{font-weight:700;font-size:19px;color:#111}
+  .qc-tier .tp span{font-size:11px;font-weight:500;color:rgba(0,0,0,.5)}
+  .qc-tier .rec{font-size:11px;font-weight:500;color:#8c7f0d}
+  .qc-cta{display:flex;align-items:center;justify-content:center;gap:8px;height:50px;background:var(--yellow);border-radius:4px;font-weight:600;font-size:15px;color:#111;text-decoration:none;transition:filter .2s;border:none;cursor:pointer}
+  .qc-cta:hover{filter:brightness(.93)}
+  .qc-links{display:flex;justify-content:center;gap:20px;flex-wrap:wrap}
+  .qc-links button{background:none;border:none;font-weight:500;font-size:13px;color:rgba(0,0,0,.4);cursor:pointer;font-family:inherit}
+  .qc-links button:hover{color:#111}
+  @media(max-width:640px){ .qc-card{padding:20px} .qc-tiers{flex-direction:column} }
 </style>
 </head>
 <body>
 
 <div data-archi="nav"></div>
 
-<section class="calc-page wrap">
+<section class="qc-page">
   <div class="inner">
-    <nav class="crumbs">
-      <a class="c1" href="index.html">Ana səhifə</a>
-      <span class="sep">/</span>
-      <span class="c2">Təmir kalkulyatoru</span>
+    <nav class="qc-crumbs">
+      <a href="index.html">Ana səhifə</a><span>/</span><span class="c2">Sürətli kalkulyator</span>
     </nav>
 
-    <div class="chead">
-      <div class="tag"><span class="line"></span><p>Təmir kalkulyatoru</p></div>
-      <h1>Nə qədər material lazımdır?</h1>
-      <p class="sub">Material seç, otağın ölçülərini yaz — miqdar və təxmini qiymət dərhal hesablansın, aşağıda uyğun məhsulları gör.</p>
-    </div>
-
-    <div class="calc-card">
-      <div class="fcalc-tabs" id="calcTabs"></div>
-      <div class="fcalc-body">
-        <div class="fcalc-fields" id="calcFields"></div>
-        <div class="fcalc-result" id="calcResult"></div>
+    <div class="qc-card">
+      <div>
+        <div class="qc-tag"><span class="line"></span><p>Sürətli kalkulyator</p></div>
+        <h1 style="margin-top:8px">Təmirin təxmini dəyəri</h1>
+        <div class="qc-sub">Bir neçə parametr — 3 büdcə variantı.</div>
       </div>
-    </div>
 
-    <div class="calc-products-sec">
-      <div class="sec-head">
-        <div>
-          <div class="sec-tag"><span class="line"></span><p>Tövsiyə</p></div>
-          <div class="sec-title">Uyğun məhsullar</div>
+      <div class="qc-group">
+        <label>Obyektin növü</label>
+        <div class="qc-chips" data-key="obj">
+          <button class="qc-chip on" data-v="menzil" data-m="1">Mənzil</button>
+          <button class="qc-chip" data-v="ev" data-m="1.1">Fərdi ev</button>
+          <button class="qc-chip" data-v="ofis" data-m="0.95">Ofis</button>
+          <button class="qc-chip" data-v="kom" data-m="1.05">Kommersiya</button>
         </div>
-        <a class="sec-more"><p>Hamısına bax</p><img src="assets/ic-arrow.svg" alt=""></a>
       </div>
-      <div class="grid4 calc-products" id="calcProducts"></div>
+
+      <div class="qc-group">
+        <label>Obyektin sahəsi</label>
+        <div class="qc-field"><input id="qcArea" type="number" min="1" value="80"><span class="u">m²</span></div>
+      </div>
+
+      <div class="qc-group">
+        <label>Təmir növü</label>
+        <div class="qc-chips" data-key="type">
+          <button class="qc-chip" data-v="qara" data-m="0.55">Qara</button>
+          <button class="qc-chip" data-v="kosmetik" data-m="0.7">Kosmetik</button>
+          <button class="qc-chip on" data-v="esasli" data-m="1">Əsaslı</button>
+          <button class="qc-chip" data-v="acar" data-m="1.25">Açar təslim</button>
+        </div>
+      </div>
+
+      <div class="qc-group">
+        <label>Otaqların sayı</label>
+        <div class="qc-chips" data-key="rooms">
+          <button class="qc-chip" data-v="studio" data-m="0.95">Studio</button>
+          <button class="qc-chip" data-v="1" data-m="1">1</button>
+          <button class="qc-chip on" data-v="2" data-m="1.03">2</button>
+          <button class="qc-chip" data-v="3" data-m="1.06">3</button>
+          <button class="qc-chip" data-v="4" data-m="1.1">4+</button>
+        </div>
+      </div>
+
+      <div class="qc-group">
+        <label>Material səviyyəsi</label>
+        <div class="qc-chips" data-key="level">
+          <button class="qc-chip" data-v="ekonom">Ekonom</button>
+          <button class="qc-chip on" data-v="standart">Standart</button>
+          <button class="qc-chip" data-v="premium">Premium</button>
+        </div>
+      </div>
+
+      <div class="qc-div"></div>
+
+      <div class="qc-rlbl" id="qcRlbl">80 m² üçün təxmini dəyər</div>
+      <div class="qc-tiers" id="qcTiers"></div>
+
+      <a class="qc-cta" id="qcNext" href="calculator-detailed.html">Ətraflı hesablamanı əldə et  →</a>
+      <div class="qc-links">
+        <button id="qcPdf">PDF yüklə</button>
+        <button id="qcWa">WhatsApp-a göndər</button>
+        <button id="qcSave">Yadda saxla</button>
+      </div>
     </div>
   </div>
 </section>
@@ -76,119 +129,66 @@
 <div data-archi="footer"></div>
 
 <script>
-  // ---- Sahə qrupları ----
-  const GROUPS = {
-    room:  { label:"Otağın ölçüsü", fields:[{id:"L",t:"Uzunluq",u:"m",v:4},{id:"W",t:"En",u:"m",v:3},{id:"H",t:"Hündürlük",u:"m",v:2.7}] },
-    floor: { label:"Sahə ölçüsü",   fields:[{id:"L",t:"Uzunluq",u:"m",v:4},{id:"W",t:"En",u:"m",v:3}] },
-    door:  { label:"Qapı",          fields:[{id:"dC",t:"Say",u:"",v:1},{id:"dW",t:"En",u:"m",v:0.9},{id:"dH",t:"Hündürlük",u:"m",v:2.1}] },
-    win:   { label:"Pəncərə",       fields:[{id:"wC",t:"Say",u:"",v:1},{id:"wW",t:"En",u:"m",v:1.5},{id:"wH",t:"Hündürlük",u:"m",v:1.4}] }
-  };
-
-  // ---- Materiallar: hesablama + uyğun məhsullar ----
-  const MATS = [
-    { key:"boya", name:"Boya", groups:["room","door","win"], extra:[{id:"coats",t:"Qat sayı",u:"",v:2}],
-      calc(v){ const wall=2*(v.L+v.W)*v.H, op=v.dC*v.dW*v.dH+v.wC*v.wW*v.wH, area=Math.max(0,wall-op);
-        const litr=Math.ceil(area*v.coats/10), banka=Math.ceil(litr/10), price=litr*12;
-        return {qty:litr,unit:"litr",rows:[["Boyanacaq sahə",Math.round(area)+" m²"],["Qat sayı",v.coats],["10L banka",banka+" əd"]],price}; },
-      products:[
-        {cat:"Boya & emal",name:"Daxili divar boyası, mat 10L",price:"59.00 ₼",rate:"4.7",rev:"(932 rəy)",img:"assets/hero-main.jpg"},
-        {cat:"Boya & emal",name:"Akril fasad boyası 10L",price:"72.00 ₼",rate:"4.6",rev:"(410 rəy)",img:"assets/blog-hero.jpg"},
-        {cat:"Boya & emal",name:"Tavan boyası, ağ 5L",price:"34.00 ₼",rate:"4.5",rev:"(286 rəy)",img:"assets/blog.png"},
-        {cat:"Alət",name:"Boya valikləri dəsti",price:"18.00 ₼",rate:"4.8",rev:"(640 rəy)",img:"assets/hero-promo.png"}
-      ] },
-    { key:"oboy", name:"Divar kağızı", groups:["room","door","win"], extra:[],
-      calc(v){ const wall=2*(v.L+v.W)*v.H, op=v.dC*v.dW*v.dH+v.wC*v.wW*v.wH, area=Math.max(0,wall-op);
-        const cov=5.3, rolls=Math.ceil(area*1.1/cov), price=rolls*22;
-        return {qty:rolls,unit:"rulon",rows:[["Divar sahəsi",Math.round(area)+" m²"],["1 rulon",cov+" m²"],["Ehtiyatla","+10%"]],price}; },
-      products:[
-        {cat:"Divar kağızı",name:"Vinil divar kağızı, rulon",price:"28.00 ₼",rate:"4.6",rev:"(512 rəy)",img:"assets/hero-promo.png"},
-        {cat:"Divar kağızı",name:"Flizelin əsaslı oboy",price:"35.00 ₼",rate:"4.7",rev:"(348 rəy)",img:"assets/blog.png"},
-        {cat:"Divar kağızı",name:"Tekstil divar kağızı",price:"49.00 ₼",rate:"4.8",rev:"(190 rəy)",img:"assets/hero-main.jpg"},
-        {cat:"Alət",name:"Oboy yapışqanı 500q",price:"9.00 ₼",rate:"4.5",rev:"(820 rəy)",img:"assets/cat-cement.png"}
-      ] },
-    { key:"laminant", name:"Laminant", groups:["floor"], extra:[{id:"waste",t:"Ehtiyat",u:"%",v:7}],
-      calc(v){ const area=v.L*v.W, need=area*(1+v.waste/100), cov=2.13, packs=Math.ceil(need/cov), price=Math.round(need*18);
-        return {qty:packs,unit:"paket",rows:[["Döşəmə sahəsi",Math.round(area)+" m²"],["Ehtiyatla",Math.round(need)+" m²"],["1 paket",cov+" m²"]],price}; },
-      products:[
-        {cat:"Laminant & parket",name:"Laminat 32-ci sinif, palıd",price:"21.90 ₼",rate:"4.7",rev:"(1,204 rəy)",img:"assets/cat-laminant.png"},
-        {cat:"Laminant & parket",name:"Su davamlı laminat 33-cü sinif",price:"29.90 ₼",rate:"4.8",rev:"(640 rəy)",img:"assets/cat-laminant.png"},
-        {cat:"Laminant & parket",name:"SPC laminat, kvars-vinil",price:"34.00 ₼",rate:"4.9",rev:"(312 rəy)",img:"assets/cat-laminant.png"},
-        {cat:"Aksesuar",name:"Laminat altlığı 3mm",price:"6.50 ₼",rate:"4.6",rev:"(508 rəy)",img:"assets/cat-cement.png"}
-      ] },
-    { key:"kafel", name:"Kafel", groups:["floor"], extra:[{id:"waste",t:"Ehtiyat",u:"%",v:10}],
-      calc(v){ const area=v.L*v.W, need=area*(1+v.waste/100), cov=1.44, boxes=Math.ceil(need/cov), price=Math.round(need*23);
-        return {qty:boxes,unit:"qutu",rows:[["Sahə",Math.round(area)+" m²"],["Ehtiyatla",Math.round(need)+" m²"],["1 qutu",cov+" m²"]],price}; },
-      products:[
-        {cat:"Kafel & metlax",name:"Keramik kafel 60×60, mat",price:"23.90 ₼",rate:"4.4",rev:"(1,876 rəy)",img:"assets/prod-kafel.png"},
-        {cat:"Kafel & metlax",name:"Mətbəx üçün kafel 30×60",price:"19.50 ₼",rate:"4.6",rev:"(742 rəy)",img:"assets/cat-bathroom.png"},
-        {cat:"Kafel & metlax",name:"Hamam metlaxı 20×20",price:"27.00 ₼",rate:"4.7",rev:"(388 rəy)",img:"assets/cat-sink.png"},
-        {cat:"Tikinti qarışıqları",name:"Plitə yapışqanı 25kg",price:"11.00 ₼",rate:"4.8",rev:"(1,030 rəy)",img:"assets/cat-cement.png"}
-      ] },
-    { key:"dam", name:"Dam örtüyü", groups:["floor"], extra:[{id:"slope",t:"Maillik",u:"%",v:30}],
-      calc(v){ const base=v.L*v.W, area=base*(1+v.slope/100), cov=2.1, sheets=Math.ceil(area/cov), price=Math.round(area*15);
-        return {qty:sheets,unit:"vərəq",rows:[["Bina sahəsi",Math.round(base)+" m²"],["Dam sahəsi",Math.round(area)+" m²"],["1 vərəq",cov+" m²"]],price}; },
-      products:[
-        {cat:"Dam örtüyü",name:"Metal kirəmit, qırmızı",price:"16.50 ₼",rate:"4.7",rev:"(420 rəy)",img:"assets/cat-roof.png"},
-        {cat:"Dam örtüyü",name:"Bitum çərpici (qontçərpic)",price:"22.00 ₼",rate:"4.6",rev:"(214 rəy)",img:"assets/cat-roof.png"},
-        {cat:"İzolyasiya",name:"Damüstü buxar izolyasiyası",price:"8.00 ₼",rate:"4.5",rev:"(360 rəy)",img:"assets/cat-brick.png"},
-        {cat:"Bərkidici",name:"Dam vintləri dəsti (250 əd)",price:"14.00 ₼",rate:"4.8",rev:"(180 rəy)",img:"assets/cat-cement.png"}
-      ] }
+  const TIERS=[
+    {key:"ekonom",  name:"Ekonom",   rate:600},
+    {key:"standart",name:"Standart", rate:900},
+    {key:"premium", name:"Premium",  rate:1500}
   ];
+  const state={obj:1,type:1,rooms:1.03,level:"standart",area:80};
 
-  const tabsEl = document.getElementById("calcTabs");
-  const fieldsEl = document.getElementById("calcFields");
-  const resultEl = document.getElementById("calcResult");
-  const productsEl = document.getElementById("calcProducts");
-  let current = MATS[0];
+  // chip qrupları
+  document.querySelectorAll('.qc-chips').forEach(grp=>{
+    grp.addEventListener('click',e=>{
+      const btn=e.target.closest('.qc-chip'); if(!btn) return;
+      grp.querySelectorAll('.qc-chip').forEach(b=>b.classList.remove('on'));
+      btn.classList.add('on');
+      const key=grp.dataset.key;
+      if(key==='level') state.level=btn.dataset.v;
+      else state[key]=parseFloat(btn.dataset.m)||1;
+      recalc();
+    });
+  });
+  const areaEl=document.getElementById('qcArea');
+  areaEl.addEventListener('input',()=>{ state.area=parseFloat(areaEl.value)||0; recalc(); });
 
-  tabsEl.innerHTML = MATS.map((m,i)=>'<button data-i="'+i+'"'+(i===0?' class="on"':'')+'>'+m.name+'</button>').join('');
+  const fmt=n=>Math.round(n).toLocaleString('ru-RU');
+  function priceFor(rate){
+    const adj=state.obj*state.type*state.rooms;
+    return Math.round(state.area*rate*adj/1000)*1000;
+  }
+  function recalc(){
+    document.getElementById('qcRlbl').textContent=(state.area||0)+' m² üçün təxmini dəyər';
+    document.getElementById('qcTiers').innerHTML=TIERS.map(t=>{
+      const on=t.key===state.level;
+      return `<div class="qc-tier ${on?'on':''}" data-v="${t.key}">
+        <div class="tn">${t.name}</div>
+        <div class="tp"><b>${fmt(priceFor(t.rate))}</b><span>AZN-dən</span></div>
+        ${on?'<div class="rec">Tövsiyə</div>':''}
+      </div>`;
+    }).join('');
+    document.querySelectorAll('#qcTiers .qc-tier').forEach(el=>{
+      el.addEventListener('click',()=>{
+        state.level=el.dataset.v;
+        document.querySelectorAll('.qc-chips[data-key="level"] .qc-chip').forEach(b=>b.classList.toggle('on',b.dataset.v===state.level));
+        recalc();
+      });
+    });
+    // seçimləri ətraflı kalkulyatora ötürmək üçün saxla
+    try{ localStorage.setItem('archi-quickcalc', JSON.stringify({area:state.area,level:state.level})); }catch(e){}
+  }
+  recalc();
 
-  function fieldHTML(f){
-    return '<div class="fc-field"><span>'+f.t+'</span><div class="ip"><input type="number" id="fc_'+f.id+'" value="'+f.v+'" min="0" step="any">'+(f.u?'<span class="u">'+f.u+'</span>':'')+'</div></div>';
-  }
-  function renderFields(m){
-    let html="";
-    m.groups.forEach(g=>{ const G=GROUPS[g]; html+='<div class="fc-group"><label>'+G.label+'</label><div class="fc-inputs">'+G.fields.map(fieldHTML).join('')+'</div></div>'; });
-    if(m.extra.length) html+='<div class="fc-group"><label>Əlavə</label><div class="fc-inputs">'+m.extra.map(fieldHTML).join('')+'</div></div>';
-    fieldsEl.innerHTML=html;
-    fieldsEl.querySelectorAll("input").forEach(i=>i.addEventListener("input",compute));
-  }
-  function readVals(m){
-    const v={}, ids=new Set();
-    m.groups.forEach(g=>GROUPS[g].fields.forEach(f=>ids.add(f.id)));
-    m.extra.forEach(f=>ids.add(f.id));
-    ids.forEach(id=>{ const el=document.getElementById("fc_"+id); v[id]=el?(parseFloat(el.value)||0):0; });
-    return v;
-  }
-  function compute(){
-    const r=current.calc(readVals(current));
-    resultEl.innerHTML =
-      '<div class="big"><b>'+r.qty+'</b><span>'+r.unit+'</span></div>'+
-      '<div class="rows">'+r.rows.map(row=>'<div class="r"><span>'+row[0]+'</span><b>'+row[1]+'</b></div>').join('')+'</div>'+
-      '<div class="fcalc-price"><span class="l">Təxmini qiymət</span><span class="v">~ '+r.price+' ₼</span></div>'+
-      '<div class="fcalc-note">* Hesablama təxminidir; real ehtiyac materiala və səthə görə dəyişə bilər.</div>';
-  }
-  function renderProducts(m){
-    productsEl.innerHTML = m.products.map(p=>`
-      <div class="pcard">
-        <div class="ph"><img src="${p.img}" alt=""></div>
-        <div class="rating"><img src="assets/ic-star.svg" alt=""><p>${p.rate} <span>${p.rev}</span></p></div>
-        <div class="cat">${p.cat}</div>
-        <div class="name">${p.name}</div>
-        <div class="price"><span class="now">${p.price}</span></div>
-      </div>`).join('');
-  }
-  function select(i){
-    current=MATS[i];
-    tabsEl.querySelectorAll("button").forEach((b,bi)=>b.classList.toggle("on",bi===i));
-    renderFields(current); compute(); renderProducts(current);
-  }
-  tabsEl.querySelectorAll("button").forEach(b=>b.addEventListener("click",()=>select(+b.dataset.i)));
-
-  // ?mat=boya|oboy|laminant|kafel|dam ilə açıla bilər
-  const want=new URLSearchParams(location.search).get("mat");
-  const startIdx=Math.max(0, MATS.findIndex(m=>m.key===want));
-  select(startIdx<0?0:startIdx);
+  // linklər (demo davranış)
+  document.getElementById('qcSave').addEventListener('click',()=>{
+    try{ localStorage.setItem('archi-quickcalc-saved', JSON.stringify({...state,ts:Date.now()})); }catch(e){}
+    alert('Hesablama yadda saxlanıldı.');
+  });
+  document.getElementById('qcWa').addEventListener('click',()=>{
+    const p=fmt(priceFor(TIERS.find(t=>t.key===state.level).rate));
+    const msg=encodeURIComponent(`ARCHİ təmir hesablaması: ${state.area} m² · ${state.level} · ~${p} AZN`);
+    window.open('https://wa.me/?text='+msg,'_blank');
+  });
+  document.getElementById('qcPdf').addEventListener('click',()=>window.print());
 </script>
 <script src="archi.js"></script>
 </body>

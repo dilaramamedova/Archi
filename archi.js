@@ -26,7 +26,7 @@
           </ul>
         </div>
         <img src="assets/ic-heart.svg" alt="" role="button" tabindex="0" aria-label="Sevimlilər">
-        <img src="assets/ic-cart.svg" alt="" role="button" tabindex="0" aria-label="Səbət">
+        <a href="cart.html" class="nav-cart" aria-label="Səbət"><img src="assets/ic-cart.svg" alt=""><span class="cart-badge" id="navCartCount"></span></a>
       </div>
       <div class="signin">
         <span class="divider"></span>
@@ -436,6 +436,15 @@
   if (navMount) navMount.outerHTML = NAV;
   const footMount = document.querySelector('[data-archi="footer"]');
   if (footMount) footMount.outerHTML = FOOTER;
+
+  /* səbət sayğacı (navbar) */
+  (function () {
+    try {
+      const c = JSON.parse(localStorage.getItem("archi-cart") || "[]");
+      const b = document.getElementById("navCartCount");
+      if (b) { if (c.length) { b.textContent = c.length; b.style.display = "flex"; } else b.style.display = "none"; }
+    } catch (e) {}
+  })();
 
   /* aktiv səhifəni naviqasiyada işarələ */
   (function () {

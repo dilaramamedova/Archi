@@ -164,11 +164,48 @@
 
   .pd-section{padding:48px 0 8px}
 
+  /* ===== Birlikdə alınır (bundle / frequently-bought-together) ===== */
+  .pdb-lead{max-width:680px;font-size:16px;line-height:1.6;color:rgba(0,0,0,.6);margin-bottom:26px}
+  .pdb-wrap{display:grid;grid-template-columns:minmax(0,1fr) 304px;align-items:stretch;border:1px solid rgba(0,0,0,.12);background:#fff}
+  .pdb-items{display:flex;align-items:stretch;flex-wrap:wrap;padding:22px 12px}
+  .pdb-item{display:flex;flex-direction:column;gap:9px;width:186px;padding:12px;border:1px solid transparent;border-radius:6px;cursor:pointer;transition:border-color .2s,opacity .2s;-webkit-tap-highlight-color:transparent}
+  .pdb-item:hover{border-color:rgba(0,0,0,.12)}
+  .pdb-item.off{opacity:.42}
+  .pdb-thumb{position:relative;height:148px;background:var(--gray-soft);border:1px solid rgba(0,0,0,.08);overflow:hidden}
+  .pdb-thumb img{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);height:80%;width:auto}
+  .pdb-check{position:absolute;left:8px;top:8px;width:24px;height:24px;border-radius:5px;border:1.5px solid rgba(0,0,0,.3);background:#fff;display:flex;align-items:center;justify-content:center;transition:.2s}
+  .pdb-check img{width:13px;height:13px;filter:brightness(0) invert(1);opacity:0;transition:opacity .15s}
+  .pdb-item.on .pdb-check{background:var(--green);border-color:var(--green)}
+  .pdb-item.on .pdb-check img{opacity:1}
+  .pdb-tag{position:absolute;right:8px;top:8px;background:var(--yellow);border-radius:4px;padding:3px 8px;font-size:11px;font-weight:600;color:#111}
+  .pdb-nm{font-size:14px;font-weight:500;color:#111;line-height:1.35;min-height:38px}
+  .pdb-pr{display:flex;align-items:baseline;gap:8px}
+  .pdb-pr .now{font-weight:600;font-size:17px;color:#111}
+  .pdb-pr .old{font-size:13px;color:rgba(0,0,0,.35);text-decoration:line-through}
+  .pdb-plus{display:flex;align-items:center;justify-content:center;width:30px;font-size:26px;font-weight:300;color:rgba(0,0,0,.28);flex-shrink:0}
+
+  .pdb-summary{background:var(--gray-soft2);border-left:1px solid rgba(0,0,0,.1);padding:26px 24px;display:flex;flex-direction:column;justify-content:center}
+  .pdb-summary .lbl{font-size:13px;color:rgba(0,0,0,.5)}
+  .pdb-summary .tot{display:flex;align-items:baseline;gap:10px;margin-top:4px}
+  .pdb-summary .tot b{font-weight:600;font-size:32px;color:#111;letter-spacing:-.5px}
+  .pdb-summary .tot .old{font-size:15px;color:rgba(0,0,0,.35);text-decoration:line-through}
+  .pdb-save{align-self:flex-start;max-width:100%;display:inline-flex;align-items:center;gap:6px;background:rgba(0,166,19,.12);color:var(--green);border-radius:4px;padding:5px 10px;font-size:13px;font-weight:600;line-height:1.3;margin:12px 0 16px}
+  .pdb-save img{width:14px;height:14px;flex-shrink:0}
+  .pdb-addall{height:52px;background:var(--yellow);display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600;font-size:16px;color:#111;transition:filter .2s}
+  .pdb-addall:hover{filter:brightness(.93)}
+  .pdb-addall:disabled{opacity:.5;cursor:not-allowed}
+  .pdb-addall img{width:20px;height:20px}
+  .pdb-addall.added{background:var(--green);color:#fff}
+  .pdb-addall.added img{filter:brightness(0) invert(1)}
+  .pdb-hint{font-size:12px;color:rgba(0,0,0,.45);text-align:center;margin-top:12px;line-height:1.4}
+
   @media(max-width:980px){
     .pd-top{grid-template-columns:1fr;gap:32px}
     .pd-rate-grid{grid-template-columns:1fr;gap:28px}
     .pd-rate-avg{text-align:left}
     .pd-rate-avg .s{justify-content:flex-start}
+    .pdb-wrap{grid-template-columns:1fr}
+    .pdb-summary{border-left:none;border-top:1px solid rgba(0,0,0,.1)}
   }
   @media(max-width:640px){
     .pd-main{height:380px}
@@ -177,6 +214,8 @@
     .pd-thumb{width:72px;height:72px;flex-shrink:0}
     .pd-info h1{font-size:24px}
     .pd-assure{grid-template-columns:1fr}
+    .pdb-item{width:calc(50% - 30px)}
+    .pdb-item .pdb-nm{min-height:0}
   }
 </style>
 </head>
@@ -282,6 +321,24 @@
       </div>
     </div>
 
+    <!-- BİRLİKDƏ ALINIR (frequently bought together) -->
+    <div class="pd-section">
+      <div class="sec-tag"><span class="line"></span><p>Birlikdə sərfəli</p></div>
+      <div class="sec-title" style="margin-bottom:10px">Bunları da unutma</div>
+      <p class="pdb-lead">Bu kafeli düzgün quraşdırmaq üçün lazım olan məhsullar. Hamısını bir kliklə səbətə at — ustanı ikinci dəfə mağazaya göndərmə.</p>
+
+      <div class="pdb-wrap">
+        <div class="pdb-items" id="pdbItems"></div>
+        <div class="pdb-summary">
+          <span class="lbl"><span id="pdbCnt">3</span> məhsul seçilib</span>
+          <div class="tot"><b id="pdbNow">47.30 ₼</b><span class="old" id="pdbOld">75.99 ₼</span></div>
+          <span class="pdb-save"><img src="assets/ic-check.svg" alt="">Ayrı almaqdan <span id="pdbSave">28.69 ₼</span> qənaət</span>
+          <button class="pdb-addall" id="pdbAddAll"><img src="assets/ic-cart.svg" alt="">Seçilənləri səbətə at</button>
+          <div class="pdb-hint">Miqdarı səbətdə tənzimləyə bilərsən</div>
+        </div>
+      </div>
+    </div>
+
     <!-- MƏHSUL HAQQINDA + XÜSUSİYYƏTLƏR -->
     <div class="pd-section">
       <div class="sec-tag"><span class="line"></span><p>Məhsul haqqında</p></div>
@@ -377,9 +434,23 @@
   /* ---- Səbətə at ---- */
   const addBtn = document.getElementById('addCart');
   const reTr = ()=>{ if(window.ARCHI && window.ARCHI.refresh) window.ARCHI.refresh(); };
+  function addToCart(){
+    try{
+      const name=(document.querySelector('.pd-info h1')||{}).textContent||'Məhsul';
+      const cat=(document.querySelector('.pd-info .cat')||{}).textContent||'';
+      const now=(document.querySelector('.pd-price .now')||{}).textContent||'0';
+      const price=parseFloat(now.replace(/[^\d.,]/g,'').replace(',','.'))||0;
+      const cart=JSON.parse(localStorage.getItem('archi-cart')||'[]');
+      if(!cart.some(c=>c.name===name.trim())){
+        cart.push({name:name.trim(),brand:'ARCHİ',cat:cat.trim(),calc:'1 məhsul',price,stock:'Stokda var',inStock:true});
+        localStorage.setItem('archi-cart',JSON.stringify(cart));
+      }
+    }catch(e){}
+  }
   addBtn.addEventListener('click', ()=>{
     addBtn.classList.add('added');
     addBtn.innerHTML = '<img src="assets/ic-check.svg" alt="">Səbətə əlavə olundu';
+    addToCart();
     reTr();
     setTimeout(()=>{
       addBtn.classList.remove('added');
@@ -444,6 +515,63 @@
         <div class="help"><span>👍 Faydalı oldu</span><span>Şikayət et</span></div>
       </div>
     </div>`).join('');
+
+  /* ---- Birlikdə alınır (bundle) ---- */
+  const bundle = [
+    {img:"assets/prod-kafel.png",  nm:"Keramik kafel 60×60, mat", now:23.90, old:45.99, tag:"Bu məhsul", main:true},
+    {img:"assets/cat-cement.png",  nm:"Kafel yapışqanı, 25 kq",   now:14.90, old:18.00},
+    {img:"assets/cat-bathroom.png",nm:"Dekor bordür kafel, mat",  now:8.50,  old:12.00},
+  ];
+  const fmt = n => n.toFixed(2) + ' ₼';
+  const pdbItems = document.getElementById('pdbItems');
+  pdbItems.innerHTML = bundle.map((p,i)=>`
+    ${i>0?'<div class="pdb-plus">+</div>':''}
+    <div class="pdb-item on" data-i="${i}">
+      <div class="pdb-thumb">
+        <span class="pdb-check"><img src="assets/ic-check.svg" alt=""></span>
+        ${p.tag?`<span class="pdb-tag">${p.tag}</span>`:''}
+        <img src="${p.img}" alt="">
+      </div>
+      <div class="pdb-nm">${p.nm}</div>
+      <div class="pdb-pr"><span class="now">${fmt(p.now)}</span><span class="old">${fmt(p.old)}</span></div>
+    </div>`).join('');
+
+  const pdbState = bundle.map(()=>true);
+  const el = {cnt:document.getElementById('pdbCnt'), now:document.getElementById('pdbNow'),
+             old:document.getElementById('pdbOld'), save:document.getElementById('pdbSave'),
+             add:document.getElementById('pdbAddAll')};
+  const pdbSaveBox = document.querySelector('.pdb-save');
+  function pdbRecalc(){
+    let now=0, old=0, cnt=0;
+    bundle.forEach((p,i)=>{ if(pdbState[i]){ now+=p.now; old+=p.old; cnt++; } });
+    el.cnt.textContent = cnt;
+    el.now.textContent = fmt(now);
+    el.old.textContent = fmt(old);
+    el.save.textContent = fmt(Math.max(0, old-now));
+    el.old.style.display = old>now ? '' : 'none';
+    pdbSaveBox.style.display = old>now ? 'inline-flex' : 'none';
+    el.add.disabled = cnt===0;
+  }
+  document.querySelectorAll('#pdbItems .pdb-item').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      const i = +item.dataset.i;
+      pdbState[i] = !pdbState[i];
+      item.classList.toggle('on', pdbState[i]);
+      item.classList.toggle('off', !pdbState[i]);
+      pdbRecalc();
+    });
+  });
+  el.add.addEventListener('click', ()=>{
+    if(el.add.disabled) return;
+    el.add.classList.add('added');
+    el.add.innerHTML = '<img src="assets/ic-check.svg" alt="">Səbətə əlavə olundu';
+    if(window.ARCHI && window.ARCHI.refresh) window.ARCHI.refresh();
+    setTimeout(()=>{
+      el.add.classList.remove('added');
+      el.add.innerHTML = '<img src="assets/ic-cart.svg" alt="">Seçilənləri səbətə at';
+    }, 1800);
+  });
+  pdbRecalc();
 
   /* ---- Oxşar məhsullar (pcard komponenti) ---- */
   const sims = [
