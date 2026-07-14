@@ -8,6 +8,28 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="archi.css">
+<style>
+  /* ===== Homepage v2 (Figma yeniləməsi) ===== */
+  /* Hero: tam enli şəkil, yan sütun ləğv edildi */
+  .hero-grid{display:block;height:620px}
+  .hero-main{width:100%;height:100%}
+  .side-calc{top:12px;right:12px}
+  /* Hero sağ-alt: usta qeydiyyat mini kartı */
+  .hero-reg{position:absolute;right:12px;bottom:16px;width:464px;background:#fff;display:flex;align-items:center;gap:16px;padding:14px 16px;z-index:25}
+  .hero-reg .d{flex:1;font-size:14px;color:rgba(0,0,0,.7);line-height:1.35}
+  .hero-reg .reg{background:#111;color:#efefef;font-size:14px;padding:12px 20px;white-space:nowrap;transition:background .2s}
+  .hero-reg .reg:hover{background:#000}
+  /* SALE marquee lenti */
+  .sale-marquee{background:#000;overflow:hidden;padding:16px 0}
+  .sale-track{display:flex;white-space:nowrap;width:max-content;animation:saleScroll 20s linear infinite}
+  .sale-track span{color:#fff;font-weight:700;font-size:26px;letter-spacing:3px;padding-right:28px;text-transform:uppercase}
+  @keyframes saleScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+  @media(prefers-reduced-motion:reduce){.sale-track{animation:none}}
+  @media(max-width:1200px){
+    .hero-grid{height:420px}
+    .hero-reg{display:none}
+  }
+</style>
 </head>
 <body>
 
@@ -28,28 +50,6 @@
         <div class="hero-info"><p>Hardan başlayacağınızı bilmirsiz?</p><p class="u">Pulsuz konsultasiya alın</p></div>
       </div>
     </div>
-    <div class="hero-side">
-      <div class="hero-promo" id="heroPromo">
-        <img src="assets/hero-promo.png" alt="" id="hpImg">
-        <a class="cta-white" id="hpCta" href="product.html"><p>Ətraflı bax</p><img src="assets/ic-arrow.svg" alt=""></a>
-        <div class="dots" id="hpDots"><i class="on"></i><i></i><i></i></div>
-      </div>
-      <div class="hero-usta" id="heroUsta">
-        <img src="assets/hero-usta.jpg" alt="" id="huImg">
-        <div class="box">
-          <div class="tag"><span class="line"></span><p id="huTag">Usta &amp; mütəxəssis</p></div>
-          <div class="mid">
-            <div>
-              <h3 id="huTitle">ARCHİ-də usta ol</h3>
-              <div class="d" id="huDesc">Profil yarat, işlərini göstər<br>və yeni müştərilər qazan.</div>
-            </div>
-            <a class="reg" id="huReg" href="register.html?role=usta">Qeydiyyatdan keç</a>
-          </div>
-          <div class="dots" id="huDots"><i class="on"></i><i></i><i></i></div>
-        </div>
-      </div>
-    </div>
-
     <!-- SIDE CALCULATOR -->
     <aside class="side-calc open" id="sideCalc">
       <button class="sc-close" id="scClose"><img src="assets/ic-cancel.svg" alt="Bağla"></button>
@@ -75,6 +75,12 @@
       </div>
       <a class="sc-full" id="scFull" href="calculator.html?mat=boya">Tam kalkulyatoru aç →</a>
     </aside>
+
+    <!-- USTA QEYDİYYAT MİNİ KARTI -->
+    <div class="hero-reg">
+      <div class="d">Profil yarat, işlərini göstər və yeni müştərilər qazan.</div>
+      <a class="reg" href="register.html?role=usta">Qeydiyyatdan keç</a>
+    </div>
   </div>
 </div>
 
@@ -82,8 +88,8 @@
 <div class="service-strip">
   <div class="inner">
     <div class="svc"><span class="ic"><img src="assets/ic-person.svg" alt=""></span><div><div class="t1">Xüsusi sertifikatlı ustalar</div><div class="t2">reytinq və rəylərlə</div></div></div>
-    <div class="svc"><span class="ic"><img src="assets/ic-message.svg" alt=""></span><div><div class="t1">Pulsuz konsultasiya</div><div class="t2">Mütəxəssislər tərəfindən</div></div></div>
-    <div class="svc"><span class="ic"><img src="assets/ic-person.svg" alt=""></span><div><div class="t1">Xüsusi sertifikatlı ustalar</div><div class="t2">reytinq və rəylərlə</div></div></div>
+    <div class="svc"><span class="ic"><img src="assets/ic-cart.svg" alt=""></span><div><div class="t1">Sürətli çatdırılma</div><div class="t2">Bütün regionlara</div></div></div>
+    <div class="svc"><span class="ic"><img src="assets/ic-check.svg" alt=""></span><div><div class="t1">Təhlükəsiz ödəniş</div><div class="t2">3D Secure</div></div></div>
     <div class="svc"><span class="ic"><img src="assets/ic-message.svg" alt=""></span><div><div class="t1">Pulsuz konsultasiya</div><div class="t2">Mütəxəssislər tərəfindən</div></div></div>
   </div>
 </div>
@@ -105,16 +111,34 @@
   </div>
 </div></div>
 
-<!-- ===================== PRODUCTS ===================== -->
-<div class="wrap"><div class="inner section">
-  <div class="sec-head">
-    <div><div class="sec-tag"><span class="line"></span><p>Ən çox satılan</p></div><div class="sec-title">Seçilmiş məhsullar</div></div>
-    <a class="sec-more"><p>Ətraflı bax</p><img src="assets/ic-arrow.svg" alt=""></a>
+<!-- ===================== SALE MARQUEE ===================== -->
+<div class="sale-marquee" aria-hidden="true">
+  <div class="sale-track">
+    <span>SALE • OUTLET •</span><span>SALE • OUTLET •</span><span>SALE • OUTLET •</span><span>SALE • OUTLET •</span><span>SALE • OUTLET •</span>
+    <span>SALE • OUTLET •</span><span>SALE • OUTLET •</span><span>SALE • OUTLET •</span><span>SALE • OUTLET •</span><span>SALE • OUTLET •</span>
   </div>
-  <div class="grid4" id="prodGrid"></div>
+</div>
+
+<!-- ===================== KAMPANİYA (SALE) ===================== -->
+<div class="wrap"><div class="inner section">
+  <div class="promo-banner">
+    <div class="pb-l">
+      <span class="pb-badge">KAMPANİYA</span>
+      <div>
+        <h3>Bütün sifarişlərə 60% endirim</h3>
+        <p>Səbətdə <b>ARCHI60</b> promokodunu daxil edin — endirim avtomatik tətbiq olunsun.</p>
+      </div>
+    </div>
+    <button class="pb-copy" type="button" data-code="ARCHI60">ARCHI60 · Kopyala</button>
+  </div>
+  <div class="sec-head">
+    <div><div class="sec-tag"><span class="line"></span><p>Endirimlə satılır</p></div><div class="sec-title">Böyük endirim SALE</div></div>
+    <a class="sec-more" href="cart.html"><p>Ətraflı bax</p><img src="assets/ic-arrow.svg" alt=""></a>
+  </div>
+  <div class="grid4" id="campGrid"></div>
 </div></div>
 
-<!-- ===================== KAMPANİYA ===================== -->
+<!-- ===================== PRODUCTS ===================== -->
 <div class="wrap"><div class="inner section">
   <div class="promo-banner">
     <div class="pb-l">
@@ -127,74 +151,19 @@
     <button class="pb-copy" type="button" data-code="ARCHI15">ARCHI15 · Kopyala</button>
   </div>
   <div class="sec-head">
-    <div><div class="sec-tag"><span class="line"></span><p>Endirimlə satılır</p></div><div class="sec-title">Kampaniya məhsulları</div></div>
-    <a class="sec-more" href="cart.html"><p>Səbətə bax</p><img src="assets/ic-arrow.svg" alt=""></a>
+    <div><div class="sec-tag"><span class="line"></span><p>Ən çox satılanlar</p></div><div class="sec-title">Seçilmiş məhsullar</div></div>
+    <a class="sec-more"><p>Ətraflı bax</p><img src="assets/ic-arrow.svg" alt=""></a>
   </div>
-  <div class="grid4" id="campGrid"></div>
+  <div class="grid4" id="prodGrid"></div>
 </div></div>
-
-<!-- ===================== CALCULATOR CTA ===================== -->
-<div class="calc-cta">
-  <div class="inner">
-    <div class="left">
-      <div class="tag"><span class="line"></span><p>Təmir kalkulyatoru</p></div>
-      <h2>Nə qədər material lazımdır? Dəqiq hesabla.</h2>
-      <p class="p">Otağın ölçüsünü yaz — boya, kafel, laminant və dam örtüyü üçün miqdar və təxmini qiymət dərhal çıxsın.</p>
-      <a class="open" id="openCalc2">Kalkulyatoru aç →</a>
-    </div>
-    <div class="card" id="miniCalc">
-      <div class="lbl">Təmir kalkulyatoru</div>
-      <div class="chips" id="mcChips">
-        <span class="c on" data-mat="boya">Boya</span>
-        <span class="c" data-mat="dam">Dam örtüyü</span>
-        <span class="c" data-mat="kafel">Kafel</span>
-        <span class="c" data-mat="laminant">Laminant</span>
-      </div>
-      <div class="mc-fields" id="mcFields"></div>
-      <div class="mc-result">
-        <div class="big"><b id="mcQty">8</b><span id="mcUnit"> litr</span></div>
-        <div class="mc-price" id="mcPrice">≈ 96 ₼</div>
-      </div>
-      <a class="mc-open" id="mcOpen" href="calculator.html?mat=boya">Tam kalkulyatoru aç →</a>
-    </div>
-  </div>
-</div>
 
 <!-- ===================== SPECIALISTS ===================== -->
 <div class="wrap"><div class="inner section">
   <div class="sec-head">
-    <div><div class="sec-tag"><span class="line"></span><p>Ən çox tələb olunan ustalar</p></div><div class="sec-title">Seçilmiş ustalar</div></div>
+    <div><div class="sec-tag"><span class="line"></span><p>Ən çox tələb olunan ustalar</p></div><div class="sec-title">Seçilmiş mütəxəssislər</div></div>
     <a class="sec-more"><p>Ətraflı bax</p><img src="assets/ic-arrow.svg" alt=""></a>
   </div>
   <div class="grid4" id="specGrid"></div>
-</div></div>
-
-<!-- ===================== LEAD FORM ===================== -->
-<div class="wrap"><div class="inner section lead">
-  <div class="inner">
-    <div class="left">
-      <div class="tag"><span class="line"></span><p>Pulsuz konsultasiya</p></div>
-      <div>
-        <h2>Hardan başlayacağını bilmirsən?</h2>
-        <p class="sub">Bir neçə sual cavabla, mütəxəssis sənə pulsuz zəng edib nədən başlayacağını izah etsin.</p>
-      </div>
-      <div class="steps">
-        <div class="step"><span class="n">1</span><span class="l">Sualları cavabla</span></div>
-        <div class="step"><span class="n">2</span><span class="l">Pulsuz zəng al</span></div>
-        <div class="step"><span class="n">3</span><span class="l">İşə başla</span></div>
-      </div>
-    </div>
-    <div class="card">
-      <h3>Nə üzərində işləyirsən?</h3>
-      <div class="opts">
-        <div class="opt sel"><p>Yeni ev tikintisi</p><span class="box"></span></div>
-        <div class="opt"><p>Mənzil təmiri</p><span class="box"></span></div>
-        <div class="opt"><p>Həyət evi / bağ evi</p><span class="box"></span></div>
-        <div class="opt"><p>Hələ qərar verməmişəm</p><span class="box"></span></div>
-        <button class="submit">Davam et</button>
-      </div>
-    </div>
-  </div>
 </div></div>
 
 <!-- ===================== BLOG ===================== -->
@@ -257,51 +226,13 @@
     const t=b.textContent; b.textContent='Kopyalandı ✓'; setTimeout(()=>b.textContent=t,1500);
   }));
 
-  // ---- Hero karusel köməkçisi ----
-  function heroCarousel(dotsEl, count, apply, delay){
-    if(!dotsEl) return;
-    const ds=[...dotsEl.querySelectorAll('i')]; let i=0, timer;
-    function show(n){ i=(n+count)%count; apply(i); ds.forEach((d,k)=>d.classList.toggle('on',k===i)); }
-    function next(){ show(i+1); }
-    function restart(){ clearInterval(timer); timer=setInterval(next, delay); }
-    ds.forEach((d,k)=>d.addEventListener('click',()=>{ show(k); restart(); }));
-    show(0); restart();
-  }
-
-  // Reklam karuseli (hero-promo)
-  (function(){
-    const slides=[
-      {img:"assets/hero-promo.png", href:"product.html"},
-      {img:"assets/blog-hero.jpg",  href:"blog.html"},
-      {img:"assets/cat-laminant.png", href:"calculator.html"}
-    ];
-    const img=document.getElementById('hpImg'), cta=document.getElementById('hpCta');
-    heroCarousel(document.getElementById('hpDots'), slides.length, n=>{
-      if(img) img.src=slides[n].img; if(cta) cta.href=slides[n].href;
-    }, 4000);
-  })();
-
-  // Rol karuseli (hero-usta): usta / satıcı / müştəri
-  (function(){
-    const roles=[
-      {img:"assets/hero-usta.jpg",  tag:"Usta & mütəxəssis", title:"ARCHİ-də usta ol", desc:"Profil yarat, işlərini göstər<br>və yeni müştərilər qazan.", href:"register.html?role=usta"},
-      {img:"assets/cat-cement.png", tag:"Biznes & satıcı",   title:"ARCHİ-də sat",      desc:"Məhsullarını yerləşdir<br>və minlərlə müştəriyə çıx.", href:"register.html?role=biznes"},
-      {img:"assets/hero-main.jpg",  tag:"Müştəri",           title:"ARCHİ-yə qoşul",    desc:"Material, usta və konsultasiya —<br>hamısı bir platformada.", href:"register.html?role=musteri"}
-    ];
-    const img=document.getElementById('huImg'), tag=document.getElementById('huTag'), title=document.getElementById('huTitle'),
-          desc=document.getElementById('huDesc'), reg=document.getElementById('huReg');
-    heroCarousel(document.getElementById('huDots'), roles.length, n=>{
-      const r=roles[n]; if(img)img.src=r.img; if(tag)tag.textContent=r.tag; if(title)title.textContent=r.title;
-      if(desc)desc.innerHTML=r.desc; if(reg)reg.href=r.href;
-    }, 4500);
-  })();
-
   // ---- Specialists (rəngli tint fonlar) ----
-  const tints = ["#f5fbff","#fdf5ff","#f5fffb","#fff5f5"];
-  const specs = Array.from({length:4}, (_,i)=>({
-    bg:tints[i], role:"Kafel & metlax ustası", rate:"4.9", reviews:"(416 rəy)",
-    name:"Rəşad Məmmədov", exp:"12 illik təcrübə", proj:"320 layihə"
-  }));
+  const specs = [
+    {bg:"#f5fbff", role:"Kafel & metlax ustası", rate:"4.9", reviews:"(416 rəy)", name:"Rəşad Məmmədov", exp:"12 illik təcrübə", proj:"320 layihə"},
+    {bg:"#fdf5ff", role:"Kafel & metlax ustası", rate:"4.9", reviews:"(416 rəy)", name:"Rəşad Məmmədov", exp:"12 illik təcrübə", proj:"320 layihə"},
+    {bg:"#f5fffb", role:"İnteryer dizayner",     rate:"4.9", reviews:"(416 rəy)", name:"Rəna Məmmədova", exp:"12 illik təcrübə", proj:"320 layihə"},
+    {bg:"#fff5f5", role:"Kafel & metlax ustası", rate:"4.9", reviews:"(416 rəy)", name:"Rəşad Məmmədov", exp:"12 illik təcrübə", proj:"320 layihə"}
+  ];
   document.getElementById('specGrid').innerHTML = specs.map(s=>`
     <div class="scard">
       <div class="top" style="background:${s.bg}">
@@ -381,47 +312,6 @@
     renderFields(); compute();
   })();
 
-  // ---- options ----
-  document.querySelectorAll('.lead .opt').forEach(o=>o.addEventListener('click',()=>{
-    document.querySelectorAll('.lead .opt').forEach(x=>x.classList.remove('sel')); o.classList.add('sel');
-  }));
-  // ---- Mini kalkulyator (calc-cta kartı) — calculator.html məntiqinin yığcam versiyası ----
-  (function(){
-    const MINI = {
-      boya:     {unit:"litr",  fields:[["L","Uzunluq","m",4],["W","En","m",3],["H","Hünd.","m",2.7]],
-                 calc:v=>{const wall=2*(v.L+v.W)*v.H, litr=Math.ceil(wall*2/10); return {qty:litr, price:litr*12};}},
-      dam:      {unit:"vərəq", fields:[["L","Uzunluq","m",4],["W","En","m",3]],
-                 calc:v=>{const area=v.L*v.W*1.3, sheets=Math.ceil(area/2.1); return {qty:sheets, price:Math.round(area*15)};}},
-      kafel:    {unit:"qutu",  fields:[["L","Uzunluq","m",4],["W","En","m",3]],
-                 calc:v=>{const need=v.L*v.W*1.1, boxes=Math.ceil(need/1.44); return {qty:boxes, price:Math.round(need*23)};}},
-      laminant: {unit:"paket", fields:[["L","Uzunluq","m",4],["W","En","m",3]],
-                 calc:v=>{const need=v.L*v.W*1.07, packs=Math.ceil(need/2.13); return {qty:packs, price:Math.round(need*18)};}}
-    };
-    const chipsEl=document.getElementById("mcChips"), fieldsEl=document.getElementById("mcFields");
-    const qtyEl=document.getElementById("mcQty"), unitEl=document.getElementById("mcUnit");
-    const priceEl=document.getElementById("mcPrice"), openEl=document.getElementById("mcOpen");
-    if(!chipsEl) return;
-    let cur="boya";
-    function renderFields(){
-      fieldsEl.innerHTML = MINI[cur].fields.map(f=>
-        '<div class="mc-field"><span>'+f[1]+'</span><div class="ip"><input type="number" id="mc_'+f[0]+'" value="'+f[3]+'" min="0" step="any"><span class="u">'+f[2]+'</span></div></div>'
-      ).join("");
-      fieldsEl.querySelectorAll("input").forEach(i=>i.addEventListener("input", compute));
-    }
-    function compute(){
-      const m=MINI[cur], v={};
-      m.fields.forEach(f=>{ const el=document.getElementById("mc_"+f[0]); v[f[0]]=el?(parseFloat(el.value)||0):0; });
-      const r=m.calc(v);
-      qtyEl.textContent=r.qty; unitEl.textContent=" "+m.unit;
-      priceEl.textContent="≈ "+r.price+" ₼"; openEl.href="calculator.html?mat="+cur;
-    }
-    chipsEl.querySelectorAll(".c").forEach(c=>c.addEventListener("click",()=>{
-      chipsEl.querySelectorAll(".c").forEach(x=>x.classList.remove("on"));
-      c.classList.add("on"); cur=c.dataset.mat; renderFields(); compute();
-    }));
-    renderFields(); compute();
-  })();
-
   // ---- "Məhsula keç" dairəsi kursor kimi kartın içində hərəkət edir ----
   document.querySelectorAll('.pcard').forEach(card=>{
     const cur = card.querySelector('.prod-cursor');
@@ -437,9 +327,9 @@
 
   // ---- Scroll reveal ----
   // Section başlıqları açılır
-  document.querySelectorAll('.sec-head, .calc-cta .left, .calc-cta .card, .lead .left, .lead .card, .foot-cols, .foot-news').forEach(el=>el.classList.add('reveal'));
+  document.querySelectorAll('.sec-head, .sale-marquee, .foot-cols, .foot-news').forEach(el=>el.classList.add('reveal'));
   // Kart şəbəkələri pillələnmiş gecikmə ilə
-  document.querySelectorAll('#prodGrid .pcard, #campGrid .pcard, #specGrid .scard, #blogGrid .post, .cat-row .cat-thumb, .lead .step, .foot-col').forEach((el,i)=>{
+  document.querySelectorAll('#prodGrid .pcard, #campGrid .pcard, #specGrid .scard, #blogGrid .post, .cat-row .cat-thumb, .foot-col').forEach((el,i)=>{
     el.classList.add('reveal','d'+((i%3)+1));
   });
   const io = new IntersectionObserver(entries=>{
