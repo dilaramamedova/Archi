@@ -10,25 +10,12 @@
 <link rel="stylesheet" href="archi.css">
 <style>
   /* ===== Homepage v2 (Figma yeniləməsi) ===== */
-  /* Hero: tam enli şəkil, yan sütun ləğv edildi */
-  .hero-grid{display:block;height:620px}
-  .hero-main{width:100%;height:100%}
-  .side-calc{top:12px;right:12px}
-  /* Hero sağ-alt: usta qeydiyyat mini kartı */
-  .hero-reg{position:absolute;right:12px;bottom:16px;width:464px;background:#fff;display:flex;align-items:center;gap:16px;padding:14px 16px;z-index:25}
-  .hero-reg .d{flex:1;font-size:14px;color:rgba(0,0,0,.7);line-height:1.35}
-  .hero-reg .reg{background:#111;color:#efefef;font-size:14px;padding:12px 20px;white-space:nowrap;transition:background .2s}
-  .hero-reg .reg:hover{background:#000}
   /* SALE marquee lenti */
   .sale-marquee{background:#000;overflow:hidden;padding:16px 0}
   .sale-track{display:flex;white-space:nowrap;width:max-content;animation:saleScroll 20s linear infinite}
   .sale-track span{color:#fff;font-weight:700;font-size:26px;letter-spacing:3px;padding-right:28px;text-transform:uppercase}
   @keyframes saleScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
   @media(prefers-reduced-motion:reduce){.sale-track{animation:none}}
-  @media(max-width:1200px){
-    .hero-grid{height:420px}
-    .hero-reg{display:none}
-  }
 </style>
 </head>
 <body>
@@ -39,7 +26,7 @@
 <div class="hero">
   <div class="inner hero-grid">
     <div class="hero-main">
-      <img src="assets/hero-main.jpg" alt="">
+      <img src="assets/hero-main-usta.jpg" alt="">
       <div class="ov"></div>
       <div class="copy">
         <div class="hero-tag"><span class="line"></span><p>Tikinti və təmir marketi</p></div>
@@ -50,8 +37,30 @@
         <div class="hero-info"><p>Hardan başlayacağınızı bilmirsiz?</p><p class="u">Pulsuz konsultasiya alın</p></div>
       </div>
     </div>
-    <!-- SIDE CALCULATOR -->
-    <aside class="side-calc open" id="sideCalc">
+    <div class="hero-side">
+      <div class="hero-promo" id="heroPromo">
+        <img src="assets/hero-promo.png" alt="" id="hpImg">
+        <a class="cta-white" id="hpCta" href="product.html"><p>Ətraflı bax</p><img src="assets/ic-arrow.svg" alt=""></a>
+        <div class="dots" id="hpDots"><i class="on"></i><i></i><i></i></div>
+      </div>
+      <div class="hero-usta" id="heroUsta">
+        <img src="assets/hero-usta.jpg" alt="" id="huImg">
+        <div class="box">
+          <div class="tag"><span class="line"></span><p id="huTag">Usta &amp; mütəxəssis</p></div>
+          <div class="mid">
+            <div>
+              <h3 id="huTitle">ARCHİ-də usta ol</h3>
+              <div class="d" id="huDesc">Profil yarat, işlərini göstər<br>və yeni müştərilər qazan.</div>
+            </div>
+            <a class="reg" id="huReg" href="register.html?role=usta">Qeydiyyatdan keç</a>
+          </div>
+          <div class="dots" id="huDots"><i class="on"></i><i></i><i></i></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIDE CALCULATOR (Figma-da gizlidir — .open klası ilə görünür) -->
+    <aside class="side-calc" id="sideCalc">
       <button class="sc-close" id="scClose"><img src="assets/ic-cancel.svg" alt="Bağla"></button>
       <div class="sc-head">
         <div class="tag"><span class="line"></span><p>Təmir kalkulyatoru</p></div>
@@ -75,12 +84,6 @@
       </div>
       <a class="sc-full" id="scFull" href="calculator.html?mat=boya">Tam kalkulyatoru aç →</a>
     </aside>
-
-    <!-- USTA QEYDİYYAT MİNİ KARTI -->
-    <div class="hero-reg">
-      <div class="d">Profil yarat, işlərini göstər və yeni müştərilər qazan.</div>
-      <a class="reg" href="register.html?role=usta">Qeydiyyatdan keç</a>
-    </div>
   </div>
 </div>
 
@@ -225,6 +228,45 @@
     const code=b.dataset.code; try{ navigator.clipboard && navigator.clipboard.writeText(code); }catch(e){}
     const t=b.textContent; b.textContent='Kopyalandı ✓'; setTimeout(()=>b.textContent=t,1500);
   }));
+
+  // ---- Hero karusel köməkçisi ----
+  function heroCarousel(dotsEl, count, apply, delay){
+    if(!dotsEl) return;
+    const ds=[...dotsEl.querySelectorAll('i')]; let i=0, timer;
+    function show(n){ i=(n+count)%count; apply(i); ds.forEach((d,k)=>d.classList.toggle('on',k===i)); }
+    function next(){ show(i+1); }
+    function restart(){ clearInterval(timer); timer=setInterval(next, delay); }
+    ds.forEach((d,k)=>d.addEventListener('click',()=>{ show(k); restart(); }));
+    show(0); restart();
+  }
+
+  // Reklam karuseli (hero-promo)
+  (function(){
+    const slides=[
+      {img:"assets/hero-promo.png", href:"product.html"},
+      {img:"assets/blog-hero.jpg",  href:"blog.html"},
+      {img:"assets/cat-laminant.png", href:"calculator.html"}
+    ];
+    const img=document.getElementById('hpImg'), cta=document.getElementById('hpCta');
+    heroCarousel(document.getElementById('hpDots'), slides.length, n=>{
+      if(img) img.src=slides[n].img; if(cta) cta.href=slides[n].href;
+    }, 4000);
+  })();
+
+  // Rol karuseli (hero-usta): usta / satıcı / müştəri
+  (function(){
+    const roles=[
+      {img:"assets/hero-usta.jpg",  tag:"Usta & mütəxəssis", title:"ARCHİ-də usta ol", desc:"Profil yarat, işlərini göstər<br>və yeni müştərilər qazan.", href:"register.html?role=usta"},
+      {img:"assets/cat-cement.png", tag:"Biznes & satıcı",   title:"ARCHİ-də sat",      desc:"Məhsullarını yerləşdir<br>və minlərlə müştəriyə çıx.", href:"register.html?role=biznes"},
+      {img:"assets/hero-main.jpg",  tag:"Müştəri",           title:"ARCHİ-yə qoşul",    desc:"Material, usta və konsultasiya —<br>hamısı bir platformada.", href:"register.html?role=musteri"}
+    ];
+    const img=document.getElementById('huImg'), tag=document.getElementById('huTag'), title=document.getElementById('huTitle'),
+          desc=document.getElementById('huDesc'), reg=document.getElementById('huReg');
+    heroCarousel(document.getElementById('huDots'), roles.length, n=>{
+      const r=roles[n]; if(img)img.src=r.img; if(tag)tag.textContent=r.tag; if(title)title.textContent=r.title;
+      if(desc)desc.innerHTML=r.desc; if(reg)reg.href=r.href;
+    }, 4500);
+  })();
 
   // ---- Specialists (rəngli tint fonlar) ----
   const specs = [
