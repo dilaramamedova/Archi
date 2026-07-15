@@ -197,7 +197,6 @@
     const rateTxt = p.mine ? 'Yeni' : p.rate;
     return `
     <a class="pcard" href="product.html">
-      <div class="prod-cursor"><span>Məhsula keç</span></div>
       <div class="ph">
         <img class="prod" src="${img}" alt="">
         <div class="badges">${badges}</div>
@@ -354,19 +353,6 @@
     }));
     renderFields(); compute();
   })();
-
-  // ---- "Məhsula keç" dairəsi kursor kimi kartın içində hərəkət edir ----
-  document.querySelectorAll('.pcard').forEach(card=>{
-    const cur = card.querySelector('.prod-cursor');
-    if(!cur) return;
-    card.addEventListener('mouseenter', ()=> card.classList.add('cursing'));
-    card.addEventListener('mouseleave', ()=> card.classList.remove('cursing'));
-    card.addEventListener('mousemove', e=>{
-      const r = card.getBoundingClientRect();
-      cur.style.left = (e.clientX - r.left) + 'px';
-      cur.style.top  = (e.clientY - r.top)  + 'px';
-    });
-  });
 
   // ---- Scroll reveal ----
   // Section başlıqları açılır

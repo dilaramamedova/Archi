@@ -269,13 +269,9 @@
 
   /* ============ PRODUCTS / SPECIALISTS GRID ============ */
   .grid4{display:flex;gap:8px}
-  .pcard{position:relative;flex:1;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
-  .pcard:hover{cursor:none}
-  .prod-cursor{position:absolute;left:0;top:0;width:110px;height:110px;border-radius:50%;background:#000;border:1px solid #000;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;
-    font-weight:500;font-size:16px;line-height:1.25;color:#fff;pointer-events:none;z-index:40;
-    opacity:0;transform:translate(-50%,-50%) scale(.4);transition:opacity .25s ease,transform .25s ease}
-  .pcard.cursing .prod-cursor{opacity:1;transform:translate(-50%,-50%) scale(1)}
-  .prod-cursor span{display:block;max-width:84px}
+  .pcard{position:relative;flex:1;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px;display:flex;flex-direction:column;gap:12px;overflow:hidden;transition:border-color .2s ease}
+  .pcard:hover{border-color:var(--border-hover)}
+  .prod-cursor{display:none}
   .pcard .ph{position:relative;height:316px;background:var(--gray-soft);overflow:hidden}
   .pcard .ph>img.prod{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);height:90%;width:auto}
   .pcard .heart{position:absolute;right:0;top:0;background:#fff;padding:8px;border-radius:37px;display:flex}
