@@ -145,14 +145,15 @@
   .mblog .info .pill{align-self:flex-start;background:var(--yellow);padding:12px 24px;font-size:16px;color:#111;transition:all .25s ease}
   .mblog .info .pill:hover{filter:brightness(.92)}
 
-  /* ============ SERVICE STRIP ============ */
-  .service-strip{border-bottom:1px solid rgba(0,0,0,.15)}
-  .service-strip .inner{display:flex;align-items:center;justify-content:space-between;padding:20px 0}
+  /* ============ SERVICE STRIP — Figma nav-section-3 (628:7820) ilə 1:1 ============ */
+  .service-strip{border-top:1px solid rgba(0,0,0,.15);border-bottom:1px solid rgba(0,0,0,.15);background:#fff}
+  .service-strip .inner{max-width:1440px;display:flex;align-items:center;justify-content:space-between;padding:20px 40px}
   .svc{display:flex;align-items:center;gap:4px}
   .svc .ic{display:flex;align-items:center;justify-content:center;background:var(--gray-soft2);padding:10px;border-radius:var(--radius-pill)}
   .svc .ic img{width:24px;height:24px}
-  .svc .t1{font-weight:500;font-size:14px;color:#000}
-  .svc .t2{font-size:12px;color:var(--text-muted)}
+  .svc>div{margin-left:4px}
+  .svc .t1{font-weight:500;font-size:14px;line-height:17px;color:#000;margin-bottom:4px}
+  .svc .t2{font-weight:400;font-size:12px;line-height:15px;color:var(--text-muted)}
 
   /* ============ HERO ============ */
   .hero{position:relative;padding-top:0}
