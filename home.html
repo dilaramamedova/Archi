@@ -100,8 +100,8 @@
 
 /* ---------- PRODUCT CARD (340x451) ---------- */
 .fx-grid{display:flex;gap:8px;padding-bottom:40px}
-.fx-card{flex:1;min-width:0;background:#fff;border:1px solid var(--border);padding:12px;cursor:pointer;transition:border-color .2s;position:relative}
-.fx-card:hover{border-color:rgba(0,0,0,.5)}
+.fx-card{flex:1;min-width:0;background:#fff;border:1px solid var(--border);padding:12px;transition:border-color .25s ease;position:relative;overflow:hidden}
+.fx-card:hover{border-color:rgba(0,0,0,.18);cursor:none}
 .fx-card .media{position:relative;height:316px;background:var(--gray-soft);overflow:hidden}
 .fx-card .media>img{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:93%;height:78%;object-fit:contain}
 .fx-card .chips{position:absolute;left:0;top:0;display:flex;gap:4px}
@@ -110,8 +110,8 @@
 .fx-card .dots{position:absolute;left:50%;transform:translateX(-50%);bottom:12px;display:flex;gap:2px;align-items:center}
 .fx-card .dots i{width:6px;height:6px;border-radius:17px;background:rgba(0,0,0,.30)}
 .fx-card .dots i.on{width:18px;background:rgba(0,0,0,.14)}
-.fx-card .go{position:absolute;right:-16px;bottom:-45px;width:110px;height:110px;border-radius:84px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:500;font-size:16px;line-height:20px;opacity:0;transition:opacity .2s;pointer-events:none}
-.fx-card:hover .go{opacity:1}
+.fx-card .go{position:absolute;left:0;top:0;width:110px;height:110px;border-radius:50%;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;text-align:center;font-weight:500;font-size:16px;line-height:20px;pointer-events:none;z-index:40;opacity:0;transform:translate(-50%,-50%) scale(.4);transition:opacity .25s ease,transform .25s ease}
+.fx-card.cursing .go{opacity:1;transform:translate(-50%,-50%) scale(1)}
 .fx-card .body{padding-top:12px}
 .fx-card .rate{display:flex;align-items:center;gap:4px;margin-bottom:11px}
 .fx-card .rate svg{width:20px;height:20px}
@@ -325,12 +325,12 @@
   ];
   const card = p => `
     <a class="fx-card" href="product.html">
+      <div class="go">Məhsula<br>keç</div>
       <div class="media">
         <img src="${p.img}" alt="">
         <div class="chips"><span>Yeni məhsul</span><span>Stokda var</span></div>
         <div class="heart">${HEART}</div>
         <div class="dots"><i class="on"></i><i></i><i></i></div>
-        <div class="go">Məhsula<br>keç</div>
       </div>
       <div class="body">
         <div class="rate">${STAR}<p>4.4 (1,876 rəy)</p></div>
@@ -379,6 +379,19 @@
         <span class="read">Oxu →</span>
       </div>
     </a>`).join('');
+
+  // "Məhsula keç" dairəsi kursoru izləyir (index.html ilə eyni)
+  document.querySelectorAll('.fx-card').forEach(card=>{
+    const cur = card.querySelector('.go');
+    if(!cur) return;
+    card.addEventListener('mouseenter', ()=> card.classList.add('cursing'));
+    card.addEventListener('mouseleave', ()=> card.classList.remove('cursing'));
+    card.addEventListener('mousemove', e=>{
+      const r = card.getBoundingClientRect();
+      cur.style.left = (e.clientX - r.left) + 'px';
+      cur.style.top  = (e.clientY - r.top)  + 'px';
+    });
+  });
 
   // promokod kopyalama
   document.querySelectorAll('.fx-banner .copy').forEach(b => b.addEventListener('click', () => {
