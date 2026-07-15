@@ -164,8 +164,68 @@
 
   .pd-section{padding:48px 0 8px}
 
-  /* ===== Birlikdə alınır (bundle / frequently-bought-together) ===== */
-  .pdb-lead{max-width:680px;font-size:16px;line-height:1.6;color:rgba(0,0,0,.6);margin-bottom:26px}
+  /* ===== Birlikdə alınır — Figma 1:1 (kartlar + panel) ===== */
+  .pdb-lead{max-width:680px;font-size:16px;line-height:1.6;color:#808080;margin-bottom:26px}
+  .fbt-cards{display:flex;align-items:flex-start;gap:0}
+  .fbt-cards .badges{align-items:center}
+  .fbt-ok{width:25px;height:25px;padding:0!important;border-radius:50%;background:var(--green)!important;border-color:var(--green)!important;display:inline-flex;align-items:center;justify-content:center}
+  .fbt-ok img{width:12px;height:12px;filter:brightness(0) invert(1)}
+  .fbt-cards .pcard{width:340px;flex:none}
+  .fbt-plus{display:flex;align-items:center;justify-content:center;width:38px;height:316px;font-weight:600;font-size:28px;color:#808080;flex-shrink:0;margin-top:12px}
+  .fbt-panel{background:#f5f6f8;padding:16px 12px;width:264px;flex-shrink:0;margin-left:8px;display:flex;flex-direction:column}
+  .fbt-panel .lbl{font-size:14px;color:#808080}
+  .fbt-panel .tot{display:flex;align-items:baseline;gap:10px;margin-top:12px}
+  .fbt-panel .tot b{font-weight:600;font-size:34px;line-height:41px;color:#111;letter-spacing:-.5px}
+  .fbt-panel .tot .old{font-size:13px;font-weight:500;color:#808080;text-decoration:line-through}
+  .fbt-save{display:flex;align-items:center;gap:12px;background:#e5f7e8;border-radius:6px;padding:13px 12px;margin-top:16px}
+  .fbt-save .ic{width:28px;height:28px;border-radius:37px;background:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .fbt-save .ic img{width:13px;height:13px;filter:brightness(0) invert(1)}
+  .fbt-save p{font-size:14px;line-height:17px;color:#218038}
+  .fbt-addall{height:52px;background:var(--yellow);display:flex;align-items:center;justify-content:center;gap:10px;font-weight:600;font-size:18px;color:#111;margin-top:16px;transition:filter .2s;width:100%}
+  .fbt-addall:hover{filter:brightness(.93)}
+  .fbt-addall img{width:22px;height:22px}
+  .fbt-hint{font-size:13px;color:#808080;margin-top:16px}
+
+  /* ===== Reytinq / rəylər — Figma 1:1 ===== */
+  .rev-summary{display:flex;align-items:stretch;gap:32px;background:#fff;border:1px solid var(--border);padding:28px}
+  .rs-score .num{font-weight:600;font-size:50px;line-height:61px;color:#111}
+  .rs-score .s{display:flex;gap:2px;margin:6px 0 6px}
+  .rs-score .s img{width:16px;height:16px}
+  .rs-score .c1{font-size:13px;color:#1a1a1a;margin-top:8px}
+  .rs-score .c2{font-size:13px;color:#737373;margin-top:6px}
+  .rs-div{width:1px;background:rgba(0,0,0,.09)}
+  .rs-dist{flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px;min-width:0}
+  .rs-dist .row{display:flex;align-items:center;gap:10px}
+  .rs-dist .row .st{width:16px;font-size:13px;color:#111;display:flex;gap:3px;align-items:center}
+  .rs-dist .row .st img{width:12px;height:12px}
+  .rs-dist .row .track{flex:1;max-width:240px;height:8px;border-radius:4px;background:#e8ecf0;overflow:hidden}
+  .rs-dist .row .track span{display:block;height:100%;border-radius:4px;background:var(--yellow-line)}
+  .rs-dist .row .cnt{font-size:13px;color:#737373;width:44px}
+  .rs-rec{width:220px;flex-shrink:0;display:flex;flex-direction:column;justify-content:center}
+  .rs-rec .num{font-weight:600;font-size:36px;line-height:44px;color:#111}
+  .rs-rec .t{font-size:13px;color:#595959;margin:8px 0 16px}
+  .rs-rec .track{width:200px;height:8px;border-radius:4px;background:#e8ecf0;overflow:hidden}
+  .rs-rec .track span{display:block;height:100%;border-radius:4px;background:var(--yellow-line)}
+  .rev-filter{display:flex;gap:8px;margin:20px 0 10px}
+  .rev-filter button{height:34px;padding:0 16px;border-radius:100px;border:1px solid var(--border);background:#fff;font-size:13px;color:#111;transition:.2s}
+  .rev-filter button:hover{border-color:var(--border-hover)}
+  .rev-filter button.on{background:#111;border-color:#111;color:#fff}
+  .rev-cards{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px}
+  .rev-card{width:300px;flex-shrink:0;background:#fff;border:1px solid var(--border);padding:18px;display:flex;flex-direction:column;gap:12px}
+  .rev-card .h{display:flex;align-items:center;gap:10px}
+  .rev-card .av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:15px;flex-shrink:0}
+  .rev-card .nm{font-weight:600;font-size:15px;color:#111}
+  .rev-card .vf{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--green);margin-top:3px}
+  .rev-card .vf img{width:12px;height:12px}
+  .rev-card .sd{display:flex;align-items:center;justify-content:space-between}
+  .rev-card .sd .s{display:flex;gap:2px}
+  .rev-card .sd .s img{width:14px;height:14px}
+  .rev-card .sd .date{font-size:13px;color:#808080}
+  .rev-card .txt{font-size:15px;line-height:1.45;color:rgba(0,0,0,.75)}
+  .rev-card .help{margin-top:auto;align-self:flex-start;border:1px solid var(--border);border-radius:100px;padding:7px 14px;font-size:13px;color:var(--text-muted);cursor:pointer;transition:.2s}
+  .rev-card .help:hover{border-color:var(--border-hover);color:#111}
+  .rev-all{display:flex;justify-content:center;margin-top:24px}
+  .sec-more2{display:inline-flex;align-items:center;font-weight:500;font-size:16px;color:#141414;border-bottom:1px solid var(--yellow-line);padding-bottom:4px;cursor:pointer}
   .pdb-wrap{display:grid;grid-template-columns:minmax(0,1fr) 304px;align-items:stretch;border:1px solid rgba(0,0,0,.12);background:#fff}
   .pdb-items{display:flex;align-items:stretch;flex-wrap:wrap;padding:22px 12px}
   .pdb-item{display:flex;flex-direction:column;gap:9px;width:186px;padding:12px;border:1px solid transparent;border-radius:6px;cursor:pointer;transition:border-color .2s,opacity .2s;-webkit-tap-highlight-color:transparent}
@@ -239,15 +299,15 @@
       <!-- qalereya -->
       <div class="pd-gallery">
         <div class="pd-thumbs" id="pdThumbs">
-          <div class="pd-thumb on"><img src="assets/prod-kafel.png" alt=""></div>
-          <div class="pd-thumb"><img src="assets/cat-bathroom.png" alt=""></div>
-          <div class="pd-thumb"><img src="assets/cat-laminant.png" alt=""></div>
-          <div class="pd-thumb"><img src="assets/cat-brick.png" alt=""></div>
+          <div class="pd-thumb on"><img src="assets/fig/707f7ce9d30a.jpg" alt=""></div>
+          <div class="pd-thumb"><img src="assets/fig/346edb216bad.jpg" alt=""></div>
+          <div class="pd-thumb"><img src="assets/fig/346edb216bad.jpg" alt=""></div>
+          <div class="pd-thumb"><img src="assets/fig/346edb216bad.jpg" alt=""></div>
         </div>
         <div class="pd-main">
           <div class="badges"><span class="b new">Yeni məhsul</span><span class="b">Stokda var</span></div>
           <div class="heart" id="pdHeartTop"><img src="assets/ic-heart2.svg" alt="Sevimlilərə əlavə et"></div>
-          <img id="pdMainImg" src="assets/prod-kafel.png" alt="Keramik kafel 60×60, mat">
+          <img id="pdMainImg" src="assets/fig/707f7ce9d30a.jpg" alt="Keramik kafel 60×60, mat">
         </div>
       </div>
 
@@ -321,24 +381,6 @@
       </div>
     </div>
 
-    <!-- BİRLİKDƏ ALINIR (frequently bought together) -->
-    <div class="pd-section">
-      <div class="sec-tag"><span class="line"></span><p>Birlikdə sərfəli</p></div>
-      <div class="sec-title" style="margin-bottom:10px">Bunları da unutma</div>
-      <p class="pdb-lead">Bu kafeli düzgün quraşdırmaq üçün lazım olan məhsullar. Hamısını bir kliklə səbətə at — ustanı ikinci dəfə mağazaya göndərmə.</p>
-
-      <div class="pdb-wrap">
-        <div class="pdb-items" id="pdbItems"></div>
-        <div class="pdb-summary">
-          <span class="lbl"><span id="pdbCnt">3</span> məhsul seçilib</span>
-          <div class="tot"><b id="pdbNow">47.30 ₼</b><span class="old" id="pdbOld">75.99 ₼</span></div>
-          <span class="pdb-save"><img src="assets/ic-check.svg" alt="">Ayrı almaqdan <span id="pdbSave">28.69 ₼</span> qənaət</span>
-          <button class="pdb-addall" id="pdbAddAll"><img src="assets/ic-cart.svg" alt="">Seçilənləri səbətə at</button>
-          <div class="pdb-hint">Miqdarı səbətdə tənzimləyə bilərsən</div>
-        </div>
-      </div>
-    </div>
-
     <!-- MƏHSUL HAQQINDA + XÜSUSİYYƏTLƏR -->
     <div class="pd-section">
       <div class="sec-tag"><span class="line"></span><p>Məhsul haqqında</p></div>
@@ -374,28 +416,47 @@
       </div>
     </div>
 
-    <!-- REYTİNQ -->
+    <!-- BİRLİKDƏ ALINIR (frequently bought together) — Figma 1:1 -->
+    <div class="pd-section">
+      <div class="sec-tag"><span class="line"></span><p>Birlikdə sərfəli</p></div>
+      <div class="sec-title" style="margin-bottom:10px">Bunları da unutma</div>
+      <p class="pdb-lead">Bu kafeli düzgün quraşdırmaq üçün lazım olan məhsullar. Hamısını bir kliklə səbətə at — ustanı ikinci dəfə mağazaya göndərmə.</p>
+
+      <div class="fbt-cards" id="fbtCards"></div>
+    </div>
+
+    <!-- REYTİNQ / RƏYLƏR — Figma 1:1 -->
     <div class="pd-section" id="reviews">
       <div class="sec-tag"><span class="line"></span><p>Reytinq</p></div>
       <div class="sec-title" style="margin-bottom:24px">Müştəri qiymətləndirməsi</div>
 
-      <div class="pd-rate-grid">
-        <div class="pd-rate-avg">
-          <div class="num">4.6</div>
+      <div class="rev-summary">
+        <div class="rs-score">
+          <div class="num">4.3</div>
           <div class="s"><img src="assets/ic-star.svg" alt=""><img src="assets/ic-star.svg" alt=""><img src="assets/ic-star.svg" alt=""><img src="assets/ic-star.svg" alt=""><img src="assets/ic-star.svg" alt=""></div>
-          <div class="cnt">1,876 rəy əsasında</div>
+          <div class="c1">4419 dəyərləndirmə</div>
+          <div class="c2">2002 yazılı şərh</div>
         </div>
-        <div class="pd-bars" id="pdBars"></div>
+        <div class="rs-div"></div>
+        <div class="rs-dist" id="rsDist"></div>
+        <div class="rs-div"></div>
+        <div class="rs-rec">
+          <div class="num">92%</div>
+          <div class="t">istifadəçi bu məhsulu tövsiyə edir</div>
+          <div class="track"><span style="width:92%"></span></div>
+        </div>
       </div>
-    </div>
 
-    <!-- RƏYLƏR / COMMENTLƏR -->
-    <div class="pd-section">
-      <div class="sec-tag"><span class="line"></span><p>Rəylər</p></div>
-      <div class="sec-title">Müştərilər nə deyir?</div>
+      <div class="rev-filter">
+        <button class="on">Ən faydalı</button>
+        <button>Ən yeni</button>
+        <button>Şəkilli (312)</button>
+        <button>5 ulduz</button>
+      </div>
 
-      <div class="pd-comments" id="pdComments"></div>
-      <button class="pd-write" type="button"><img src="assets/ic-message.svg" alt="">Rəy yaz</button>
+      <div class="rev-cards" id="revCards"></div>
+
+      <div class="rev-all"><a class="sec-more2">Bütün rəylərə bax&nbsp;&nbsp;→</a></div>
     </div>
 
   </div>
@@ -408,6 +469,15 @@
     <a class="sec-more" href="index.html"><p>Hamısına bax</p><img src="assets/ic-arrow.svg" alt=""></a>
   </div>
   <div class="grid4" id="simGrid"></div>
+</div></div>
+
+<!-- SEÇİLMİŞ MÜTƏXƏSSİSLƏR (Figma 572:10504 son bölmə) -->
+<div class="wrap"><div class="inner section">
+  <div class="sec-head">
+    <div><div class="sec-tag"><span class="line"></span><p>Ən çox tələb olunan ustalar</p></div><div class="sec-title">Seçilmiş mütəxəssislər</div></div>
+    <a class="sec-more"><p>Ətraflı bax</p><img src="assets/ic-arrow.svg" alt=""></a>
+  </div>
+  <div class="grid4" id="specGrid"></div>
 </div></div>
 
 <div data-archi="footer"></div>
@@ -483,109 +553,81 @@
   document.querySelectorAll('[data-goto="reviews"]').forEach(el=>
     el.addEventListener('click', ()=> document.getElementById('reviews').scrollIntoView({behavior:'smooth'})));
 
-  /* ---- Reytinq barları ---- */
-  const dist = [
-    {st:5, pct:72}, {st:4, pct:18}, {st:3, pct:6}, {st:2, pct:3}, {st:1, pct:1}
-  ];
-  document.getElementById('pdBars').innerHTML = dist.map(d=>`
-    <div class="pd-bar">
-      <span class="lab">${d.st} <img src="assets/ic-star.svg" alt=""></span>
-      <span class="track"><span class="fill" style="width:${d.pct}%"></span></span>
-      <span class="pct">${d.pct}%</span>
+  /* ---- Birlikdə alınır — Figma 1:1: 3 kart + panel ---- */
+  const fbtCard = (chips) => `
+    <a class="pcard" href="product.html">
+      <div class="ph">
+        <img class="prod" src="assets/fig/1ed736a990f0.jpg" alt="">
+        <div class="badges">${chips}</div>
+        <div class="heart"><img src="assets/ic-heart2.svg" alt=""></div>
+        <div class="dots"><i class="on"></i><i></i><i></i></div>
+      </div>
+      <div class="rating"><img src="assets/ic-star.svg" alt=""><p>4.4 <span>(1,876 rəy)</span></p></div>
+      <div class="cat">Kafel &amp; metlax</div>
+      <div class="name">Keramik kafel 60x60, mat</div>
+      <div class="price"><span class="now">23.90 ₼</span><span class="old">15,99 ₼</span><span class="off">-48%</span></div>
+    </a>`;
+  const chipMain = '<span class="b fbt-ok"><img src="assets/ic-check.svg" alt=""></span><span class="b" style="background:var(--yellow);border-color:var(--yellow)">Bu məhsul</span><span class="b">Stokda var</span>';
+  const chipOther = '<span class="b">Stokda var</span>';
+  document.getElementById('fbtCards').innerHTML =
+    fbtCard(chipMain) + '<div class="fbt-plus">+</div>' +
+    fbtCard(chipOther) + '<div class="fbt-plus">+</div>' +
+    fbtCard(chipOther) + `
+    <div class="fbt-panel">
+      <span class="lbl">3 məhsul seçilib</span>
+      <div class="tot"><b>47.30 ₼</b><span class="old">75.99 ₼</span></div>
+      <div class="fbt-save"><span class="ic"><img src="assets/ic-check.svg" alt=""></span><p>Ayrı almaqdan<br>28.69 ₼ qənaət</p></div>
+      <button class="fbt-addall"><img src="assets/ic-cart.svg" alt="">Seçilənləri səbətə at</button>
+      <div class="fbt-hint">Miqdarı səbətdə tənzimləyə bilərsən</div>
+    </div>`;
+
+  /* ---- Reytinq paylanması — Figma dəyərləri ---- */
+  const dist = [ [5,2890], [4,920], [3,380], [2,150], [1,79] ];
+  const maxD = 2890;
+  document.getElementById('rsDist').innerHTML = dist.map(([st,cnt])=>`
+    <div class="row">
+      <span class="st">${st} <img src="assets/ic-star.svg" alt=""></span>
+      <span class="track"><span style="width:${Math.round(cnt/maxD*100)}%"></span></span>
+      <span class="cnt">${cnt}</span>
     </div>`).join('');
 
-  /* ---- Rəylər (commentlər) ---- */
-  function stars(n){ return '<img src="assets/ic-star.svg" alt="">'.repeat(n); }
-  const comments = [
-    {name:"Aysel H.", vf:true, date:"12 İyun 2026", r:5, txt:"Keyfiyyət gözlədiyimdən yüksək çıxdı. Rəngi şəkildəki kimidir, hamamın döşəməsinə düzdürdük — mat səth heç sürüşmür. Tövsiyə edirəm."},
-    {name:"Rəşad M.", vf:true, date:"3 İyun 2026", r:5, txt:"Usta kimi onlarla layihədə istifadə etmişəm. Kəsimi təmiz gedir, künclərdə çatlamır. Qiymət-keyfiyyət balansı əladır."},
-    {name:"Nigar Q.", vf:false, date:"28 May 2026", r:4, txt:"Məhsul yaxşıdır, amma bir qutuda 2 ədəd kiçik zədə vardı. Satıcı dərhal əvəzini göndərdi, ona görə təşəkkür."},
-    {name:"Elvin S.", vf:true, date:"15 May 2026", r:5, txt:"Çatdırılma sürətli oldu, qablaşdırma möhkəm idi. Mətbəx önlüyünə vurduq, çox müasir göründü."},
+  /* ---- Rəy kartları — Figma mətnləri ---- */
+  const stars5 = '<img src="assets/ic-star.svg" alt="">'.repeat(5);
+  const revs = [
+    {ini:"RM", bg:"#eef1f4", fg:"#5a6472", name:"Rəşad M.", date:"18 May 2025", txt:"Keyfiyyət gözlədiyimdən yüksək çıxdı. Mat səth heç sürüşmür, hamama düzdürdük — nəticədən çox razıyıq.", help:12},
+    {ini:"AH", bg:"#e8f5ec", fg:"#2f7d44", name:"Aygün H.", date:"02 Aprel 2025", txt:"Rəngi şəkildəki kimidir, kalibrlənmə əladır. Ustam da işin rahatlığını təriflədi, tövsiyə edirəm.", help:8},
+    {ini:"NQ", bg:"#fdf3e3", fg:"#b07626", name:"Nicat Q.", date:"15 Fevral 2025", txt:"Çatdırılma sürətli oldu, qutular zədəsiz gəldi — bir dənə də sınıq çıxmadı. Təşəkkürlər.", help:17},
+    {ini:"ES", bg:"#e9f0fb", fg:"#3c62a8", name:"Elvin S.", date:"30 Yanvar 2025", txt:"Qiymətinə görə çox sərfəlidir. 1 m²-ə tam kifayət etdi, bir az da ehtiyat qaldı.", help:5},
+    {ini:"ES", bg:"#e9f0fb", fg:"#3c62a8", name:"Elvin S.", date:"30 Yanvar 2025", txt:"Qiymətinə görə çox sərfəlidir. 1 m²-ə tam kifayət etdi, bir az da ehtiyat qaldı.", help:5},
   ];
-  document.getElementById('pdComments').innerHTML = comments.map(c=>`
-    <div class="pd-cm">
-      <div class="av">${c.name.charAt(0)}</div>
-      <div class="body">
-        <div class="h">
-          <div class="nm">${c.name} ${c.vf?'<span class="vf"><img src="assets/ic-check.svg" alt="">Təsdiqlənmiş alış</span>':''}</div>
-          <div class="date">${c.date}</div>
+  document.getElementById('revCards').innerHTML = revs.map(r=>`
+    <div class="rev-card">
+      <div class="h">
+        <div class="av" style="background:${r.bg};color:${r.fg}">${r.ini}</div>
+        <div>
+          <div class="nm">${r.name}</div>
+          <div class="vf"><img src="assets/ic-check.svg" alt="">Təsdiqlənmiş alış</div>
         </div>
-        <div class="s">${stars(c.r)}</div>
-        <div class="txt">${c.txt}</div>
-        <div class="help"><span>👍 Faydalı oldu</span><span>Şikayət et</span></div>
       </div>
+      <div class="sd"><span class="s">${stars5}</span><span class="date">${r.date}</span></div>
+      <div class="txt">${r.txt}</div>
+      <div class="help">Faydalı oldu&nbsp;&nbsp;·&nbsp;&nbsp;${r.help}</div>
     </div>`).join('');
-
-  /* ---- Birlikdə alınır (bundle) ---- */
-  const bundle = [
-    {img:"assets/prod-kafel.png",  nm:"Keramik kafel 60×60, mat", now:23.90, old:45.99, tag:"Bu məhsul", main:true},
-    {img:"assets/cat-cement.png",  nm:"Kafel yapışqanı, 25 kq",   now:14.90, old:18.00},
-    {img:"assets/cat-bathroom.png",nm:"Dekor bordür kafel, mat",  now:8.50,  old:12.00},
-  ];
-  const fmt = n => n.toFixed(2) + ' ₼';
-  const pdbItems = document.getElementById('pdbItems');
-  pdbItems.innerHTML = bundle.map((p,i)=>`
-    ${i>0?'<div class="pdb-plus">+</div>':''}
-    <div class="pdb-item on" data-i="${i}">
-      <div class="pdb-thumb">
-        <span class="pdb-check"><img src="assets/ic-check.svg" alt=""></span>
-        ${p.tag?`<span class="pdb-tag">${p.tag}</span>`:''}
-        <img src="${p.img}" alt="">
-      </div>
-      <div class="pdb-nm">${p.nm}</div>
-      <div class="pdb-pr"><span class="now">${fmt(p.now)}</span><span class="old">${fmt(p.old)}</span></div>
-    </div>`).join('');
-
-  const pdbState = bundle.map(()=>true);
-  const el = {cnt:document.getElementById('pdbCnt'), now:document.getElementById('pdbNow'),
-             old:document.getElementById('pdbOld'), save:document.getElementById('pdbSave'),
-             add:document.getElementById('pdbAddAll')};
-  const pdbSaveBox = document.querySelector('.pdb-save');
-  function pdbRecalc(){
-    let now=0, old=0, cnt=0;
-    bundle.forEach((p,i)=>{ if(pdbState[i]){ now+=p.now; old+=p.old; cnt++; } });
-    el.cnt.textContent = cnt;
-    el.now.textContent = fmt(now);
-    el.old.textContent = fmt(old);
-    el.save.textContent = fmt(Math.max(0, old-now));
-    el.old.style.display = old>now ? '' : 'none';
-    pdbSaveBox.style.display = old>now ? 'inline-flex' : 'none';
-    el.add.disabled = cnt===0;
-  }
-  document.querySelectorAll('#pdbItems .pdb-item').forEach(item=>{
-    item.addEventListener('click', ()=>{
-      const i = +item.dataset.i;
-      pdbState[i] = !pdbState[i];
-      item.classList.toggle('on', pdbState[i]);
-      item.classList.toggle('off', !pdbState[i]);
-      pdbRecalc();
-    });
-  });
-  el.add.addEventListener('click', ()=>{
-    if(el.add.disabled) return;
-    el.add.classList.add('added');
-    el.add.innerHTML = '<img src="assets/ic-check.svg" alt="">Səbətə əlavə olundu';
-    if(window.ARCHI && window.ARCHI.refresh) window.ARCHI.refresh();
-    setTimeout(()=>{
-      el.add.classList.remove('added');
-      el.add.innerHTML = '<img src="assets/ic-cart.svg" alt="">Seçilənləri səbətə at';
-    }, 1800);
-  });
-  pdbRecalc();
 
   /* ---- Oxşar məhsullar (pcard komponenti) ---- */
+  /* Figma 572:10504 "Oxşar məhsullar" məzmunu ilə birə-bir */
   const sims = [
-    {img:"assets/prod-kafel.png", cat:"Kafel & metlax", name:"Keramik kafel 60×60, parlaq", rate:"4.5", rev:"(1,204 rəy)", now:"26.50 ₼", old:"48.00 ₼", off:"-44%"},
-    {img:"assets/cat-laminant.png", cat:"Döşəmə", name:"Laminant parket 8 mm, palıd", rate:"4.7", rev:"(890 rəy)", now:"18.90 ₼", old:"29.90 ₼", off:"-37%"},
-    {img:"assets/cat-bathroom.png", cat:"Kafel & metlax", name:"Mozaika kafel, ağ mat", rate:"4.4", rev:"(512 rəy)", now:"31.00 ₼", old:"52.00 ₼", off:"-40%"},
-    {img:"assets/cat-brick.png", cat:"Üzlük", name:"Dekorativ kərpic üzlük, terrakot", rate:"4.6", rev:"(744 rəy)", now:"21.50 ₼", old:"34.00 ₼", off:"-37%"},
+    {img:"assets/fig/50873ec31b52.jpg", cat:"Boya", name:"Akrilik fasad boyası", rate:"4.4", rev:"(1,876 rəy)", now:"23.90 ₼", old:"15,99 ₼", off:"-48%"},
+    {img:"assets/fig/6146d21348a6.jpg", cat:"İzolyasiya", name:"Mineral yun izolyasiya", rate:"4.4", rev:"(1,876 rəy)", now:"23.90 ₼", old:"15,99 ₼", off:"-48%"},
+    {img:"assets/fig/50873ec31b52.jpg", cat:"Boya", name:"Akrilik fasad boyası", rate:"4.4", rev:"(1,876 rəy)", now:"23.90 ₼", old:"15,99 ₼", off:"-48%"},
+    {img:"assets/fig/1ed736a990f0.jpg", cat:"Kafel & metlax", name:"Keramik kafel 60x60, mat", rate:"4.4", rev:"(1,876 rəy)", now:"23.90 ₼", old:"15,99 ₼", off:"-48%"},
   ];
   document.getElementById('simGrid').innerHTML = sims.map(p=>`
     <a class="pcard" href="product.html">
       <div class="prod-cursor"><span>Məhsula keç</span></div>
       <div class="ph">
         <img class="prod" src="${p.img}" alt="">
-        <div class="badges"><span class="b">Stokda var</span></div>
+        <div class="badges"><span class="b">Yeni məhsul</span><span class="b">Stokda var</span></div>
         <div class="heart"><img src="assets/ic-heart2.svg" alt=""></div>
         <div class="dots"><i class="on"></i><i></i><i></i></div>
       </div>
@@ -594,6 +636,31 @@
       <div class="name">${p.name}</div>
       <div class="price"><span class="now">${p.now}</span><span class="old">${p.old}</span><span class="off">${p.off}</span></div>
     </a>`).join('');
+
+  /* ---- Seçilmiş mütəxəssislər (Figma: 3-cü kart İnteryer dizayner) ---- */
+  const specs = [
+    {bg:"#f5fbff", role:"Kafel & metlax ustası", name:"Rəşad Məmmədov"},
+    {bg:"#fdf5ff", role:"Kafel & metlax ustası", name:"Rəşad Məmmədov"},
+    {bg:"#f5fffb", role:"İnteryer dizayner",     name:"Rəna Məmmədova"},
+    {bg:"#fff5f5", role:"Kafel & metlax ustası", name:"Rəşad Məmmədov"}
+  ];
+  document.getElementById('specGrid').innerHTML = specs.map(s=>`
+    <div class="scard">
+      <div class="top" style="background:${s.bg}">
+        <div class="badges">
+          <span class="b"><img src="assets/ic-crown.svg" alt="">Top usta</span>
+          <span class="b ok"><img src="assets/ic-check.svg" alt="">Təsdiqlənmiş</span>
+        </div>
+        <div class="heart"><img src="assets/ic-heart2.svg" alt=""></div>
+        <div class="avatar"><img src="assets/ic-person.svg" alt=""></div>
+        <div class="role">${s.role}</div>
+        <div class="rating"><img src="assets/ic-star.svg" alt=""><p>4.9 <span>(416 rəy)</span></p></div>
+      </div>
+      <div>
+        <div class="name">${s.name}</div>
+        <div class="meta"><span>12 illik təcrübə</span><span>320 layihə</span></div>
+      </div>
+    </div>`).join('');
 
   /* ---- "Məhsula keç" kursor effekti (index ilə eyni) ---- */
   document.querySelectorAll('.pcard').forEach(card=>{
