@@ -518,12 +518,9 @@
   .lang:hover,.signin .txt:hover{opacity:.6;cursor:pointer}
   .nav-icons>img:hover{transform:scale(1.15);cursor:pointer}
 
-  /* card hovers */
-  .pcard:hover,.scard:hover,.post:hover{transform:translateY(-6px);box-shadow:0 14px 30px var(--border);border-color:rgba(0,0,0,.18)}
-  .pcard .ph img.prod{transition:transform .4s ease}
-  .pcard:hover .ph img.prod{transform:translate(-50%,-50%) scale(1.06)}
-  .post .ph img{transition:transform .5s ease}
-  .post:hover .ph img{transform:scale(1.07)}
+  /* card hovers — kart yerindən tərpənmir, yalnız border azacıq tündləşir */
+  .pcard,.scard,.post{transition:border-color .25s ease}
+  .pcard:hover,.scard:hover,.post:hover{border-color:rgba(0,0,0,.18)}
   .pcard .heart,.scard .heart{transition:transform .2s ease}
   .pcard:hover .heart,.scard:hover .heart{transform:scale(1.12)}
 
