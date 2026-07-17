@@ -11,10 +11,11 @@
 <header class="topbar">
   <div class="nav-row1">
     <a href="index.html" aria-label="ARCHİ — ana səhifə"><img class="logo" src="assets/logo.png" alt="ARCHI"></a>
-    <label class="search">
+    <div class="search">
       <img src="assets/ic-search.svg" alt="">
-      <input type="text" aria-label="Axtarış" placeholder="Məhsul, marka və ya mütəxəssis axtarın">
-    </label>
+      <input type="text" id="navSearch" aria-label="Axtarış" placeholder="Məhsul, marka və ya mütəxəssis axtarın" autocomplete="off">
+      <div class="search-dropdown" id="searchDrop"></div>
+    </div>
     <div class="nav-menu">
       <div class="nav-icons">
         <div class="lang" id="langBtn" role="button" tabindex="0" aria-label="Dil seçimi" aria-haspopup="true">
@@ -495,6 +496,50 @@
 
   function setLang(lang) { collect(); apply(lang); }
   window.ARCHI = { setLang, refresh() { collect(); apply(curLang); } };
+
+  /* ---------- Search autocomplete (Figma 1105:17790 ilə 1:1) ---------- */
+  (function initSearch() {
+    const input = document.getElementById("navSearch");
+    const drop = document.getElementById("searchDrop");
+    if (!input || !drop) return;
+    const overlay = document.createElement("div");
+    overlay.className = "search-overlay";
+    const topbar = document.querySelector(".topbar");
+    if (topbar) topbar.appendChild(overlay); else document.body.appendChild(overlay);
+
+    const esc = s => s.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
+    function render(qRaw) {
+      const q = esc((qRaw || "").trim() || "kafel");
+      drop.innerHTML =
+        '<div class="sd-head">Sürətli axtarış</div>' +
+        [q + "|60×60", q + "|yapışdırıcısı", q + "|ustası"].map(s => {
+          const [b, rest] = s.split("|");
+          return '<div class="sd-sug"><img src="assets/ic-search.svg" alt=""><span><b>' + b + '</b> ' + rest + '</span></div>';
+        }).join("") +
+        '<div class="sd-sug"><img src="assets/ic-search.svg" alt=""><span>metlax <b>' + q + '</b></span></div>' +
+        '<div class="sd-div"></div>' +
+        '<div class="sd-head">Məhsullar</div>' +
+        [
+          ["assets/fig/1ed736a990f0.jpg", "Keramik kafel 60×60, mat", "Kafel & metlax", "23.90 ₼"],
+          ["assets/fig/bca0ec1e.jpg", "Metlax kafel 20×20, naxışlı", "Kafel & metlax", "18.50 ₼"],
+          ["assets/fig/78886edf.jpg", "Mərmər effektli kafel 60×120", "Kafel & metlax", "49.90 ₼"],
+        ].map(p => '<a class="sd-prod" href="product.html"><span class="im"><img src="' + p[0] + '" alt=""></span><span class="tx"><span class="t1">' + p[1] + '</span><br><span class="t2">' + p[2] + '</span></span><span class="pr">' + p[3] + '</span></a>').join("") +
+        '<div class="sd-div"></div>' +
+        '<div class="sd-head">Ustalar</div>' +
+        [
+          ["RM", "Rəşad Məmmədov", "Kafel & metlax ustası", "4.9"],
+          ["TH", "Tural Həsənov", "Kafel & metlax ustası", "4.7"],
+        ].map(u => '<a class="sd-usta" href="#"><span class="av">' + u[0] + '</span><span class="tx"><span class="t1">' + u[1] + '</span><br><span class="t2">' + u[2] + '</span></span><span class="rt"><span class="st">★</span>' + u[3] + '</span></a>').join("") +
+        '<a class="sd-all" href="#">Bütün nəticələrə bax (86) →</a>';
+    }
+    function open() { render(input.value); drop.classList.add("on"); overlay.classList.add("on"); }
+    function close() { drop.classList.remove("on"); overlay.classList.remove("on"); }
+    input.addEventListener("focus", open);
+    input.addEventListener("input", () => { render(input.value); drop.classList.add("on"); overlay.classList.add("on"); });
+    input.addEventListener("keydown", e => { if (e.key === "Escape") { close(); input.blur(); } });
+    document.addEventListener("click", e => { if (!e.target.closest(".search")) close(); });
+    overlay.addEventListener("click", close);
+  })();
 
   /* ---------- mega dropdown (hover + click + klaviatura) ---------- */
   (function initMega() {
