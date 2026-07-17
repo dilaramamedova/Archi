@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>«kafel» üçün nəticələr — ARCHİ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="archi.css">
+<style>
+  /* ===== Axtarış nəticələri səhifəsi (Figma 1105:18662 ilə 1:1, sr- prefiksli) ===== */
+  .sr{padding:32px 0 56px}
+  .sr .inner{max-width:1384px;margin:0 auto;padding:0 28px;display:flex;flex-direction:column;gap:24px}
+
+  .sr-head{display:flex;flex-direction:column;gap:12px}
+  .sr-tag{display:flex;align-items:center;gap:10px}
+  .sr-tag .line{width:32px;height:2px;background:var(--yellow)}
+  .sr-tag p{font-weight:500;font-size:13px;letter-spacing:.5px;color:#000;text-transform:uppercase}
+  .sr-title{display:flex;align-items:flex-end;gap:14px}
+  .sr-title h1{font-weight:600;font-size:38px;line-height:1.2;color:#000;letter-spacing:-.4px}
+  .sr-title .count{font-size:15px;color:#000;padding-bottom:7px}
+
+  .sr-tabs{display:flex;gap:8px;flex-wrap:wrap}
+  .sr-tab{padding:10px 16px;border-radius:4px;background:#fff;border:1px solid rgba(0,0,0,.14);font-weight:500;font-size:14px;color:#000;cursor:pointer;transition:border-color .2s,background .2s}
+  .sr-tab:hover{border-color:rgba(0,0,0,.35)}
+  .sr-tab.on{background:#111;border-color:#000;color:#fff;font-weight:600}
+
+  .sr-sec{display:flex;flex-direction:column;gap:24px}
+  .sr-sec-head{display:flex;align-items:flex-end;justify-content:space-between;padding-top:8px}
+  .sr-sec-head .l{display:flex;align-items:flex-end;gap:10px}
+  .sr-sec-head h2{font-weight:600;font-size:26px;color:#111;letter-spacing:-.2px}
+  .sr-sec-head .n{font-size:14px;color:#000;padding-bottom:4px}
+  .sr-all{position:relative;font-weight:500;font-size:12px;letter-spacing:.6px;color:#141414;text-transform:uppercase;padding-bottom:4px}
+  .sr-all::before{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--yellow-line)}
+  .sr-all::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:rgba(17,17,17,.7);transform:scaleX(0);transform-origin:left;transition:transform .35s ease}
+  .sr-all:hover::after{transform:scaleX(1)}
+
+  .sr .grid4{gap:12px}
+
+  @media(max-width:900px){
+    .sr-title h1{font-size:28px}
+    .sr-sec-head h2{font-size:22px}
+  }
+</style>
+</head>
+<body>
+
+<div data-archi="nav"></div>
+
+<section class="sr">
+  <div class="inner">
+
+    <!-- başlıq -->
+    <div class="sr-head">
+      <div class="sr-tag"><span class="line"></span><p>Axtarış nəticələri</p></div>
+      <div class="sr-title">
+        <h1 id="srQuery">«kafel» üçün nəticələr</h1>
+        <span class="count">86 nəticə</span>
+      </div>
+    </div>
+
+    <!-- tablar -->
+    <div class="sr-tabs" id="srTabs">
+      <button class="sr-tab on" data-t="all">Hamısı (86)</button>
+      <button class="sr-tab" data-t="prod">Məhsullar (64)</button>
+      <button class="sr-tab" data-t="usta">Ustalar (14)</button>
+      <button class="sr-tab" data-t="blog">Məqalələr (8)</button>
+    </div>
+
+    <!-- Məhsullar -->
+    <div class="sr-sec" data-sec="prod">
+      <div class="sr-sec-head">
+        <div class="l"><h2>Məhsullar</h2><span class="n">64 nəticə</span></div>
+        <a class="sr-all">Hamısına bax →</a>
+      </div>
+      <div class="grid4" id="srProd"></div>
+    </div>
+
+    <!-- Ustalar -->
+    <div class="sr-sec" data-sec="usta">
+      <div class="sr-sec-head">
+        <div class="l"><h2>Ustalar</h2><span class="n">14 nəticə</span></div>
+        <a class="sr-all">Hamısına bax →</a>
+      </div>
+      <div class="grid4" id="srUsta"></div>
+    </div>
+
+    <!-- Məqalələr -->
+    <div class="sr-sec" data-sec="blog">
+      <div class="sr-sec-head">
+        <div class="l"><h2>Məqalələr</h2><span class="n">8 nəticə</span></div>
+        <a class="sr-all" href="blog.html">Hamısına bax →</a>
+      </div>
+      <div class="grid4" id="srBlog"></div>
+    </div>
+
+  </div>
+</section>
+
+<div data-archi="footer"></div>
+
+<script src="archi.js"></script>
+<script>
+  // URL-dən sorğunu götür (?q=...), yoxdursa Figma-dakı nümunə «kafel»
+  const q = new URLSearchParams(location.search).get('q') || 'kafel';
+  document.getElementById('srQuery').textContent = '«' + q + '» üçün nəticələr';
+  document.title = '«' + q + '» üçün nəticələr — ARCHİ';
+
+  // ---- Məhsullar (Figma: card-1, card-3, card-1, card-2) ----
+  const prods = [
+    {cat:"Kafel & metlax", name:"Keramik kafel 60x60, mat",  img:"assets/fig/1ed736a990f0.jpg"},
+    {cat:"İzolyasiya",     name:"Mineral yun izolyasiya",     img:"assets/fig/6146d21348a6.jpg"},
+    {cat:"Kafel & metlax", name:"Keramik kafel 60x60, mat",  img:"assets/fig/1ed736a990f0.jpg"},
+    {cat:"Boya",           name:"Akrilik fasad boyası",       img:"assets/fig/50873ec31b52.jpg"}
+  ];
+  document.getElementById('srProd').innerHTML = prods.map(p=>`
+    <a class="pcard" href="product.html">
+      <div class="prod-cursor"><span>Məhsula keç</span></div>
+      <div class="ph">
+        <img class="prod" src="${p.img}" alt="">
+        <div class="badges"><span class="b">Yeni məhsul</span><span class="b">Stokda var</span></div>
+        <div class="heart"><img src="assets/ic-heart2.svg" alt=""></div>
+        <div class="dots"><i class="on"></i><i></i><i></i></div>
+      </div>
+      <div class="rating"><img src="assets/ic-star.svg" alt=""><p>4.4 <span>(1,876 rəy)</span></p></div>
+      <div class="cat">${p.cat}</div>
+      <div class="name">${p.name}</div>
+      <div class="price"><span class="now">23.90 ₼</span><span class="old">15,99 ₼</span><span class="off">-48%</span></div>
+    </a>`).join('');
+
+  // ---- Ustalar ----
+  const ustalar = [
+    {bg:"#f5fbff", role:"Kafel & metlax ustası", name:"Rəşad Məmmədov"},
+    {bg:"#fdf5ff", role:"Kafel & metlax ustası", name:"Rəşad Məmmədov"},
+    {bg:"#f5fffb", role:"İnteryer dizayner",     name:"Rəna Məmmədova"},
+    {bg:"#fff5f5", role:"Kafel & metlax ustası", name:"Rəşad Məmmədov"}
+  ];
+  document.getElementById('srUsta').innerHTML = ustalar.map(s=>`
+    <div class="scard">
+      <div class="top" style="background:${s.bg}">
+        <div class="badges">
+          <span class="b"><img src="assets/ic-crown.svg" alt="">Top usta</span>
+          <span class="b ok"><img src="assets/ic-check.svg" alt="">Təsdiqlənmiş</span>
+        </div>
+        <div class="heart"><img src="assets/ic-heart2.svg" alt=""></div>
+        <div class="avatar"><img src="assets/ic-person.svg" alt=""></div>
+        <div class="role">${s.role}</div>
+        <div class="rating"><img src="assets/ic-star.svg" alt=""><p>4.9 <span>(416 rəy)</span></p></div>
+      </div>
+      <div>
+        <div class="name">${s.name}</div>
+        <div class="meta"><span>12 illik təcrübə</span><span>320 layihə</span></div>
+      </div>
+    </div>`).join('');
+
+  // ---- Məqalələr ----
+  const posts = [
+    {time:"6 dəq oxu", title:"Təmirə hardan başlamaq lazımdır?", ex:"İlk addımlar, büdcə planı və ən çox edilən səhvlər — başlamazdan əvvəl bilməli olduqlar."},
+    {time:"4 dəq oxu", title:"Düzgün laminant necə seçilir?", ex:"Sinif, qalınlıq, su davamlılığı — otağa görə hansını seçmək lazımdır."},
+    {time:"5 dəq oxu", title:"Fasad boyası: tam bələdçi", ex:"Hava şəraitinə davamlılıq, örtmə hesabı və tətbiq qaydaları bir məqalədə."},
+    {time:"6 dəq oxu", title:"Təmirə hardan başlamaq lazımdır?", ex:"İlk addımlar, büdcə planı və ən çox edilən səhvlər — başlamazdan əvvəl bilməli olduqlar."}
+  ];
+  document.getElementById('srBlog').innerHTML = posts.map(p=>`
+    <a class="post" href="blog.html">
+      <div class="ph"><img src="assets/fig/759c1d0b83ee.jpg" alt=""></div>
+      <div class="body">
+        <div class="time">${p.time}</div>
+        <h3>${p.title}</h3>
+        <p class="ex">${p.ex}</p>
+        <span class="read">Oxu →</span>
+      </div>
+    </a>`).join('');
+
+  // ---- Tab filtrləmə ----
+  document.getElementById('srTabs').addEventListener('click', e=>{
+    const b = e.target.closest('.sr-tab'); if(!b) return;
+    document.querySelectorAll('.sr-tab').forEach(t=>t.classList.remove('on'));
+    b.classList.add('on');
+    const t = b.dataset.t;
+    document.querySelectorAll('.sr-sec').forEach(s=>{
+      s.style.display = (t==='all' || s.dataset.sec===t) ? '' : 'none';
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -530,13 +530,20 @@
           ["RM", "Rəşad Məmmədov", "Kafel & metlax ustası", "4.9"],
           ["TH", "Tural Həsənov", "Kafel & metlax ustası", "4.7"],
         ].map(u => '<a class="sd-usta" href="#"><span class="av">' + u[0] + '</span><span class="tx"><span class="t1">' + u[1] + '</span><br><span class="t2">' + u[2] + '</span></span><span class="rt"><span class="st">★</span>' + u[3] + '</span></a>').join("") +
-        '<a class="sd-all" href="#">Bütün nəticələrə bax (86) →</a>';
+        '<a class="sd-all" href="' + resultsHref(qRaw) + '">Bütün nəticələrə bax (86) →</a>';
+    }
+    function resultsHref(qRaw) {
+      const q = (qRaw || "").trim();
+      return "search.html" + (q ? "?q=" + encodeURIComponent(q) : "");
     }
     function open() { render(input.value); drop.classList.add("on"); overlay.classList.add("on"); }
     function close() { drop.classList.remove("on"); overlay.classList.remove("on"); }
     input.addEventListener("focus", open);
     input.addEventListener("input", () => { render(input.value); drop.classList.add("on"); overlay.classList.add("on"); });
-    input.addEventListener("keydown", e => { if (e.key === "Escape") { close(); input.blur(); } });
+    input.addEventListener("keydown", e => {
+      if (e.key === "Escape") { close(); input.blur(); }
+      if (e.key === "Enter") { location.href = resultsHref(input.value); }
+    });
     document.addEventListener("click", e => { if (!e.target.closest(".search")) close(); });
     overlay.addEventListener("click", close);
   })();
