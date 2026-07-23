@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>business-profile-edit · Şourumlar — ARCHİ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#f5f7f9;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
+  img{display:block;max-width:100%}
+  p{margin:0}
+
+  .page{background:#f5f7f9;display:flex;flex-direction:column;align-items:flex-start;width:1440px;margin:0 auto;overflow-x:hidden}
+
+  /* ===== navbar ===== */
+  .navbar-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;width:1440px}
+  .navbar{background:#fff;display:flex;gap:48px;height:80px;align-items:center;padding:0 28px;width:100%}
+  .nav-logo{height:50px;width:131.579px;position:relative;overflow:hidden;flex-shrink:0}
+  .nav-logo img{position:absolute;height:263.16%;left:-0.04%;top:-81.58%;width:100.08%;max-width:none;pointer-events:none}
+  .search{background:#f3f5f7;display:flex;flex:1 0 0;gap:8px;align-items:center;min-width:1px;padding:12px 16px}
+  .search-ic{width:20px;height:20px;flex-shrink:0;position:relative}
+  .search-ic img{position:absolute;inset:0;width:100%;height:100%}
+  .search p{font-family:'Manrope',sans-serif;font-weight:400;line-height:22px;font-size:16px;color:rgba(0,0,0,0.5);white-space:nowrap}
+  .menu{display:flex;gap:24px;align-items:center;justify-content:flex-end;flex-shrink:0}
+  .menu-icons{display:flex;gap:24px;align-items:center;flex-shrink:0}
+  .bloq{display:flex;gap:4px;height:22px;align-items:center;justify-content:center;flex-shrink:0}
+  .bloq p{font-family:'Manrope',sans-serif;font-weight:500;line-height:22px;font-size:16px;color:#000;white-space:nowrap}
+  .ic16{width:16px;height:16px;flex-shrink:0;position:relative}
+  .ic16 img{position:absolute;inset:0;width:100%;height:100%}
+  .ic24{width:24px;height:24px;flex-shrink:0;position:relative}
+  .ic24 img{position:absolute;inset:0;width:100%;height:100%}
+  .signupin{display:flex;gap:24px;align-items:center;flex-shrink:0}
+  .vdiv{height:28px;width:0;position:relative;flex-shrink:0}
+  .vdiv > div{position:absolute;inset:0 -0.5px}
+  .vdiv img{width:100%;height:100%;max-width:none}
+  .daxil{font-family:'Manrope',sans-serif;font-weight:500;line-height:22px;font-size:16px;color:#111;white-space:nowrap;flex-shrink:0}
+  .login-btn{background:#111;display:flex;gap:4px;align-items:center;justify-content:center;overflow:hidden;padding:12px 24px;flex-shrink:0}
+  .ic20{width:20px;height:20px;flex-shrink:0;position:relative}
+  .ic20 img{position:absolute;inset:0;width:100%;height:100%}
+  .login-btn p{font-family:'Inter',sans-serif;font-weight:400;font-size:16px;color:#efefef;white-space:nowrap}
+
+  /* nav-2 */
+  .nav2{background:#fff;border-top:1px solid rgba(0,0,0,0.5);border-bottom:1px solid rgba(0,0,0,0.5);display:flex;flex-direction:column;height:60px;align-items:flex-start;width:1384px}
+  .nav2-row{display:flex;height:60px;align-items:center;justify-content:space-between;width:100%}
+  .nav2-left{display:flex;align-items:center;flex-shrink:0}
+  .kataloq-wrap{display:flex;flex-direction:column;height:60px;align-items:flex-start;flex-shrink:0;width:150px}
+  .kataloq{border-left:1px solid rgba(0,0,0,0.4);border-right:1px solid rgba(0,0,0,0.4);display:flex;gap:8px;height:60px;align-items:center;justify-content:center;overflow:hidden;padding:12px 24px;width:100%}
+  .kataloq p{font-family:'Inter',sans-serif;font-weight:500;font-size:16px;color:#000;white-space:nowrap}
+  .nav2-item{border-right:1px solid rgba(0,0,0,0.5);display:flex;gap:4px;height:60px;align-items:center;justify-content:center;padding:0 12px;flex-shrink:0}
+  .nav2-item p{font-family:'Manrope',sans-serif;font-weight:500;line-height:22px;font-size:16px;color:#000;white-space:nowrap}
+  .w180{width:180px}.w150{width:150px}
+  .nav2-calc{border-left:1px solid rgba(0,0,0,0.5);border-right:1px solid rgba(0,0,0,0.5);display:flex;gap:8px;height:60px;align-items:center;justify-content:center;padding:12px 24px;flex-shrink:0}
+  .nav2-calc p{font-family:'Manrope',sans-serif;font-weight:500;line-height:22px;font-size:16px;color:rgba(0,0,0,0.8);white-space:nowrap}
+
+  /* ===== edit-page ===== */
+  .edit-page{background:#f5f7f9;display:flex;flex-direction:column;gap:20px;align-items:flex-start;overflow:hidden;padding:32px 28px 56px;width:100%}
+  .edit-head{display:flex;align-items:flex-end;justify-content:space-between;overflow:hidden;width:100%}
+  .head-left{display:flex;flex-direction:column;gap:10px;align-items:flex-start;overflow:hidden;flex-shrink:0;white-space:nowrap}
+  .crumbs{display:flex;gap:8px;align-items:center;overflow:hidden;flex-shrink:0;font-size:13px}
+  .crumbs .c1{font-weight:400;color:rgba(0,0,0,0.5)}
+  .crumbs .c2{font-weight:500;color:rgba(0,0,0,0.9)}
+  .head-title{font-weight:700;font-size:34px;color:#111;flex-shrink:0}
+  .head-right{display:flex;gap:12px;align-items:center;overflow:hidden;flex-shrink:0}
+  .badge-pub{background:#e9f6ed;display:flex;gap:8px;align-items:center;overflow:hidden;padding:8px 14px;border-radius:4px;flex-shrink:0}
+  .dot8{width:8px;height:8px;flex-shrink:0;position:relative}
+  .dot8 img{position:absolute;inset:0;width:100%;height:100%}
+  .badge-pub p{font-weight:600;font-size:13px;color:#229653;white-space:nowrap}
+  .view-btn{background:#fff;border:1px solid rgba(0,0,0,0.2);display:flex;height:44px;align-items:center;justify-content:center;overflow:hidden;padding:0 20px;border-radius:4px;flex-shrink:0}
+  .view-btn p{font-weight:600;font-size:13px;color:#111;white-space:nowrap}
+
+  .edit-body{display:flex;gap:24px;align-items:flex-start;overflow:hidden;width:100%}
+
+  /* settings-nav */
+  .settings-nav{background:#fff;border:1px solid rgba(0,0,0,0.1);display:flex;flex-direction:column;gap:4px;align-items:flex-start;overflow:hidden;padding:14px 12px;border-radius:4px;flex-shrink:0;width:264px}
+  .sn-item{display:flex;align-items:center;justify-content:space-between;overflow:hidden;padding:11px 12px;border-radius:4px;width:100%;white-space:nowrap}
+  .sn-item .lbl{font-weight:500;font-size:14px;color:rgba(0,0,0,0.7)}
+  .sn-item .cnt{font-weight:600;font-size:12px;color:rgba(0,0,0,0.4)}
+  .sn-item.active{background:#fffde0;border:1px solid #ffe600}
+  .sn-item.active .lbl{font-weight:700;font-size:14px;color:#000}
+  .sn-prog{background:#f5f7f9;display:flex;flex-direction:column;gap:8px;align-items:flex-start;overflow:hidden;padding:14px 12px;border-radius:4px;width:100%}
+  .sn-prog-top{display:flex;align-items:flex-start;justify-content:space-between;overflow:hidden;width:100%;color:#111;font-size:12px;white-space:nowrap}
+  .sn-prog-top .l{font-weight:600}
+  .sn-prog-top .r{font-weight:700}
+  .sn-bar{background:rgba(0,0,0,0.1);height:6px;overflow:hidden;border-radius:3px;width:100%;position:relative}
+  .sn-bar > div{position:absolute;background:#fdfe00;height:6px;left:0;top:0;border-radius:3px;width:184px}
+  .sn-prog .note{font-weight:400;font-size:11px;color:rgba(0,0,0,0.5);white-space:nowrap}
+
+  /* edit-main */
+  .edit-main{display:flex;flex:1 0 0;flex-direction:column;gap:20px;align-items:flex-start;min-width:1px;overflow:hidden}
+  .card{background:#fff;border:1px solid rgba(0,0,0,0.1);display:flex;flex-direction:column;gap:16px;align-items:flex-start;overflow:hidden;padding:24px;border-radius:4px;width:100%}
+  .card-head{display:flex;align-items:center;justify-content:space-between;overflow:hidden;width:100%}
+  .card-head-txt{display:flex;flex:1 0 0;flex-direction:column;gap:4px;align-items:flex-start;min-width:1px;overflow:hidden;white-space:nowrap}
+  .card-head-txt h2{font-weight:700;font-size:18px;color:#111}
+  .card-head-txt p{font-weight:400;font-size:13px;color:rgba(0,0,0,0.5)}
+  .add-btn{background:#fdfe00;display:flex;height:42px;align-items:center;justify-content:center;overflow:hidden;padding:0 18px;border-radius:4px;flex-shrink:0}
+  .add-btn p{font-weight:700;font-size:13px;color:#111;white-space:nowrap}
+
+  .showroom{background:#f5f7f9;display:flex;gap:16px;align-items:center;overflow:hidden;padding:16px;border-radius:4px;width:100%}
+  .sh-circle{background:#fff;border:1px solid rgba(0,0,0,0.12);overflow:hidden;position:relative;border-radius:22px;flex-shrink:0;width:44px;height:44px}
+  .sh-circle > div{position:absolute;left:11px;top:11px;width:20px;height:20px}
+  .sh-circle img{position:absolute;inset:0;width:100%;height:100%}
+  .sh-info{display:flex;flex:1 0 0;flex-direction:column;gap:3px;align-items:flex-start;min-width:1px;overflow:hidden}
+  .sh-info b{font-weight:700;font-size:15px;color:#111;white-space:nowrap}
+  .sh-info p{font-weight:400;font-size:13px;color:rgba(0,0,0,0.55);white-space:pre}
+  .sh-badge{display:flex;align-items:center;overflow:hidden;padding:4px 9px;border-radius:4px;flex-shrink:0}
+  .sh-badge.aktiv{background:#e9f6ed}
+  .sh-badge.aktiv p{font-weight:600;font-size:11px;color:#229653;white-space:nowrap}
+  .sh-badge.gizli{background:#f0f1f3}
+  .sh-badge.gizli p{font-weight:600;font-size:11px;color:rgba(0,0,0,0.5);white-space:nowrap}
+  .sh-actions{display:flex;gap:8px;align-items:flex-start;overflow:hidden;flex-shrink:0}
+  .sh-edit{background:#fff;border:1px solid rgba(0,0,0,0.2);display:flex;align-items:flex-start;overflow:hidden;padding:8px 14px;border-radius:4px;flex-shrink:0}
+  .sh-edit p{font-weight:600;font-size:13px;color:#111;white-space:nowrap}
+  .sh-del{display:flex;align-items:flex-start;overflow:hidden;padding:8px 12px;border-radius:4px;flex-shrink:0}
+  .sh-del p{font-weight:500;font-size:13px;color:#d33c32;white-space:nowrap}
+
+  /* save-bar */
+  .save-bar{background:#111;display:flex;align-items:center;justify-content:space-between;overflow:hidden;padding:16px 24px;border-radius:4px;width:100%}
+  .save-left{display:flex;gap:8px;align-items:center;overflow:hidden;flex-shrink:0}
+  .save-left p{font-weight:500;font-size:13px;color:rgba(255,255,255,0.85);white-space:nowrap}
+  .save-right{display:flex;gap:10px;align-items:flex-start;overflow:hidden;flex-shrink:0}
+  .save-cancel{border:1px solid rgba(255,255,255,0.35);display:flex;height:44px;align-items:center;justify-content:center;overflow:hidden;padding:0 18px;border-radius:4px;flex-shrink:0}
+  .save-cancel p{font-weight:500;font-size:14px;color:rgba(255,255,255,0.85);white-space:nowrap}
+  .save-save{background:#fdfe00;display:flex;height:44px;align-items:center;justify-content:center;overflow:hidden;padding:0 26px;border-radius:4px;flex-shrink:0}
+  .save-save p{font-weight:700;font-size:14px;color:#111;white-space:nowrap}
+
+  /* ===== footer ===== */
+  .app{background:#000;display:flex;height:960px;align-items:flex-start;justify-content:center;width:1440px}
+  .app-c1{max-width:1440px;width:1431px;display:flex;flex-direction:column;align-items:center}
+  .app-c2{max-width:1384px;width:1384px;display:flex;flex-direction:column;align-items:flex-start;padding:64px 28px 48px}
+  .ft-top{width:100%;display:flex;align-items:flex-end;justify-content:space-between}
+  .ft-logo-row{display:flex;gap:4px;align-items:center;flex-shrink:0}
+  .ft-logo{height:58px;width:144px;position:relative;overflow:hidden}
+  .ft-logo img{position:absolute;height:250%;left:-0.04%;top:-71.25%;width:100.08%;max-width:none;pointer-events:none}
+  .ft-breadcrumbs{display:flex;gap:10px;height:64px;align-items:flex-start;padding:10px;width:229px}
+  .ft-gobtn{border-radius:10px;flex-shrink:0;display:flex;gap:8px;align-items:center;justify-content:center;padding:16px 32px}
+  .ft-gobtn p{font-weight:400;line-height:24px;font-size:16px;text-align:center;color:#fff;white-space:nowrap}
+
+  .ft-divider{background:rgba(255,255,255,0.12);height:1px;width:1328px}
+  .ft-divider.full{width:100%}
+
+  .ft-cols-wrap{width:100%;padding-top:64px}
+  .ft-cols{display:flex;align-items:center;justify-content:space-between;width:100%}
+  .ft-col{display:flex;flex-direction:column;gap:24px;height:240px;align-items:flex-start;flex-shrink:0;width:195px}
+  .ft-col-title{font-weight:500;line-height:23.8px;font-size:17px;color:#fff;white-space:nowrap}
+  .ft-list{width:194.672px;display:flex;flex-direction:column;gap:16px;align-items:flex-start}
+  .ft-link{font-weight:400;line-height:1;font-size:16px;color:#8f8f8f;white-space:nowrap}
+
+  .ft-news-wrap{width:100%;padding-top:56px}
+  .ft-news{height:139.695px;width:1328.992px;display:flex;align-items:flex-start;padding:40px 0}
+  .ft-news-left{height:100%;display:flex;gap:24px;align-items:center;padding-right:48px;flex-shrink:0}
+  .ic48{width:48px;height:48px;flex-shrink:0;position:relative}
+  .ic48 img{position:absolute;inset:0;width:100%;height:100%}
+  .ft-news-txt{width:676.797px;display:flex;flex-direction:column;align-items:flex-start}
+  .ft-news-txt .t{font-weight:500;line-height:1.25;font-size:22px;color:#fff;width:616px}
+  .ft-news-txt .s{font-weight:400;line-height:1.25;font-size:16px;color:#9a9a9a;white-space:nowrap;padding-top:6px}
+  .ft-news-form{height:60px;width:531px;display:flex;gap:8px;align-items:flex-end;flex-shrink:0}
+  .ft-input{border:1px solid rgba(255,255,255,0.12);display:flex;flex:1 0 0;height:52px;align-items:center;min-width:1px;padding:1px 1px 1px 21px}
+  .ft-input p{font-weight:400;line-height:27px;font-size:18px;color:#9a9a9a;white-space:nowrap}
+  .ft-sub{background:#fdfe00;display:flex;align-items:center;justify-content:center;padding:16px 24px;flex-shrink:0}
+  .ft-sub p{font-weight:400;line-height:1;font-size:20px;color:#111;white-space:nowrap}
+
+  .ft-bottom{width:100%;display:flex;align-items:center;justify-content:space-between;padding-top:32px}
+  .ft-bottom-left{display:flex;flex-direction:column;gap:12px;align-items:flex-start;flex-shrink:0}
+  .ft-links{display:flex;align-items:center}
+  .ft-links a{font-weight:400;line-height:24px;font-size:16px;color:#fff;white-space:nowrap;text-decoration:none}
+  .ft-sep{padding:0 20px;color:rgba(255,255,255,0.35);font-size:16px;line-height:24px}
+  .ft-copy{font-weight:400;line-height:22.5px;font-size:15px;color:#8f8f8f;white-space:nowrap}
+  .ft-social{display:flex;gap:12px;align-items:center;justify-content:flex-end;flex-shrink:0}
+  .ft-ig{border:1px solid rgba(255,255,255,0.25);border-radius:26px;width:52px;height:52px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- navbar -->
+  <div class="navbar-wrap">
+    <div class="navbar">
+      <div class="nav-logo">
+        <img alt="" src="https://www.figma.com/api/mcp/asset/edcd1eb8-d86f-44c7-a6f8-94da850c03ea">
+      </div>
+      <div class="search">
+        <div class="search-ic"><img alt="" src="https://www.figma.com/api/mcp/asset/2c4fd093-51c2-43a6-a9d1-e96bd117be07"></div>
+        <p>Məhsul, marka və ya mütəxəssis axtarın</p>
+      </div>
+      <div class="menu">
+        <div class="menu-icons">
+          <div class="bloq">
+            <p>AZ</p>
+            <div class="ic16"><img alt="" src="https://www.figma.com/api/mcp/asset/983c449b-6632-4570-87a6-587a1c30ede0"></div>
+          </div>
+          <div class="ic24"><img alt="" src="https://www.figma.com/api/mcp/asset/ef16bce2-5f0a-4217-9885-201de1d3283d"></div>
+          <div class="ic24"><img alt="" src="https://www.figma.com/api/mcp/asset/12d82614-d26d-4ebb-8177-17d395ea1177"></div>
+        </div>
+        <div class="signupin">
+          <div class="vdiv"><div><img alt="" src="https://www.figma.com/api/mcp/asset/d6676a94-e2b0-4eda-8bea-09132e341618"></div></div>
+          <p class="daxil">Daxil ol </p>
+          <div class="login-btn">
+            <div class="ic20"><img alt="" src="https://www.figma.com/api/mcp/asset/c167494f-dff5-415a-85c8-ea827a8c85eb"></div>
+            <p>Məhsul yerləşdir</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav2">
+      <div class="nav2-row">
+        <div class="nav2-left">
+          <div class="kataloq-wrap">
+            <div class="kataloq">
+              <div class="ic20"><img alt="" src="https://www.figma.com/api/mcp/asset/1bf0eee3-392f-4d43-aa39-3a0ad46b07c1"></div>
+              <p>Kataloq</p>
+            </div>
+          </div>
+          <div class="nav2-item w180">
+            <p>Mütəxəssislər</p>
+            <div class="ic16"><img alt="" src="https://www.figma.com/api/mcp/asset/983c449b-6632-4570-87a6-587a1c30ede0"></div>
+          </div>
+          <div class="nav2-item w150">
+            <p>Bloq</p>
+            <div class="ic16"><img alt="" src="https://www.figma.com/api/mcp/asset/983c449b-6632-4570-87a6-587a1c30ede0"></div>
+          </div>
+          <div class="nav2-item w150">
+            <p>Haqqımızda</p>
+          </div>
+          <div class="nav2-item w150">
+            <p>B2B</p>
+          </div>
+        </div>
+        <div class="nav2-calc">
+          <div class="ic24"><img alt="" src="https://www.figma.com/api/mcp/asset/f8f024e4-46c0-433e-830e-5035ae017e8d"></div>
+          <p>Təmir kalkulyatoru</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- edit-page -->
+  <div class="edit-page">
+    <div class="edit-head">
+      <div class="head-left">
+        <div class="crumbs">
+          <p class="c1">Biznes paneli</p>
+          <p class="c1">/</p>
+          <p class="c2">Profil redaktəsi</p>
+        </div>
+        <p class="head-title">Biznes profilinin redaktəsi</p>
+      </div>
+      <div class="head-right">
+        <div class="badge-pub">
+          <div class="dot8"><img alt="" src="https://www.figma.com/api/mcp/asset/4a063f1c-8629-40f9-b239-0a115171b6dc"></div>
+          <p>Dərc olunub</p>
+        </div>
+        <div class="view-btn">
+          <p>Profilə bax ↗</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="edit-body">
+      <!-- settings-nav -->
+      <div class="settings-nav">
+        <div class="sn-item"><p class="lbl">Şirkət məlumatları</p></div>
+        <div class="sn-item"><p class="lbl">Əlaqə məlumatları</p></div>
+        <div class="sn-item active"><p class="lbl">Şourumlar</p><p class="cnt">3</p></div>
+        <div class="sn-item"><p class="lbl">Məhsullar</p><p class="cnt">1,240</p></div>
+        <div class="sn-item"><p class="lbl">Bildirişlər</p></div>
+        <div class="sn-item"><p class="lbl">Təhlükəsizlik</p></div>
+        <div class="sn-prog">
+          <div class="sn-prog-top">
+            <p class="l">Profil tamlığı</p>
+            <p class="r">85%</p>
+          </div>
+          <div class="sn-bar"><div></div></div>
+          <p class="note">Video əlavə et — +15%</p>
+        </div>
+      </div>
+
+      <!-- edit-main -->
+      <div class="edit-main">
+        <div class="card">
+          <div class="card-head">
+            <div class="card-head-txt">
+              <h2>Şourumlar (3)</h2>
+              <p>Ünvanlar profildə və xəritədə göstərilir.</p>
+            </div>
+            <div class="add-btn">
+              <p>＋ Şourum əlavə et</p>
+            </div>
+          </div>
+
+          <div class="showroom">
+            <div class="sh-circle"><div><img alt="" src="https://www.figma.com/api/mcp/asset/271bc71c-2acc-4b4d-8663-5458a1431c9b"></div></div>
+            <div class="sh-info">
+              <b>Nərimanov (əsas)</b>
+              <p>Təbriz küç. 108, Bakı  ·  B.e–Şən 09:00–19:00</p>
+            </div>
+            <div class="sh-badge aktiv"><p>Aktiv</p></div>
+            <div class="sh-actions">
+              <div class="sh-edit"><p>Redaktə et</p></div>
+              <div class="sh-del"><p>Sil</p></div>
+            </div>
+          </div>
+
+          <div class="showroom">
+            <div class="sh-circle"><div><img alt="" src="https://www.figma.com/api/mcp/asset/271bc71c-2acc-4b4d-8663-5458a1431c9b"></div></div>
+            <div class="sh-info">
+              <b>Yasamal</b>
+              <p>Şərifzadə küç. 21, Bakı  ·  B.e–Şən 10:00–19:00</p>
+            </div>
+            <div class="sh-badge aktiv"><p>Aktiv</p></div>
+            <div class="sh-actions">
+              <div class="sh-edit"><p>Redaktə et</p></div>
+              <div class="sh-del"><p>Sil</p></div>
+            </div>
+          </div>
+
+          <div class="showroom">
+            <div class="sh-circle"><div><img alt="" src="https://www.figma.com/api/mcp/asset/271bc71c-2acc-4b4d-8663-5458a1431c9b"></div></div>
+            <div class="sh-info">
+              <b>Xətai</b>
+              <p>Babək pr. 64, Bakı  ·  Hər gün 10:00–20:00</p>
+            </div>
+            <div class="sh-badge gizli"><p>Gizli</p></div>
+            <div class="sh-actions">
+              <div class="sh-edit"><p>Redaktə et</p></div>
+              <div class="sh-del"><p>Sil</p></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="save-bar">
+          <div class="save-left">
+            <div class="dot8"><img alt="" src="https://www.figma.com/api/mcp/asset/8e2c887d-6ed4-4b0a-b9ff-eeb0ccf9a4bc"></div>
+            <p>Yadda saxlanmamış dəyişikliklər var</p>
+          </div>
+          <div class="save-right">
+            <div class="save-cancel"><p>Ləğv et</p></div>
+            <div class="save-save"><p>Yadda saxla</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- footer -->
+  <div class="app">
+    <div class="app-c1">
+      <div class="app-c2">
+        <div class="ft-top">
+          <div class="ft-logo-row">
+            <div class="ft-logo">
+              <img alt="" src="https://www.figma.com/api/mcp/asset/8dba2681-09f5-464e-932d-a736ebecef7f">
+            </div>
+            <div class="ft-breadcrumbs"></div>
+          </div>
+          <div class="ft-gobtn">
+            <p>Məhsullara keç</p>
+            <div class="ic24"><img alt="" src="https://www.figma.com/api/mcp/asset/68eac73b-9995-4418-a3f5-44024af03f0d"></div>
+          </div>
+        </div>
+
+        <div class="ft-divider"></div>
+
+        <div class="ft-cols-wrap">
+          <div class="ft-cols">
+            <div class="ft-col">
+              <p class="ft-col-title">Məhsullar</p>
+              <div class="ft-list">
+                <p class="ft-link">Kafel &amp; metlax</p>
+                <p class="ft-link">Boya &amp; emal</p>
+                <p class="ft-link">Santexnika</p>
+                <p class="ft-link">İzolyasiya &amp; istilik </p>
+                <p class="ft-link">Bütün kateqoriyalara keç</p>
+              </div>
+            </div>
+            <div class="ft-col">
+              <p class="ft-col-title">Mütəxəssislər</p>
+              <div class="ft-list">
+                <p class="ft-link">Usta tap</p>
+                <p class="ft-link">Top reytinqli ustalar</p>
+                <p class="ft-link">Bütün mütəxəssislərə bax</p>
+              </div>
+            </div>
+            <div class="ft-col">
+              <p class="ft-col-title">ARCHİ-yə qoşul</p>
+              <div class="ft-list">
+                <p class="ft-link">Satıcı ol</p>
+                <p class="ft-link">Usta ol</p>
+                <p class="ft-link">Tərəfdaşlıq proqramı</p>
+                <p class="ft-link">Bizneslə əməkdaşlıq</p>
+              </div>
+            </div>
+            <div class="ft-col">
+              <p class="ft-col-title">Şirkət &amp; dəstək</p>
+              <div class="ft-list">
+                <p class="ft-link">Haqqımızda</p>
+                <p class="ft-link">Pulsuz konsultasiya</p>
+                <p class="ft-link">Məqalələr</p>
+                <p class="ft-link">Yardım mərkəzi</p>
+                <p class="ft-link">Əlaqə</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ft-news-wrap">
+          <div class="ft-divider"></div>
+        </div>
+
+        <div class="ft-news">
+          <div class="ft-news-left">
+            <div class="ic48"><img alt="" src="https://www.figma.com/api/mcp/asset/c27484c2-410e-4729-b6f6-747072d183de"></div>
+            <div class="ft-news-txt">
+              <p class="t">Təmir dünyasında yeniliklərdən xəbərdar olun</p>
+              <p class="s">Endirimlərdən, yeni məhsullar, faydalı məqalələr və yeniliklər barədə ilk siz məlumat alın.</p>
+            </div>
+          </div>
+          <div class="ft-news-form">
+            <div class="ft-input"><p>E-poçt ünvanın</p></div>
+            <div class="ft-sub"><p>Abunə ol</p></div>
+          </div>
+        </div>
+
+        <div class="ft-divider full"></div>
+
+        <div class="ft-bottom">
+          <div class="ft-bottom-left">
+            <div class="ft-links">
+              <a href="#">İstifadə şərtləri</a>
+              <span class="ft-sep">|</span>
+              <a href="#">Məxfilik siyasəti</a>
+              <span class="ft-sep">|</span>
+              <a href="#">Çatdırılma &amp; qaytarılma</a>
+              <span class="ft-sep">|</span>
+              <a href="#">Cookie siyasəti</a>
+              <span class="ft-sep">|</span>
+              <a href="#">Sayt xəritəsi</a>
+            </div>
+            <p class="ft-copy">©2026 ARCHI - Bütün hüquqlar qorunur.</p>
+          </div>
+          <div class="ft-social">
+            <div class="ft-ig">
+              <div class="ic20"><img alt="" src="https://www.figma.com/api/mcp/asset/b166dd1d-9186-46aa-9f1b-eab75b877155"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

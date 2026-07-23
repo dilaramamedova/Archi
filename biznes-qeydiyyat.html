@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>auth — Sadə qeydiyyat · Biznes/Satıcı seçilib</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --white:#ffffff;
+    --gray-soft:#f3f5f7;
+    --gray-soft2:#f5f7f9;
+    --text-muted:rgba(0,0,0,0.5);
+    --text-secondary:rgba(0,0,0,0.7);
+    --text-faint:rgba(0,0,0,0.4);
+    --footer-black:#000000;
+    --black:#111111;
+    --off-white:#efefef;
+    --border:rgba(0,0,0,0.1);
+    --border-strong:rgba(0,0,0,0.14);
+    --yellow:#fdfe00;
+    --yellow-line:#ffe600;
+    --sel-bg:#fffde0;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:var(--white)}
+  body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;min-width:1440px}
+  img{display:block}
+
+  .frame{position:relative;width:1440px;background:var(--white)}
+
+  /* ===================== NAVBAR ===================== */
+  .navbar-wrap{position:absolute;left:0;top:0;width:1440px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+
+  .navbar{background:var(--white);display:flex;gap:48px;height:80px;align-items:center;padding:0 40px;width:100%}
+
+  .logo{position:relative;height:50px;width:131.579px}
+  .logo .clip{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  .logo img{position:absolute;height:263.16%;left:-0.04%;top:-81.58%;width:100.08%;max-width:none}
+
+  .search{background:var(--gray-soft);display:flex;flex:1 0 0;gap:8px;align-items:center;min-width:1px;padding:12px 16px}
+  .search .ic{position:relative;width:20px;height:20px;flex-shrink:0}
+  .search .ic img{position:absolute;inset:0;width:100%;height:100%}
+  .search p{font-weight:400;line-height:22px;font-size:16px;color:var(--text-muted);white-space:nowrap;word-break:break-word}
+
+  .menu{display:flex;gap:24px;align-items:center;justify-content:flex-end;flex-shrink:0}
+  .menu .icons{display:flex;gap:24px;align-items:center;flex-shrink:0}
+  .lang{display:flex;gap:4px;height:22px;align-items:center;justify-content:center;flex-shrink:0}
+  .lang p{font-weight:500;line-height:22px;font-size:16px;color:var(--footer-black);white-space:nowrap}
+  .ic16{position:relative;width:16px;height:16px;flex-shrink:0}
+  .ic16 img{position:absolute;inset:0;width:100%;height:100%}
+  .ic24{position:relative;width:24px;height:24px;flex-shrink:0}
+  .ic24 img{position:absolute;inset:0;width:100%;height:100%}
+  .ic20{position:relative;width:20px;height:20px;flex-shrink:0}
+  .ic20 img{position:absolute;inset:0;width:100%;height:100%}
+
+  .signup{display:flex;gap:24px;align-items:center;flex-shrink:0}
+  .divider{position:relative;height:28px;width:1px;background:rgba(0,0,0,0.1);flex-shrink:0}
+  .enter{font-weight:500;line-height:22px;font-size:16px;color:var(--black);white-space:nowrap}
+  .post-btn{background:var(--black);display:flex;gap:4px;align-items:center;justify-content:center;overflow:hidden;padding:12px 24px;flex-shrink:0;cursor:pointer}
+  .post-btn p{font-weight:400;line-height:normal;font-size:16px;color:var(--off-white);white-space:nowrap}
+
+  .nav{background:var(--white);display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;flex-shrink:0}
+  .nav-2{background:var(--white);border-top:1px solid rgba(0,0,0,0.3);border-bottom:1px solid rgba(0,0,0,0.3);display:flex;flex-direction:column;height:60px;align-items:flex-start;width:1384px}
+  .nav-row{display:flex;height:60px;align-items:center;justify-content:space-between;width:100%}
+  .nav-left{display:flex;align-items:center}
+  .kataloq-wrap{display:flex;flex-direction:column;height:60px;align-items:flex-start;width:150px}
+  .kataloq{border-right:1px solid rgba(0,0,0,0.3);display:flex;gap:8px;height:60px;align-items:center;justify-content:center;overflow:hidden;padding:12px 24px;width:100%;cursor:pointer}
+  .kataloq p{font-weight:500;line-height:normal;font-size:16px;color:var(--footer-black);white-space:nowrap}
+  .nav-item{border-right:1px solid rgba(0,0,0,0.3);display:flex;gap:4px;height:60px;align-items:center;justify-content:center;padding:0 12px;flex-shrink:0;cursor:pointer}
+  .nav-item p{font-weight:500;line-height:22px;font-size:16px;color:var(--footer-black);white-space:nowrap}
+  .nav-item.w180{width:180px}
+  .nav-item.w150{width:150px}
+  .nav-item.b2b{border-right-color:var(--text-muted)}
+  .nav-item.b2b p{font-family:'Manrope',sans-serif}
+  .calc{border-left:1px solid rgba(0,0,0,0.3);display:flex;gap:8px;height:60px;align-items:center;justify-content:center;padding:12px 24px;flex-shrink:0;cursor:pointer}
+  .calc p{font-weight:500;line-height:22px;font-size:16px;color:rgba(0,0,0,0.8);white-space:nowrap}
+
+  /* ===================== AUTH PAGE ===================== */
+  .auth-page{position:absolute;left:0;top:140px;width:1440px;height:1160px;background:var(--gray-soft2);overflow:hidden}
+  .auth-card{position:absolute;left:400px;top:80px;width:640px;background:var(--white);border:1px solid var(--border);display:flex;flex-direction:column;gap:24px;align-items:flex-start;overflow:hidden;padding:40px 48px}
+
+  .tag{background:#fff;display:flex;gap:10px;align-items:center;overflow:hidden}
+  .tag .rect{background:var(--yellow-line);height:4px;width:32px;border-radius:4px;flex-shrink:0}
+  .tag p{font-weight:600;line-height:normal;font-size:12px;color:var(--text-muted);letter-spacing:1px;white-space:nowrap}
+
+  .title{font-weight:700;line-height:normal;font-size:32px;color:var(--black);letter-spacing:-0.5px;white-space:nowrap}
+  .subtitle{font-weight:400;line-height:normal;font-size:14px;color:var(--text-muted);white-space:nowrap}
+
+  .roles{background:#fff;display:flex;gap:10px;align-items:flex-start;overflow:hidden;width:100%}
+  .role{background:var(--white);border:1px solid var(--border);display:flex;flex:1 0 0;flex-direction:column;gap:8px;align-items:flex-start;min-width:1px;overflow:hidden;padding:14px;border-radius:4px;cursor:pointer}
+  .role .rc{background:var(--gray-soft);display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:100px;width:36px;height:36px;flex-shrink:0}
+  .role .rc p{font-weight:400;line-height:normal;font-size:16px;color:#000;white-space:nowrap}
+  .role .rname{font-weight:600;line-height:normal;font-size:14px;color:var(--black);white-space:nowrap}
+  .role .rdesc{font-weight:400;line-height:normal;font-size:12px;color:var(--text-muted);min-width:100%;width:min-content}
+  .role.sel{background:var(--sel-bg);border:2px solid var(--yellow-line)}
+  .role.sel .rc{background:var(--yellow)}
+
+  .field{background:#fff;display:flex;flex-direction:column;gap:8px;align-items:flex-start;overflow:hidden;width:100%}
+  .field label{font-weight:600;line-height:normal;font-size:13px;color:var(--black);white-space:nowrap}
+  .field .input{background:var(--white);border:1px solid var(--border-strong);display:flex;align-items:center;overflow:hidden;padding:13px 16px;border-radius:4px;width:100%}
+  .field .input input{border:none;outline:none;background:transparent;font-family:'Inter',sans-serif;font-weight:400;line-height:normal;font-size:14px;color:var(--black);width:100%}
+  .field .input input::placeholder{color:var(--text-faint)}
+
+  .consent{background:#fff;display:flex;gap:10px;align-items:center;overflow:hidden}
+  .consent .box{background:var(--white);border:1px solid var(--border-strong);border-radius:4px;width:18px;height:18px;flex-shrink:0;appearance:none;-webkit-appearance:none;cursor:pointer;margin:0}
+  .consent .box:checked{background:var(--yellow);border-color:var(--yellow-line)}
+  .consent p{font-weight:400;line-height:normal;font-size:13px;color:var(--text-secondary);white-space:nowrap}
+
+  .cta{background:var(--yellow);display:flex;align-items:center;justify-content:center;overflow:hidden;padding:16px 0;border-radius:4px;width:100%;border:none;cursor:pointer}
+  .cta p{font-weight:600;line-height:normal;font-size:16px;color:var(--black);white-space:nowrap;font-family:'Inter',sans-serif}
+
+  .note{background:var(--gray-soft2);display:flex;gap:10px;align-items:center;overflow:hidden;padding:12px 14px;border-radius:4px;width:100%;font-weight:400}
+  .note .emoji{line-height:normal;font-size:14px;color:#000;white-space:nowrap;flex-shrink:0}
+  .note .txt{flex:1 0 0;line-height:1.45;min-width:1px;font-size:13px;color:var(--text-secondary)}
+
+  .login-row{background:#fff;display:flex;gap:6px;align-items:flex-start;justify-content:center;overflow:hidden;width:100%;font-size:13px;white-space:nowrap;line-height:normal}
+  .login-row .q{font-weight:400;color:var(--text-muted);flex-shrink:0}
+  .login-row .l{font-weight:600;color:var(--black);flex-shrink:0;cursor:pointer}
+</style>
+</head>
+<body>
+
+<div class="frame">
+
+  <!-- ===================== NAVBAR ===================== -->
+  <div class="navbar-wrap">
+    <div class="navbar">
+      <div class="logo">
+        <div class="clip">
+          <img alt="ARCHI" src="https://www.figma.com/api/mcp/asset/82eb29e1-c35f-483b-8334-256d60a166dc">
+        </div>
+      </div>
+      <div class="search">
+        <div class="ic"><img alt="" src="https://www.figma.com/api/mcp/asset/e505196e-9736-421c-b65b-78b76f24f1e7"></div>
+        <p>Məhsul, marka və ya mütəxəssis axtarın</p>
+      </div>
+      <div class="menu">
+        <div class="icons">
+          <div class="lang">
+            <p>AZ</p>
+            <div class="ic16"><img alt="" src="https://www.figma.com/api/mcp/asset/f40e355f-3e92-4545-90ab-1400366d6aa2"></div>
+          </div>
+          <div class="ic24"><img alt="" src="https://www.figma.com/api/mcp/asset/fa739b43-302c-4e82-90c5-c5e4fe325710"></div>
+          <div class="ic24"><img alt="" src="https://www.figma.com/api/mcp/asset/cf209395-a7b2-4f38-8906-401fc548d5a2"></div>
+        </div>
+        <div class="signup">
+          <div class="divider"></div>
+          <p class="enter">Daxil ol </p>
+          <div class="post-btn">
+            <div class="ic20"><img alt="" src="https://www.figma.com/api/mcp/asset/84d8b25a-51f7-4fc9-b816-9375e815f7a6"></div>
+            <p>Məhsul yerləşdir</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="nav">
+      <div class="nav-2">
+        <div class="nav-row">
+          <div class="nav-left">
+            <div class="kataloq-wrap">
+              <div class="kataloq">
+                <div class="ic20"><img alt="" src="https://www.figma.com/api/mcp/asset/8845f099-10a8-465c-aa96-f0a81d29744d"></div>
+                <p>Kataloq</p>
+              </div>
+            </div>
+            <div class="nav-item w180">
+              <p>Mütəxəssislər</p>
+              <div class="ic16"><img alt="" src="https://www.figma.com/api/mcp/asset/f40e355f-3e92-4545-90ab-1400366d6aa2"></div>
+            </div>
+            <div class="nav-item w150">
+              <p>Bloq</p>
+              <div class="ic16"><img alt="" src="https://www.figma.com/api/mcp/asset/f40e355f-3e92-4545-90ab-1400366d6aa2"></div>
+            </div>
+            <div class="nav-item w150">
+              <p>Haqqımızda</p>
+            </div>
+            <div class="nav-item w150 b2b">
+              <p>B2B</p>
+            </div>
+          </div>
+          <div class="calc">
+            <div class="ic24"><img alt="" src="https://www.figma.com/api/mcp/asset/9f81f539-4a06-4073-9e39-fabd3e356d15"></div>
+            <p>Təmir kalkulyatoru</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== AUTH PAGE ===================== -->
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="tag">
+        <div class="rect"></div>
+        <p>ARCHİ-YƏ QOŞUL</p>
+      </div>
+      <p class="title">Qeydiyyatdan keç</p>
+      <p class="subtitle">30 saniyə çəkir. Hesab növünü seç, 3 sahəni doldur — hazırsan.</p>
+
+      <div class="roles">
+        <div class="role" data-role="alici">
+          <div class="rc"><p>🛒</p></div>
+          <p class="rname">Alıcı</p>
+          <p class="rdesc">Material al, usta tap, sifariş ver.</p>
+        </div>
+        <div class="role" data-role="usta">
+          <div class="rc"><p>🛠</p></div>
+          <p class="rname">Usta / Mütəxəssis</p>
+          <p class="rdesc">Xidmət göstər, müştəri qazan.</p>
+        </div>
+        <div class="role sel" data-role="biznes">
+          <div class="rc"><p>🏢</p></div>
+          <p class="rname">Biznes / Satıcı</p>
+          <p class="rdesc">Məhsullarını yerləşdir və sat.</p>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Ad və soyad</label>
+        <div class="input"><input type="text" placeholder="Adın və soyadın"></div>
+      </div>
+      <div class="field">
+        <label>E-poçt və ya telefon</label>
+        <div class="input"><input type="text" placeholder="email@example.com və ya +994 50 …"></div>
+      </div>
+      <div class="field">
+        <label>Şifrə</label>
+        <div class="input"><input type="password" placeholder="Ən azı 6 simvol"></div>
+      </div>
+
+      <label class="consent">
+        <input type="checkbox" class="box">
+        <p>İstifadə şərtləri və Məxfilik siyasəti ilə razıyam</p>
+      </label>
+
+      <button class="cta" type="button"><p>Qeydiyyatdan keç</p></button>
+
+      <div class="note">
+        <p class="emoji">ℹ️</p>
+        <p class="txt">Usta və Biznes hesabları üçün əlavə məlumatlar (ixtisas, sənədlər, şirkət) qeydiyyatdan sonra öz profilində tamamlanır.</p>
+      </div>
+
+      <div class="login-row">
+        <p class="q">Artıq hesabın var?</p>
+        <p class="l">Daxil ol</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Rol seçimi (dizaynda default: Biznes / Satıcı)
+  document.querySelectorAll('.role').forEach(function(r){
+    r.addEventListener('click', function(){
+      document.querySelectorAll('.role').forEach(function(x){ x.classList.remove('sel'); });
+      r.classList.add('sel');
+    });
+  });
+</script>
+</body>
+</html>

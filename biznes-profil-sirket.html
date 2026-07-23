@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>business-profile-edit · Şirkət məlumatları — ARCHİ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{background:#f5f7f9;font-family:'Inter',sans-serif;color:#111;-webkit-font-smoothing:antialiased}
+  img{display:block}
+  .page{width:1440px;margin:0 auto;background:#f5f7f9;display:flex;flex-direction:column;align-items:flex-start}
+  input,textarea{font-family:inherit}
+
+  /* ============ NAVBAR ============ */
+  .navbar-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;width:1440px}
+  .navbar{background:#fff;display:flex;gap:48px;height:80px;align-items:center;padding:0 28px;width:100%}
+  .nav-logo{height:50px;width:131.579px;position:relative;flex-shrink:0}
+  .nav-logo .clip{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  .nav-logo img{position:absolute;height:263.16%;left:-0.04%;top:-81.58%;width:100.08%;max-width:none}
+  .search{background:#f3f5f7;display:flex;flex:1 0 0;gap:8px;align-items:center;min-width:0;padding:12px 16px}
+  .search .ic{width:20px;height:20px;flex-shrink:0;position:relative}
+  .search .ic img{position:absolute;inset:0;width:100%;height:100%}
+  .search p{font-family:'Manrope';font-weight:400;font-size:16px;line-height:22px;color:rgba(0,0,0,.5);white-space:nowrap}
+  .menu{display:flex;gap:24px;align-items:center;justify-content:flex-end;flex-shrink:0}
+  .menu-icons{display:flex;gap:24px;align-items:center;flex-shrink:0}
+  .lang{display:flex;gap:4px;height:22px;align-items:center;justify-content:center;flex-shrink:0}
+  .lang p{font-family:'Manrope';font-weight:500;font-size:16px;line-height:22px;color:#000;white-space:nowrap}
+  .ic16{width:16px;height:16px;flex-shrink:0;position:relative}
+  .ic16 img{position:absolute;inset:0;width:100%;height:100%}
+  .ic24{width:24px;height:24px;flex-shrink:0;position:relative}
+  .ic24 img{position:absolute;inset:0;width:100%;height:100%}
+  .signin{display:flex;gap:24px;align-items:center;flex-shrink:0}
+  .vdivider{height:28px;width:1px;flex-shrink:0;position:relative}
+  .vdivider img{position:absolute;inset:0;width:100%;height:100%}
+  .signin .login-txt{font-family:'Manrope';font-weight:500;font-size:16px;line-height:22px;color:#111;white-space:nowrap}
+  .btn-post{background:#111;display:flex;gap:4px;align-items:center;justify-content:center;overflow:hidden;padding:12px 24px;flex-shrink:0;cursor:pointer;border:none}
+  .btn-post .ic20{width:20px;height:20px;flex-shrink:0;position:relative}
+  .btn-post .ic20 img{position:absolute;inset:0;width:100%;height:100%}
+  .btn-post p{font-family:'Inter';font-weight:400;font-size:16px;color:#efefef;white-space:nowrap}
+
+  /* nav-2 */
+  .nav2{background:#fff;border-top:1px solid rgba(0,0,0,.5);border-bottom:1px solid rgba(0,0,0,.5);display:flex;flex-direction:column;height:60px;align-items:flex-start;width:1384px}
+  .nav2-row{display:flex;height:60px;align-items:center;justify-content:space-between;width:100%}
+  .nav2-left{display:flex;align-items:center;flex-shrink:0}
+  .nav2-kataloq{display:flex;flex-direction:column;height:60px;width:150px;flex-shrink:0}
+  .nav2-kataloq .inner{border-left:1px solid rgba(0,0,0,.4);border-right:1px solid rgba(0,0,0,.4);display:flex;gap:8px;height:60px;align-items:center;justify-content:center;overflow:hidden;padding:12px 24px;width:100%}
+  .nav2-kataloq .ic20{width:20px;height:20px;flex-shrink:0;position:relative}
+  .nav2-kataloq .ic20 img{position:absolute;inset:0;width:100%;height:100%}
+  .nav2-kataloq p{font-family:'Inter';font-weight:500;font-size:16px;color:#000;white-space:nowrap}
+  .nav2-item{border-right:1px solid rgba(0,0,0,.5);display:flex;gap:4px;height:60px;align-items:center;justify-content:center;padding:0 12px;flex-shrink:0}
+  .nav2-item p{font-family:'Manrope';font-weight:500;font-size:16px;line-height:22px;color:#000;white-space:nowrap}
+  .nav2-w180{width:180px}.nav2-w150{width:150px}
+  .nav2-calc{border-left:1px solid rgba(0,0,0,.5);border-right:1px solid rgba(0,0,0,.5);display:flex;gap:8px;height:60px;align-items:center;justify-content:center;padding:12px 24px;flex-shrink:0}
+  .nav2-calc p{font-family:'Manrope';font-weight:500;font-size:16px;line-height:22px;color:rgba(0,0,0,.8);white-space:nowrap}
+
+  /* ============ EDIT PAGE ============ */
+  .edit-page{background:#f5f7f9;display:flex;flex-direction:column;gap:20px;align-items:flex-start;overflow:hidden;padding:32px 28px 56px;width:100%}
+  .edit-head{display:flex;align-items:flex-end;justify-content:space-between;overflow:hidden;width:100%}
+  .edit-head-left{display:flex;flex-direction:column;gap:10px;align-items:flex-start;overflow:hidden;white-space:nowrap}
+  .crumbs{display:flex;gap:8px;align-items:center;overflow:hidden;font-size:13px}
+  .crumbs .c1{font-family:'Inter';font-weight:400;color:rgba(0,0,0,.5)}
+  .crumbs .c2{font-family:'Inter';font-weight:500;color:rgba(0,0,0,.9)}
+  .edit-title{font-family:'Inter';font-weight:700;color:#111;font-size:34px}
+  .edit-head-right{display:flex;gap:12px;align-items:center;overflow:hidden}
+  .badge-pub{background:#e9f6ed;display:flex;gap:8px;align-items:center;overflow:hidden;padding:8px 14px;border-radius:4px}
+  .badge-pub .dot{width:8px;height:8px;flex-shrink:0;position:relative}
+  .badge-pub .dot img{position:absolute;inset:0;width:100%;height:100%}
+  .badge-pub p{font-family:'Inter';font-weight:600;color:#229653;font-size:13px;white-space:nowrap}
+  .btn-view{background:#fff;border:1px solid rgba(0,0,0,.2);display:flex;height:44px;align-items:center;justify-content:center;overflow:hidden;padding:0 20px;border-radius:4px;cursor:pointer}
+  .btn-view p{font-family:'Inter';font-weight:600;color:#111;font-size:13px;white-space:nowrap}
+
+  .edit-body{display:flex;gap:24px;align-items:flex-start;overflow:hidden;width:100%}
+  /* settings nav */
+  .settings-nav{background:#fff;border:1px solid rgba(0,0,0,.1);display:flex;flex-direction:column;gap:4px;align-items:flex-start;overflow:hidden;padding:14px 12px;border-radius:4px;width:264px;flex-shrink:0}
+  .snav-item{display:flex;align-items:center;justify-content:space-between;overflow:hidden;padding:11px 12px;border-radius:4px;width:100%}
+  .snav-item.active{background:#fffde0}
+  .snav-item.active p{font-family:'Inter';font-weight:700;font-size:14px;color:rgba(0,0,0,.7)}
+  .snav-item .lbl{font-family:'Inter';font-weight:500;font-size:14px;color:rgba(0,0,0,.7);white-space:nowrap}
+  .snav-item.contact .lbl{color:#000}
+  .snav-item .cnt{font-family:'Inter';font-weight:600;font-size:12px;color:rgba(0,0,0,.4)}
+  .snav-progress{background:#f5f7f9;display:flex;flex-direction:column;gap:8px;align-items:flex-start;overflow:hidden;padding:14px 12px;border-radius:4px;width:100%}
+  .snav-progress .top{display:flex;align-items:flex-start;justify-content:space-between;overflow:hidden;width:100%;color:#111;font-size:12px}
+  .snav-progress .top .l{font-family:'Inter';font-weight:600}
+  .snav-progress .top .r{font-family:'Inter';font-weight:700}
+  .snav-bar{background:rgba(0,0,0,.1);height:6px;overflow:hidden;border-radius:3px;width:100%;position:relative}
+  .snav-bar .fill{position:absolute;background:#fdfe00;height:6px;left:0;top:0;border-radius:3px;width:184px}
+  .snav-progress .note{font-family:'Inter';font-weight:400;font-size:11px;color:rgba(0,0,0,.5);white-space:nowrap}
+
+  /* edit main */
+  .edit-main{display:flex;flex:1 0 0;flex-direction:column;gap:20px;align-items:flex-start;min-width:0;overflow:hidden}
+  .card-logo{background:#fff;border:1px solid rgba(0,0,0,.1);display:flex;flex-direction:column;gap:18px;align-items:flex-start;overflow:hidden;padding:24px;border-radius:4px;width:100%}
+  .card-logo-head{display:flex;flex-direction:column;gap:4px;align-items:flex-start;overflow:hidden;width:100%}
+  .card-logo-head h3{font-family:'Inter';font-weight:700;color:#111;font-size:18px;white-space:nowrap}
+  .card-logo-head p{font-family:'Inter';font-weight:400;line-height:1.45;font-size:13px;color:rgba(0,0,0,.5);width:100%}
+  .cover-edit{height:180px;overflow:hidden;border-radius:4px;width:100%;position:relative}
+  .cover-edit .bg{position:absolute;inset:0;pointer-events:none;border-radius:4px}
+  .cover-edit .bg img{position:absolute;width:100%;height:100%;object-fit:cover;border-radius:4px;max-width:none}
+  .cover-edit .overlay{position:absolute;inset:0;background:rgba(0,0,0,.2);border-radius:4px}
+  .cover-btn{position:absolute;background:#fff;display:flex;align-items:flex-start;overflow:hidden;padding:9px 14px;border-radius:4px;left:840px;top:130px;cursor:pointer}
+  .cover-btn p{font-family:'Inter';font-weight:600;color:#111;font-size:13px;white-space:nowrap}
+  .logo-row{display:flex;gap:16px;align-items:center;overflow:hidden}
+  .logo-box{background:#111;overflow:hidden;border-radius:8px;width:80px;height:80px;flex-shrink:0;position:relative}
+  .logo-box p{position:absolute;font-family:'Inter';font-weight:700;left:20px;top:24px;color:#fdfe00;font-size:28px;white-space:nowrap}
+  .logo-info{display:flex;flex-direction:column;gap:8px;align-items:flex-start;overflow:hidden;flex-shrink:0}
+  .logo-info>p{font-family:'Inter';font-weight:400;font-size:13px;color:rgba(0,0,0,.55);white-space:nowrap}
+  .logo-btns{display:flex;gap:8px;align-items:flex-start;overflow:hidden}
+  .btn-change{background:#fff;border:1px solid rgba(0,0,0,.2);display:flex;align-items:flex-start;overflow:hidden;padding:8px 14px;border-radius:4px;cursor:pointer}
+  .btn-change p{font-family:'Inter';font-weight:600;color:#111;font-size:13px;white-space:nowrap}
+  .btn-del{display:flex;align-items:flex-start;overflow:hidden;padding:8px 14px;border-radius:4px;cursor:pointer}
+  .btn-del p{font-family:'Inter';font-weight:500;color:#d33c32;font-size:13px;white-space:nowrap}
+
+  /* company card */
+  .card-company{background:#fff;border:1px solid rgba(0,0,0,.1);display:flex;flex-direction:column;gap:20px;align-items:flex-start;overflow:hidden;padding:24px 28px 28px;border-radius:4px;width:100%}
+  .card-company h2{font-family:'Inter';font-weight:700;color:#111;font-size:20px;white-space:nowrap}
+  .card-company .desc{font-family:'Inter';font-weight:400;font-size:13px;color:rgba(0,0,0,.5);white-space:nowrap}
+  .row2{display:flex;gap:16px;align-items:flex-start;overflow:hidden;width:100%}
+  .field{display:flex;flex:1 0 0;flex-direction:column;gap:8px;align-items:flex-start;min-width:0;overflow:hidden}
+  .field.full{flex:none;width:100%}
+  .field-lbl{display:flex;gap:8px;align-items:center;overflow:hidden;flex-shrink:0}
+  .field-lbl p{font-family:'Inter';font-weight:600;font-size:13px;color:#111;white-space:nowrap}
+  .badge-ok{background:rgba(0,166,19,.12);display:flex;align-items:flex-start;overflow:hidden;padding:3px 8px;border-radius:4px;flex-shrink:0}
+  .badge-ok p{font-family:'Inter';font-weight:500;font-size:11px;color:#00a613;white-space:nowrap}
+  .input{background:#fff;border:1px solid rgba(0,0,0,.14);display:flex;align-items:center;overflow:hidden;padding:13px 16px;border-radius:4px;width:100%;font-family:'Inter';font-weight:400;font-size:14px;color:#111;outline:none}
+  .input:focus{border-color:#111}
+  .textarea{background:#fff;border:1px solid rgba(0,0,0,.14);height:96px;padding:13px 16px;border-radius:4px;width:100%;font-family:'Inter';font-weight:400;font-size:14px;line-height:normal;color:#111;outline:none;resize:none}
+  .textarea:focus{border-color:#111}
+
+  /* save bar */
+  .save-bar{background:#111;display:flex;align-items:center;justify-content:space-between;overflow:hidden;padding:16px 24px;border-radius:4px;width:100%}
+  .save-left{display:flex;gap:8px;align-items:center;overflow:hidden;flex-shrink:0}
+  .save-left .dot{width:8px;height:8px;flex-shrink:0;position:relative}
+  .save-left .dot img{position:absolute;inset:0;width:100%;height:100%}
+  .save-left p{font-family:'Inter';font-weight:500;font-size:13px;color:rgba(255,255,255,.85);white-space:nowrap}
+  .save-right{display:flex;gap:10px;align-items:flex-start;overflow:hidden}
+  .btn-cancel{border:1px solid rgba(255,255,255,.35);display:flex;height:44px;align-items:center;justify-content:center;overflow:hidden;padding:0 18px;border-radius:4px;cursor:pointer;background:transparent}
+  .btn-cancel p{font-family:'Inter';font-weight:500;font-size:14px;color:rgba(255,255,255,.85);white-space:nowrap}
+  .btn-save{background:#fdfe00;display:flex;height:44px;align-items:center;justify-content:center;overflow:hidden;padding:0 26px;border-radius:4px;cursor:pointer;border:none}
+  .btn-save p{font-family:'Inter';font-weight:700;font-size:14px;color:#111;white-space:nowrap}
+
+  /* ============ FOOTER ============ */
+  .footer{background:#000;display:flex;height:770px;align-items:flex-start;justify-content:center;width:1440px}
+  .footer .c1431{max-width:1440px;width:1431px}
+  .footer .c1431 .wrap{display:flex;flex-direction:column;align-items:center;max-width:inherit}
+  .footer .c1384{max-width:1384px;width:1384px}
+  .footer .c1384 .wrap{display:flex;flex-direction:column;align-items:flex-start;max-width:inherit;padding:64px 28px 48px}
+  .ft-top{width:100%}
+  .ft-top .row{display:flex;align-items:flex-end;justify-content:space-between}
+  .ft-logo-cont{display:flex;gap:4px;align-items:center}
+  .ft-logo{height:58px;width:144px;position:relative}
+  .ft-logo .clip{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  .ft-logo img{position:absolute;height:250%;left:-0.04%;top:-71.25%;width:100.08%;max-width:none}
+  .ft-crumbs{display:flex;gap:10px;height:64px;align-items:flex-start;padding:10px;width:229px}
+  .ft-btn-prod{border-radius:10px}
+  .ft-btn-prod .in{display:flex;gap:8px;align-items:center;justify-content:center;padding:16px 32px}
+  .ft-btn-prod p{font-family:'Inter';font-weight:400;line-height:24px;font-size:16px;text-align:center;color:#fff;white-space:nowrap}
+  .ft-btn-prod .ic24{width:24px;height:24px}
+  .ft-div{background:rgba(255,255,255,.12);height:1px;width:1328px}
+  .ft-div.full{width:100%}
+  .ft-cols-margin{width:100%;padding-top:64px}
+  .ft-cols{display:flex;align-items:center;justify-content:space-between;width:100%}
+  .ft-col{display:flex;flex-direction:column;gap:24px;height:240px;align-items:flex-start;width:195px}
+  .ft-col .head{font-family:'Inter';font-weight:500;line-height:23.8px;font-size:17px;color:#fff;white-space:nowrap}
+  .ft-list{display:flex;flex-direction:column;gap:16px;align-items:flex-start;width:194.672px}
+  .ft-list a{font-family:'Inter';font-weight:400;line-height:1;font-size:16px;color:#8f8f8f;white-space:nowrap;text-decoration:none}
+  .ft-news-margin{width:100%;padding-top:56px}
+  .ft-news{height:139.695px;width:1328.992px;display:flex;align-items:flex-start;padding:40px 0}
+  .ft-news-left{height:100%;display:flex;gap:24px;align-items:center;padding-right:48px}
+  .ft-mail{width:48px;height:48px;flex-shrink:0;position:relative}
+  .ft-mail img{position:absolute;inset:0;width:100%;height:100%}
+  .ft-news-text{width:676.797px}
+  .ft-news-text .t1{font-family:'Inter';font-weight:500;line-height:1.25;font-size:22px;color:#fff;width:616px}
+  .ft-news-text .t2{font-family:'Inter';font-weight:400;line-height:1.25;font-size:16px;color:#9a9a9a;white-space:nowrap;padding-top:6px}
+  .ft-news-form{height:60px;width:531px;display:flex;gap:8px;align-items:flex-end}
+  .ft-input{border:1px solid rgba(255,255,255,.12);display:flex;flex:1 0 0;height:52px;align-items:center;min-width:0;padding:1px 1px 1px 21px}
+  .ft-input p{font-family:'Inter';font-weight:400;line-height:27px;font-size:18px;color:#9a9a9a;white-space:nowrap}
+  .ft-sub{background:#fdfe00;display:flex;align-items:center;justify-content:center;padding:16px 24px;flex-shrink:0;cursor:pointer}
+  .ft-sub p{font-family:'Inter';font-weight:400;line-height:1;font-size:20px;color:#111;white-space:nowrap}
+  .ft-bottom-margin{width:100%}
+  .ft-bottom{display:flex;align-items:center;justify-content:space-between;width:100%;padding-top:32px}
+  .ft-bottom-left{display:flex;flex-direction:column;gap:12px;align-items:flex-start}
+  .ft-links{display:flex;align-items:center}
+  .ft-links a{font-family:'Inter';font-weight:400;line-height:24px;font-size:16px;color:#fff;white-space:nowrap;text-decoration:none}
+  .ft-links .sep{font-family:'Inter';font-weight:400;line-height:24px;font-size:16px;color:rgba(255,255,255,.35);padding:0 20px}
+  .ft-copy{font-family:'Inter';font-weight:400;line-height:22.5px;font-size:15px;color:#8f8f8f;white-space:nowrap}
+  .ft-social{display:flex;gap:12px;align-items:center;justify-content:flex-end}
+  .ft-ig{border:1px solid rgba(255,255,255,.25);border-radius:26px;width:52px;height:52px;display:flex;align-items:center;justify-content:center}
+  .ft-ig .ic20{width:20px;height:20px;position:relative}
+  .ft-ig .ic20 img{position:absolute;inset:0;width:100%;height:100%}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- NAVBAR -->
+  <div class="navbar-wrap">
+    <div class="navbar">
+      <div class="nav-logo"><div class="clip"><img src="https://www.figma.com/api/mcp/asset/b1cbb0c6-3e3e-486c-b778-fdec8ded2dd1" alt="ARCHI"></div></div>
+      <div class="search">
+        <div class="ic"><img src="https://www.figma.com/api/mcp/asset/315eeb5f-ed42-45e2-9b2a-9c6689b452b0" alt=""></div>
+        <p>Məhsul, marka və ya mütəxəssis axtarın</p>
+      </div>
+      <div class="menu">
+        <div class="menu-icons">
+          <div class="lang">
+            <p>AZ</p>
+            <div class="ic16"><img src="https://www.figma.com/api/mcp/asset/521715af-86b1-46e4-a650-4d8d187b5de3" alt=""></div>
+          </div>
+          <div class="ic24"><img src="https://www.figma.com/api/mcp/asset/0cbbbfdd-7c71-4c26-8418-c587304a37e0" alt=""></div>
+          <div class="ic24"><img src="https://www.figma.com/api/mcp/asset/57028a53-5e93-4d54-8f11-11a08617547d" alt=""></div>
+        </div>
+        <div class="signin">
+          <div class="vdivider"><img src="https://www.figma.com/api/mcp/asset/536dacd3-34e6-4beb-8bb2-75d00f662707" alt=""></div>
+          <p class="login-txt">Daxil ol </p>
+          <div class="btn-post">
+            <div class="ic20"><img src="https://www.figma.com/api/mcp/asset/744fdc38-6f16-4275-b184-7787c7e02fad" alt=""></div>
+            <p>Məhsul yerləşdir</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="nav2">
+      <div class="nav2-row">
+        <div class="nav2-left">
+          <div class="nav2-kataloq">
+            <div class="inner">
+              <div class="ic20"><img src="https://www.figma.com/api/mcp/asset/3cc77419-24b5-4968-90ec-d8dddeeabe11" alt=""></div>
+              <p>Kataloq</p>
+            </div>
+          </div>
+          <div class="nav2-item nav2-w180">
+            <p>Mütəxəssislər</p>
+            <div class="ic16"><img src="https://www.figma.com/api/mcp/asset/521715af-86b1-46e4-a650-4d8d187b5de3" alt=""></div>
+          </div>
+          <div class="nav2-item nav2-w150">
+            <p>Bloq</p>
+            <div class="ic16"><img src="https://www.figma.com/api/mcp/asset/521715af-86b1-46e4-a650-4d8d187b5de3" alt=""></div>
+          </div>
+          <div class="nav2-item nav2-w150"><p>Haqqımızda</p></div>
+          <div class="nav2-item nav2-w150"><p>B2B</p></div>
+        </div>
+        <div class="nav2-calc">
+          <div class="ic24"><img src="https://www.figma.com/api/mcp/asset/f7a603f7-f674-436a-b310-4e272eac75af" alt=""></div>
+          <p>Təmir kalkulyatoru</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- EDIT PAGE -->
+  <div class="edit-page">
+    <div class="edit-head">
+      <div class="edit-head-left">
+        <div class="crumbs">
+          <p class="c1">Biznes paneli</p>
+          <p class="c1">/</p>
+          <p class="c2">Profil redaktəsi</p>
+        </div>
+        <p class="edit-title">Biznes profilinin redaktəsi</p>
+      </div>
+      <div class="edit-head-right">
+        <div class="badge-pub">
+          <div class="dot"><img src="https://www.figma.com/api/mcp/asset/a8e81331-75ea-4fd1-90c3-2aaebe8c27c0" alt=""></div>
+          <p>Dərc olunub</p>
+        </div>
+        <div class="btn-view"><p>Profilə bax ↗</p></div>
+      </div>
+    </div>
+
+    <div class="edit-body">
+      <!-- settings nav -->
+      <div class="settings-nav">
+        <div class="snav-item active"><p>Şirkət məlumatları</p></div>
+        <div class="snav-item contact"><p class="lbl">Əlaqə məlumatları</p></div>
+        <div class="snav-item"><p class="lbl">Şourumlar</p><p class="cnt">3</p></div>
+        <div class="snav-item"><p class="lbl">Məhsullar</p><p class="cnt">1,240</p></div>
+        <div class="snav-item"><p class="lbl">Bildirişlər</p></div>
+        <div class="snav-item"><p class="lbl">Təhlükəsizlik</p></div>
+        <div class="snav-progress">
+          <div class="top"><p class="l">Profil tamlığı</p><p class="r">85%</p></div>
+          <div class="snav-bar"><div class="fill"></div></div>
+          <p class="note">Video əlavə et — +15%</p>
+        </div>
+      </div>
+
+      <!-- edit main -->
+      <div class="edit-main">
+        <!-- logo & cover card -->
+        <div class="card-logo">
+          <div class="card-logo-head">
+            <h3>Loqo və cover şəkli</h3>
+            <p>Profilinizin vizual kimliyi — kataloqda və axtarışda görünür.</p>
+          </div>
+          <div class="cover-edit">
+            <div class="bg"><img src="https://www.figma.com/api/mcp/asset/576cb038-03aa-42d2-8cba-b2a16e3419dc" alt=""><div class="overlay"></div></div>
+            <div class="cover-btn"><p>Cover-i dəyiş</p></div>
+          </div>
+          <div class="logo-row">
+            <div class="logo-box"><p>AB</p></div>
+            <div class="logo-info">
+              <p>Loqo · PNG və ya SVG, min 240×240</p>
+              <div class="logo-btns">
+                <div class="btn-change"><p>Dəyiş</p></div>
+                <div class="btn-del"><p>Sil</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- company card -->
+        <div class="card-company">
+          <h2>Şirkət məlumatları</h2>
+          <p class="desc">Qeydiyyat zamanı doldurulan rəsmi məlumatlar. VÖEN dəyişdirildikdə sənədlər yenidən yoxlanılır.</p>
+          <div class="row2">
+            <div class="field">
+              <div class="field-lbl"><p>Hüquqi ad</p></div>
+              <input class="input" value="ARCHI Build MMC">
+            </div>
+            <div class="field">
+              <div class="field-lbl"><p>Marka adı (mağaza adı)</p></div>
+              <input class="input" value="ARCHI Build">
+            </div>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <div class="field-lbl"><p>VÖEN</p><div class="badge-ok"><p>✓ Təsdiqlənib</p></div></div>
+              <input class="input" value="1234567890">
+            </div>
+            <div class="field">
+              <div class="field-lbl"><p>Şəhər</p></div>
+              <input class="input" value="Bakı">
+            </div>
+          </div>
+          <div class="field full">
+            <div class="field-lbl"><p>Hüquqi ünvan</p></div>
+            <input class="input" value="Nərimanov r., Təbriz küç. 102">
+          </div>
+          <div class="field full">
+            <div class="field-lbl"><p>Şirkət haqqında qısa təsvir</p></div>
+            <textarea class="textarea">Avropa istehsalı döşəmə materiallarının rəsmi diler və distribütoruyuq — 2015-ci ildən.</textarea>
+          </div>
+        </div>
+
+        <!-- save bar -->
+        <div class="save-bar">
+          <div class="save-left">
+            <div class="dot"><img src="https://www.figma.com/api/mcp/asset/30b6e174-9679-4de9-bdd4-9a62013ff7d1" alt=""></div>
+            <p>Yadda saxlanmamış dəyişikliklər var</p>
+          </div>
+          <div class="save-right">
+            <div class="btn-cancel"><p>Ləğv et</p></div>
+            <div class="btn-save"><p>Yadda saxla</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="c1431">
+      <div class="wrap">
+        <div class="c1384">
+          <div class="wrap">
+            <!-- top -->
+            <div class="ft-top">
+              <div class="row">
+                <div class="ft-logo-cont">
+                  <div class="ft-logo"><div class="clip"><img src="https://www.figma.com/api/mcp/asset/8bdd3b06-df47-4c02-8c8a-aa3a4e98b240" alt="ARCHI"></div></div>
+                  <div class="ft-crumbs"></div>
+                </div>
+                <div class="ft-btn-prod">
+                  <div class="in">
+                    <p>Məhsullara keç</p>
+                    <div class="ic24"><img src="https://www.figma.com/api/mcp/asset/33d27a21-9887-4cb3-bdc9-d3381a79ab5d" alt=""></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- divider -->
+            <div class="ft-cols-margin" style="padding-top:0"><div class="ft-div"></div></div>
+            <!-- columns -->
+            <div class="ft-cols-margin">
+              <div class="ft-cols">
+                <div class="ft-col">
+                  <p class="head">Məhsullar</p>
+                  <div class="ft-list">
+                    <a href="#">Kafel &amp; metlax</a>
+                    <a href="#">Boya &amp; emal</a>
+                    <a href="#">Santexnika</a>
+                    <a href="#">İzolyasiya &amp; istilik </a>
+                    <a href="#">Bütün kateqoriyalara keç</a>
+                  </div>
+                </div>
+                <div class="ft-col">
+                  <p class="head">Mütəxəssislər</p>
+                  <div class="ft-list">
+                    <a href="#">Usta tap</a>
+                    <a href="#">Top reytinqli ustalar</a>
+                    <a href="#">Bütün mütəxəssislərə bax</a>
+                  </div>
+                </div>
+                <div class="ft-col">
+                  <p class="head">ARCHİ-yə qoşul</p>
+                  <div class="ft-list">
+                    <a href="#">Satıcı ol</a>
+                    <a href="#">Usta ol</a>
+                    <a href="#">Tərəfdaşlıq proqramı</a>
+                    <a href="#">Bizneslə əməkdaşlıq</a>
+                  </div>
+                </div>
+                <div class="ft-col">
+                  <p class="head">Şirkət &amp; dəstək</p>
+                  <div class="ft-list">
+                    <a href="#">Haqqımızda</a>
+                    <a href="#">Pulsuz konsultasiya</a>
+                    <a href="#">Məqalələr</a>
+                    <a href="#">Yardım mərkəzi</a>
+                    <a href="#">Əlaqə</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- divider -->
+            <div class="ft-news-margin"><div class="ft-div"></div></div>
+            <!-- newsletter -->
+            <div class="ft-news">
+              <div class="ft-news-left">
+                <div class="ft-mail"><img src="https://www.figma.com/api/mcp/asset/598f9c2f-eb69-4a32-a2b2-c919ca250455" alt=""></div>
+                <div class="ft-news-text">
+                  <p class="t1">Təmir dünyasında yeniliklərdən xəbərdar olun</p>
+                  <p class="t2">Endirimlərdən, yeni məhsullar, faydalı məqalələr və yeniliklər barədə ilk siz məlumat alın.</p>
+                </div>
+              </div>
+              <div class="ft-news-form">
+                <div class="ft-input"><p>E-poçt ünvanın</p></div>
+                <div class="ft-sub"><p>Abunə ol</p></div>
+              </div>
+            </div>
+            <!-- full divider -->
+            <div class="ft-div full"></div>
+            <!-- bottom -->
+            <div class="ft-bottom-margin">
+              <div class="ft-bottom">
+                <div class="ft-bottom-left">
+                  <div class="ft-links">
+                    <a href="#">İstifadə şərtləri</a>
+                    <span class="sep">|</span>
+                    <a href="#">Məxfilik siyasəti</a>
+                    <span class="sep">|</span>
+                    <a href="#">Çatdırılma &amp; qaytarılma</a>
+                    <span class="sep">|</span>
+                    <a href="#">Cookie siyasəti</a>
+                    <span class="sep">|</span>
+                    <a href="#">Sayt xəritəsi</a>
+                  </div>
+                  <p class="ft-copy">©2026 ARCHI - Bütün hüquqlar qorunur.</p>
+                </div>
+                <div class="ft-social">
+                  <div class="ft-ig"><div class="ic20"><img src="https://www.figma.com/api/mcp/asset/0d4d60e4-f4ca-4660-85ac-b14ee6d1459e" alt=""></div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  // Save bar interaction
+  var saveBtn = document.querySelector('.btn-save');
+  var cancelBtn = document.querySelector('.btn-cancel');
+  if(saveBtn){saveBtn.addEventListener('click', function(){ alert('Dəyişikliklər yadda saxlanıldı.'); });}
+  if(cancelBtn){cancelBtn.addEventListener('click', function(){ location.reload(); });}
+
+  // Settings nav tab switching (visual active state)
+  var navItems = document.querySelectorAll('.settings-nav .snav-item');
+  navItems.forEach(function(item){
+    item.addEventListener('click', function(){
+      navItems.forEach(function(i){
+        i.classList.remove('active');
+        i.classList.remove('contact');
+        var p = i.querySelector('p');
+        if(p && !p.classList.contains('cnt') && !p.classList.contains('lbl')){
+          p.className = 'lbl';
+        }
+      });
+      // rebuild label class for clicked
+      var lbl = this.querySelector('p');
+      this.classList.add('active');
+    });
+  });
+})();
+</script>
+</body>
+</html>

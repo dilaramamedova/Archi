@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>business-profile — ARCHI Build MMC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{
+    --white:#fff;
+    --gray-soft:#f3f5f7;
+    --border:rgba(0,0,0,.1);
+    --border-strong:rgba(0,0,0,.14);
+    --red:#d3524c;
+    --footer-black:#000;
+    --text-muted:rgba(0,0,0,.5);
+    --yellow:#fdfe00;
+  }
+  body{background:#fff;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
+  img{display:block}
+  .inter{font-family:'Inter',sans-serif}
+  .manrope{font-family:'Manrope',sans-serif}
+
+  /* ===== page root ===== */
+  .page{background:#fff;display:flex;flex-direction:column;align-items:flex-start;width:100%}
+
+  /* ===== navbar ===== */
+  .navbar-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;width:1440px}
+  .navbar{background:#fff;display:flex;gap:48px;height:80px;align-items:center;padding:0 28px;width:100%}
+  .nav-logo{height:50px;width:131.579px;position:relative;flex-shrink:0}
+  .nav-logo .clip{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  .nav-logo img{position:absolute;height:263.16%;left:-0.04%;top:-81.58%;width:100.08%;max-width:none}
+
+  .search{background:#f3f5f7;display:flex;flex:1 0 0;gap:8px;align-items:center;min-width:0;padding:12px 16px}
+  .search .ic{width:20px;height:20px;flex-shrink:0;position:relative}
+  .search .ic img{position:absolute;inset:0;width:100%;height:100%}
+  .search p{font-family:'Manrope',sans-serif;font-weight:400;line-height:22px;font-size:16px;color:rgba(0,0,0,.5);white-space:nowrap;word-break:break-word}
+
+  .menu-c{display:flex;gap:24px;align-items:center;justify-content:flex-end;flex-shrink:0}
+  .icons{display:flex;gap:24px;align-items:center;flex-shrink:0}
+  .bloq{display:flex;gap:4px;height:22px;align-items:center;justify-content:center;flex-shrink:0}
+  .bloq p{font-family:'Manrope',sans-serif;font-weight:500;line-height:22px;font-size:16px;color:#000;white-space:nowrap}
+  .ic16{width:16px;height:16px;flex-shrink:0;position:relative}
+  .ic16 img{position:absolute;inset:0;width:100%;height:100%}
+  .ic24{width:24px;height:24px;flex-shrink:0;position:relative}
+  .ic24 img{position:absolute;inset:0;width:100%;height:100%}
+
+  .signup{display:flex;gap:24px;align-items:center;flex-shrink:0}
+  .vdiv{height:28px;width:0;position:relative;flex-shrink:0}
+  .vdiv .in{position:absolute;top:0;bottom:0;left:-0.5px;right:-0.5px}
+  .vdiv img{width:100%;height:100%}
+  .signup .daxil{font-family:'Manrope',sans-serif;font-weight:500;line-height:22px;font-size:16px;color:#111;white-space:nowrap;flex-shrink:0}
+  .login{background:#111;display:flex;gap:4px;align-items:center;justify-content:center;overflow:hidden;padding:12px 24px;flex-shrink:0}
+  .login .ic20{width:20px;height:20px;flex-shrink:0;position:relative}
+  .login .ic20 img{position:absolute;inset:0;width:100%;height:100%}
+  .login p{font-family:'Inter',sans-serif;font-weight:400;line-height:normal;font-size:16px;color:#efefef;white-space:nowrap}
+
+  /* ===== nav-2 ===== */
+  .nav2{background:#fff;border-top:1px solid rgba(0,0,0,.5);border-bottom:1px solid rgba(0,0,0,.5);display:flex;flex-direction:column;height:60px;align-items:flex-start;width:1384px}
+  .nav2-row{display:flex;height:60px;align-items:center;justify-content:space-between;width:100%}
+  .nav2-left{display:flex;align-items:center;flex-shrink:0}
+  .n2-kataloq-wrap{display:flex;flex-direction:column;height:60px;align-items:flex-start;width:150px;flex-shrink:0}
+  .n2-kataloq{border-left:1px solid rgba(0,0,0,.4);border-right:1px solid rgba(0,0,0,.4);display:flex;gap:8px;height:60px;align-items:center;justify-content:center;overflow:hidden;padding:12px 24px;width:100%}
+  .n2-kataloq .ic20{width:20px;height:20px;flex-shrink:0;position:relative}
+  .n2-kataloq .ic20 img{position:absolute;inset:0;width:100%;height:100%}
+  .n2-kataloq p{font-family:'Inter',sans-serif;font-weight:500;line-height:normal;font-size:16px;color:#000;white-space:nowrap}
+  .n2-item{border-right:1px solid rgba(0,0,0,.5);display:flex;gap:4px;height:60px;align-items:center;justify-content:center;padding:0 12px;flex-shrink:0}
+  .n2-item p{font-family:'Manrope',sans-serif;font-weight:500;line-height:22px;font-size:16px;color:#000;white-space:nowrap}
+  .n2-w180{width:180px}
+  .n2-w150{width:150px}
+  .n2-calc{border-left:1px solid rgba(0,0,0,.5);border-right:1px solid rgba(0,0,0,.5);display:flex;gap:8px;height:60px;align-items:center;justify-content:center;padding:12px 24px;flex-shrink:0}
+  .n2-calc p{font-family:'Manrope',sans-serif;font-weight:500;line-height:22px;font-size:16px;color:rgba(0,0,0,.8);white-space:nowrap}
+
+  /* ===== cover ===== */
+  .cover-wrap{background:#fff;height:280px;position:relative;width:1440px;flex-shrink:0}
+  .cover{position:absolute;height:240px;left:28px;top:20px;width:1384px;border-radius:4px}
+  .cover .bg{position:absolute;inset:0;pointer-events:none;border-radius:4px}
+  .cover .bg img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:4px;max-width:none}
+  .cover .ov{position:absolute;inset:0;background:rgba(0,0,0,.25);border-radius:4px}
+
+  /* ===== identity ===== */
+  .identity{display:flex;align-items:flex-start;justify-content:space-between;overflow:hidden;padding:8px 28px;width:100%;flex-shrink:0}
+  .id-left{display:flex;gap:40px;align-items:center;flex-shrink:0}
+  .biz-logo{background:#111;border:4px solid #fff;overflow:hidden;position:relative;border-radius:8px;width:120px;height:120px;flex-shrink:0}
+  .biz-logo p{position:absolute;font-family:'Inter',sans-serif;font-weight:700;line-height:normal;left:32px;color:#fdfe00;font-size:40px;top:36px;white-space:nowrap}
+  .id-info{display:flex;flex-direction:column;gap:8px;align-items:flex-start;overflow:hidden;flex-shrink:0}
+  .id-name-row{display:flex;gap:12px;align-items:center;overflow:hidden;flex-shrink:0}
+  .id-name{font-family:'Inter',sans-serif;font-weight:700;line-height:normal;color:#111;font-size:32px;white-space:nowrap;flex-shrink:0}
+  .id-badge{background:#e9f6ed;display:flex;align-items:center;overflow:hidden;padding:4px 10px;border-radius:4px;flex-shrink:0}
+  .id-badge p{font-family:'Inter',sans-serif;font-weight:600;line-height:normal;color:#229653;font-size:12px;white-space:nowrap}
+  .id-meta{display:flex;gap:10px;align-items:center;line-height:normal;overflow:hidden;font-size:14px;white-space:nowrap;flex-shrink:0}
+  .id-meta .m{font-family:'Inter',sans-serif;font-weight:500;color:rgba(0,0,0,.55)}
+  .id-meta .d{font-family:'Inter',sans-serif;font-weight:400;color:rgba(0,0,0,.3)}
+  .id-rating{display:flex;gap:6px;align-items:center;line-height:normal;overflow:hidden;white-space:nowrap;flex-shrink:0}
+  .id-rating .star{font-family:'Inter',sans-serif;font-weight:400;color:#e1a13c;font-size:16px}
+  .id-rating .val{font-family:'Inter',sans-serif;font-weight:700;color:#111;font-size:16px}
+  .id-rating .lbl{font-family:'Inter',sans-serif;font-weight:400;color:rgba(0,0,0,.45);font-size:13px}
+  .id-rating .dot{font-family:'Inter',sans-serif;font-weight:400;color:rgba(0,0,0,.3);font-size:13px}
+  .id-rating .cnt{font-family:'Inter',sans-serif;font-weight:600;color:rgba(0,0,0,.7);font-size:13px}
+  .id-actions{display:flex;gap:12px;align-items:flex-start;overflow:hidden;flex-shrink:0}
+  .btn-yellow{background:#fdfe00;display:flex;height:46px;align-items:center;justify-content:center;overflow:hidden;padding:0 24px;border-radius:4px;flex-shrink:0}
+  .btn-yellow p{font-family:'Inter',sans-serif;font-weight:700;line-height:normal;color:#111;font-size:14px;white-space:nowrap}
+  .btn-outline{background:#fff;border:1px solid rgba(0,0,0,.2);display:flex;height:46px;align-items:center;justify-content:center;overflow:hidden;padding:0 24px;border-radius:4px;flex-shrink:0}
+  .btn-outline p{font-family:'Inter',sans-serif;font-weight:600;line-height:normal;color:#111;font-size:14px;white-space:nowrap}
+
+  /* ===== bp-body ===== */
+  .bp-body{display:flex;gap:32px;align-items:flex-start;overflow:hidden;padding:24px 28px;width:100%;flex-shrink:0}
+  .bp-left{display:flex;flex:1 0 0;flex-direction:column;gap:36px;align-items:flex-start;min-width:0;overflow:hidden}
+  .sec-head{display:flex;flex-direction:column;gap:10px;align-items:flex-start;overflow:hidden;width:100%;flex-shrink:0}
+  .kicker{display:flex;gap:10px;align-items:center;overflow:hidden;flex-shrink:0}
+  .kicker .bar{background:#fdfe00;height:2px;width:32px;flex-shrink:0}
+  .kicker p{font-family:'Inter',sans-serif;font-weight:500;line-height:normal;font-size:12px;color:rgba(0,0,0,.55);letter-spacing:1px;white-space:nowrap}
+  .sec-title{font-family:'Inter',sans-serif;font-weight:600;line-height:normal;font-size:28px;color:#000;white-space:nowrap;flex-shrink:0}
+  .about-p{font-family:'Inter',sans-serif;font-weight:400;line-height:1.65;font-size:15px;color:rgba(0,0,0,.68);width:100%;flex-shrink:0;word-break:break-word}
+
+  .showrooms{display:flex;gap:12px;align-items:flex-start;overflow:hidden;width:100%;line-height:normal;white-space:nowrap;flex-shrink:0}
+  .sr-card{background:#f5f7f9;display:flex;flex:1 0 0;flex-direction:column;gap:6px;align-items:flex-start;min-width:0;overflow:hidden;padding:18px;border-radius:4px}
+  .sr-card .nm{font-family:'Inter',sans-serif;font-weight:700;color:#111;font-size:15px}
+  .sr-card .ad{font-family:'Inter',sans-serif;font-weight:400;color:rgba(0,0,0,.6);font-size:13px}
+  .sr-card .hr{font-family:'Inter',sans-serif;font-weight:500;color:rgba(0,0,0,.45);font-size:12px}
+
+  .catalog-head{display:flex;align-items:flex-end;justify-content:space-between;overflow:hidden;width:100%;flex-shrink:0}
+  .see-all{border-bottom:2px solid #ffe600;display:flex;align-items:flex-start;overflow:hidden;padding-bottom:2px;flex-shrink:0}
+  .see-all p{font-family:'Inter',sans-serif;font-weight:500;line-height:normal;color:#141414;font-size:12px;white-space:nowrap}
+
+  .cards{display:flex;gap:12px;align-items:flex-start;overflow:hidden;width:100%;flex-shrink:0}
+  .card{background:var(--white);border:1px solid var(--border);display:flex;flex:1 0 0;flex-direction:column;gap:12px;align-items:flex-start;min-width:0;padding:12px}
+  .card-img{background:var(--gray-soft);height:316px;overflow:hidden;position:relative;width:100%;flex-shrink:0}
+  .card-heart{position:absolute;background:var(--white);display:flex;align-items:center;justify-content:center;left:280px;top:0;padding:8px;border-radius:37px}
+  .card-heart .ic20{width:20px;height:20px;flex-shrink:0;position:relative}
+  .card-heart .ic20 img{position:absolute;inset:0;width:100%;height:100%}
+  .card-badges{position:absolute;display:flex;gap:4px;align-items:center;left:0;top:0}
+  .card-badge{background:var(--white);border:1px solid var(--border);display:flex;gap:4px;align-items:center;padding:4px 8px;border-radius:4px;flex-shrink:0}
+  .card-badge p{font-family:'Inter',sans-serif;font-weight:400;line-height:normal;font-size:14px;color:var(--footer-black);white-space:nowrap}
+  .card-dots{position:absolute;display:flex;gap:2px;align-items:center;left:132px;top:298px}
+  .card-dots .active{background:var(--border-strong);height:6px;border-radius:17px;width:18px;flex-shrink:0}
+  .card-dots .dot{background:rgba(0,0,0,.3);border-radius:17px;width:6px;height:6px;overflow:hidden;position:relative;flex-shrink:0}
+  .prod-img{position:absolute}
+  .prod-img.a{left:58px;width:200px;height:200px;top:63px}
+  .prod-img.b{left:17px;top:78px;width:282px;height:159px}
+  .prod-img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;max-width:none}
+  .card-title{display:flex;flex-direction:column;gap:12px;align-items:flex-start;width:100%;flex-shrink:0}
+  .card-title-in{display:flex;flex-direction:column;gap:8px;align-items:flex-start;width:100%;flex-shrink:0}
+  .card-stars{display:flex;gap:4px;align-items:center;justify-content:center;flex-shrink:0}
+  .card-stars .st{background:var(--white);width:20px;height:20px;position:relative;flex-shrink:0}
+  .card-stars .st img{position:absolute;inset:0;width:100%;height:100%}
+  .card-stars p{font-family:'Inter',sans-serif;font-weight:500;line-height:normal;font-size:14px;color:#000;white-space:nowrap}
+  .card-stars p .muted{color:rgba(0,0,0,.3)}
+  .card-cat{font-family:'Inter',sans-serif;font-weight:500;line-height:1.25;font-size:12px;color:var(--text-muted);text-transform:uppercase;white-space:nowrap;flex-shrink:0}
+  .card-name{font-family:'Inter',sans-serif;font-weight:500;line-height:1;font-size:16px;color:var(--footer-black);white-space:nowrap;flex-shrink:0}
+  .card-price{display:flex;gap:12px;align-items:flex-end;justify-content:center;flex-shrink:0}
+  .card-price .grp{display:flex;font-family:'Inter',sans-serif;font-weight:500;gap:8px;align-items:flex-end;justify-content:center;line-height:1;white-space:nowrap;flex-shrink:0}
+  .card-price .now{font-size:20px;color:var(--footer-black)}
+  .card-price .old{font-size:14px;color:rgba(0,0,0,.3);text-decoration:line-through}
+  .card-off{background:rgba(211,82,76,.2);display:flex;align-items:center;padding:2px 4px;border-radius:4px;flex-shrink:0}
+  .card-off p{font-family:'Inter',sans-serif;font-weight:700;line-height:normal;font-size:10px;color:var(--red);white-space:nowrap}
+
+  /* ===== sidebar ===== */
+  .bp-sidebar{background:rgba(240,242,255,.6);border:1px solid rgba(0,0,0,.08);display:flex;flex-direction:column;gap:14px;align-items:flex-start;overflow:hidden;padding:24px 22px;border-radius:4px;width:380px;flex-shrink:0}
+  .sb-kicker{font-family:'Inter',sans-serif;font-weight:600;line-height:normal;font-size:11px;color:rgba(0,0,0,.5);letter-spacing:1px;white-space:nowrap;flex-shrink:0}
+  .sb-row{display:flex;align-items:flex-start;justify-content:space-between;line-height:normal;overflow:hidden;font-size:13px;width:100%;white-space:nowrap;flex-shrink:0}
+  .sb-row .k{font-family:'Inter',sans-serif;font-weight:400;color:rgba(0,0,0,.55)}
+  .sb-row .v{font-family:'Inter',sans-serif;font-weight:600;color:#111}
+  .sb-line{background:rgba(0,0,0,.1);height:1px;width:100%;flex-shrink:0}
+  .sb-langs{display:flex;gap:6px;align-items:center;overflow:hidden;flex-shrink:0}
+  .sb-langs .lbl{font-family:'Inter',sans-serif;font-weight:400;line-height:normal;font-size:13px;color:rgba(0,0,0,.55);white-space:nowrap}
+  .sb-chip{background:#fff;border:1px solid rgba(0,0,0,.15);display:flex;align-items:flex-start;overflow:hidden;padding:3px 8px;border-radius:4px;flex-shrink:0}
+  .sb-chip p{font-family:'Inter',sans-serif;font-weight:600;line-height:normal;color:#111;font-size:11px;white-space:nowrap}
+  .sb-btn-yellow{background:#fdfe00;display:flex;height:50px;align-items:center;justify-content:center;overflow:hidden;border-radius:4px;width:100%;flex-shrink:0}
+  .sb-btn-yellow p{font-family:'Inter',sans-serif;font-weight:700;line-height:normal;color:#111;font-size:15px;white-space:nowrap}
+  .sb-btn-outline{background:#fff;border:1px solid rgba(0,0,0,.2);display:flex;height:48px;align-items:center;justify-content:center;overflow:hidden;border-radius:4px;width:100%;flex-shrink:0}
+  .sb-btn-outline p{font-family:'Inter',sans-serif;font-weight:600;line-height:normal;color:#111;font-size:14px;white-space:nowrap}
+
+  /* ===== footer / App ===== */
+  .app{background:#000;display:flex;min-height:960px;align-items:flex-start;justify-content:center;width:1440px;flex-shrink:0}
+  .app-container{max-width:1440px;width:1431px}
+  .app-inner1{display:flex;flex-direction:column;align-items:center;max-width:inherit;width:100%}
+  .app-inner2{max-width:1384px;width:1384px}
+  .app-pad{display:flex;flex-direction:column;align-items:flex-start;max-width:inherit;width:100%;padding:64px 28px 48px}
+
+  .ft-top{width:100%}
+  .ft-top-row{display:flex;align-items:flex-end;justify-content:space-between;width:100%}
+  .ft-brand{display:flex;gap:4px;align-items:center;flex-shrink:0}
+  .ft-logo{height:58px;width:144px;position:relative;flex-shrink:0}
+  .ft-logo .clip{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+  .ft-logo img{position:absolute;height:250%;left:-0.04%;top:-71.25%;width:100.08%;max-width:none}
+  .ft-crumb{display:flex;gap:10px;height:64px;align-items:flex-start;padding:10px;width:229px;flex-shrink:0}
+  .ft-topbtn{border-radius:10px;flex-shrink:0}
+  .ft-topbtn .in{display:flex;gap:8px;align-items:center;justify-content:center;padding:16px 32px}
+  .ft-topbtn p{font-family:'Inter',sans-serif;font-weight:400;line-height:24px;font-size:16px;text-align:center;color:#fff;white-space:nowrap}
+  .ft-topbtn .ic24{width:24px;height:24px;position:relative;flex-shrink:0}
+  .ft-topbtn .ic24 img{position:absolute;inset:0;width:100%;height:100%}
+
+  .ft-divider{background:rgba(255,255,255,.12);height:1px;width:1328px}
+  .ft-divider-full{background:rgba(255,255,255,.12);height:1px;width:100%;flex-shrink:0}
+  .ft-margin{width:100%}
+  .ft-cols-wrap{display:flex;flex-direction:column;align-items:flex-start;width:100%;padding-top:64px}
+  .ft-cols{display:flex;align-items:center;justify-content:space-between;width:100%}
+  .ft-col{display:flex;flex-direction:column;gap:24px;height:240px;align-items:flex-start;width:195px;flex-shrink:0}
+  .ft-col h4{font-family:'Inter',sans-serif;font-weight:500;line-height:23.8px;font-size:17px;color:#fff;white-space:nowrap}
+  .ft-list{display:flex;flex-direction:column;gap:16px;align-items:flex-start;width:194.672px}
+  .ft-list a,.ft-list p{font-family:'Inter',sans-serif;font-weight:400;line-height:1;font-size:16px;color:#8f8f8f;white-space:nowrap;text-decoration:none;display:block;width:194.672px}
+
+  .ft-news-wrap{width:100%;padding-top:56px}
+  .ft-news{height:139.695px;width:1328.992px}
+  .ft-news-in{display:flex;align-items:flex-start;padding:40px 0;width:100%;height:100%}
+  .ft-news-left{height:100%;flex-shrink:0}
+  .ft-news-left-in{display:flex;gap:24px;align-items:center;padding-right:48px;height:100%}
+  .ft-mail{width:48px;height:48px;position:relative;flex-shrink:0}
+  .ft-mail img{position:absolute;inset:0;width:100%;height:100%}
+  .ft-news-txt{width:676.797px;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-start}
+  .ft-news-txt h3{font-family:'Inter',sans-serif;font-weight:500;line-height:1.25;font-size:22px;color:#fff;width:616px}
+  .ft-news-sub{height:30px;display:flex;flex-direction:column;align-items:flex-start;padding-top:6px}
+  .ft-news-sub p{font-family:'Inter',sans-serif;font-weight:400;line-height:1.25;font-size:16px;color:#9a9a9a;white-space:nowrap}
+  .ft-form{height:60px;width:531px;flex-shrink:0;display:flex;gap:8px;align-items:flex-end}
+  .ft-input{border:1px solid rgba(255,255,255,.12);display:flex;flex:1 0 0;height:52px;align-items:center;min-width:0;padding:1px 1px 1px 21px}
+  .ft-input input{background:transparent;border:none;outline:none;font-family:'Inter',sans-serif;font-weight:400;line-height:27px;font-size:18px;color:#9a9a9a;width:100%}
+  .ft-input input::placeholder{color:#9a9a9a;opacity:1}
+  .ft-subscribe{background:#fdfe00;display:flex;align-items:center;justify-content:center;padding:16px 24px;flex-shrink:0}
+  .ft-subscribe p{font-family:'Inter',sans-serif;font-weight:400;line-height:1;font-size:20px;color:#111;white-space:nowrap}
+
+  .ft-bottom{width:100%}
+  .ft-bottom-in{display:flex;align-items:center;justify-content:space-between;padding-top:32px;width:100%}
+  .ft-bottom-left{display:flex;flex-direction:column;gap:12px;align-items:flex-start;flex-shrink:0}
+  .ft-legal{display:flex;align-items:center}
+  .ft-legal a{font-family:'Inter',sans-serif;font-weight:400;line-height:24px;font-size:16px;color:#fff;white-space:nowrap;text-decoration:none}
+  .ft-legal .sep{padding:0 20px;font-family:'Inter',sans-serif;font-weight:400;line-height:24px;font-size:16px;color:rgba(255,255,255,.35);white-space:nowrap}
+  .ft-copy{width:100%}
+  .ft-copy p{font-family:'Inter',sans-serif;font-weight:400;line-height:22.5px;font-size:15px;color:#8f8f8f;white-space:nowrap}
+  .ft-social{display:flex;gap:12px;align-items:center;justify-content:flex-end;flex-shrink:0}
+  .ft-ig{border:1px solid rgba(255,255,255,.25);border-radius:26px;width:52px;height:52px;flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:1px}
+  .ft-ig .ic20{width:20px;height:20px;position:relative;flex-shrink:0}
+  .ft-ig .ic20 img{position:absolute;inset:0;width:100%;height:100%}
+</style>
+</head>
+<body>
+<div class="page" data-node-id="1105:24979">
+
+  <!-- ===== NAVBAR ===== -->
+  <div class="navbar-wrap" data-node-id="1105:24980">
+    <div class="navbar" data-node-id="1105:24981">
+      <div class="nav-logo" data-node-id="1105:24982">
+        <div class="clip"><img alt="" src="https://www.figma.com/api/mcp/asset/730a2be3-3f3c-4437-8558-8d2ce86a272c"></div>
+      </div>
+      <div class="search" data-node-id="1105:24983">
+        <div class="ic"><img alt="" src="https://www.figma.com/api/mcp/asset/9fdcba83-6a3d-4b57-8b5f-9aa0b671c89f"></div>
+        <p>Məhsul, marka və ya mütəxəssis axtarın</p>
+      </div>
+      <div class="menu-c" data-node-id="1105:24987">
+        <div class="icons" data-node-id="1105:24988">
+          <div class="bloq" data-node-id="1105:24989">
+            <p>AZ</p>
+            <div class="ic16"><img alt="" src="https://www.figma.com/api/mcp/asset/565ccd0f-5b7e-42a3-83d8-7e3580f38d3c"></div>
+          </div>
+          <div class="ic24" data-node-id="1105:24992"><img alt="" src="https://www.figma.com/api/mcp/asset/27485dff-96cf-4839-aff1-c6b4c4bbf50f"></div>
+          <div class="ic24" data-node-id="1105:24994"><img alt="" src="https://www.figma.com/api/mcp/asset/d18f155f-eed3-4b6e-aa38-117268a6d43a"></div>
+        </div>
+        <div class="signup" data-node-id="1105:24996">
+          <div class="vdiv" data-node-id="1105:24997"><div class="in"><img alt="" src="https://www.figma.com/api/mcp/asset/1b87a5b5-d617-4b0a-bc62-6c40b23dc07a"></div></div>
+          <p class="daxil" data-node-id="1105:24998">Daxil ol </p>
+          <div class="login" data-node-id="1105:24999">
+            <div class="ic20"><img alt="" src="https://www.figma.com/api/mcp/asset/60d8d8c9-382d-4a93-ab25-f862758ac0f1"></div>
+            <p>Məhsul yerləşdir</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== NAV-2 ===== -->
+    <div class="nav2" data-node-id="1105:25000">
+      <div class="nav2-row">
+        <div class="nav2-left">
+          <div class="n2-kataloq-wrap">
+            <div class="n2-kataloq" data-node-id="1105:25004">
+              <div class="ic20"><img alt="" src="https://www.figma.com/api/mcp/asset/b5fcb334-031c-45c7-9a6a-b735f2c43ab3"></div>
+              <p>Kataloq</p>
+            </div>
+          </div>
+          <div class="n2-item n2-w180" data-node-id="1105:25005">
+            <p>Mütəxəssislər</p>
+            <div class="ic16"><img alt="" src="https://www.figma.com/api/mcp/asset/565ccd0f-5b7e-42a3-83d8-7e3580f38d3c"></div>
+          </div>
+          <div class="n2-item n2-w150" data-node-id="1105:25006">
+            <p>Bloq</p>
+            <div class="ic16"><img alt="" src="https://www.figma.com/api/mcp/asset/565ccd0f-5b7e-42a3-83d8-7e3580f38d3c"></div>
+          </div>
+          <div class="n2-item n2-w150" data-node-id="1105:25007">
+            <p>Haqqımızda</p>
+          </div>
+          <div class="n2-item n2-w150" data-node-id="1105:25008">
+            <p>B2B</p>
+          </div>
+        </div>
+        <div class="n2-calc" data-node-id="1105:25010">
+          <div class="ic24"><img alt="" src="https://www.figma.com/api/mcp/asset/577fb192-6a0a-4460-8601-45b49a94dd97"></div>
+          <p>Təmir kalkulyatoru</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== COVER ===== -->
+  <div class="cover-wrap" data-node-id="1105:25016">
+    <div class="cover" data-node-id="1105:25017">
+      <div class="bg">
+        <img alt="" src="https://www.figma.com/api/mcp/asset/bd3b1542-ad10-4ded-aac9-ae92e315ce8c">
+        <div class="ov"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== IDENTITY ===== -->
+  <div class="identity" data-node-id="1105:25022">
+    <div class="id-left" data-node-id="1105:25728">
+      <div class="biz-logo" data-node-id="1105:25725"><p>AB</p></div>
+      <div class="id-info" data-node-id="1105:25023">
+        <div class="id-name-row" data-node-id="1105:25024">
+          <p class="id-name">ARCHI Build MMC</p>
+          <div class="id-badge"><p>✓ Təsdiqlənmiş biznes</p></div>
+        </div>
+        <div class="id-meta" data-node-id="1105:25028">
+          <p class="m">Bakı, Azərbaycan</p>
+          <p class="d">·</p>
+          <p class="m">2015-dən</p>
+          <p class="d">·</p>
+          <p class="m">25 əməkdaş</p>
+          <p class="d">·</p>
+          <p class="m">3 şourum</p>
+        </div>
+        <div class="id-rating" data-node-id="1105:25036">
+          <p class="star">★</p>
+          <p class="val">4.8</p>
+          <p class="lbl">mağaza reytinqi</p>
+          <p class="dot">·</p>
+          <p class="cnt">1,240 məhsul</p>
+        </div>
+      </div>
+    </div>
+    <div class="id-actions" data-node-id="1105:25042">
+      <div class="btn-yellow" data-node-id="1105:25043"><p>Məhsullara keç</p></div>
+      <div class="btn-outline" data-node-id="1105:25045"><p>İzlə</p></div>
+    </div>
+  </div>
+
+  <!-- ===== BODY ===== -->
+  <div class="bp-body" data-node-id="1105:25047">
+    <div class="bp-left" data-node-id="1105:25048">
+
+      <div class="sec-head" data-node-id="1105:25049">
+        <div class="kicker"><div class="bar"></div><p>HAQQINDA</p></div>
+        <p class="sec-title">Şirkət haqqında</p>
+      </div>
+
+      <p class="about-p" data-node-id="1105:25054">2015-ci ildən Azərbaycan bazarında fəaliyyət göstəririk. Avropa istehsalı döşəmə materiallarının rəsmi diler və distribütoruyuq — Quick-Step və Egger brendlərini birbaşa istehsalçıdan gətiririk. Bakıda 3 şourumumuz, 25 nəfərlik komandamız və 320-dən çox tamamlanmış korporativ layihəmiz var.</p>
+
+      <div class="sec-head" data-node-id="1105:25055">
+        <div class="kicker"><div class="bar"></div><p>ŞOURUMLAR</p></div>
+        <p class="sec-title">3 şourum — Bakı</p>
+      </div>
+
+      <div class="showrooms" data-node-id="1105:25060">
+        <div class="sr-card">
+          <p class="nm">Nərimanov</p>
+          <p class="ad">Təbriz küç. 108</p>
+          <p class="hr">B.e–Şən 09:00–19:00</p>
+        </div>
+        <div class="sr-card">
+          <p class="nm">Yasamal</p>
+          <p class="ad">Şərifzadə küç. 21</p>
+          <p class="hr">B.e–Şən 10:00–19:00</p>
+        </div>
+        <div class="sr-card">
+          <p class="nm">Xətai</p>
+          <p class="ad">Babək pr. 64</p>
+          <p class="hr">Hər gün 10:00–20:00</p>
+        </div>
+      </div>
+
+      <div class="catalog-head" data-node-id="1105:25073">
+        <div class="sec-head" style="width:auto">
+          <div class="kicker"><div class="bar"></div><p>KATALOQ</p></div>
+          <p class="sec-title">Məhsullarımız</p>
+        </div>
+        <div class="see-all"><p>HAMISINA BAX (1,240) →</p></div>
+      </div>
+
+      <div class="cards" data-node-id="1105:25081">
+        <!-- card 1 -->
+        <div class="card" data-node-id="1105:25082">
+          <div class="card-img">
+            <div class="card-heart"><div class="ic20"><img alt="" src="https://www.figma.com/api/mcp/asset/c3df5338-6b9f-4e0a-bdd1-9ee004febed9"></div></div>
+            <div class="card-badges">
+              <div class="card-badge"><p>Yeni məhsul</p></div>
+              <div class="card-badge"><p>Stokda var</p></div>
+            </div>
+            <div class="card-dots"><div class="active"></div><div class="dot"></div><div class="dot"></div></div>
+            <div class="prod-img a"><img alt="" src="https://www.figma.com/api/mcp/asset/d4fa5ba5-165a-4973-8538-7fc097361948"></div>
+          </div>
+          <div class="card-title">
+            <div class="card-title-in">
+              <div class="card-stars">
+                <div class="st"><img alt="" src="https://www.figma.com/api/mcp/asset/53ae9d6e-ba2c-4911-8638-fa91a053aaa1"></div>
+                <p>4.4 <span class="muted">(1,876 rəy)</span></p>
+              </div>
+              <p class="card-cat">BOYA </p>
+              <p class="card-name">Akrilik fasad boyası</p>
+            </div>
+            <div class="card-price">
+              <div class="grp"><p class="now">23.90 ₼</p><p class="old">15,99 ₼</p></div>
+              <div class="card-off"><p>-48%</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- card 2 -->
+        <div class="card" data-node-id="1105:25083">
+          <div class="card-img">
+            <div class="card-heart"><div class="ic20"><img alt="" src="https://www.figma.com/api/mcp/asset/c3df5338-6b9f-4e0a-bdd1-9ee004febed9"></div></div>
+            <div class="card-badges">
+              <div class="card-badge"><p>Yeni məhsul</p></div>
+              <div class="card-badge"><p>Stokda var</p></div>
+            </div>
+            <div class="card-dots"><div class="active"></div><div class="dot"></div><div class="dot"></div></div>
+            <div class="prod-img b"><img alt="" src="https://www.figma.com/api/mcp/asset/8409fa28-1b3d-43c1-b6a1-f7f08690f8b0"></div>
+          </div>
+          <div class="card-title">
+            <div class="card-title-in">
+              <div class="card-stars">
+                <div class="st"><img alt="" src="https://www.figma.com/api/mcp/asset/53ae9d6e-ba2c-4911-8638-fa91a053aaa1"></div>
+                <p>4.4 <span class="muted">(1,876 rəy)</span></p>
+              </div>
+              <p class="card-cat">İzolyasiya</p>
+              <p class="card-name">Mineral yun izolyasiya</p>
+            </div>
+            <div class="card-price">
+              <div class="grp"><p class="now">23.90 ₼</p><p class="old">15,99 ₼</p></div>
+              <div class="card-off"><p>-48%</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- card 3 -->
+        <div class="card" data-node-id="1105:25084">
+          <div class="card-img">
+            <div class="card-heart"><div class="ic20"><img alt="" src="https://www.figma.com/api/mcp/asset/c3df5338-6b9f-4e0a-bdd1-9ee004febed9"></div></div>
+            <div class="card-badges">
+              <div class="card-badge"><p>Yeni məhsul</p></div>
+              <div class="card-badge"><p>Stokda var</p></div>
+            </div>
+            <div class="card-dots"><div class="active"></div><div class="dot"></div><div class="dot"></div></div>
+            <div class="prod-img a"><img alt="" src="https://www.figma.com/api/mcp/asset/d4fa5ba5-165a-4973-8538-7fc097361948"></div>
+          </div>
+          <div class="card-title">
+            <div class="card-title-in">
+              <div class="card-stars">
+                <div class="st"><img alt="" src="https://www.figma.com/api/mcp/asset/53ae9d6e-ba2c-4911-8638-fa91a053aaa1"></div>
+                <p>4.4 <span class="muted">(1,876 rəy)</span></p>
+              </div>
+              <p class="card-cat">BOYA </p>
+              <p class="card-name">Akrilik fasad boyası</p>
+            </div>
+            <div class="card-price">
+              <div class="grp"><p class="now">23.90 ₼</p><p class="old">15,99 ₼</p></div>
+              <div class="card-off"><p>-48%</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== SIDEBAR ===== -->
+    <div class="bp-sidebar" data-node-id="1105:25107">
+      <p class="sb-kicker">ƏLAQƏ</p>
+      <div class="sb-row"><p class="k">Telefon</p><p class="v">+994 12 555 08 15</p></div>
+      <div class="sb-row"><p class="k">WhatsApp</p><p class="v">+994 50 555 08 15</p></div>
+      <div class="sb-row"><p class="k">E-poçt</p><p class="v">info@archibuild.az</p></div>
+      <div class="sb-row"><p class="k">Veb-sayt</p><p class="v">archibuild.az</p></div>
+      <div class="sb-row"><p class="k">İş saatları</p><p class="v">B.e–Cümə 09:00–18:00</p></div>
+      <div class="sb-line"></div>
+      <div class="sb-langs">
+        <p class="lbl">Dillər:</p>
+        <div class="sb-chip"><p>AZ</p></div>
+        <div class="sb-chip"><p>RU</p></div>
+        <div class="sb-chip"><p>EN</p></div>
+      </div>
+      <div class="sb-btn-yellow"><p>Əlaqə saxla</p></div>
+      <div class="sb-btn-outline"><p>Mesaj göndər</p></div>
+      <div class="sb-line"></div>
+      <div class="sb-row"><p class="k">Cavab vaxtı</p><p class="v">~2 saat</p></div>
+      <div class="sb-row"><p class="k">Məhsul</p><p class="v">1,240</p></div>
+      <div class="sb-row"><p class="k">Üzv</p><p class="v">2021-dən</p></div>
+    </div>
+  </div>
+
+  <!-- ===== FOOTER / APP ===== -->
+  <div class="app" data-node-id="1105:25147">
+    <div class="app-container">
+      <div class="app-inner1">
+        <div class="app-inner2">
+          <div class="app-pad">
+
+            <!-- top row -->
+            <div class="ft-top">
+              <div class="ft-top-row">
+                <div class="ft-brand">
+                  <div class="ft-logo"><div class="clip"><img alt="" src="https://www.figma.com/api/mcp/asset/6a5df39b-65e8-4205-bb09-4c7fed8fc5a0"></div></div>
+                  <div class="ft-crumb"></div>
+                </div>
+                <div class="ft-topbtn">
+                  <div class="in">
+                    <p>Məhsullara keç</p>
+                    <div class="ic24"><img alt="" src="https://www.figma.com/api/mcp/asset/3ff3e1c8-159d-4849-9cfb-8945a9aff338"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ft-margin"><div class="ft-divider"></div></div>
+
+            <!-- columns -->
+            <div class="ft-cols-wrap">
+              <div class="ft-cols">
+                <div class="ft-col">
+                  <h4>Məhsullar</h4>
+                  <div class="ft-list">
+                    <a href="#">Kafel &amp; metlax</a>
+                    <a href="#">Boya &amp; emal</a>
+                    <a href="#">Santexnika</a>
+                    <a href="#">İzolyasiya &amp; istilik </a>
+                    <a href="#">Bütün kateqoriyalara keç</a>
+                  </div>
+                </div>
+                <div class="ft-col">
+                  <h4>Mütəxəssislər</h4>
+                  <div class="ft-list">
+                    <a href="#">Usta tap</a>
+                    <a href="#">Top reytinqli ustalar</a>
+                    <p>Bütün mütəxəssislərə bax</p>
+                  </div>
+                </div>
+                <div class="ft-col">
+                  <h4>ARCHİ-yə qoşul</h4>
+                  <div class="ft-list">
+                    <a href="#">Satıcı ol</a>
+                    <a href="#">Usta ol</a>
+                    <a href="#">Tərəfdaşlıq proqramı</a>
+                    <a href="#">Bizneslə əməkdaşlıq</a>
+                  </div>
+                </div>
+                <div class="ft-col">
+                  <h4>Şirkət &amp; dəstək</h4>
+                  <div class="ft-list">
+                    <a href="#">Haqqımızda</a>
+                    <a href="#">Pulsuz konsultasiya</a>
+                    <a href="#">Məqalələr</a>
+                    <a href="#">Yardım mərkəzi</a>
+                    <a href="#">Əlaqə</a>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ft-news-wrap"><div class="ft-divider"></div></div>
+
+            <!-- newsletter -->
+            <div class="ft-news">
+              <div class="ft-news-in">
+                <div class="ft-news-left">
+                  <div class="ft-news-left-in">
+                    <div class="ft-mail"><img alt="" src="https://www.figma.com/api/mcp/asset/ce017efa-a87a-447d-881a-d3cd4d6bc36e"></div>
+                    <div class="ft-news-txt">
+                      <h3>Təmir dünyasında yeniliklərdən xəbərdar olun</h3>
+                      <div class="ft-news-sub"><p>Endirimlərdən, yeni məhsullar, faydalı məqalələr və yeniliklər barədə ilk siz məlumat alın.</p></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="ft-form">
+                  <div class="ft-input"><input type="text" placeholder="E-poçt ünvanın"></div>
+                  <div class="ft-subscribe"><p>Abunə ol</p></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="ft-divider-full"></div>
+
+            <!-- bottom -->
+            <div class="ft-bottom">
+              <div class="ft-bottom-in">
+                <div class="ft-bottom-left">
+                  <div class="ft-legal">
+                    <a href="#">İstifadə şərtləri</a>
+                    <span class="sep">|</span>
+                    <a href="#">Məxfilik siyasəti</a>
+                    <span class="sep">|</span>
+                    <a href="#">Çatdırılma &amp; qaytarılma</a>
+                    <span class="sep">|</span>
+                    <a href="#">Cookie siyasəti</a>
+                    <span class="sep">|</span>
+                    <a href="#">Sayt xəritəsi</a>
+                  </div>
+                  <div class="ft-copy"><p>©2026 ARCHI - Bütün hüquqlar qorunur.</p></div>
+                </div>
+                <div class="ft-social">
+                  <div class="ft-ig"><div class="ic20"><img alt="" src="https://www.figma.com/api/mcp/asset/334c42de-6abb-42b2-918a-6f716d511a10"></div></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
