@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rəşad Məmmədov — Kafel &amp; metlax ustası — ARCHİ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="archi.css">
+<style>
+  /* ============ MÜTƏXƏSSİS PROFİLİ (Figma node 777-2779 ilə 1:1, pp- prefiksli) ============ */
+  body{background:#fff}
+  /* Figma: content padding 40px, inner 1360px, bölmələr arası 48px */
+  .pp{max-width:1440px;margin:0 auto;padding:40px 40px 80px;display:flex;flex-direction:column;gap:48px}
+
+  /* breadcrumb */
+  .pp-crumbs{display:flex;gap:8px;align-items:center;font-size:14px}
+  .pp-crumbs a{color:var(--text-muted)}
+  .pp-crumbs a:hover{color:var(--text-secondary)}
+  .pp-crumbs .sep{color:rgba(0,0,0,.3)}
+  .pp-crumbs .cur{font-weight:500;color:#111}
+
+  /* ---- bölmə başlığı (eyebrow + h2) ---- */
+  .pp-sechead{display:flex;flex-direction:column;gap:16px}
+  .pp-eyebrow{display:flex;align-items:center;gap:12px}
+  .pp-eyebrow .line{width:32px;height:2px;background:var(--yellow)}
+  .pp-eyebrow p{font-weight:500;font-size:14px;letter-spacing:.84px;color:rgba(0,0,0,.55);text-transform:uppercase}
+  .pp-sechead h2{font-weight:600;font-size:32px;color:#111}
+
+  /* ---- header: sol sütun + rezervasiya kartı ---- */
+  .pp-head{display:flex;gap:48px;align-items:flex-start}
+  .pp-head-l{flex:1;min-width:0;display:flex;flex-direction:column;gap:48px}
+  .pp-id{display:flex;gap:24px;align-items:flex-start}
+
+  .pp-ava{position:relative;width:238px;height:226px;flex-shrink:0;background:#f5fbff;border-radius:16px;overflow:hidden}
+  .pp-ava .ring{position:absolute;left:47px;top:41px;width:144px;height:144px;border-radius:50%;background:#fff;border:4.5px solid var(--yellow);display:flex;align-items:center;justify-content:center}
+  .pp-ava .ring img{width:60px;height:60px;object-fit:cover}
+  .pp-badge{position:absolute;left:6px;top:6px;display:flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:4px 8px;font-size:14px;color:#000;white-space:nowrap}
+  .pp-badge img{width:20px;height:20px}
+  .pp-fav{position:absolute;right:4px;top:4px;width:36px;height:36px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s}
+  .pp-fav img{width:20px;height:20px}
+  .pp-fav:hover{transform:scale(1.08)}
+
+  .pp-id-r{display:flex;flex-direction:column;gap:16px}
+  .pp-verified{align-self:flex-start;display:flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:4px 8px;font-size:14px;color:var(--green);white-space:nowrap}
+  .pp-verified img{width:20px;height:20px}
+  .pp-name{display:flex;flex-direction:column;gap:12px}
+  .pp-name h1{font-weight:600;font-size:36px;line-height:1.05;color:#111}
+  .pp-name .role{font-weight:500;font-size:20px;color:var(--text-muted);margin-top:8px}
+  .pp-rate{display:flex;align-items:center;gap:4px}
+  .pp-stars{display:flex;gap:4px}
+  .pp-stars img{width:16px;height:16px}
+  .pp-rate .v{font-weight:600;font-size:14px;color:#000}
+  .pp-rate .r{font-weight:500;font-size:14px;color:var(--text-faint)}
+  .pp-meta{font-weight:500;font-size:16px;color:var(--text-muted)}
+  .pp-meta .dot{padding:0 14px;color:rgba(0,0,0,.3)}
+
+  /* ---- haqqında ---- */
+  .pp-about{display:flex;flex-direction:column;gap:24px}
+  .pp-about .txt{font-size:16px;line-height:1.5;color:var(--text-secondary)}
+  .pp-tags{display:flex;flex-wrap:wrap;gap:8px}
+  .pp-tag{padding:6px 12px;background:var(--gray-soft);border-radius:var(--radius);font-size:14px;color:#111}
+
+  /* ---- rezervasiya kartı ---- */
+  .pp-book{width:360px;flex-shrink:0;background:#f5f7ff;padding:24px;display:flex;flex-direction:column;gap:16px}
+  .pp-book .ph{display:flex;flex-direction:column;gap:2px}
+  .pp-book .ph .lbl{font-size:14px;color:var(--text-muted)}
+  .pp-book .prow{display:flex;align-items:baseline;gap:8px}
+  .pp-book .prow .now{font-weight:600;font-size:32px;color:#111}
+  .pp-book .prow .sub{font-size:14px;color:var(--text-faint)}
+  .pp-btn{display:flex;align-items:center;justify-content:center;padding:16px 24px;font-weight:500;font-size:16px;color:#111;cursor:pointer;transition:filter .2s,border-color .2s}
+  .pp-btn.y{background:var(--yellow)}
+  .pp-btn.y:hover{filter:brightness(.95)}
+  .pp-btn.w{background:#fff;border:1px solid rgba(0,0,0,.2)}
+  .pp-btn.w:hover{border-color:#111}
+  .pp-book .div{height:1px;background:var(--border)}
+  .pp-stat{display:flex;align-items:center;justify-content:space-between;font-size:14px}
+  .pp-stat .k{color:var(--text-muted)}
+  .pp-stat .v{font-weight:500;color:#111}
+  .pp-free{display:flex;align-items:center;gap:8px;font-weight:600;font-size:12px;color:#229653}
+  .pp-free .d{width:8px;height:8px;border-radius:50%;background:#229653;flex-shrink:0}
+
+  /* ---- portfolio ---- */
+  .pp-sec{display:flex;flex-direction:column;gap:24px}
+  .pp-grid{display:flex;flex-direction:column;gap:16px}
+  .pp-grow{display:flex;gap:16px}
+  .pp-tile{position:relative;flex:1;min-width:0;height:230px;border-radius:var(--radius);overflow:hidden}
+  .pp-tile>img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
+  .pp-tile:hover>img{transform:scale(1.04)}
+  .pp-tile .lb{position:absolute;left:12px;top:189px;background:rgba(255,255,255,.95);border-radius:var(--radius);padding:6px 10px;font-weight:600;font-size:12px;color:#111;white-space:nowrap}
+  .pp-tile.more{display:flex;align-items:center;justify-content:center}
+  .pp-tile.more .ov{position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
+  .pp-tile.more .ov b{font-weight:700;font-size:22px;color:#fff}
+  .pp-tile.more .ov span{font-weight:500;font-size:13px;color:rgba(255,255,255,.85)}
+
+  /* ---- xidmətlər ---- */
+  .pp-svc-list{display:flex;flex-direction:column}
+  .pp-svc{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 0;cursor:pointer}
+  .pp-svc + .pp-svc{border-top:1px solid var(--border)}
+  .pp-svc .l{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+  .pp-svc .t{font-weight:500;font-size:16px;color:#111}
+  .pp-svc .s{font-size:14px;color:var(--text-muted)}
+  .pp-svc .rr{display:flex;align-items:center;gap:16px;font-size:16px;white-space:nowrap}
+  .pp-svc .pr{font-weight:500;color:#111}
+  .pp-svc .ar{color:var(--text-muted);transition:transform .25s ease}
+  .pp-svc:hover .ar{transform:translateX(4px)}
+
+  /* ---- rəylər ---- */
+  .pp-score{display:flex;align-items:center;gap:6px}
+  .pp-score .n{font-weight:600;font-size:40px;color:#111}
+  .pp-score .c{display:flex;flex-direction:column;gap:6px}
+  .pp-score .ss{display:flex;gap:2px}
+  .pp-score .ss img{width:16px;height:16px}
+  .pp-score .cnt{font-size:13px;color:#1a1a1a}
+  .pp-revs{display:flex;gap:16px;align-items:stretch}
+  .pp-rev{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px}
+  .pp-rev .hd{display:flex;align-items:center;gap:12px}
+  .pp-rev .av{width:40px;height:40px;flex-shrink:0;border-radius:50%;background:var(--gray-soft);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px;color:#111}
+  .pp-rev .nm{display:flex;flex-direction:column;gap:2px}
+  .pp-rev .nm .n{font-weight:500;font-size:14px;color:#111}
+  .pp-rev .nm .d{font-size:12px;color:var(--text-faint)}
+  /* rəy ulduzları — 4.9 xalının yanındaki ic-star.svg ilə eyni ikon */
+  .pp-rev .st{display:flex;gap:2px}
+  .pp-rev .st img{width:16px;height:16px}
+  .pp-rev .tx{font-size:14px;line-height:1.5;color:var(--text-secondary)}
+  /* .sec-more flex sütununda stretch olur — Figma-da yalnız mətn eni qədərdir */
+  .pp-sec .sec-more{align-self:flex-start}
+
+  /* responsiv */
+  @media(max-width:1200px){
+    .pp-head{flex-direction:column;gap:32px}
+    .pp-book{width:100%}
+  }
+  @media(max-width:900px){
+    .pp{padding:28px 20px 56px;gap:36px}
+    .pp-grow{flex-wrap:wrap}
+    .pp-tile{flex:1 1 calc(50% - 8px)}
+    .pp-revs{flex-direction:column}
+    .pp-name h1{font-size:28px}
+    .pp-sechead h2{font-size:24px}
+  }
+  @media(max-width:640px){
+    .pp-id{flex-direction:column}
+    .pp-tile{flex:1 1 100%}
+    .pp-meta .dot{padding:0 8px}
+  }
+</style>
+</head>
+<body>
+
+<div data-archi="nav"></div>
+
+<!-- ============ MÜTƏXƏSSİS PROFİLİ ============ -->
+<main class="pp">
+
+  <!-- breadcrumb -->
+  <nav class="pp-crumbs">
+    <a href="index.html">Ana səhifə</a>
+    <span class="sep">/</span>
+    <a href="specialists.html">Mütəxəssislər</a>
+    <span class="sep">/</span>
+    <span class="cur">Rəşad Məmmədov</span>
+  </nav>
+
+  <!-- header -->
+  <div class="pp-head">
+    <div class="pp-head-l">
+
+      <!-- kimlik -->
+      <div class="pp-id">
+        <div class="pp-ava">
+          <div class="ring"><img src="assets/sp-avatar.png" alt="Rəşad Məmmədov"></div>
+          <span class="pp-badge"><img src="assets/ic-crown.svg" alt="">Top usta</span>
+          <span class="pp-fav" id="ppFav" role="button" aria-label="Seçilmişlərə əlavə et"><img src="assets/ic-heart2.svg" alt=""></span>
+        </div>
+        <div class="pp-id-r">
+          <span class="pp-verified"><img src="assets/ic-check.svg" alt="">Təsdiqlənmiş</span>
+          <div class="pp-name">
+            <div>
+              <h1>Rəşad Məmmədov</h1>
+              <p class="role">Kafel &amp; metlax ustası</p>
+            </div>
+            <div class="pp-rate">
+              <span class="pp-stars">
+                <img src="assets/ic-star-amber.svg" alt=""><img src="assets/ic-star-amber.svg" alt=""><img src="assets/ic-star-amber.svg" alt=""><img src="assets/ic-star-amber.svg" alt=""><img src="assets/ic-star-amber.svg" alt="">
+              </span>
+              <span class="v">4.9</span>
+              <span class="r">(416 rəy)</span>
+            </div>
+          </div>
+          <p class="pp-meta">12 illik təcrübə<span class="dot">·</span>320 tamamlanmış layihə<span class="dot">·</span>Bakı</p>
+        </div>
+      </div>
+
+      <!-- haqqında -->
+      <section class="pp-about">
+        <div class="pp-sechead">
+          <div class="pp-eyebrow"><span class="line"></span><p>Haqqında</p></div>
+          <h2>Mütəxəssis haqqında</h2>
+        </div>
+        <p class="txt">12 ildən artıqdır kafel və metlax döşəmə ilə məşğulam. Mətbəx, hamam, balkon və tam mənzil üzlüyü üzrə işləyirəm. Hər layihəyə dəqiq ölçü, səliqəli iş və vaxtında təhvil prinsipi ilə yanaşıram. Materialın düzgün seçimində də məsləhət verirəm.</p>
+        <div class="pp-tags">
+          <span class="pp-tag">Kafel döşəmə</span>
+          <span class="pp-tag">Mətbəx üzlüyü</span>
+          <span class="pp-tag">Hamam</span>
+          <span class="pp-tag">Mozaika</span>
+          <span class="pp-tag">Hidroizolyasiya</span>
+          <span class="pp-tag">Qranit &amp; mərmər</span>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- rezervasiya -->
+    <aside class="pp-book">
+      <div class="ph">
+        <span class="lbl">Konsultasiya</span>
+        <div class="prow"><span class="now">Pulsuz</span><span class="sub">· ilk zəng</span></div>
+      </div>
+      <button class="pp-btn y" data-fcalc>Pulsuz konsultasiya</button>
+      <button class="pp-btn w" id="ppMsg">Mesaj göndər</button>
+      <div class="div"></div>
+      <div class="pp-stat"><span class="k">Cavab vaxtı</span><span class="v">~1 saat</span></div>
+      <div class="pp-stat"><span class="k">Tamamlanmış</span><span class="v">320 layihə</span></div>
+      <div class="pp-stat"><span class="k">Üzv</span><span class="v">2021-dən</span></div>
+      <div class="pp-free"><span class="d"></span>Bu həftə üçün 3 boş yer</div>
+    </aside>
+  </div>
+
+  <!-- portfolio -->
+  <section class="pp-sec">
+    <div class="pp-sechead">
+      <div class="pp-eyebrow"><span class="line"></span><p>Portfolio</p></div>
+      <h2>İşlərim</h2>
+    </div>
+    <div class="pp-grid">
+      <div class="pp-grow">
+        <a class="pp-tile"><img src="assets/pf1.jpg" alt="Mətbəx üzlüyü"><span class="lb">Mətbəx üzlüyü</span></a>
+        <a class="pp-tile"><img src="assets/pf2.jpg" alt="Hamam · kafel"><span class="lb">Hamam · kafel</span></a>
+        <a class="pp-tile"><img src="assets/pf3.jpg" alt="Tam mənzil üzlüyü"><span class="lb">Tam mənzil üzlüyü</span></a>
+      </div>
+      <div class="pp-grow">
+        <a class="pp-tile"><img src="assets/pf4.jpg" alt="Mozaika"><span class="lb">Mozaika</span></a>
+        <a class="pp-tile"><img src="assets/pf5.jpg" alt="Santexnika zonası"><span class="lb">Santexnika zonası</span></a>
+        <a class="pp-tile more">
+          <img src="assets/pf6.jpg" alt="">
+          <span class="ov"><b>+24 layihə</b><span>Hamısına bax →</span></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- xidmətlər -->
+  <section class="pp-sec">
+    <div class="pp-sechead">
+      <div class="pp-eyebrow"><span class="line"></span><p>Xidmətlər</p></div>
+      <h2>Xidmətlər və qiymətlər</h2>
+    </div>
+    <div class="pp-svc-list">
+      <a class="pp-svc">
+        <span class="l"><span class="t">Kafel &amp; metlax döşəmə</span><span class="s">Mətbəx, hamam, döşəmə üzlüyü</span></span>
+        <span class="rr"><span class="pr">≈ 25 ₼/m²</span><span class="ar">→</span></span>
+      </a>
+      <a class="pp-svc">
+        <span class="l"><span class="t">Mozaika quraşdırma</span><span class="s">Dekorativ mozaika, bordür</span></span>
+        <span class="rr"><span class="pr">≈ 35 ₼/m²</span><span class="ar">→</span></span>
+      </a>
+      <a class="pp-svc">
+        <span class="l"><span class="t">Hidroizolyasiya</span><span class="s">Hamam və balkon üçün</span></span>
+        <span class="rr"><span class="pr">≈ 18 ₼/m²</span><span class="ar">→</span></span>
+      </a>
+      <a class="pp-svc">
+        <span class="l"><span class="t">Köhnə kafelin sökülməsi</span><span class="s">Demontaj və təmizlik</span></span>
+        <span class="rr"><span class="pr">≈ 8 ₼/m²</span><span class="ar">→</span></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- rəylər -->
+  <section class="pp-sec">
+    <div class="pp-sechead">
+      <div class="pp-eyebrow"><span class="line"></span><p>Rəylər</p></div>
+      <h2>Müştəri rəyləri</h2>
+    </div>
+    <div class="pp-score">
+      <span class="n">4.9</span>
+      <span class="c">
+        <span class="ss">
+          <img src="assets/ic-star.svg" alt=""><img src="assets/ic-star.svg" alt=""><img src="assets/ic-star.svg" alt=""><img src="assets/ic-star.svg" alt=""><img src="assets/ic-star.svg" alt="">
+        </span>
+        <span class="cnt">4419 dəyərləndirmə</span>
+      </span>
+    </div>
+    <div class="pp-revs">
+      <article class="pp-rev">
+        <div class="hd">
+          <span class="av">A</span>
+          <span class="nm"><span class="n">Aysel H.</span><span class="d">12 İyun 2026</span></span>
+        </div>
+        <div class="st"><img src="assets/ic-star.svg" alt=""><img src="assets/ic-star.svg" alt=""><img src="assets/ic-star.svg" alt=""><img src="assets/ic-star.svg" alt=""><img src="assets/ic-star.svg" alt=""></div>
+        <p class="tx">Mətbəxin kafelini çox səliqəli döşədi. Vaxtında gəldi, işdən sonra hər yeri təmizlədi. Tövsiyə edirəm.</p>
+      </article>
+      <article class="pp-rev">
+        <div class="hd">
+          <span class="av">E</span>
+          <span class="nm"><span class="n">Elvin M.</span><span class="d">3 May 2026</span></span>
+        </div>
+        <div class="st"><img src="assets/ic-star.svg" alt=""><img src="assets/ic-star.svg" alt=""><img src="assets/ic-star.svg" alt=""><img src="assets/ic-star.svg" alt=""><img src="assets/ic-star.svg" alt=""></div>
+        <p class="tx">Hamamın hidroizolyasiyası və kafeli üçün müraciət etdim. Peşəkar yanaşma, dəqiq ölçü. Nəticədən razıyam.</p>
+      </article>
+    </div>
+    <a class="sec-more"><p>Bütün rəylərə bax</p><img src="assets/ic-arrow.svg" alt=""></a>
+  </section>
+
+</main>
+
+<div data-archi="footer"></div>
+
+<script src="archi.js"></script>
+<script>
+(function(){
+  // ürək düyməsi — seçilmiş vəziyyəti
+  var fav = document.getElementById('ppFav');
+  if(fav){
+    fav.addEventListener('click', function(){
+      var on = fav.classList.toggle('on');
+      fav.querySelector('img').src = on ? 'assets/ic-heart.svg' : 'assets/ic-heart2.svg';
+    });
+  }
+  // "Mesaj göndər" — login tələb edir (platformadaki modal)
+  var msg = document.getElementById('ppMsg');
+  if(msg){
+    msg.addEventListener('click', function(){
+      if(window.ARCHI && window.ARCHI.openLogin) window.ARCHI.openLogin();
+    });
+  }
+})();
+</script>
+</body>
+</html>

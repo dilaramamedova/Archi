@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="archi.css">
 <style>
   :root{
     --white:#ffffff;
@@ -29,7 +30,7 @@
   body{font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased;min-width:1440px}
   img{display:block}
 
-  .frame{position:relative;width:1440px;background:var(--white)}
+  .frame{position:relative;width:1440px;margin:0 auto;background:var(--white)}
 
   /* ===================== NAVBAR ===================== */
   .navbar-wrap{position:absolute;left:0;top:0;width:1440px;display:flex;flex-direction:column;align-items:center;justify-content:center}
@@ -125,70 +126,7 @@
 
 <div class="frame">
 
-  <!-- ===================== NAVBAR ===================== -->
-  <div class="navbar-wrap">
-    <div class="navbar">
-      <div class="logo">
-        <div class="clip">
-          <img alt="ARCHI" src="https://www.figma.com/api/mcp/asset/82eb29e1-c35f-483b-8334-256d60a166dc">
-        </div>
-      </div>
-      <div class="search">
-        <div class="ic"><img alt="" src="https://www.figma.com/api/mcp/asset/e505196e-9736-421c-b65b-78b76f24f1e7"></div>
-        <p>Məhsul, marka və ya mütəxəssis axtarın</p>
-      </div>
-      <div class="menu">
-        <div class="icons">
-          <div class="lang">
-            <p>AZ</p>
-            <div class="ic16"><img alt="" src="https://www.figma.com/api/mcp/asset/f40e355f-3e92-4545-90ab-1400366d6aa2"></div>
-          </div>
-          <div class="ic24"><img alt="" src="https://www.figma.com/api/mcp/asset/fa739b43-302c-4e82-90c5-c5e4fe325710"></div>
-          <div class="ic24"><img alt="" src="https://www.figma.com/api/mcp/asset/cf209395-a7b2-4f38-8906-401fc548d5a2"></div>
-        </div>
-        <div class="signup">
-          <div class="divider"></div>
-          <p class="enter">Daxil ol </p>
-          <div class="post-btn">
-            <div class="ic20"><img alt="" src="https://www.figma.com/api/mcp/asset/84d8b25a-51f7-4fc9-b816-9375e815f7a6"></div>
-            <p>Məhsul yerləşdir</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="nav">
-      <div class="nav-2">
-        <div class="nav-row">
-          <div class="nav-left">
-            <div class="kataloq-wrap">
-              <div class="kataloq">
-                <div class="ic20"><img alt="" src="https://www.figma.com/api/mcp/asset/8845f099-10a8-465c-aa96-f0a81d29744d"></div>
-                <p>Kataloq</p>
-              </div>
-            </div>
-            <div class="nav-item w180">
-              <p>Mütəxəssislər</p>
-              <div class="ic16"><img alt="" src="https://www.figma.com/api/mcp/asset/f40e355f-3e92-4545-90ab-1400366d6aa2"></div>
-            </div>
-            <div class="nav-item w150">
-              <p>Bloq</p>
-              <div class="ic16"><img alt="" src="https://www.figma.com/api/mcp/asset/f40e355f-3e92-4545-90ab-1400366d6aa2"></div>
-            </div>
-            <div class="nav-item w150">
-              <p>Haqqımızda</p>
-            </div>
-            <div class="nav-item w150 b2b">
-              <p>B2B</p>
-            </div>
-          </div>
-          <div class="calc">
-            <div class="ic24"><img alt="" src="https://www.figma.com/api/mcp/asset/9f81f539-4a06-4073-9e39-fabd3e356d15"></div>
-            <p>Təmir kalkulyatoru</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div data-archi="nav"></div>
 
   <!-- ===================== AUTH PAGE ===================== -->
   <div class="auth-page">
@@ -261,5 +199,7 @@
     });
   });
 </script>
+<script src="archi.js"></script>
+<script data-logo-home>(function(){var s='.nav-logo,.ft-logo,.foot-logo,.logo,.nb-logo,.f-logo,.logo-top,.logo-footer';document.querySelectorAll(s).forEach(function(el){el.style.cursor='pointer';el.addEventListener('click',function(){location.href='index.html';});});})();</script>
 </body>
 </html>

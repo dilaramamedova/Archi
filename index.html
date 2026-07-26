@@ -44,19 +44,50 @@
         <a class="cta-white" id="hpCta" href="product.html"><p>Ətraflı bax</p><img src="assets/ic-arrow.svg" alt=""></a>
         <div class="dots" id="hpDots"><i class="on"></i><i></i><i></i></div>
       </div>
+      <!-- rol banneri: 3 slayd üfüqi sürüşür (Figma 630:8871 / 630:8835 / 630:8898) -->
       <div class="hero-usta" id="heroUsta">
-        <img src="assets/hero-usta.jpg" alt="" id="huImg">
-        <div class="box">
-          <div class="tag"><span class="line"></span><p id="huTag">Usta &amp; mütəxəssis</p></div>
-          <div class="mid">
-            <div>
-              <h3 id="huTitle">ARCHİ-də usta ol</h3>
-              <div class="d" id="huDesc">Profil yarat, işlərini göstər<br>və yeni müştərilər qazan.</div>
+        <div class="hu-track" id="huTrack">
+          <div class="hu-slide">
+            <img src="assets/hero-usta.jpg" alt="">
+            <div class="box">
+              <div class="tag"><span class="line"></span><p>Usta &amp; mütəxəssis</p></div>
+              <div class="mid">
+                <div>
+                  <h3>ARCHİ-də usta ol</h3>
+                  <div class="d">Profil yarat, işlərini göstər<br>və yeni müştərilər qazan.</div>
+                </div>
+                <a class="reg" href="register.html?role=usta">Qeydiyyatdan keç</a>
+              </div>
             </div>
-            <a class="reg" id="huReg" href="register.html?role=usta">Qeydiyyatdan keç</a>
           </div>
-          <div class="dots" id="huDots"><i class="on"></i><i></i><i></i></div>
+          <div class="hu-slide">
+            <img src="assets/hero-satici.png" alt="">
+            <div class="box">
+              <div class="tag"><span class="line"></span><p>Biznes &amp; satıcı</p></div>
+              <div class="mid">
+                <div>
+                  <h3>ARCHİ-də sat</h3>
+                  <div class="d">Məhsullarını yerləşdir<br>və minlərlə müştəriyə çıx.</div>
+                </div>
+                <a class="reg" href="register.html?role=biznes">Qeydiyyatdan keç</a>
+              </div>
+            </div>
+          </div>
+          <div class="hu-slide">
+            <img src="assets/hero-musteri.jpg" alt="">
+            <div class="box">
+              <div class="tag"><span class="line"></span><p>Müştəri</p></div>
+              <div class="mid">
+                <div>
+                  <h3>ARCHİ-yə qoşul</h3>
+                  <div class="d">Material, usta və konsultasiya —<br>hamısı bir platformada.</div>
+                </div>
+                <a class="reg" href="register.html?role=musteri">Qeydiyyatdan keç</a>
+              </div>
+            </div>
+          </div>
         </div>
+        <div class="dots" id="huDots"><i class="on"></i><i></i><i></i></div>
       </div>
     </div>
 
@@ -156,7 +187,7 @@
   </div>
   <div class="sec-head">
     <div><div class="sec-tag"><span class="line"></span><p>Ən çox satılanlar</p></div><div class="sec-title">Seçilmiş məhsullar</div></div>
-    <a class="sec-more"><p>Ətraflı bax</p><img src="assets/ic-arrow.svg" alt=""></a>
+    <a class="sec-more" href="search.html?tab=prod"><p>Ətraflı bax</p><img src="assets/ic-arrow.svg" alt=""></a>
   </div>
   <div class="grid4" id="prodGrid"></div>
 </div></div>
@@ -165,7 +196,7 @@
 <div class="wrap"><div class="inner section">
   <div class="sec-head">
     <div><div class="sec-tag"><span class="line"></span><p>Ən çox tələb olunan ustalar</p></div><div class="sec-title">Seçilmiş mütəxəssislər</div></div>
-    <a class="sec-more"><p>Ətraflı bax</p><img src="assets/ic-arrow.svg" alt=""></a>
+    <a class="sec-more" href="search.html?tab=usta"><p>Ətraflı bax</p><img src="assets/ic-arrow.svg" alt=""></a>
   </div>
   <div class="grid4" id="specGrid"></div>
 </div></div>
@@ -254,18 +285,14 @@
     }, 4000);
   })();
 
-  // Rol karuseli (hero-usta): usta / satıcı / müştəri
+  // Rol slideri (hero-usta): usta ol → sat → qoşul; slaydlar HTML-dədir, burada
+  // yalnız track sürüşdürülür (mətn statik qaldığı üçün dil dəyişimi də pozulmur)
   (function(){
-    const roles=[
-      {img:"assets/hero-usta.jpg",    tag:"Usta & mütəxəssis", title:"ARCHİ-də usta ol", desc:"Profil yarat, işlərini göstər<br>və yeni müştərilər qazan.", href:"register.html?role=usta"},
-      {img:"assets/hero-satici.png",  tag:"Biznes & satıcı",   title:"ARCHİ-də sat",      desc:"Məhsullarını yerləşdir<br>və minlərlə müştəriyə çıx.", href:"register.html?role=biznes"},
-      {img:"assets/hero-musteri.jpg", tag:"Müştəri",           title:"ARCHİ-yə qoşul",    desc:"Material, usta və konsultasiya —<br>hamısı bir platformada.", href:"register.html?role=musteri"}
-    ];
-    const img=document.getElementById('huImg'), tag=document.getElementById('huTag'), title=document.getElementById('huTitle'),
-          desc=document.getElementById('huDesc'), reg=document.getElementById('huReg');
-    heroCarousel(document.getElementById('huDots'), roles.length, n=>{
-      const r=roles[n]; if(img)img.src=r.img; if(tag)tag.textContent=r.tag; if(title)title.textContent=r.title;
-      if(desc)desc.innerHTML=r.desc; if(reg)reg.href=r.href;
+    const track=document.getElementById('huTrack');
+    if(!track) return;
+    const count=track.querySelectorAll('.hu-slide').length;
+    heroCarousel(document.getElementById('huDots'), count, n=>{
+      track.style.transform='translateX(-'+(n*100)+'%)';
     }, 4500);
   })();
 
@@ -355,18 +382,7 @@
     renderFields(); compute();
   })();
 
-  // ---- "Məhsula keç" dairəsi kursor kimi kartın içində hərəkət edir ----
-  document.querySelectorAll('.pcard').forEach(card=>{
-    const cur = card.querySelector('.prod-cursor');
-    if(!cur) return;
-    card.addEventListener('mouseenter', ()=> card.classList.add('cursing'));
-    card.addEventListener('mouseleave', ()=> card.classList.remove('cursing'));
-    card.addEventListener('mousemove', e=>{
-      const r = card.getBoundingClientRect();
-      cur.style.left = (e.clientX - r.left) + 'px';
-      cur.style.top  = (e.clientY - r.top)  + 'px';
-    });
-  });
+  // ---- "Məhsula keç" dairəsi: qlobal olaraq archi.js-dədir (bütün .pcard-lar) ----
 
   // ---- Scroll reveal ----
   // Section başlıqları açılır

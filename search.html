@@ -182,6 +182,13 @@
       s.style.display = (t==='all' || s.dataset.sec===t) ? '' : 'none';
     });
   });
+
+  // ---- URL-dən tab seçimi (?tab=prod|usta|blog) — məs. ana səhifədən «Ətraflı bax» ----
+  const tabParam = new URLSearchParams(location.search).get('tab');
+  if(tabParam){
+    const tb = document.querySelector('.sr-tab[data-t="'+tabParam+'"]');
+    if(tb) tb.click();
+  }
 </script>
 
 </body>

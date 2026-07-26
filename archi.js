@@ -39,11 +39,11 @@
   <div class="nav-row2">
     <div class="inner">
       <div class="nav-left">
-        <a class="nav-item catalog" data-mega="catalog" role="button" aria-label="Kataloq"><img src="assets/ic-grip.svg" alt="">Kataloq</a>
-        <a class="nav-item" data-mega="spec" role="button">Mütəxəssislər <img class="mcaret" src="assets/ic-caret.svg" alt=""></a>
+        <a class="nav-item catalog" data-mega="catalog" data-pages="catalog.html" href="catalog.html" aria-label="Kataloq"><img src="assets/ic-grip.svg" alt="">Kataloq</a>
+        <a class="nav-item" data-mega="spec" href="specialists.html">Mütəxəssislər <img class="mcaret" src="assets/ic-caret.svg" alt=""></a>
         <a class="nav-item" data-mega="blog" href="blog.html">Bloq <img class="mcaret" src="assets/ic-caret.svg" alt=""></a>
-        <a class="nav-item" href="#">Haqqımızda</a>
-        <a class="nav-item" href="#">B2B</a>
+        <a class="nav-item" data-pages="haqqimizda.html" href="#">Haqqımızda</a>
+        <a class="nav-item" data-pages="biznes-*" href="biznes-qeydiyyat.html">B2B</a>
       </div>
       <a class="nav-calc" id="openCalc"><img src="assets/ic-calculator.svg" alt="">Təmir kalkulyatoru</a>
     </div>
@@ -52,12 +52,12 @@
   <div class="mega-panel" data-panel="catalog">
     <div class="mega-inner">
       <div class="mega-cats">
-        <a class="mcat"><div class="top"><img src="assets/cat-ic-tikinti.svg" alt=""><p>Tikinti materialları</p></div><div class="desc">Sement, armatur, kərpic və digər əsas tikinti məhsulları</div></a>
-        <a class="mcat"><div class="top"><img src="assets/cat-ic-santexnika.svg" alt=""><p>Santexnika</p></div><div class="desc">Hamam, mətbəx və mühəndislik sistemləri üçün məhsullar</div></a>
-        <a class="mcat"><div class="top"><img src="assets/cat-ic-elektrik.svg" alt=""><p>Elektrik</p></div><div class="desc">Kabel, açar, rozetka və elektrik avadanlıqları</div></a>
-        <a class="mcat"><div class="top"><img src="assets/cat-ic-dosheme.svg" alt=""><p>Döşəmə və üzlük</p></div><div class="desc">Laminat, parket, kafel və keramoqranit məhsulları</div></a>
-        <a class="mcat"><div class="top"><img src="assets/cat-ic-isiq.svg" alt=""><p>İşıqlandırma</p></div><div class="desc">Ev və kommersiya məkanları üçün işıqlandırma həlləri</div></a>
-        <a class="mcat"><div class="top"><img src="assets/cat-ic-dekor.svg" alt=""><p>Dekor və mebel</p></div><div class="desc">İnteryerinizi tamamlayan dekor və mebel həlləri</div></a>
+        <a class="mcat" href="catalog.html"><div class="top"><img src="assets/cat-ic-tikinti.svg" alt=""><p>Tikinti materialları</p></div><div class="desc">Sement, armatur, kərpic və digər əsas tikinti məhsulları</div></a>
+        <a class="mcat" href="catalog.html"><div class="top"><img src="assets/cat-ic-santexnika.svg" alt=""><p>Santexnika</p></div><div class="desc">Hamam, mətbəx və mühəndislik sistemləri üçün məhsullar</div></a>
+        <a class="mcat" href="catalog.html"><div class="top"><img src="assets/cat-ic-elektrik.svg" alt=""><p>Elektrik</p></div><div class="desc">Kabel, açar, rozetka və elektrik avadanlıqları</div></a>
+        <a class="mcat" href="catalog.html"><div class="top"><img src="assets/cat-ic-dosheme.svg" alt=""><p>Döşəmə və üzlük</p></div><div class="desc">Laminat, parket, kafel və keramoqranit məhsulları</div></a>
+        <a class="mcat" href="catalog.html"><div class="top"><img src="assets/cat-ic-isiq.svg" alt=""><p>İşıqlandırma</p></div><div class="desc">Ev və kommersiya məkanları üçün işıqlandırma həlləri</div></a>
+        <a class="mcat" href="catalog.html"><div class="top"><img src="assets/cat-ic-dekor.svg" alt=""><p>Dekor və mebel</p></div><div class="desc">İnteryerinizi tamamlayan dekor və mebel həlləri</div></a>
       </div>
     </div>
   </div>
@@ -66,10 +66,10 @@
     <div class="mega-inner">
       <div class="mega-spec">
         <div class="grid">
-          <a class="mcat"><div class="top"><img src="assets/spec-ic-memar.svg" alt=""><p>Memarlar</p></div><div class="desc">Müasir və funksional layihələrin hazırlanması, estetik və texniki dizayn</div></a>
-          <a class="mcat"><div class="top"><img src="assets/spec-ic-interyer.svg" alt=""><p>İnteryer dizaynerlər</p></div><div class="desc">Məkanın estetik və funksional təşkili</div></a>
-          <a class="mcat"><div class="top"><img src="assets/spec-ic-usta.svg" alt=""><p>Ustalar</p></div><div class="desc">Kafelçi, elektrik, santexnik və digər peşəkarlar</div></a>
-          <a class="mcat"><div class="top"><img src="assets/spec-ic-sirket.svg" alt=""><p>Tikinti şirkətləri</p></div><div class="desc">Tikinti prosesinin peşəkar idarə olunması</div></a>
+          <a class="mcat" href="specialists.html"><div class="top"><img src="assets/spec-ic-memar.svg" alt=""><p>Memarlar</p></div><div class="desc">Müasir və funksional layihələrin hazırlanması, estetik və texniki dizayn</div></a>
+          <a class="mcat" href="specialists.html"><div class="top"><img src="assets/spec-ic-interyer.svg" alt=""><p>İnteryer dizaynerlər</p></div><div class="desc">Məkanın estetik və funksional təşkili</div></a>
+          <a class="mcat" href="specialists.html"><div class="top"><img src="assets/spec-ic-usta.svg" alt=""><p>Ustalar</p></div><div class="desc">Kafelçi, elektrik, santexnik və digər peşəkarlar</div></a>
+          <a class="mcat" href="specialists.html"><div class="top"><img src="assets/spec-ic-sirket.svg" alt=""><p>Tikinti şirkətləri</p></div><div class="desc">Tikinti prosesinin peşəkar idarə olunması</div></a>
         </div>
         <div class="promo">
           <img class="ph" src="assets/mega-consult.jpg" alt="">
@@ -447,12 +447,17 @@
     } catch (e) {}
   })();
 
-  /* aktiv səhifəni naviqasiyada işarələ */
+  /* aktiv səhifəni naviqasiyada işarələ.
+     data-pages="a.html b.html pref-*" — nav item hansı səhifələrdə aktiv sayılsın
+     (boşluqla ayrılır, sonu * olan şablon prefiks kimi işləyir).
+     Verilməyibsə href-in fayl adı ilə birebir uyğunluq yoxlanılır. */
   (function () {
     const page = (location.pathname.split("/").pop() || "index.html").toLowerCase();
-    document.querySelectorAll(".nav-item[href]").forEach(a => {
-      const h = (a.getAttribute("href") || "").toLowerCase();
-      if (h && h !== "#" && h === page) a.classList.add("active");
+    const hit = p => (p.endsWith("*") ? page.startsWith(p.slice(0, -1)) : page === p);
+    document.querySelectorAll(".nav-item").forEach(a => {
+      const pats = (a.dataset.pages || a.getAttribute("href") || "")
+        .toLowerCase().split(/\s+/).filter(p => p && p !== "#");
+      if (pats.some(hit)) a.classList.add("active");
     });
   })();
 
@@ -508,38 +513,87 @@
     if (topbar) topbar.appendChild(overlay); else document.body.appendChild(overlay);
 
     const esc = s => s.replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;" }[c]));
-    function render(qRaw) {
-      const q = esc((qRaw || "").trim() || "kafel");
-      drop.innerHTML =
-        '<div class="sd-head">Sürətli axtarış</div>' +
-        [q + "|60×60", q + "|yapışdırıcısı", q + "|ustası"].map(s => {
-          const [b, rest] = s.split("|");
-          return '<div class="sd-sug"><img src="assets/ic-search.svg" alt=""><span><b>' + b + '</b> ' + rest + '</span></div>';
-        }).join("") +
-        '<div class="sd-sug"><img src="assets/ic-search.svg" alt=""><span>metlax <b>' + q + '</b></span></div>' +
-        '<div class="sd-div"></div>' +
-        '<div class="sd-head">Məhsullar</div>' +
-        [
-          ["assets/fig/1ed736a990f0.jpg", "Keramik kafel 60×60, mat", "Kafel & metlax", "23.90 ₼"],
-          ["assets/fig/bca0ec1e.jpg", "Metlax kafel 20×20, naxışlı", "Kafel & metlax", "18.50 ₼"],
-          ["assets/fig/78886edf.jpg", "Mərmər effektli kafel 60×120", "Kafel & metlax", "49.90 ₼"],
-        ].map(p => '<a class="sd-prod" href="product.html"><span class="im"><img src="' + p[0] + '" alt=""></span><span class="tx"><span class="t1">' + p[1] + '</span><br><span class="t2">' + p[2] + '</span></span><span class="pr">' + p[3] + '</span></a>').join("") +
-        '<div class="sd-div"></div>' +
-        '<div class="sd-head">Ustalar</div>' +
-        [
-          ["RM", "Rəşad Məmmədov", "Kafel & metlax ustası", "4.9"],
-          ["TH", "Tural Həsənov", "Kafel & metlax ustası", "4.7"],
-        ].map(u => '<a class="sd-usta" href="#"><span class="av">' + u[0] + '</span><span class="tx"><span class="t1">' + u[1] + '</span><br><span class="t2">' + u[2] + '</span></span><span class="rt"><span class="st">★</span>' + u[3] + '</span></a>').join("") +
-        '<a class="sd-all" href="' + resultsHref(qRaw) + '">Bütün nəticələrə bax (86) →</a>';
+    /* AZ hərflərini sadələşdirən müqayisə açarı: "Şüşə" → "suse", "İzolyasiya" → "izolyasiya" */
+    const norm = s => (s || "").toLowerCase()
+      .replace(/i̇/g, "i").replace(/ı/g, "i").replace(/ə/g, "e")
+      .replace(/ö/g, "o").replace(/ü/g, "u").replace(/ç/g, "c")
+      .replace(/ş/g, "s").replace(/ğ/g, "g");
+
+    /* Demo məlumat bazası (backend qoşulanda bu massivlər API cavabı ilə əvəzlənir) */
+    const SUGGESTS = [
+      "kafel 60×60", "kafel yapışdırıcısı", "kafel ustası", "metlax kafel 20×20",
+      "mərmər effektli kafel", "keramoqranit", "santexnika", "laminat & parket",
+      "fasad boyası", "izolyasiya materialları", "elektrik kabeli", "interyer dizayneri"
+    ];
+    const PRODUCTS = [
+      ["assets/fig/1ed736a990f0.jpg", "Keramik kafel 60×60, mat",     "Kafel & metlax",      "23.90 ₼"],
+      ["assets/fig/bca0ec1e.jpg",     "Metlax kafel 20×20, naxışlı",  "Kafel & metlax",      "18.50 ₼"],
+      ["assets/fig/78886edf.jpg",     "Mərmər effektli kafel 60×120", "Kafel & metlax",      "49.90 ₼"],
+      ["assets/fig/50873ec31b52.jpg", "Akril fasad boyası 10 l",      "Boya & emal",         "64.00 ₼"],
+      ["assets/fig/6146d21348a6.jpg", "Daş yunu izolyasiya 50 mm",    "İzolyasiya & istilik","31.20 ₼"],
+      ["assets/fig/2701238de96a.jpg", "Laminat parket 8 mm, palıd",   "Laminant & parket",   "27.80 ₼"]
+    ];
+    const USTALAR = [
+      ["RM", "Rəşad Məmmədov",   "Kafel & metlax ustası",  "4.9"],
+      ["TH", "Tural Həsənov",    "Kafel & metlax ustası",  "4.7"],
+      ["EQ", "Elçin Quliyev",    "Santexnik",              "4.8"],
+      ["NM", "Nigar Məmmədova",  "İnteryer dizayneri",     "4.9"]
+    ];
+
+    /* Sorğuya uyğun gələnləri seç — heç nə tapılmasa dropdown açılmır */
+    function match(qRaw) {
+      const q = norm((qRaw || "").trim());
+      if (q.length < 2) return null;                       // 1 hərfə açılmasın
+      const has = txt => norm(txt).indexOf(q) !== -1;
+      const sug = SUGGESTS.filter(has).slice(0, 4);
+      const prod = PRODUCTS.filter(p => has(p[1]) || has(p[2])).slice(0, 3);
+      const usta = USTALAR.filter(u => has(u[1]) || has(u[2])).slice(0, 2);
+      if (!sug.length && !prod.length && !usta.length) return null;
+      return { sug, prod, usta, total: sug.length + prod.length + usta.length };
+    }
+
+    /* Uyğun hissəni <b> ilə qalın göstər */
+    function hl(txt, qRaw) {
+      const q = norm((qRaw || "").trim());
+      const i = norm(txt).indexOf(q);
+      if (i === -1) return esc(txt);
+      return esc(txt.slice(0, i)) + "<b>" + esc(txt.slice(i, i + q.length)) + "</b>" + esc(txt.slice(i + q.length));
+    }
+
+    function render(qRaw, m) {
+      let html = "";
+      if (m.sug.length) {
+        html += '<div class="sd-head">Sürətli axtarış</div>' +
+          m.sug.map(s => '<a class="sd-sug" href="' + resultsHref(s) + '"><img src="assets/ic-search.svg" alt=""><span>' + hl(s, qRaw) + '</span></a>').join("");
+      }
+      if (m.prod.length) {
+        if (html) html += '<div class="sd-div"></div>';
+        html += '<div class="sd-head">Məhsullar</div>' +
+          m.prod.map(p => '<a class="sd-prod" href="product.html"><span class="im"><img src="' + p[0] + '" alt=""></span><span class="tx"><span class="t1">' + hl(p[1], qRaw) + '</span><br><span class="t2">' + esc(p[2]) + '</span></span><span class="pr">' + esc(p[3]) + '</span></a>').join("");
+      }
+      if (m.usta.length) {
+        if (html) html += '<div class="sd-div"></div>';
+        html += '<div class="sd-head">Ustalar</div>' +
+          m.usta.map(u => '<a class="sd-usta" href="specialists.html"><span class="av">' + esc(u[0]) + '</span><span class="tx"><span class="t1">' + hl(u[1], qRaw) + '</span><br><span class="t2">' + esc(u[2]) + '</span></span><span class="rt"><span class="st">★</span>' + esc(u[3]) + '</span></a>').join("");
+      }
+      html += '<a class="sd-all" href="' + resultsHref(qRaw) + '">Bütün nəticələrə bax (' + m.total + ') →</a>';
+      drop.innerHTML = html;
     }
     function resultsHref(qRaw) {
       const q = (qRaw || "").trim();
       return "search.html" + (q ? "?q=" + encodeURIComponent(q) : "");
     }
-    function open() { render(input.value); drop.classList.add("on"); overlay.classList.add("on"); }
+    /* Yalnız yazılana uyğun nəticə varsa aç — fokus/klik özü açmır */
+    function update() {
+      const m = match(input.value);
+      if (!m) { close(); return; }
+      render(input.value, m);
+      drop.classList.add("on");
+      overlay.classList.add("on");
+    }
     function close() { drop.classList.remove("on"); overlay.classList.remove("on"); }
-    input.addEventListener("focus", open);
-    input.addEventListener("input", () => { render(input.value); drop.classList.add("on"); overlay.classList.add("on"); });
+    input.addEventListener("focus", update);
+    input.addEventListener("input", update);
     input.addEventListener("keydown", e => {
       if (e.key === "Escape") { close(); input.blur(); }
       if (e.key === "Enter") { location.href = resultsHref(input.value); }
@@ -643,6 +697,73 @@
       })
     );
     document.querySelectorAll(".btn-post").forEach(el => el.addEventListener("click", () => { location.href = "sell.html"; }));
+  })();
+
+  /* ---------- Dairəvi "kursor" CTA — platforma üzrə bütün kart tiplərində ----------
+     index.html-dəki effekt qlobal edildi: uyğun karta .prod-cursor avtomatik
+     əlavə olunur, hadisələr document səviyyəsində deleqasiya ilə tutulur — buna
+     görə kataloq/mütəxəssislər kimi kartları JS ilə render (və yenidən render)
+     edən səhifələrdə də işləyir.
+     Yeni kart tipi əlavə etmək üçün sadəcə TARGETS-ə bir sətir yazmaq kifayətdir. */
+  (function prodCursor() {
+    const TARGETS = [
+      { sel: ".pcard",   label: "Məhsula keç" },   // məhsul kartları
+      { sel: ".sp-card", label: "Ətraflı bax" }    // mütəxəssis kartları
+    ];
+    const SEL = TARGETS.map(t => t.sel).join(",");
+    let active = null, pending = false;
+
+    function labelFor(card) {
+      const t = TARGETS.find(t => card.matches(t.sel));
+      return t ? t.label : "Ətraflı bax";
+    }
+
+    function ensure(card) {
+      let cur = card.querySelector(".prod-cursor");
+      if (cur) return cur;
+      cur = document.createElement("div");
+      cur.className = "prod-cursor";
+      cur.appendChild(document.createElement("span")).textContent = labelFor(card);
+      card.insertBefore(cur, card.firstChild);
+      return cur;
+    }
+
+    /* Mövcud + yeni gələn kartlara dairəni yerləşdir; mətni cari dilə uyğunlaşdır. */
+    function mountAll() {
+      let added = 0;
+      document.querySelectorAll(SEL).forEach(card => {
+        card.classList.add("hascur");
+        if (!card.querySelector(".prod-cursor")) { ensure(card); added++; }
+      });
+      if (added) { collect(); apply(curLang); }   // yeni mətn node-larını i18n-ə qoş
+    }
+
+    mountAll();
+    const mo = new MutationObserver(() => {
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(() => { pending = false; mountAll(); });
+    });
+    mo.observe(document.body, { childList: true, subtree: true });
+
+    function clear() { if (active) { active.classList.remove("cursing"); active = null; } }
+
+    document.addEventListener("mousemove", e => {
+      const card = e.target && e.target.closest ? e.target.closest(SEL) : null;
+      if (card !== active) {
+        clear();
+        if (card) { active = card; ensure(card); card.classList.add("cursing"); }
+      }
+      if (!active) return;
+      const cur = active.querySelector(".prod-cursor");
+      if (!cur) return;
+      const r = active.getBoundingClientRect();
+      cur.style.left = (e.clientX - r.left) + "px";
+      cur.style.top  = (e.clientY - r.top)  + "px";
+    }, { passive: true });
+
+    document.addEventListener("mouseleave", clear);
+    window.addEventListener("blur", clear);
   })();
 
   /* ---------- saxlanmış dili bərpa et ---------- */

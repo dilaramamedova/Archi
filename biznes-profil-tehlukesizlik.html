@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="archi.css">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   img{display:block;max-width:100%}
@@ -51,7 +52,7 @@
   .nav2-calc p{font-family:'Manrope';font-weight:500;font-size:16px;line-height:22px;color:rgba(0,0,0,0.8);white-space:nowrap}
 
   /* ---------- edit page ---------- */
-  .edit-page{background:#f5f7f9;display:flex;flex-direction:column;gap:20px;align-items:flex-start;overflow:hidden;padding:32px 28px 56px;width:100%}
+  .edit-page{background:#f5f7f9;display:flex;flex-direction:column;gap:20px;align-items:flex-start;padding:32px 28px 56px;width:100%}
   .page-head{display:flex;align-items:flex-end;justify-content:space-between;overflow:hidden;width:100%}
   .page-head-l{display:flex;flex-direction:column;gap:10px;align-items:flex-start;overflow:hidden;white-space:nowrap}
   .crumb{display:flex;gap:8px;align-items:center;overflow:hidden;font-size:13px}
@@ -66,9 +67,9 @@
   .btn-view{background:#fff;border:1px solid rgba(0,0,0,0.2);display:flex;height:44px;align-items:center;justify-content:center;overflow:hidden;padding:0 20px;border-radius:4px}
   .btn-view p{font-family:'Inter';font-weight:600;color:#111;font-size:13px;white-space:nowrap}
 
-  .edit-body{display:flex;gap:24px;align-items:flex-start;overflow:hidden;width:100%}
-  .settings-nav{background:#fff;border:1px solid rgba(0,0,0,0.1);display:flex;flex-direction:column;gap:4px;align-items:flex-start;overflow:hidden;padding:14px 12px;border-radius:4px;width:264px;flex-shrink:0}
-  .nav-link{display:flex;align-items:center;justify-content:space-between;overflow:hidden;padding:11px 12px;border-radius:4px;width:100%}
+  .edit-body{display:flex;gap:24px;align-items:flex-start;width:100%}
+  .settings-nav{background:#fff;border:1px solid rgba(0,0,0,0.1);display:flex;flex-direction:column;gap:4px;align-items:flex-start;overflow:hidden;padding:14px 12px;border-radius:4px;width:264px;flex-shrink:0;position:sticky;top:158px;align-self:flex-start}
+  .nav-link{display:flex;align-items:center;justify-content:space-between;overflow:hidden;padding:11px 12px;border-radius:4px;width:100%;cursor:pointer;text-decoration:none;color:inherit}
   .nav-link p{font-family:'Inter';font-weight:500;font-size:14px;color:rgba(0,0,0,0.7);white-space:nowrap}
   .nav-link .count{font-family:'Inter';font-weight:600;font-size:12px;color:rgba(0,0,0,0.4)}
   .nav-link.active{background:#fffde0;border:1px solid #ffe600}
@@ -178,60 +179,7 @@
 <body>
 <div class="page">
 
-  <!-- navbar -->
-  <div class="navbar-wrap">
-    <div class="navbar">
-      <div class="logo-top"><img src="https://www.figma.com/api/mcp/asset/13718a6e-1a60-4a5f-bd2b-0a6ec763f5f2" alt="ARCHİ"></div>
-      <div class="search">
-        <div class="ic"><img src="https://www.figma.com/api/mcp/asset/f01493ba-7488-459d-a584-f7a576d05c7b" alt=""></div>
-        <p>Məhsul, marka və ya mütəxəssis axtarın</p>
-      </div>
-      <div class="menu">
-        <div class="icons">
-          <div class="bloq">
-            <p>AZ</p>
-            <div class="ic16"><img src="https://www.figma.com/api/mcp/asset/1e97a079-f0d9-462b-8406-27d381eebf70" alt=""></div>
-          </div>
-          <div class="ic24"><img src="https://www.figma.com/api/mcp/asset/afcc9ada-daa5-40c9-8729-ca7221795a50" alt=""></div>
-          <div class="ic24"><img src="https://www.figma.com/api/mcp/asset/374918df-1d8d-4236-9100-90fb49064a98" alt=""></div>
-        </div>
-        <div class="signup">
-          <div class="vdiv"><img src="https://www.figma.com/api/mcp/asset/97f8fc2c-031f-4513-aadf-4fe49405f2fe" alt=""></div>
-          <p class="login-txt">Daxil ol </p>
-          <div class="btn-login">
-            <div class="ic20"><img src="https://www.figma.com/api/mcp/asset/fe73e715-39f9-46f9-9069-cc063295a701" alt=""></div>
-            <p>Məhsul yerləşdir</p>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="nav2">
-      <div class="nav2-row">
-        <div class="nav2-left">
-          <div class="nav2-cat">
-            <div class="nav2-cat-in">
-              <div class="ic20"><img src="https://www.figma.com/api/mcp/asset/b296b92c-73dd-4423-863e-2b44eaa9e112" alt=""></div>
-              <p>Kataloq</p>
-            </div>
-          </div>
-          <div class="nav2-item" style="width:180px">
-            <p>Mütəxəssislər</p>
-            <div class="ic16"><img src="https://www.figma.com/api/mcp/asset/1e97a079-f0d9-462b-8406-27d381eebf70" alt=""></div>
-          </div>
-          <div class="nav2-item" style="width:150px">
-            <p>Bloq</p>
-            <div class="ic16"><img src="https://www.figma.com/api/mcp/asset/1e97a079-f0d9-462b-8406-27d381eebf70" alt=""></div>
-          </div>
-          <div class="nav2-item" style="width:150px"><p>Haqqımızda</p></div>
-          <div class="nav2-item" style="width:150px"><p>B2B</p></div>
-        </div>
-        <div class="nav2-calc">
-          <div class="ic24"><img src="https://www.figma.com/api/mcp/asset/7e5b17f4-73a8-423b-8390-dd1044090612" alt=""></div>
-          <p>Təmir kalkulyatoru</p>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div data-archi="nav"></div>
 
   <!-- edit page -->
   <div class="edit-page">
@@ -257,12 +205,12 @@
       <!-- settings nav -->
       <div class="settings-nav">
         <div class="nav-link"><p>Əsas məlumat</p></div>
-        <div class="nav-link"><p>Şirkət məlumatları</p></div>
-        <div class="nav-link"><p>Əlaqə məlumatları</p></div>
-        <div class="nav-link"><p>Şourumlar</p><p class="count">3</p></div>
-        <div class="nav-link"><p>Məhsullar</p><p class="count">1,240</p></div>
-        <div class="nav-link"><p>Bildirişlər</p></div>
-        <div class="nav-link active"><p>Təhlükəsizlik</p></div>
+        <a class="nav-link" href="biznes-profil-sirket.html"><p>Şirkət məlumatları</p></a>
+        <a class="nav-link" href="biznes-profil-elaqe.html"><p>Əlaqə məlumatları</p></a>
+        <a class="nav-link" href="biznes-profil-shourumlar.html"><p>Şourumlar</p><p class="count">3</p></a>
+        <a class="nav-link" href="biznes-profil-mehsullar.html"><p>Məhsullar</p><p class="count">1,240</p></a>
+        <a class="nav-link" href="biznes-profil-bildirisler.html"><p>Bildirişlər</p></a>
+        <a class="nav-link active" href="biznes-profil-tehlukesizlik.html"><p>Təhlükəsizlik</p></a>
         <div class="nav-progress">
           <div class="pr-top">
             <p class="l">Profil tamlığı</p>
@@ -362,114 +310,7 @@
     </div>
   </div>
 
-  <!-- footer -->
-  <div class="footer-app">
-    <div class="footer-c1">
-      <div class="footer-c1-in">
-        <div class="footer-c2">
-          <div class="footer-c2-in">
-            <div class="footer-top">
-              <div class="footer-top-in">
-                <div class="footer-brand">
-                  <div class="logo-footer"><img src="https://www.figma.com/api/mcp/asset/09bd32c2-d780-4a30-a797-2aabdf2ce1e0" alt="ARCHİ"></div>
-                  <div class="footer-crumbs"></div>
-                </div>
-                <div class="footer-btn">
-                  <div class="footer-btn-in">
-                    <p>Məhsullara keç</p>
-                    <div class="ic24"><img src="https://www.figma.com/api/mcp/asset/8a7c9a7a-57b9-4e24-8fab-d66c7b1157b0" alt=""></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div style="width:100%;display:flex;flex-direction:column;align-items:flex-start"><div class="footer-div"></div></div>
-
-            <div class="footer-links">
-              <div class="footer-col">
-                <h3>Məhsullar</h3>
-                <div class="footer-list">
-                  <a href="#">Kafel &amp; metlax</a>
-                  <a href="#">Boya &amp; emal</a>
-                  <a href="#">Santexnika</a>
-                  <a href="#">İzolyasiya &amp; istilik </a>
-                  <a href="#">Bütün kateqoriyalara keç</a>
-                </div>
-              </div>
-              <div class="footer-col">
-                <h3>Mütəxəssislər</h3>
-                <div class="footer-list">
-                  <a href="#">Usta tap</a>
-                  <a href="#">Top reytinqli ustalar</a>
-                  <a href="#">Bütün mütəxəssislərə bax</a>
-                </div>
-              </div>
-              <div class="footer-col">
-                <h3>ARCHİ-yə qoşul</h3>
-                <div class="footer-list">
-                  <a href="#">Satıcı ol</a>
-                  <a href="#">Usta ol</a>
-                  <a href="#">Tərəfdaşlıq proqramı</a>
-                  <a href="#">Bizneslə əməkdaşlıq</a>
-                </div>
-              </div>
-              <div class="footer-col">
-                <h3>Şirkət &amp; dəstək</h3>
-                <div class="footer-list">
-                  <a href="#">Haqqımızda</a>
-                  <a href="#">Pulsuz konsultasiya</a>
-                  <a href="#">Məqalələr</a>
-                  <a href="#">Yardım mərkəzi</a>
-                  <a href="#">Əlaqə</a>
-                </div>
-              </div>
-            </div>
-
-            <div style="width:100%;display:flex;flex-direction:column;align-items:flex-start;padding-top:56px"><div class="footer-div"></div></div>
-
-            <div class="footer-news">
-              <div class="footer-news-l">
-                <div class="mail-ic"><img src="https://www.figma.com/api/mcp/asset/20a89a85-c045-4b8f-ad26-21659e6d8ac5" alt=""></div>
-                <div class="footer-news-txt">
-                  <p class="t1">Təmir dünyasında yeniliklərdən xəbərdar olun</p>
-                  <p class="t2">Endirimlərdən, yeni məhsullar, faydalı məqalələr və yeniliklər barədə ilk siz məlumat alın.</p>
-                </div>
-              </div>
-              <div class="footer-form">
-                <div class="footer-input"><p>E-poçt ünvanın</p></div>
-                <div class="footer-sub"><p>Abunə ol</p></div>
-              </div>
-            </div>
-
-            <div class="footer-div-full"></div>
-
-            <div class="footer-bottom">
-              <div class="footer-bottom-l">
-                <div class="footer-legal">
-                  <a href="#">İstifadə şərtləri</a>
-                  <span class="sep">|</span>
-                  <a href="#">Məxfilik siyasəti</a>
-                  <span class="sep">|</span>
-                  <a href="#">Çatdırılma &amp; qaytarılma</a>
-                  <span class="sep">|</span>
-                  <a href="#">Cookie siyasəti</a>
-                  <span class="sep">|</span>
-                  <a href="#">Sayt xəritəsi</a>
-                </div>
-                <p class="footer-copy">©2026 ARCHI - Bütün hüquqlar qorunur.</p>
-              </div>
-              <div class="footer-social">
-                <div class="social-btn">
-                  <div class="ic20"><img src="https://www.figma.com/api/mcp/asset/8c258cd1-4253-4e5e-83af-cefd69a96bae" alt=""></div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <div data-archi="footer"></div>
 
 </div>
 
@@ -483,5 +324,7 @@
     });
   });
 </script>
+<script src="archi.js"></script>
+<script data-logo-home>(function(){var s='.nav-logo,.ft-logo,.foot-logo,.logo,.nb-logo,.f-logo,.logo-top,.logo-footer';document.querySelectorAll(s).forEach(function(el){el.style.cursor='pointer';el.addEventListener('click',function(){location.href='index.html';});});})();</script>
 </body>
 </html>

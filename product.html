@@ -662,18 +662,7 @@
       </div>
     </div>`).join('');
 
-  /* ---- "Məhsula keç" kursor effekti (index ilə eyni) ---- */
-  document.querySelectorAll('.pcard').forEach(card=>{
-    const cur = card.querySelector('.prod-cursor');
-    if(!cur) return;
-    card.addEventListener('mouseenter', ()=> card.classList.add('cursing'));
-    card.addEventListener('mouseleave', ()=> card.classList.remove('cursing'));
-    card.addEventListener('mousemove', e=>{
-      const r = card.getBoundingClientRect();
-      cur.style.left = (e.clientX - r.left) + 'px';
-      cur.style.top  = (e.clientY - r.top)  + 'px';
-    });
-  });
+  /* ---- "Məhsula keç" kursor effekti qlobaldır (archi.js) — burada təkrarlanmır ---- */
 
   /* ---- Scroll reveal ---- */
   document.querySelectorAll('.sec-head, .pd-section .sec-tag').forEach(el=>el.classList.add('reveal'));
