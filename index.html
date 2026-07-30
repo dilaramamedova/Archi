@@ -10,17 +10,155 @@
 <link rel="stylesheet" href="archi.css">
 <!-- Tailwind — sıra vacibdir: tema Tailwind compiler-indən ƏVVƏL DOM-a düşməlidir. -->
 <script src="archi-tw.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-<style>
-  /* ===== Homepage v2 (Figma yeniləməsi) ===== */
+<!-- Ana səhifə (Figma 628:7820). Bu blokda həm səhifənin öz CSS-i, həm də
+     archi.css-dən köçürülmüş SERVICE STRIP / HERO / SIDE CALCULATOR / CATEGORIES
+     bölmələri var — onlar YALNIZ bu səhifədə istifadə olunurdu, ona görə paylaşılan
+     fayldan çıxarılıb buraya gətirildi. `.calc-cta` bölməsi heç bir səhifədə
+     işlədilmirdi (ölü CSS) və silindi. Class adları saxlanıldı — markup toxunulmadı. -->
+<style type="text/tailwindcss">
+@layer components {
   /* SALE marquee lenti */
-  .sale-marquee{background:#000;overflow:hidden;padding:16px 0;max-width:1384px;margin:0 auto;border-radius:var(--radius)}
-  @media(max-width:1440px){.sale-marquee{margin:0 28px;max-width:none}}
-  .sale-track{display:flex;white-space:nowrap;width:max-content;animation:saleScroll 20s linear infinite}
-  .sale-track span{color:#fff;font-weight:700;font-size:26px;letter-spacing:3px;padding-right:28px;text-transform:uppercase}
-  @keyframes saleScroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-  @media(prefers-reduced-motion:reduce){.sale-track{animation:none}}
+  .sale-marquee     { @apply mx-auto max-w-[1384px] overflow-hidden rounded-ds bg-black py-4
+                              max-[1440px]:mx-7 max-[1440px]:max-w-none; }
+  .sale-track       { @apply flex w-max whitespace-nowrap; animation: saleScroll 20s linear infinite; }
+  .sale-track span  { @apply pr-7 text-[26px] font-bold tracking-[3px] text-white uppercase; }
+  @keyframes saleScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+  @media (prefers-reduced-motion: reduce) { .sale-track { animation: none; } }
+
+  /* ---- Kampaniya banneri (archi.css-dən köçürülüb, yalnız burada işlənir) ---- */
+  .promo-banner        { @apply mb-7 flex items-center justify-between gap-5 rounded-ds bg-ink px-7 py-[22px] max-[640px]:flex-col max-[640px]:items-start; }
+  .promo-banner .pb-l  { @apply flex items-center gap-[18px]; }
+  .pb-badge            { @apply rounded-ds bg-yellow px-3 py-1.5 text-xs font-bold tracking-[1px] whitespace-nowrap text-ink; }
+  .promo-banner h3     { @apply text-[22px] font-bold tracking-[-.2px] text-white; }
+  .promo-banner p      { @apply mt-1 text-sm text-white/70; }
+  .promo-banner p b    { @apply text-yellow; }
+  .pb-copy             { @apply cursor-pointer rounded-ds border-none bg-yellow px-[22px] py-[13px] text-sm font-bold whitespace-nowrap text-ink transition-[filter] duration-200 [font-family:inherit] hover:brightness-[.93]; }
+
+  /* ============ SERVICE STRIP — Figma nav-section-3 (628:7820) ilə 1:1 ============ */
+  .service-strip        { @apply border-y border-black/15 bg-white; }
+  .service-strip .inner { @apply flex max-w-[1440px] items-center justify-between px-10 py-5; }
+  .svc          { @apply flex items-center gap-1; }
+  .svc .ic      { @apply flex items-center justify-center rounded-pill bg-gray-soft2 p-2.5; }
+  .svc .ic img  { @apply size-6; }
+  .svc > div    { @apply ml-1; }
+  .svc .t1      { @apply mb-1 text-sm leading-[17px] font-medium text-black; }
+  .svc .t2      { @apply text-xs leading-[15px] font-normal text-black/50; }
+
+  /* ============ HERO ============ */
+  .hero            { @apply relative pt-0; }
+  .hero-grid       { @apply mt-0 flex h-[543px] gap-1 pt-0; }
+  .hero-main       { @apply relative w-[960px] shrink-0 overflow-hidden; }
+  .hero-main > img { @apply absolute inset-0 size-full object-cover; }
+  .hero-main .ov   { @apply absolute inset-0 bg-black/30; }
+  .hero-main .copy { @apply absolute top-[199px] left-[30px] z-[2] flex w-[756px] flex-col gap-6; }
+  .hero-tag        { @apply flex items-center gap-2.5; }
+  .hero-tag .line  { @apply h-0.5 w-10 bg-yellow; }
+  .hero-tag p      { @apply text-lg font-medium text-white uppercase; }
+  .hero-main h1    { @apply text-5xl leading-none font-semibold text-white; }
+  .hero-main .sub  { @apply mt-3 text-xl font-normal text-white; }
+  .hero-info       { @apply flex gap-[9px] text-xl font-medium text-white; }
+  .hero-info .u    { @apply underline [text-decoration-color:var(--color-yellow)]; }
+
+  .hero-side                { @apply flex w-[420px] shrink-0 flex-col gap-1; }
+  .hero-promo               { @apply relative h-[236px] overflow-hidden p-2; }
+  .hero-promo > img         { @apply absolute inset-0 size-full object-cover transition-opacity duration-[350ms]; }
+  .hero-promo .cta-white    { @apply absolute top-[162px] left-5 flex items-center gap-1 border border-black bg-white px-3 py-2; }
+  .hero-promo .cta-white p  { @apply text-sm text-black; }
+  .hero-promo .cta-white img{ @apply size-4; }
+  .hero-promo .dots         { @apply absolute top-[214px] left-[193px] flex items-center gap-0.5; }
+  .hero-promo .dots i       { @apply size-1.5 cursor-pointer rounded-[17px] bg-black/30 transition-[width] duration-300; }
+  .hero-promo .dots i.on    { @apply w-[18px] bg-[#5b5b5b]/80; }
+
+  /* rol banneri — 3 slayd (usta / satıcı / müştəri) üfüqi sürüşür.
+     will-change qoyulmur — daimi kompozit qat mətnin subpiksel hamarlamasını dəyişir. */
+  .hero-usta        { @apply relative h-[303px] overflow-hidden; }
+  .hu-track         { @apply flex size-full transition-transform duration-[550ms] ease-[cubic-bezier(.4,0,.2,1)]; }
+  .hu-slide         { @apply relative flex size-full flex-[0_0_100%] items-center overflow-hidden px-3 py-5; }
+  .hu-slide > img   { @apply absolute inset-0 size-full object-cover; }
+  .hu-slide::before {
+    content: ""; position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(90deg, rgba(255,255,255,.93), rgba(255,255,255,.6) 45%, rgba(255,255,255,0) 80%);
+  }
+  /* h-full VACİBDİR — olmasa mətn şaquli mərkəzə düşür, halbuki yuxarıdan başlamalıdır */
+  .hero-usta .box      { @apply relative z-[2] flex h-full w-[200px] flex-col gap-6; }
+  .hero-usta .dots     { @apply absolute bottom-5 left-3 z-[3] flex items-center gap-1; }
+  .hero-usta .dots i   { @apply size-1.5 cursor-pointer rounded-[17px] bg-black/30 transition-[width] duration-300; }
+  .hero-usta .dots i.on{ @apply w-[18px] bg-black/60; }
+  .hero-usta .tag      { @apply flex items-center gap-2.5; }
+  .hero-usta .tag .line{ @apply h-0.5 w-8 bg-yellow; }
+  .hero-usta .tag p    { @apply text-sm font-medium text-black/55 uppercase; }
+  .hero-usta .mid      { @apply flex flex-col gap-4; }
+  .hero-usta h3        { @apply text-2xl font-bold tracking-[-.4px] text-black/90; }
+  .hero-usta .d        { @apply mt-2 text-sm leading-[1.25] text-black/60; }
+  .hero-usta .reg      { @apply self-start bg-ink px-6 py-3 text-sm text-off-white; }
+
+  /* ---- SIDE CALCULATOR ---- */
+  .side-calc      { @apply invisible absolute top-0 right-0 z-30 flex w-[464px] translate-x-4 flex-col gap-6 border border-black/50 bg-white p-6 opacity-0 shadow-[-4px_4px_4px_rgba(0,0,0,0.25)] transition-all duration-[250ms]; }
+  .side-calc.open { @apply visible translate-x-0 opacity-100; }
+  .sc-head .tag        { @apply mb-2 flex items-center gap-2; }
+  .sc-head .tag .line  { @apply h-1 w-8 rounded-[2px] bg-yellow; }
+  .sc-head .tag p      { @apply text-xs font-medium tracking-[1.4px] text-black/55 uppercase; }
+  .sc-head h3          { @apply text-xl font-semibold tracking-[-.4px] text-black/90; }
+  .sc-tabs             { @apply flex border border-black/20; }
+  .sc-tabs button      { @apply h-10 flex-1 text-sm text-black/50; }
+  .sc-tabs button.on   { @apply bg-black text-white; }
+  .sc-body             { @apply flex flex-col gap-6 border-b border-black/20 pb-6; }
+  .sc-group            { @apply flex flex-col gap-3; }
+  .sc-group > label    { @apply text-lg font-semibold text-black; }
+  .sc-inputs           { @apply flex gap-2; }
+  .sc-field            { @apply flex flex-col gap-1; }
+  .sc-field > span     { @apply text-sm font-medium text-black/70; }
+  .sc-field .ip        { @apply flex items-center justify-center gap-2.5 border border-black/20 p-3; }
+  .sc-field .ip input  { @apply w-20 border-none text-lg text-black outline-none; }
+  .sc-field .ip .u     { @apply text-base text-black/50; }
+  .sc-result           { @apply flex items-start justify-between; }
+  .sc-result .litr     { @apply flex items-end gap-2; }
+  .sc-result .litr b   { @apply text-[40px] font-semibold text-black; }
+  .sc-result .litr span{ @apply text-xl font-medium text-black/80; }
+  .sc-result .desc     { @apply mt-6 flex flex-col gap-2 text-base text-black/80; }
+  .sc-result .desc .r  { @apply flex gap-2; }
+  .sc-result .desc .r b{ @apply font-medium; }
+  .sc-result .price    { @apply flex items-end gap-1 text-black; }
+  .sc-result .price .p1,
+  .sc-result .price .p2{ @apply text-2xl font-semibold; }
+  .sc-result .price .p3{ @apply text-xl font-medium; }
+  .sc-full             { @apply flex h-10 items-center justify-center bg-yellow text-base font-medium text-black/90; }
+  .sc-close            { @apply absolute top-[23px] right-6 flex size-10 items-center justify-center bg-black; }
+  .sc-close img        { @apply size-6; }
+
+  /* ============ CATEGORIES ============ */
+  .cat-row          { @apply flex items-center gap-2; }
+  .cat-first        { @apply relative h-[238px] w-[340px] shrink-0 overflow-hidden; }
+  .cat-first > img  { @apply absolute inset-0 size-full object-cover; }
+  .cat-first .ov    { @apply absolute inset-0 bg-black/40; }
+  .cat-first .info  { @apply absolute top-[165px] left-[9px] z-[2] flex w-[222px] items-start gap-6 p-2.5; }
+  .cat-first .info h4  { @apply text-xl font-semibold text-white; }
+  .cat-first .info p   { @apply mt-2 text-sm font-medium text-white; }
+  .cat-first .info img { @apply size-6; }
+
+  .cat-thumb        { @apply relative h-[238px] min-w-0 flex-[1_1_0] cursor-pointer overflow-hidden bg-[#e3e3e3] transition-[flex-grow] duration-[450ms] ease-[cubic-bezier(.4,0,.2,1)]; }
+  .cat-thumb:hover,
+  .cat-thumb.open   { @apply grow-[2.7]; }
+  .cat-thumb > img  { @apply size-full object-cover; }
+  .cat-thumb .ov    {
+    @apply absolute inset-0 opacity-0 transition-opacity duration-[350ms];
+    background: linear-gradient(180deg, rgba(0,0,0,0) 38%, rgba(0,0,0,.62));
+  }
+  .cat-thumb:hover .ov,
+  .cat-thumb.open .ov   { @apply opacity-100; }
+  .cat-thumb .info      { @apply absolute inset-x-0 bottom-0 z-[2] flex translate-y-2 items-end justify-between gap-2 p-3.5 opacity-0 transition-[opacity,transform] delay-[50ms] duration-[350ms]; }
+  .cat-thumb:hover .info,
+  .cat-thumb.open .info { @apply translate-y-0 opacity-100; }
+  .cat-thumb .info h4   { @apply text-lg leading-[1.2] font-semibold whitespace-nowrap text-white; }
+  .cat-thumb .info p    { @apply mt-1.5 text-[13px] font-medium whitespace-nowrap text-white/85; }
+  .cat-thumb .info img  { @apply size-[22px] shrink-0 brightness-0 invert; }
+  /* başqa karta hover edəndə default-açıq kart bağlansın */
+  .cat-row:hover .cat-thumb.open:not(:hover)       { @apply grow; }
+  .cat-row:hover .cat-thumb.open:not(:hover) .ov   { @apply opacity-0; }
+  .cat-row:hover .cat-thumb.open:not(:hover) .info { @apply translate-y-2 opacity-0; }
+}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body>
 
