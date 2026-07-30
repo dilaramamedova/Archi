@@ -167,11 +167,6 @@
   .scard .rating { @apply flex items-center gap-1; }
   .scard .rating img { @apply size-5; }
   .scard .rating p { @apply font-sans text-sm font-medium text-black; }
-  .scard .rating p span { @apply text-black/40; }
-  .scard .name { @apply text-base font-medium text-black/80; }
-  .scard .meta { @apply mt-3 flex gap-3; }
-  .scard .meta span { @apply text-base font-medium text-black/50; }
-
   /* ---- bloq kartı ---- */
   /* flex-1 + .read{mt-auto} — başlıq 1 və ya 2 sətir olsun, «Oxu →» kartın altında
      eyni yerdə dayanır (kartlar sətir daxilində onsuz da eyni hündürlükdədir) */
