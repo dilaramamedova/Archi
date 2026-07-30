@@ -10,141 +10,124 @@
 <link rel="stylesheet" href="archi.css">
 <!-- Tailwind — sıra vacibdir: tema Tailwind compiler-indən ƏVVƏL DOM-a düşməlidir. -->
 <script src="archi-tw.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-<style>
-  /* ============ CATALOG PAGE (Figma node 959-10198 ilə 1:1) ============ */
-  body{background:#fff}
-  /* NOTE: mütləq main.catalog olsun — sadəcə .catalog navbardaki
+<!-- Kataloq (Figma 959:10198). CSS @apply ilə Tailwind-ə çevrildi, class adları
+     saxlanıldı — markup və JS toxunulmadı. Məhsul kartı (`.pcard`) archi-tw.js-dədir;
+     burada yalnız kataloqa xas düzəlişləri var. -->
+<style type="text/tailwindcss">
+@layer components {
+  body { @apply bg-white; }
+  /* mütləq `main.catalog` olsun — sadəcə `.catalog` navbardaki
      <a class="nav-item catalog"> elementini də tutur və border xətlərini aşağı dartır */
-  main.catalog{padding:32px 0 64px}
-
-  /* navbar fix: kataloq cari səhifədə "active" olduqda qalxıq/anormal görünməsin */
-  .nav-item.catalog.active{box-shadow:none;background:transparent}
+  main.catalog { @apply pt-8 pb-16; }
+  /* navbar fix: kataloq cari səhifədə "active" olduqda qalxıq görünməsin */
+  .nav-item.catalog.active { @apply bg-transparent shadow-none; }
 
   /* breadcrumbs */
-  .cat-crumbs{display:flex;gap:8px;align-items:center;font-size:13px;height:16px}
-  .cat-crumbs a{color:var(--text-muted)}
-  .cat-crumbs a:hover{color:var(--text-secondary)}
-  .cat-crumbs .sep{color:var(--text-faint)}
-  .cat-crumbs .cur{color:var(--text-secondary);font-weight:500}
+  .cat-crumbs      { @apply flex h-4 items-center gap-2 text-[13px]; }
+  .cat-crumbs a    { @apply text-black/50 hover:text-black/70; }
+  .cat-crumbs .sep { @apply text-black/40; }
+  .cat-crumbs .cur { @apply font-medium text-black/70; }
 
-  /* header row */
-  .cat-head{display:flex;align-items:flex-end;justify-content:space-between;margin-top:36px}
-  .cat-head-l{display:flex;flex-direction:column}
-  .cat-head-l .eyebrow{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-  .cat-head-l .eyebrow .line{width:32px;height:2px;background:var(--yellow)}
-  .cat-head-l .eyebrow p{font-weight:500;font-size:14px;color:rgba(0,0,0,.55);text-transform:uppercase}
-  .cat-head-l .title-row{display:flex;align-items:baseline;gap:14px}
-  .cat-head-l h1{font-weight:600;font-size:40px;color:#000;line-height:1}
-  .cat-head-l .count{font-weight:400;font-size:18px;color:var(--text-muted)}
-  .cat-sort{position:relative;display:flex;align-items:center;gap:8px;height:41px;padding:0 16px;border:1px solid var(--border-strong);border-radius:var(--radius);cursor:pointer;white-space:nowrap;user-select:none}
-  .cat-sort:hover{border-color:var(--border-hover)}
-  .cat-sort .lbl{font-size:14px;color:var(--text-muted)}
-  .cat-sort .val{font-size:14px;font-weight:600;color:#111}
-  .cat-sort .car{font-size:12px;color:var(--text-muted);margin-left:4px;transition:transform .2s}
-  .cat-sort.open .car{transform:rotate(180deg)}
-  .sort-menu{position:absolute;top:calc(100% + 6px);right:0;min-width:200px;background:#fff;border:1px solid var(--border-strong);border-radius:var(--radius);box-shadow:0 6px 20px rgba(0,0,0,.12);padding:6px;z-index:60;display:none}
-  .cat-sort.open .sort-menu{display:block}
-  .sort-menu li{list-style:none;padding:10px 12px;border-radius:var(--radius);font-size:14px;color:var(--text-secondary);cursor:pointer}
-  .sort-menu li:hover{background:var(--gray-soft);color:#111}
-  .sort-menu li.on{background:var(--sel-bg);color:#111;font-weight:600}
+  /* başlıq sətri */
+  .cat-head                 { @apply mt-9 flex items-end justify-between; }
+  .cat-head-l               { @apply flex flex-col; }
+  .cat-head-l .eyebrow      { @apply mb-3.5 flex items-center gap-2.5; }
+  .cat-head-l .eyebrow .line{ @apply h-0.5 w-8 bg-yellow; }
+  .cat-head-l .eyebrow p    { @apply text-sm font-medium text-black/55 uppercase; }
+  .cat-head-l .title-row    { @apply flex items-baseline gap-3.5; }
+  .cat-head-l h1            { @apply text-[40px] leading-none font-semibold text-black; }
+  .cat-head-l .count        { @apply text-lg font-normal text-black/50; }
 
-  /* active filter chips */
-  .cat-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:20px}
-  .cat-chip{display:inline-flex;align-items:center;height:32px;padding:0 12px;background:var(--gray-soft);border:1px solid var(--border);border-radius:var(--radius);font-size:14px;color:#111;cursor:pointer}
-  .cat-chip .x{margin-left:8px;color:var(--text-muted)}
-  .cat-chip:hover{border-color:var(--border-hover)}
-  .cat-clear{background:none;border:none;font-family:inherit;font-size:14px;color:var(--text-muted);cursor:pointer;padding:0 4px}
-  .cat-clear:hover{color:#111}
+  .cat-sort            { @apply relative flex h-[41px] cursor-pointer items-center gap-2 rounded-ds border border-black/14 px-4 whitespace-nowrap select-none hover:border-black/35; }
+  .cat-sort .lbl       { @apply text-sm text-black/50; }
+  .cat-sort .val       { @apply text-sm font-semibold text-ink; }
+  .cat-sort .car       { @apply ml-1 text-xs text-black/50 transition-transform duration-200; }
+  .cat-sort.open .car  { @apply rotate-180; }
+  .sort-menu           { @apply absolute top-[calc(100%+6px)] right-0 z-[60] hidden min-w-[200px] rounded-ds border border-black/14 bg-white p-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.12)]; }
+  .cat-sort.open .sort-menu { @apply block; }
+  .sort-menu li        { @apply cursor-pointer list-none rounded-ds px-3 py-2.5 text-sm text-black/70 hover:bg-gray-soft hover:text-ink; }
+  .sort-menu li.on     { @apply bg-sel-bg font-semibold text-ink; }
 
-  /* body: sidebar + grid */
-  .cat-body{display:flex;gap:24px;align-items:flex-start;margin-top:20px}
+  /* aktiv filtr çipləri */
+  .cat-chips    { @apply mt-5 flex flex-wrap items-center gap-2; }
+  .cat-chip     { @apply inline-flex h-8 cursor-pointer items-center rounded-ds border border-black/10 bg-gray-soft px-3 text-sm text-ink hover:border-black/35; }
+  .cat-chip .x  { @apply ml-2 text-black/50; }
+  .cat-clear    { @apply cursor-pointer border-none px-1 text-sm text-black/50 [background:none] [font-family:inherit] hover:text-ink; }
 
-  /* ---- filter sidebar (sticky) ----
-     .topbar 140px (nav-row1 80 + nav-row2 60) sticky olduğu üçün top ondan aşağıdır.
-     Sidebar ekrandan uzun olarsa öz içində scroll olunur ki "Tətbiq et" düyməsi
-     həmişə əlçatan qalsın. .cat-body-də align-items:flex-start olması vacibdir —
-     stretch olsa sidebar tam hündürlük alır və sticky işləməz. */
-  .filter-side{width:280px;flex-shrink:0;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:22px 18px;
-    position:sticky;top:156px;max-height:calc(100vh - 172px);display:flex;flex-direction:column;overflow:hidden}
-  /* filtrlər panelin içində sürüşür, "Filtrləri tətbiq et" isə altda sabit qalır */
-  /* padding-bottom: "Yalnız stokda olanlar" sətri ilə ayırıcı/düymə arasındaki məsafə */
-  .fs-scroll{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;margin-right:-8px;padding-right:8px;padding-bottom:22px}
-  .fs-scroll::-webkit-scrollbar{width:6px}
-  .fs-scroll::-webkit-scrollbar-track{background:transparent}
-  .fs-scroll::-webkit-scrollbar-thumb{background:rgba(0,0,0,.18);border-radius:3px}
-  .fs-scroll::-webkit-scrollbar-thumb:hover{background:rgba(0,0,0,.3)}
-  /* dar ekranlarda sticky-nin faydası yoxdur */
-  @media(max-width:980px){
-    .filter-side{position:static;max-height:none;overflow:visible;display:block}
-    .fs-scroll{overflow:visible;margin-right:0;padding-right:0}
+  /* gövdə: sidebar + grid */
+  .cat-body { @apply mt-5 flex items-start gap-6; }
+
+  /* filtr sidebar — `.topbar` 140px sticky olduğu üçün top ondan aşağıdır.
+     `.cat-body`-də `items-start` olması VACİBDİR: stretch olsa sidebar tam
+     hündürlük alır və sticky işləməz. Panel özü sürüşmür, `.fs-scroll` sürüşür,
+     «Filtrləri tətbiq et» altda sabit qalır. */
+  .filter-side { @apply sticky top-[156px] flex max-h-[calc(100vh-172px)] w-[280px] shrink-0 flex-col overflow-hidden rounded-ds border border-black/10 bg-white px-[18px] py-[22px]
+                        max-[980px]:static max-[980px]:block max-[980px]:max-h-none max-[980px]:overflow-visible; }
+  .fs-scroll   { @apply min-h-0 flex-1 overflow-y-auto pr-2 pb-[22px] [margin-right:-8px] [overscroll-behavior:contain] [scrollbar-width:thin]
+                        max-[980px]:mr-0 max-[980px]:overflow-visible max-[980px]:pr-0; }
+  .fs-scroll::-webkit-scrollbar             { width: 6px; }
+  .fs-scroll::-webkit-scrollbar-track       { background: transparent; }
+  .fs-scroll::-webkit-scrollbar-thumb       { background: rgba(0,0,0,.18); border-radius: 3px; }
+  .fs-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,.3); }
+
+  .fs-block { @apply p-0; }
+  .fs-title { @apply mb-3.5 text-[15px] font-semibold text-ink; }
+  .fs-div   { @apply my-[23px] h-px bg-black/10; }
+
+  /* kateqoriyalar */
+  .fs-cat            { @apply flex cursor-pointer items-center justify-between rounded-ds px-2 py-1.5 text-sm text-black/70 hover:text-ink; }
+  .fs-cat + .fs-cat  { @apply mt-2.5; }
+  .fs-cat .n         { @apply text-[13px] text-black/40; }
+  .fs-cat.active     { @apply bg-sel-bg font-semibold text-ink; }
+  .fs-cat.active .n  { @apply text-black/70; }
+
+  /* qiymət */
+  .fs-price-inputs        { @apply flex items-center gap-2; }
+  .fs-price-inputs .in    { @apply h-[38px] min-w-0 flex-1 rounded-ds border border-black/14 px-3 text-sm text-ink outline-none focus:border-ink; }
+  .fs-price-inputs .dash  { @apply text-black/40; }
+  .fs-slider              { @apply relative mt-[26px] mr-[7px] ml-[7px] h-1 rounded-[2px] bg-black/10; }
+  .fs-slider .fill        { @apply absolute top-0 right-[50%] left-[20%] h-1 rounded-[2px] bg-yellow; }
+  .fs-slider .knob        { @apply absolute top-1/2 left-0 z-[2] size-4 -translate-x-1/2 -translate-y-1/2 cursor-grab rounded-full border-2 border-ink bg-white [touch-action:none] active:cursor-grabbing; }
+
+  /* checkbox sətirləri — tick border ilə çəkilir, xam CSS qalır */
+  .fs-check              { @apply flex cursor-pointer items-center gap-2.5; }
+  .fs-check + .fs-check  { @apply mt-2.5; }
+  .fs-box                { @apply relative size-[18px] shrink-0 rounded-ds border border-black/35 bg-white; }
+  .fs-check.on .fs-box   { @apply border-ink bg-ink; }
+  .fs-check.on .fs-box::after {
+    content: ""; position: absolute; left: 5px; top: 2px; width: 5px; height: 9px;
+    border: solid #fff; border-width: 0 2px 2px 0; transform: rotate(45deg);
   }
-  .fs-block{padding:0}
-  .fs-title{font-weight:600;font-size:15px;color:#111;margin-bottom:14px}
-  .fs-div{height:1px;background:var(--border);margin:23px 0}
+  .fs-check .lbl { @apply flex-1 text-sm text-ink; }
+  .fs-check .n   { @apply text-[13px] text-black/40; }
 
-  /* categories */
-  .fs-cat{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-radius:var(--radius);font-size:14px;color:var(--text-secondary);cursor:pointer}
-  .fs-cat + .fs-cat{margin-top:10px}
-  .fs-cat .n{color:var(--text-faint);font-size:13px}
-  .fs-cat:hover{color:#111}
-  .fs-cat.active{background:var(--sel-bg);color:#111;font-weight:600}
-  .fs-cat.active .n{color:var(--text-secondary)}
+  /* ölçü çipləri */
+  .fs-sizes   { @apply flex flex-wrap gap-1.5; }
+  .fs-size    { @apply inline-flex h-[29px] cursor-pointer items-center justify-center rounded-ds border border-black/14 px-[11px] text-[13px] text-black/70 hover:border-black/35; }
+  .fs-size.on { @apply border-yellow-line bg-sel-bg font-semibold text-ink; }
 
-  /* price */
-  .fs-price-inputs{display:flex;align-items:center;gap:8px}
-  .fs-price-inputs .in{flex:1;min-width:0;height:38px;border:1px solid var(--border-strong);border-radius:var(--radius);padding:0 12px;font-size:14px;color:#111;outline:none}
-  .fs-price-inputs .in:focus{border-color:#111}
-  .fs-price-inputs .dash{color:var(--text-faint)}
-  .fs-slider{position:relative;height:4px;background:var(--border);border-radius:2px;margin:26px 7px 0}
-  .fs-slider .fill{position:absolute;left:20%;right:50%;top:0;height:4px;background:var(--yellow);border-radius:2px}
-  .fs-slider .knob{position:absolute;top:50%;left:0;width:16px;height:16px;border-radius:50%;background:#fff;border:2px solid #111;transform:translate(-50%,-50%);cursor:grab;touch-action:none;z-index:2}
-  .fs-slider .knob:active{cursor:grabbing}
+  /* stok açarı */
+  .fs-stock       { @apply flex items-center justify-between; }
+  .fs-stock .lbl  { @apply text-sm text-ink; }
+  .switch         { @apply relative h-[22px] w-10 cursor-pointer rounded-[11px] bg-black/18 transition-[background] duration-200; }
+  .switch .knob   { @apply absolute top-0.5 left-0.5 size-[18px] rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,0.25)] transition-[left] duration-200; }
+  .switch.on      { @apply bg-yellow; }
+  .switch.on .knob{ @apply left-5; }
 
-  /* checkbox rows */
-  .fs-check{display:flex;align-items:center;gap:10px;cursor:pointer}
-  .fs-check + .fs-check{margin-top:10px}
-  .fs-box{width:18px;height:18px;flex-shrink:0;border:1px solid var(--border-hover);border-radius:var(--radius);position:relative;background:#fff}
-  .fs-check.on .fs-box{background:#111;border-color:#111}
-  .fs-check.on .fs-box::after{content:"";position:absolute;left:5px;top:2px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
-  .fs-check .lbl{flex:1;font-size:14px;color:#111}
-  .fs-check .n{font-size:13px;color:var(--text-faint)}
+  /* tətbiq et — sürüşən filtrlərlə düymə arasında incə ayırıcı */
+  .fs-apply-sep { @apply h-px shrink-0 bg-black/10 [margin:0_-18px]; }
+  .fs-apply     { @apply mt-[22px] h-[46px] w-full shrink-0 cursor-pointer rounded-ds bg-yellow text-sm font-bold text-ink transition-[filter] duration-200 hover:brightness-95; }
 
-  /* size chips */
-  .fs-sizes{display:flex;flex-wrap:wrap;gap:6px}
-  .fs-size{display:inline-flex;align-items:center;justify-content:center;height:29px;padding:0 11px;border:1px solid var(--border-strong);border-radius:var(--radius);font-size:13px;color:var(--text-secondary);cursor:pointer}
-  .fs-size:hover{border-color:var(--border-hover)}
-  .fs-size.on{background:var(--sel-bg);border-color:var(--yellow-line);color:#111;font-weight:600}
-
-  /* stock toggle row */
-  .fs-stock{display:flex;align-items:center;justify-content:space-between}
-  .fs-stock .lbl{font-size:14px;color:#111}
-  .switch{width:40px;height:22px;border-radius:11px;background:rgba(0,0,0,.18);position:relative;cursor:pointer;transition:background .2s}
-  .switch .knob{position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
-  .switch.on{background:var(--yellow)}
-  .switch.on .knob{left:20px}
-
-  /* apply button */
-  .fs-apply{flex-shrink:0;width:100%;height:46px;margin-top:22px;background:var(--yellow);border-radius:var(--radius);font-weight:700;font-size:14px;color:#111;cursor:pointer;transition:filter .2s}
-  /* sürüşən filtrlərlə düymə arasında incə ayırıcı — məzmunun altda kəsildiyi görünsün */
-  .fs-apply-sep{flex-shrink:0;height:1px;background:var(--border);margin:0 -18px}
-  .fs-apply:hover{filter:brightness(.95)}
-
-  /* ---- product grid ---- */
-  .cat-grid{flex:1;min-width:0;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;align-content:start}
-
-  /* ===== TEST: 1 sətirdə 4 kart =====================================
-     Bəyənilməsə bu blokun HAMISINI sil — yuxarıdaki repeat(3,1fr) qalır
-     və səhifə əvvəlki 3 sütunlu versiyaya qayıdır. ==================== */
-  .cat-grid{grid-template-columns:repeat(4,1fr)}
+  /* məhsul şəbəkəsi — 1 sətirdə 4 kart */
+  .cat-grid { @apply grid min-w-0 flex-1 grid-cols-4 content-start gap-3
+                     max-[1280px]:grid-cols-3 max-[980px]:grid-cols-2; }
   /* kart daraldığı üçün şəkil sahəsi 316px sabit yerinə kvadrat saxlanılır */
-  .cat-grid .pcard .ph{height:auto;aspect-ratio:1/1}
+  .cat-grid .pcard .ph     { @apply h-auto aspect-square; }
   /* dar kartda 2 badge bir sətirdə sığmır — alt-alta düşsün, kəsilməsin */
-  .cat-grid .pcard .badges{flex-wrap:wrap;max-width:calc(100% - 44px)}
-  @media(max-width:1280px){ .cat-grid{grid-template-columns:repeat(3,1fr)} }
-  @media(max-width:980px){  .cat-grid{grid-template-columns:repeat(2,1fr)} }
-  /* ===== TEST bloku bitir ============================================ */
+  .cat-grid .pcard .badges { @apply max-w-[calc(100%-44px)] flex-wrap; }
+}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body>
 
