@@ -418,6 +418,35 @@ Boşluq şkalası (4/8/12/16/20/24/28/32/40/48) Tailwind-in standartı ilə üst
 (`--spacing`=4px → `p-1`…`p-12`), ayrıca spacing tokeni lazım deyil.
 `line-height:normal` üçün `leading-normal` YOX, **`leading-[normal]`** işlət (`leading-normal`=1.5).
 
+### ⚠️ «Səhifə tam stilsiz görünür» — necə debug etmək
+
+Simptom: navbar/footer stilli görünür, qalan HƏR ŞEY çılpaq HTML kimidir.
+
+Bu naxış bir şeyi göstərir: `archi.css` yüklənir (adi `<link>`), **Tailwind isə
+ümumiyyətlə heç nə istehsal etmir**. Tailwind-in bütün stilləri runtime-da
+qurulduğu üçün compiler işə düşməsə səhifədə sıfır CSS olur.
+
+Ardıcıllıqla yoxla:
+
+1. **Console (F12)** — `Failed to load resource` və ya `net::ERR_...` varsa,
+   `tailwind-browser.js` yüklənməyib (yol səhvdir və ya fayl yoxdur).
+2. Console-da:
+   ```js
+   document.querySelectorAll('style[type="text/tailwindcss"]').length  // 2 olmalı
+   ```
+   `0` → `archi-tw.js` işləməyib. `1` → səhifənin öz bloku yoxdur.
+3. Kompilyasiya xətası varsa Tailwind onu Console-a yazır (`@apply`-də tanınmayan
+   utility və s.). Kodda xəta olub-olmadığını brauzersiz yoxlamaq üçün
+   scratchpad-dəki `sim-browser.js` skripti brauzerin etdiyini simulyasiya edir:
+   bütün `style[type="text/tailwindcss"]` bloklarını birləşdirir və `@source`
+   OLMADAN kompilyasiya edir.
+
+**2026-07-31-də baş verən real hadisə:** səhifələr `cdn.jsdelivr.net`-dən 281 KB-lıq
+browser build-i çəkirdi. İstifadəçi faylları qovluqdan (`file://`) açanda skript
+gəlmirdi və bütün səhifələr stilsiz görünürdü. Həll: build layihəyə
+`tailwind-browser.js` kimi salındı, 23 səhifə yerli fayla keçirildi.
+**CDN-ə qaytarma** — oflayn işləməz.
+
 ### Çevirmə necə yoxlanılır (brauzer olmadan)
 
 Scratchpad-də Tailwind CLI quraşdırılıb (**layihəyə build step əlavə etmir**), `verify-tw.js`
