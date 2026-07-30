@@ -8,134 +8,88 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="archi.css">
-<style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{background:#f5f7f9;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
-  img{display:block}
-  p{word-break:break-word}
+<!-- Tailwind — sıra vacibdir: tema Tailwind compiler-indən ƏVVƏL DOM-a düşməlidir. -->
+<script src="archi-tw.js"></script>
+<!-- Biznes kabineti — Bildirişlər. CSS @apply ilə Tailwind-ə çevrildi, class adları
+     saxlanıldı (markup toxunulmadı). Navbar CSS-i (47 sətir) ölü idi — markup
+     `data-archi="nav"` ilə inject olunur — silindi. `.page`-in sabit width:1440px-i
+     də götürüldü. Generik adlar (.page .card .crumbs .save-bar) səhifə səviyyəsində
+     qalır ki, başqa səhifələrə sızmasın. -->
+<style type="text/tailwindcss">
+@layer components {
+  body  { @apply bg-gray-soft2 font-sans antialiased; }
+  p     { @apply [word-break:break-word]; }
+  .page { @apply mx-auto flex w-full max-w-[1440px] flex-col items-start bg-gray-soft2; }
 
-  /* asset image constants used via data URLs kept inline as <img src> */
-  .page{background:#f5f7f9;display:flex;flex-direction:column;align-items:flex-start;width:1440px;margin:0 auto}
+  .edit-page       { @apply flex w-full flex-col items-start gap-5 bg-gray-soft2 px-7 pt-8 pb-14; }
+  .edit-head       { @apply flex w-full items-end justify-between overflow-hidden; }
+  .edit-head-left  { @apply flex flex-col items-start gap-2.5 overflow-hidden whitespace-nowrap; }
+  .crumbs          { @apply flex items-center gap-2 overflow-hidden text-[13px]; }
+  .crumbs .c1      { @apply font-normal text-black/50; }
+  .crumbs .c2      { @apply font-medium text-black/90; }
+  .edit-title      { @apply text-[34px] font-bold text-ink; }
+  .edit-head-right { @apply flex items-center gap-3 overflow-hidden; }
+  .badge           { @apply flex items-center gap-2 overflow-hidden rounded-ds bg-[#e9f6ed] px-3.5 py-2; }
+  .badge .dot      { @apply relative size-2 shrink-0; }
+  .badge .dot img  { @apply absolute inset-0 size-full max-w-none; }
+  .badge p         { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-[#229653]; }
+  .btn-view        { @apply flex h-11 items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white px-5; }
+  .btn-view p      { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
 
-  /* ---------- NAVBAR ---------- */
-  .navbar-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;width:1440px}
-  .navbar{background:#fff;display:flex;gap:48px;height:80px;align-items:center;padding:0 28px;width:100%}
-  .nav-logo{height:50px;width:131.579px;position:relative;flex-shrink:0}
-  .nav-logo .crop{position:absolute;inset:0;overflow:hidden;pointer-events:none}
-  .nav-logo .crop img{position:absolute;height:263.16%;left:-0.04%;top:-81.58%;width:100.08%;max-width:none}
+  .edit-body            { @apply flex w-full items-start gap-6; }
+  .settings-nav         { @apply sticky top-[158px] flex w-[264px] shrink-0 flex-col items-start gap-1 self-start overflow-hidden rounded-ds border border-black/10 bg-white px-3 py-3.5; }
+  .sn-item              { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds px-3 py-[11px] text-inherit no-underline; }
+  .sn-item p.lbl        { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-black/70; }
+  .sn-item p.cnt        { @apply text-xs leading-[normal] font-semibold whitespace-nowrap text-black/40; }
+  .sn-item.active       { @apply border border-yellow-line bg-sel-bg; }
+  .sn-item.active p.lbl { @apply font-bold text-black; }
+  .sn-progress          { @apply flex w-full flex-col items-start gap-2 overflow-hidden rounded-ds bg-gray-soft2 px-3 py-3.5; }
+  .sn-progress .row     { @apply flex w-full items-start justify-between overflow-hidden text-xs whitespace-nowrap text-ink; }
+  .sn-progress .row .t  { @apply font-semibold; }
+  .sn-progress .row .v  { @apply font-bold; }
+  .sn-bar               { @apply relative h-1.5 w-full overflow-hidden rounded-[3px] bg-black/10; }
+  .sn-bar .fill         { @apply absolute top-0 left-0 h-1.5 w-[184px] rounded-[3px] bg-yellow; }
+  .sn-progress .hint    { @apply text-[11px] leading-[normal] font-normal whitespace-nowrap text-black/50; }
 
-  .search{background:#f3f5f7;display:flex;flex:1 0 0;gap:8px;align-items:center;min-width:1px;padding:12px 16px}
-  .search .ico{width:20px;height:20px;flex-shrink:0;position:relative}
-  .search .ico img{position:absolute;inset:0;width:100%;height:100%;max-width:none}
-  .search p{font-family:'Manrope',sans-serif;font-weight:400;line-height:22px;font-size:16px;color:rgba(0,0,0,.5);white-space:nowrap}
+  .edit-main   { @apply flex min-w-px flex-[1_0_0] flex-col items-start gap-5 overflow-hidden; }
+  .card        { @apply flex w-full flex-col items-start overflow-hidden rounded-ds border border-black/10 bg-white p-6; }
+  .card h3     { @apply text-lg leading-[normal] font-bold whitespace-nowrap text-ink; }
+  .card .desc  { @apply w-full text-[13px] leading-[1.45] font-normal text-black/50; }
+  .spacer      { @apply h-3 w-2.5 shrink-0; }
 
-  .menu{display:flex;gap:24px;align-items:center;justify-content:flex-end;flex-shrink:0}
-  .menu .icons{display:flex;gap:24px;align-items:center}
-  .bloq{display:flex;gap:4px;height:22px;align-items:center;justify-content:center}
-  .bloq p{font-family:'Manrope',sans-serif;font-weight:500;line-height:22px;font-size:16px;color:#000;white-space:nowrap}
-  .ico16{width:16px;height:16px;flex-shrink:0;position:relative}
-  .ico16 img{position:absolute;inset:0;width:100%;height:100%;max-width:none}
-  .ico24{width:24px;height:24px;flex-shrink:0;position:relative}
-  .ico24 img{position:absolute;inset:0;width:100%;height:100%;max-width:none}
-  .ic24{width:24px;height:24px;flex-shrink:0;position:relative}
-  .ic24 img{position:absolute;inset:0;width:100%;height:100%;max-width:none}
-  .ic20{width:20px;height:20px;flex-shrink:0;position:relative}
-  .ic20 img{position:absolute;inset:0;width:100%;height:100%;max-width:none}
+  .notif-row          { @apply flex w-full items-center justify-between overflow-hidden border-b border-black/8 py-3.5; }
+  .notif-row .txt     { @apply flex min-w-px flex-[1_0_0] flex-col items-start gap-[3px] overflow-hidden whitespace-nowrap; }
+  .notif-row .txt .t  { @apply text-[15px] leading-[normal] font-semibold text-ink; }
+  .notif-row .txt .s  { @apply text-[13px] leading-[normal] font-normal text-black/50; }
+  .toggle             { @apply relative h-6 w-11 shrink-0; }
+  .toggle img         { @apply absolute inset-0 size-full max-w-none; }
 
-  .signupin{display:flex;gap:24px;align-items:center;flex-shrink:0}
-  .divider-v{height:28px;width:0;position:relative;flex-shrink:0}
-  .divider-v .in{position:absolute;top:0;bottom:0;left:-0.5px;right:-0.5px}
-  .divider-v img{width:100%;height:100%;max-width:none}
-  .signupin>.login-txt{font-family:'Manrope',sans-serif;font-weight:500;line-height:22px;font-size:16px;color:#111;white-space:nowrap}
-  .login-btn{background:#111;display:flex;gap:4px;align-items:center;justify-content:center;overflow:hidden;padding:12px 24px;flex-shrink:0}
-  .login-btn .ic20{width:20px;height:20px;flex-shrink:0;position:relative}
-  .login-btn .ic20 img{position:absolute;inset:0;width:100%;height:100%;max-width:none}
-  .login-btn p{font-family:'Inter',sans-serif;font-weight:400;line-height:normal;font-size:16px;color:#efefef;white-space:nowrap}
+  .card2            { @apply flex w-full flex-col items-start gap-1 overflow-hidden rounded-ds border border-black/10 bg-white p-6; }
+  .chips            { @apply flex items-start gap-2 overflow-hidden pt-3; }
+  .chip             { @apply flex items-center gap-2 overflow-hidden rounded-ds py-2.5 pr-4 pl-3.5; }
+  .chip p           { @apply text-sm leading-[normal] whitespace-nowrap; }
+  .chip.on          { @apply border border-yellow-line bg-sel-bg; }
+  .chip.on p        { @apply font-semibold text-black; }
+  .chip.off         { @apply border border-black/14 bg-white; }
+  .chip.off p       { @apply font-medium text-black/70; }
+  .chk-on           { @apply relative size-[18px] shrink-0 overflow-hidden rounded-ds bg-ink; }
+  .chk-on .mark     { @apply absolute top-[3.5px] left-[3.5px] size-[11px]; }
+  .chk-on .mark img { @apply absolute inset-0 size-full max-w-none; }
+  .chk-off          { @apply size-[18px] shrink-0 rounded-ds border border-black/25 bg-white; }
 
-  .nav2{background:#fff;border-top:1px solid rgba(0,0,0,.5);border-bottom:1px solid rgba(0,0,0,.5);display:flex;flex-direction:column;height:60px;width:1384px}
-  .nav2-row{display:flex;height:60px;align-items:center;justify-content:space-between;width:100%}
-  .nav2-left{display:flex;align-items:center}
-  .nav2-katcol{display:flex;flex-direction:column;height:60px;width:150px}
-  .nav2-kataloq{border-left:1px solid rgba(0,0,0,.4);border-right:1px solid rgba(0,0,0,.4);display:flex;gap:8px;height:60px;align-items:center;justify-content:center;overflow:hidden;padding:12px 24px;width:100%}
-  .nav2-kataloq .ic20{width:20px;height:20px;flex-shrink:0;position:relative}
-  .nav2-kataloq .ic20 img{position:absolute;inset:0;width:100%;height:100%;max-width:none}
-  .nav2-kataloq p{font-family:'Inter',sans-serif;font-weight:500;line-height:normal;font-size:16px;color:#000;white-space:nowrap}
-  .nav2-item{border-right:1px solid rgba(0,0,0,.5);display:flex;gap:4px;height:60px;align-items:center;justify-content:center;padding:0 12px;flex-shrink:0}
-  .nav2-item p{font-family:'Manrope',sans-serif;font-weight:500;line-height:22px;font-size:16px;color:#000;white-space:nowrap}
-  .nav2-calc{border-left:1px solid rgba(0,0,0,.5);border-right:1px solid rgba(0,0,0,.5);display:flex;gap:8px;height:60px;align-items:center;justify-content:center;padding:12px 24px;flex-shrink:0}
-  .nav2-calc p{font-family:'Manrope',sans-serif;font-weight:500;line-height:22px;font-size:16px;color:rgba(0,0,0,.8);white-space:nowrap}
-
-  /* ---------- EDIT PAGE ---------- */
-  .edit-page{background:#f5f7f9;display:flex;flex-direction:column;gap:20px;align-items:flex-start;padding:32px 28px 56px;width:100%}
-  .edit-head{display:flex;align-items:flex-end;justify-content:space-between;overflow:hidden;width:100%}
-  .edit-head-left{display:flex;flex-direction:column;gap:10px;align-items:flex-start;overflow:hidden;white-space:nowrap}
-  .crumbs{display:flex;gap:8px;align-items:center;overflow:hidden;font-size:13px}
-  .crumbs .c1{font-family:'Inter',sans-serif;font-weight:400;color:rgba(0,0,0,.5)}
-  .crumbs .c2{font-family:'Inter',sans-serif;font-weight:500;color:rgba(0,0,0,.9)}
-  .edit-title{font-family:'Inter',sans-serif;font-weight:700;font-size:34px;color:#111}
-  .edit-head-right{display:flex;gap:12px;align-items:center;overflow:hidden}
-  .badge{background:#e9f6ed;display:flex;gap:8px;align-items:center;overflow:hidden;padding:8px 14px;border-radius:4px}
-  .badge .dot{width:8px;height:8px;flex-shrink:0;position:relative}
-  .badge .dot img{position:absolute;inset:0;width:100%;height:100%;max-width:none}
-  .badge p{font-family:'Inter',sans-serif;font-weight:600;line-height:normal;font-size:13px;color:#229653;white-space:nowrap}
-  .btn-view{background:#fff;border:1px solid rgba(0,0,0,.2);display:flex;height:44px;align-items:center;justify-content:center;overflow:hidden;padding:0 20px;border-radius:4px}
-  .btn-view p{font-family:'Inter',sans-serif;font-weight:600;line-height:normal;font-size:13px;color:#111;white-space:nowrap}
-
-  .edit-body{display:flex;gap:24px;align-items:flex-start;width:100%}
-
-  /* sidebar */
-  .settings-nav{background:#fff;border:1px solid rgba(0,0,0,.1);display:flex;flex-direction:column;gap:4px;align-items:flex-start;overflow:hidden;padding:14px 12px;border-radius:4px;width:264px;flex-shrink:0;position:sticky;top:158px;align-self:flex-start}
-  .sn-item{display:flex;align-items:center;justify-content:space-between;overflow:hidden;padding:11px 12px;border-radius:4px;width:100%;cursor:pointer;text-decoration:none;color:inherit}
-  .sn-item p.lbl{font-family:'Inter',sans-serif;font-weight:500;line-height:normal;font-size:14px;color:rgba(0,0,0,.7);white-space:nowrap}
-  .sn-item p.cnt{font-family:'Inter',sans-serif;font-weight:600;line-height:normal;font-size:12px;color:rgba(0,0,0,.4);white-space:nowrap}
-  .sn-item.active{background:#fffde0;border:1px solid #ffe600}
-  .sn-item.active p.lbl{font-weight:700;color:#000}
-  .sn-progress{background:#f5f7f9;display:flex;flex-direction:column;gap:8px;align-items:flex-start;overflow:hidden;padding:14px 12px;border-radius:4px;width:100%}
-  .sn-progress .row{display:flex;align-items:flex-start;justify-content:space-between;overflow:hidden;width:100%;color:#111;font-size:12px;white-space:nowrap}
-  .sn-progress .row .t{font-family:'Inter',sans-serif;font-weight:600}
-  .sn-progress .row .v{font-family:'Inter',sans-serif;font-weight:700}
-  .sn-bar{background:rgba(0,0,0,.1);height:6px;overflow:hidden;border-radius:3px;width:100%;position:relative}
-  .sn-bar .fill{position:absolute;background:#fdfe00;height:6px;left:0;top:0;border-radius:3px;width:184px}
-  .sn-progress .hint{font-family:'Inter',sans-serif;font-weight:400;line-height:normal;font-size:11px;color:rgba(0,0,0,.5);white-space:nowrap}
-
-  /* main */
-  .edit-main{display:flex;flex:1 0 0;flex-direction:column;gap:20px;align-items:flex-start;min-width:1px;overflow:hidden}
-  .card{background:#fff;border:1px solid rgba(0,0,0,.1);display:flex;flex-direction:column;align-items:flex-start;overflow:hidden;padding:24px;border-radius:4px;width:100%}
-  .card h3{font-family:'Inter',sans-serif;font-weight:700;line-height:normal;font-size:18px;color:#111;white-space:nowrap}
-  .card .desc{font-family:'Inter',sans-serif;font-weight:400;line-height:1.45;font-size:13px;color:rgba(0,0,0,.5);width:100%}
-  .spacer{height:12px;width:10px;flex-shrink:0}
-
-  .notif-row{border-bottom:1px solid rgba(0,0,0,.08);display:flex;align-items:center;justify-content:space-between;overflow:hidden;padding:14px 0;width:100%}
-  .notif-row .txt{display:flex;flex:1 0 0;flex-direction:column;gap:3px;align-items:flex-start;min-width:1px;overflow:hidden;white-space:nowrap}
-  .notif-row .txt .t{font-family:'Inter',sans-serif;font-weight:600;line-height:normal;font-size:15px;color:#111}
-  .notif-row .txt .s{font-family:'Inter',sans-serif;font-weight:400;line-height:normal;font-size:13px;color:rgba(0,0,0,.5)}
-  .toggle{width:44px;height:24px;flex-shrink:0;position:relative}
-  .toggle img{position:absolute;inset:0;width:100%;height:100%;max-width:none}
-
-  .card2{background:#fff;border:1px solid rgba(0,0,0,.1);display:flex;flex-direction:column;gap:4px;align-items:flex-start;overflow:hidden;padding:24px;border-radius:4px;width:100%}
-  .chips{display:flex;gap:8px;align-items:flex-start;overflow:hidden;padding-top:12px}
-  .chip{display:flex;gap:8px;align-items:center;overflow:hidden;padding:10px 16px 10px 14px;border-radius:4px}
-  .chip p{line-height:normal;font-size:14px;white-space:nowrap}
-  .chip.on{background:#fffde0;border:1px solid #ffe600}
-  .chip.on p{font-family:'Inter',sans-serif;font-weight:600;color:#000}
-  .chip.off{background:#fff;border:1px solid rgba(0,0,0,.14)}
-  .chip.off p{font-family:'Inter',sans-serif;font-weight:500;color:rgba(0,0,0,.7)}
-  .chk-on{background:#111;overflow:hidden;border-radius:4px;width:18px;height:18px;flex-shrink:0;position:relative}
-  .chk-on .mark{position:absolute;left:3.5px;top:3.5px;width:11px;height:11px}
-  .chk-on .mark img{position:absolute;inset:0;width:100%;height:100%;max-width:none}
-  .chk-off{background:#fff;border:1px solid rgba(0,0,0,.25);border-radius:4px;width:18px;height:18px;flex-shrink:0}
-
-  .save-bar{background:#111;display:flex;align-items:center;justify-content:space-between;overflow:hidden;padding:16px 24px;border-radius:4px;width:100%}
-  .save-bar .left{display:flex;gap:8px;align-items:center;overflow:hidden;flex-shrink:0}
-  .save-bar .left .dot{width:8px;height:8px;flex-shrink:0;position:relative}
-  .save-bar .left .dot img{position:absolute;inset:0;width:100%;height:100%;max-width:none}
-  .save-bar .left p{font-family:'Inter',sans-serif;font-weight:500;line-height:normal;font-size:13px;color:rgba(255,255,255,.85);white-space:nowrap}
-  .save-bar .right{display:flex;gap:10px;align-items:flex-start;overflow:hidden;flex-shrink:0}
-  .btn-cancel{border:1px solid rgba(255,255,255,.35);display:flex;height:44px;align-items:center;justify-content:center;overflow:hidden;padding:0 18px;border-radius:4px}
-  .btn-cancel p{font-family:'Inter',sans-serif;font-weight:500;line-height:normal;font-size:14px;color:rgba(255,255,255,.85);white-space:nowrap}
-  .btn-save{background:#fdfe00;display:flex;height:44px;align-items:center;justify-content:center;overflow:hidden;padding:0 26px;border-radius:4px}
-  .btn-save p{font-family:'Inter',sans-serif;font-weight:700;line-height:normal;font-size:14px;color:#111;white-space:nowrap}
+  .save-bar              { @apply flex w-full items-center justify-between overflow-hidden rounded-ds bg-ink px-6 py-4; }
+  .save-bar .left        { @apply flex shrink-0 items-center gap-2 overflow-hidden; }
+  .save-bar .left .dot   { @apply relative size-2 shrink-0; }
+  .save-bar .left .dot img { @apply absolute inset-0 size-full max-w-none; }
+  .save-bar .left p      { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-white/85; }
+  .save-bar .right       { @apply flex shrink-0 items-start gap-2.5 overflow-hidden; }
+  .btn-cancel            { @apply flex h-11 items-center justify-center overflow-hidden rounded-ds border border-white/35 px-[18px]; }
+  .btn-cancel p          { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-white/85; }
+  .btn-save              { @apply flex h-11 items-center justify-center overflow-hidden rounded-ds bg-yellow px-[26px]; }
+  .btn-save p            { @apply text-sm leading-[normal] font-bold whitespace-nowrap text-ink; }
+}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body>
 <div class="page">
