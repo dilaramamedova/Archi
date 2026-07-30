@@ -8,173 +8,96 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="archi.css">
-<style>
-  *{margin:0;padding:0;box-sizing:border-box}
-  img{display:block;max-width:100%}
-  body{background:#f5f7f9;font-family:'Inter',sans-serif;-webkit-font-smoothing:antialiased}
-  .page{width:1440px;margin:0 auto;background:#f5f7f9;display:flex;flex-direction:column;align-items:flex-start}
+<!-- Tailwind — sıra vacibdir: tema Tailwind compiler-indən ƏVVƏL DOM-a düşməlidir. -->
+<script src="archi-tw.js"></script>
+<!-- Biznes kabineti — Təhlükəsizlik (Figma 1105:23405). CSS @apply ilə Tailwind-ə
+     çevrildi, class adları saxlanıldı. Navbar (37 sətir) və footer (45 sətir) CSS-i
+     ölü idi — markup `data-archi` ilə inject olunur — silindi.
+     `.page`-in sabit width:1440px-i götürüldü. -->
+<style type="text/tailwindcss">
+@layer components {
+  body  { @apply bg-gray-soft2 font-sans antialiased; }
+  .page { @apply mx-auto flex w-full max-w-[1440px] flex-col items-start bg-gray-soft2; }
 
-  /* ---------- navbar ---------- */
-  .navbar-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;width:1440px}
-  .navbar{background:#fff;display:flex;gap:48px;height:80px;align-items:center;padding:0 28px;width:100%}
-  .logo-top{height:50px;width:131.579px;position:relative;overflow:hidden;flex-shrink:0}
-  .logo-top img{position:absolute;height:263.16%;left:-0.04%;top:-81.58%;width:100.08%;max-width:none;pointer-events:none}
-  .search{background:#f3f5f7;display:flex;flex:1 0 0;gap:8px;align-items:center;min-width:0;padding:12px 16px}
-  .search .ic{width:20px;height:20px;flex-shrink:0;position:relative}
-  .search .ic img{position:absolute;inset:0;width:100%;height:100%}
-  .search p{font-family:'Manrope';font-weight:400;font-size:16px;line-height:22px;color:rgba(0,0,0,0.5);white-space:nowrap}
-  .menu{display:flex;gap:24px;align-items:center;justify-content:flex-end;flex-shrink:0}
-  .menu .icons{display:flex;gap:24px;align-items:center}
-  .bloq{display:flex;gap:4px;height:22px;align-items:center;justify-content:center}
-  .bloq p{font-family:'Manrope';font-weight:500;font-size:16px;line-height:22px;color:#000;white-space:nowrap}
-  .ic16{width:16px;height:16px;position:relative;flex-shrink:0}
-  .ic16 img{position:absolute;inset:0;width:100%;height:100%}
-  .ic24{width:24px;height:24px;position:relative;flex-shrink:0}
-  .ic24 img{position:absolute;inset:0;width:100%;height:100%}
-  .ic20{width:20px;height:20px;position:relative;flex-shrink:0}
-  .ic20 img{position:absolute;inset:0;width:100%;height:100%}
-  .signup{display:flex;gap:24px;align-items:center;flex-shrink:0}
-  .vdiv{height:28px;width:0;position:relative;flex-shrink:0}
-  .vdiv img{position:absolute;top:0;bottom:0;left:-0.5px;right:-0.5px;width:1px;height:100%}
-  .signup .login-txt{font-family:'Manrope';font-weight:500;font-size:16px;line-height:22px;color:#111;white-space:nowrap}
-  .btn-login{background:#111;display:flex;gap:4px;align-items:center;justify-content:center;overflow:hidden;padding:12px 24px;flex-shrink:0}
-  .btn-login p{font-family:'Inter';font-weight:400;font-size:16px;color:#efefef;white-space:nowrap}
+  .edit-page     { @apply flex w-full flex-col items-start gap-5 bg-gray-soft2 px-7 pt-8 pb-14; }
+  .page-head     { @apply flex w-full items-end justify-between overflow-hidden; }
+  .page-head-l   { @apply flex flex-col items-start gap-2.5 overflow-hidden whitespace-nowrap; }
+  .crumb         { @apply flex items-center gap-2 overflow-hidden text-[13px]; }
+  .crumb .c1     { @apply font-normal text-black/50; }
+  .crumb .c2     { @apply font-medium text-black/90; }
+  .page-title    { @apply text-[34px] font-bold text-ink; }
+  .page-head-r   { @apply flex items-center gap-3 overflow-hidden; }
+  .badge-pub     { @apply flex items-center gap-2 overflow-hidden rounded-ds bg-[#e9f6ed] px-3.5 py-2; }
+  .dot8          { @apply relative size-2 shrink-0; }
+  .dot8 img      { @apply absolute inset-0 size-full; }
+  .badge-pub p   { @apply text-[13px] font-semibold whitespace-nowrap text-[#229653]; }
+  .btn-view      { @apply flex h-11 items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white px-5; }
+  .btn-view p    { @apply text-[13px] font-semibold whitespace-nowrap text-ink; }
 
-  .nav2{background:#fff;border-top:1px solid rgba(0,0,0,0.5);border-bottom:1px solid rgba(0,0,0,0.5);display:flex;flex-direction:column;height:60px;width:1384px}
-  .nav2-row{display:flex;height:60px;align-items:center;justify-content:space-between;width:100%}
-  .nav2-left{display:flex;align-items:center}
-  .nav2-cat{display:flex;flex-direction:column;height:60px;width:150px}
-  .nav2-cat-in{border-left:1px solid rgba(0,0,0,0.4);border-right:1px solid rgba(0,0,0,0.4);display:flex;gap:8px;height:60px;align-items:center;justify-content:center;overflow:hidden;padding:12px 24px;width:100%}
-  .nav2-cat-in p{font-family:'Inter';font-weight:500;font-size:16px;color:#000;white-space:nowrap}
-  .nav2-item{border-right:1px solid rgba(0,0,0,0.5);display:flex;gap:4px;height:60px;align-items:center;justify-content:center;padding:0 12px;flex-shrink:0}
-  .nav2-item p{font-family:'Manrope';font-weight:500;font-size:16px;line-height:22px;color:#000;white-space:nowrap}
-  .nav2-calc{border-left:1px solid rgba(0,0,0,0.5);border-right:1px solid rgba(0,0,0,0.5);display:flex;gap:8px;height:60px;align-items:center;justify-content:center;padding:12px 24px;flex-shrink:0}
-  .nav2-calc p{font-family:'Manrope';font-weight:500;font-size:16px;line-height:22px;color:rgba(0,0,0,0.8);white-space:nowrap}
+  .edit-body               { @apply flex w-full items-start gap-6; }
+  .settings-nav            { @apply sticky top-[158px] flex w-[264px] shrink-0 flex-col items-start gap-1 self-start overflow-hidden rounded-ds border border-black/10 bg-white px-3 py-3.5; }
+  .nav-link                { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds px-3 py-[11px] text-inherit no-underline; }
+  .nav-link p              { @apply text-sm font-medium whitespace-nowrap text-black/70; }
+  .nav-link .count         { @apply text-xs font-semibold text-black/40; }
+  .nav-link.active         { @apply border border-yellow-line bg-sel-bg; }
+  .nav-link.active p       { @apply text-sm font-bold text-black; }
+  .nav-progress            { @apply flex w-full flex-col items-start gap-2 overflow-hidden rounded-ds bg-gray-soft2 px-3 py-3.5; }
+  .nav-progress .pr-top    { @apply flex w-full items-start justify-between overflow-hidden text-xs whitespace-nowrap text-ink; }
+  .nav-progress .pr-top .l { @apply font-semibold; }
+  .nav-progress .pr-top .r { @apply font-bold; }
+  .pr-bar                  { @apply relative h-1.5 w-full overflow-hidden rounded-[3px] bg-black/10; }
+  .pr-bar .fill            { @apply absolute top-0 left-0 h-1.5 w-[184px] rounded-[3px] bg-yellow; }
+  .nav-progress .note      { @apply text-[11px] font-normal whitespace-nowrap text-black/50; }
 
-  /* ---------- edit page ---------- */
-  .edit-page{background:#f5f7f9;display:flex;flex-direction:column;gap:20px;align-items:flex-start;padding:32px 28px 56px;width:100%}
-  .page-head{display:flex;align-items:flex-end;justify-content:space-between;overflow:hidden;width:100%}
-  .page-head-l{display:flex;flex-direction:column;gap:10px;align-items:flex-start;overflow:hidden;white-space:nowrap}
-  .crumb{display:flex;gap:8px;align-items:center;overflow:hidden;font-size:13px}
-  .crumb .c1{font-family:'Inter';font-weight:400;color:rgba(0,0,0,0.5)}
-  .crumb .c2{font-family:'Inter';font-weight:500;color:rgba(0,0,0,0.9)}
-  .page-title{font-family:'Inter';font-weight:700;color:#111;font-size:34px}
-  .page-head-r{display:flex;gap:12px;align-items:center;overflow:hidden}
-  .badge-pub{background:#e9f6ed;display:flex;gap:8px;align-items:center;overflow:hidden;padding:8px 14px;border-radius:4px}
-  .dot8{width:8px;height:8px;position:relative;flex-shrink:0}
-  .dot8 img{position:absolute;inset:0;width:100%;height:100%}
-  .badge-pub p{font-family:'Inter';font-weight:600;color:#229653;font-size:13px;white-space:nowrap}
-  .btn-view{background:#fff;border:1px solid rgba(0,0,0,0.2);display:flex;height:44px;align-items:center;justify-content:center;overflow:hidden;padding:0 20px;border-radius:4px}
-  .btn-view p{font-family:'Inter';font-weight:600;color:#111;font-size:13px;white-space:nowrap}
+  .edit-main         { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-5 overflow-hidden; }
+  .card              { @apply flex w-full flex-col items-start gap-4 overflow-hidden rounded-ds border border-black/10 bg-white p-6; }
+  .card-head         { @apply flex w-full flex-col items-start gap-1 overflow-hidden; }
+  .card-head h2      { @apply text-lg font-bold whitespace-nowrap text-ink; }
+  .card-head .sub    { @apply w-full text-[13px] leading-[1.45] font-normal text-black/50; }
+  .card-head.single  { @apply gap-0; }
 
-  .edit-body{display:flex;gap:24px;align-items:flex-start;width:100%}
-  .settings-nav{background:#fff;border:1px solid rgba(0,0,0,0.1);display:flex;flex-direction:column;gap:4px;align-items:flex-start;overflow:hidden;padding:14px 12px;border-radius:4px;width:264px;flex-shrink:0;position:sticky;top:158px;align-self:flex-start}
-  .nav-link{display:flex;align-items:center;justify-content:space-between;overflow:hidden;padding:11px 12px;border-radius:4px;width:100%;cursor:pointer;text-decoration:none;color:inherit}
-  .nav-link p{font-family:'Inter';font-weight:500;font-size:14px;color:rgba(0,0,0,0.7);white-space:nowrap}
-  .nav-link .count{font-family:'Inter';font-weight:600;font-size:12px;color:rgba(0,0,0,0.4)}
-  .nav-link.active{background:#fffde0;border:1px solid #ffe600}
-  .nav-link.active p{font-family:'Inter';font-weight:700;font-size:14px;color:#000}
-  .nav-progress{background:#f5f7f9;display:flex;flex-direction:column;gap:8px;align-items:flex-start;overflow:hidden;padding:14px 12px;border-radius:4px;width:100%}
-  .nav-progress .pr-top{display:flex;align-items:flex-start;justify-content:space-between;overflow:hidden;width:100%;color:#111;font-size:12px;white-space:nowrap}
-  .nav-progress .pr-top .l{font-family:'Inter';font-weight:600}
-  .nav-progress .pr-top .r{font-family:'Inter';font-weight:700}
-  .pr-bar{background:rgba(0,0,0,0.1);height:6px;overflow:hidden;border-radius:3px;width:100%;position:relative}
-  .pr-bar .fill{position:absolute;background:#fdfe00;height:6px;left:0;top:0;border-radius:3px;width:184px}
-  .nav-progress .note{font-family:'Inter';font-weight:400;font-size:11px;color:rgba(0,0,0,0.5);white-space:nowrap}
+  .fields        { @apply flex w-full items-start gap-4 overflow-hidden; }
+  .field         { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-2 overflow-hidden; }
+  .field > label { @apply text-[13px] font-semibold whitespace-nowrap text-ink; }
+  .input         { @apply flex h-11 w-full items-center overflow-hidden rounded-ds border border-black/14 bg-white pr-3 pl-3.5; }
+  .input .dots   { @apply min-w-0 flex-[1_0_0] text-sm font-bold text-ink/60; }
+  .input .eye    { @apply text-[13px] font-normal whitespace-nowrap text-black/40; }
 
-  .edit-main{display:flex;flex:1 0 0;flex-direction:column;gap:20px;align-items:flex-start;min-width:0;overflow:hidden}
-  .card{background:#fff;border:1px solid rgba(0,0,0,0.1);display:flex;flex-direction:column;gap:16px;align-items:flex-start;overflow:hidden;padding:24px;border-radius:4px;width:100%}
-  .card-head{display:flex;flex-direction:column;gap:4px;align-items:flex-start;overflow:hidden;width:100%}
-  .card-head h2{font-family:'Inter';font-weight:700;color:#111;font-size:18px;white-space:nowrap}
-  .card-head .sub{font-family:'Inter';font-weight:400;line-height:1.45;font-size:13px;color:rgba(0,0,0,0.5);width:100%}
-  .card-head.single{gap:0}
+  .btn-yellow    { @apply flex h-11 items-center justify-center overflow-hidden rounded-ds bg-yellow px-[22px]; }
+  .btn-yellow p  { @apply text-[13px] font-bold whitespace-nowrap text-ink; }
 
-  .fields{display:flex;gap:16px;align-items:flex-start;overflow:hidden;width:100%}
-  .field{display:flex;flex:1 0 0;flex-direction:column;gap:8px;align-items:flex-start;min-width:0;overflow:hidden}
-  .field > label{font-family:'Inter';font-weight:600;color:#111;font-size:13px;white-space:nowrap}
-  .input{background:#fff;border:1px solid rgba(0,0,0,0.14);display:flex;height:44px;align-items:center;overflow:hidden;padding:0 12px 0 14px;border-radius:4px;width:100%}
-  .input .dots{flex:1 0 0;font-family:'Inter';font-weight:700;min-width:0;font-size:14px;color:rgba(17,17,17,0.6)}
-  .input .eye{font-family:'Inter';font-weight:400;font-size:13px;color:rgba(0,0,0,0.4);white-space:nowrap}
+  .row-between       { @apply flex w-full items-center justify-between overflow-hidden; }
+  .row-between .desc { @apply min-w-0 flex-[1_0_0] text-sm leading-[1.5] font-normal text-black/65; }
+  .toggle            { @apply relative h-6 w-11 shrink-0; }
+  .toggle img        { @apply absolute inset-0 size-full; }
 
-  .btn-yellow{background:#fdfe00;display:flex;height:44px;align-items:center;justify-content:center;overflow:hidden;padding:0 22px;border-radius:4px}
-  .btn-yellow p{font-family:'Inter';font-weight:700;color:#111;font-size:13px;white-space:nowrap}
+  .session            { @apply flex w-full items-center justify-between overflow-hidden rounded-ds bg-gray-soft2 px-3.5 py-3; }
+  .session-info       { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-0.5 overflow-hidden; }
+  .session-title      { @apply flex items-center gap-2 overflow-hidden; }
+  .session-title.nogap{ @apply gap-0; }
+  .session-title p    { @apply text-sm font-semibold whitespace-nowrap text-ink; }
+  .badge-this         { @apply flex items-start overflow-hidden rounded-ds bg-[#e9f6ed] px-2 py-0.5; }
+  .badge-this p       { @apply text-[10px] font-semibold whitespace-nowrap text-[#229653]; }
+  .session-sub        { @apply text-xs font-normal whitespace-nowrap text-black/50; }
+  .logout             { @apply text-[13px] font-semibold whitespace-nowrap text-[#d33c32]; }
 
-  .row-between{display:flex;align-items:center;justify-content:space-between;overflow:hidden;width:100%}
-  .row-between .desc{flex:1 0 0;font-family:'Inter';font-weight:400;line-height:1.5;min-width:0;font-size:14px;color:rgba(0,0,0,0.65)}
-  .toggle{height:24px;width:44px;position:relative;flex-shrink:0}
-  .toggle img{position:absolute;inset:0;width:100%;height:100%}
+  .card.danger                  { @apply border border-[#d33c32]/50; }
+  .card.danger .card-head h2    { @apply text-[#d33c32]; }
+  .btn-danger                   { @apply flex h-[42px] shrink-0 items-center justify-center overflow-hidden rounded-ds border border-[#d33c32]/80 bg-white px-[18px]; }
+  .btn-danger p                 { @apply text-[13px] font-semibold whitespace-nowrap text-[#d33c32]; }
+  .card.danger .row-between .desc { @apply text-[13px] text-black/60; }
 
-  .session{background:#f5f7f9;display:flex;align-items:center;justify-content:space-between;overflow:hidden;padding:12px 14px;border-radius:4px;width:100%}
-  .session-info{display:flex;flex:1 0 0;flex-direction:column;gap:2px;align-items:flex-start;min-width:0;overflow:hidden}
-  .session-title{display:flex;gap:8px;align-items:center;overflow:hidden}
-  .session-title.nogap{gap:0}
-  .session-title p{font-family:'Inter';font-weight:600;color:#111;font-size:14px;white-space:nowrap}
-  .badge-this{background:#e9f6ed;display:flex;align-items:flex-start;overflow:hidden;padding:2px 8px;border-radius:4px}
-  .badge-this p{font-family:'Inter';font-weight:600;color:#229653;font-size:10px;white-space:nowrap}
-  .session-sub{font-family:'Inter';font-weight:400;font-size:12px;color:rgba(0,0,0,0.5);white-space:nowrap}
-  .logout{font-family:'Inter';font-weight:600;color:#d33c32;font-size:13px;white-space:nowrap}
-
-  .card.danger{border:1px solid rgba(211,60,50,0.5)}
-  .card.danger .card-head h2{color:#d33c32}
-  .btn-danger{background:#fff;border:1px solid rgba(211,60,50,0.8);display:flex;height:42px;align-items:center;justify-content:center;overflow:hidden;padding:0 18px;border-radius:4px;flex-shrink:0}
-  .btn-danger p{font-family:'Inter';font-weight:600;color:#d33c32;font-size:13px;white-space:nowrap}
-  .card.danger .row-between .desc{font-size:13px;color:rgba(0,0,0,0.6)}
-
-  .save-bar{background:#111;display:flex;align-items:center;justify-content:space-between;overflow:hidden;padding:16px 24px;border-radius:4px;width:100%}
-  .save-l{display:flex;gap:8px;align-items:center;overflow:hidden;flex-shrink:0}
-  .save-l p{font-family:'Inter';font-weight:500;font-size:13px;color:rgba(255,255,255,0.85);white-space:nowrap}
-  .save-r{display:flex;gap:10px;align-items:flex-start;overflow:hidden;flex-shrink:0}
-  .btn-cancel{border:1px solid rgba(255,255,255,0.35);display:flex;height:44px;align-items:center;justify-content:center;overflow:hidden;padding:0 18px;border-radius:4px}
-  .btn-cancel p{font-family:'Inter';font-weight:500;font-size:14px;color:rgba(255,255,255,0.85);white-space:nowrap}
-  .btn-save{background:#fdfe00;display:flex;height:44px;align-items:center;justify-content:center;overflow:hidden;padding:0 26px;border-radius:4px}
-  .btn-save p{font-family:'Inter';font-weight:700;color:#111;font-size:14px;white-space:nowrap}
-
-  /* ---------- footer ---------- */
-  .footer-app{background:#000;display:flex;height:960px;align-items:flex-start;justify-content:center;width:1440px}
-  .footer-c1{max-width:1440px;width:1431px}
-  .footer-c1-in{display:flex;flex-direction:column;align-items:center;max-width:inherit}
-  .footer-c2{max-width:1384px;width:1384px}
-  .footer-c2-in{display:flex;flex-direction:column;align-items:flex-start;max-width:inherit;padding:64px 28px 48px}
-  .footer-top{width:100%}
-  .footer-top-in{display:flex;align-items:flex-end;justify-content:space-between}
-  .footer-brand{display:flex;gap:4px;align-items:center}
-  .logo-footer{height:58px;width:144px;position:relative;overflow:hidden;flex-shrink:0}
-  .logo-footer img{position:absolute;height:250%;left:-0.04%;top:-71.25%;width:100.08%;max-width:none;pointer-events:none}
-  .footer-crumbs{display:flex;gap:10px;height:64px;align-items:flex-start;padding:10px;width:229px}
-  .footer-btn{border-radius:10px}
-  .footer-btn-in{display:flex;gap:8px;align-items:center;justify-content:center;padding:16px 32px}
-  .footer-btn-in p{font-family:'Inter';font-weight:400;line-height:24px;font-size:16px;text-align:center;color:#fff;white-space:nowrap}
-
-  .footer-div{background:rgba(255,255,255,0.12);height:1px;width:1328px}
-  .footer-div-full{background:rgba(255,255,255,0.12);height:1px;width:100%}
-  .footer-links{display:flex;align-items:center;justify-content:space-between;width:100%;padding-top:64px}
-  .footer-col{display:flex;flex-direction:column;gap:24px;height:240px;align-items:flex-start;width:195px}
-  .footer-col h3{font-family:'Inter';font-weight:500;line-height:23.8px;font-size:17px;color:#fff;white-space:nowrap}
-  .footer-list{display:flex;flex-direction:column;gap:16px;align-items:flex-start;width:194.672px}
-  .footer-list a{font-family:'Inter';font-weight:400;line-height:1;font-size:16px;color:#8f8f8f;white-space:nowrap;text-decoration:none}
-
-  .footer-news{height:139.695px;width:1328.992px;display:flex;align-items:flex-start;padding:40px 0}
-  .footer-news-l{height:100%;display:flex;gap:24px;align-items:center;padding-right:48px}
-  .mail-ic{width:48px;height:48px;position:relative;flex-shrink:0}
-  .mail-ic img{position:absolute;inset:0;width:100%;height:100%}
-  .footer-news-txt{width:676.797px;display:flex;flex-direction:column;align-items:flex-start}
-  .footer-news-txt .t1{font-family:'Inter';font-weight:500;line-height:1.25;font-size:22px;color:#fff;width:616px}
-  .footer-news-txt .t2{font-family:'Inter';font-weight:400;line-height:1.25;font-size:16px;color:#9a9a9a;white-space:nowrap;padding-top:6px}
-  .footer-form{height:60px;width:531px;display:flex;gap:8px;align-items:flex-end}
-  .footer-input{border:1px solid rgba(255,255,255,0.12);display:flex;flex:1 0 0;height:52px;align-items:center;min-width:0;padding:1px 1px 1px 21px}
-  .footer-input p{font-family:'Inter';font-weight:400;line-height:27px;font-size:18px;color:#9a9a9a;white-space:nowrap}
-  .footer-sub{background:#fdfe00;display:flex;align-items:center;justify-content:center;padding:16px 24px;flex-shrink:0}
-  .footer-sub p{font-family:'Inter';font-weight:400;line-height:1;font-size:20px;color:#111;white-space:nowrap}
-
-  .footer-bottom{display:flex;align-items:center;justify-content:space-between;width:100%;padding-top:32px}
-  .footer-bottom-l{display:flex;flex-direction:column;gap:12px;align-items:flex-start}
-  .footer-legal{display:flex;align-items:center}
-  .footer-legal a{font-family:'Inter';font-weight:400;line-height:24px;font-size:16px;color:#fff;white-space:nowrap;text-decoration:none}
-  .footer-legal .sep{padding:0 20px;font-family:'Inter';font-weight:400;line-height:24px;font-size:16px;color:rgba(255,255,255,0.35)}
-  .footer-copy{font-family:'Inter';font-weight:400;line-height:22.5px;font-size:15px;color:#8f8f8f;white-space:nowrap}
-  .footer-social{display:flex;gap:12px;align-items:center;justify-content:flex-end}
-  .social-btn{border:1px solid rgba(255,255,255,0.25);border-radius:26px;width:52px;height:52px;display:flex;align-items:center;justify-content:center}
+  .save-bar     { @apply flex w-full items-center justify-between overflow-hidden rounded-ds bg-ink px-6 py-4; }
+  .save-l       { @apply flex shrink-0 items-center gap-2 overflow-hidden; }
+  .save-l p     { @apply text-[13px] font-medium whitespace-nowrap text-white/85; }
+  .save-r       { @apply flex shrink-0 items-start gap-2.5 overflow-hidden; }
+  .btn-cancel   { @apply flex h-11 items-center justify-center overflow-hidden rounded-ds border border-white/35 px-[18px]; }
+  .btn-cancel p { @apply text-sm font-medium whitespace-nowrap text-white/85; }
+  .btn-save     { @apply flex h-11 items-center justify-center overflow-hidden rounded-ds bg-yellow px-[26px]; }
+  .btn-save p   { @apply text-sm font-bold whitespace-nowrap text-ink; }
+}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body>
 <div class="page">
