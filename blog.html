@@ -8,95 +8,49 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="archi.css">
-<style>
-  /* ===== Bloq səhifəsinə xas stillər (paylaşılan archi.css-i tamamlayır) ===== */
-  .blog-hero{padding:48px 0 0}
-  .blog-hero .inner{display:flex;flex-direction:column;gap:40px;max-width:1384px}
-  .crumbs{display:flex;align-items:center;gap:4px;line-height:1.5}
-  .crumbs .c1{font-size:14px;color:var(--text-muted)}
-  .crumbs .sep{font-size:16px;color:rgba(0,0,0,.55)}
-  .crumbs .c2{font-size:14px;color:var(--text-primary)}
-  .blog-hero .head{max-width:688px;display:flex;flex-direction:column}
-  .blog-hero .tag{display:flex;align-items:center;gap:12px}
-  .blog-hero .tag .line{width:32px;height:4px;border-radius:2px;background:var(--yellow)}
-  .blog-hero .tag p{font-weight:500;font-size:14px;color:rgba(0,0,0,.55);text-transform:uppercase;letter-spacing:1.4px}
-  .blog-hero h1{font-weight:600;font-size:48px;color:var(--text-primary);letter-spacing:-.4px;line-height:1.25;max-width:600px;padding-top:16px}
-  .blog-hero .sub{font-weight:400;font-size:20px;color:rgba(0,0,0,.55);line-height:1.5;max-width:560px;padding-top:8px}
-
-  .blog-main{padding:48px 0 80px}
-  .blog-main .inner{display:flex;flex-direction:column;gap:80px;max-width:1384px}
-  .filter-bar{border-top:1px solid rgba(0,0,0,.3);border-bottom:1px solid rgba(0,0,0,.3)}
-  .filter-row{display:flex;align-items:center;height:60px;overflow-x:auto}
-  .filter-row::-webkit-scrollbar{display:none}
-  .fchip{display:flex;align-items:center;justify-content:center;height:60px;padding:0 40px;font-weight:400;font-size:16px;color:var(--text-muted);white-space:nowrap;cursor:pointer;transition:color .2s,border-color .2s}
-  .fchip.active{width:180px;padding:0 12px;color:#000;border-bottom:1px solid rgba(0,0,0,.8)}
-  .fchip:hover{color:#000}
-
-  .featured{display:flex;gap:40px;align-items:flex-start}
-  .featured .ph{width:680px;height:516px;flex-shrink:0;overflow:hidden;border-radius:var(--radius)}
-  .featured .ph img{width:100%;height:100%;object-fit:cover;transition:transform .6s ease}
-  .featured .ph:hover img{transform:scale(1.05)}
-  .featured .body{flex:1;display:flex;flex-direction:column;gap:20px}
-  .featured .tag{display:flex;align-items:center;gap:12px}
-  .featured .tag .line{width:32px;height:4px;border-radius:2px;background:var(--yellow)}
-  .featured .tag p{font-weight:500;font-size:14px;color:rgba(0,0,0,.55);text-transform:uppercase;letter-spacing:1.4px}
-  .featured .tag .dot{width:4px;height:4px;border-radius:14px;background:#5c5c5c}
-  .featured h2{font-weight:600;font-size:40px;color:#141414;letter-spacing:-.21px;line-height:1.25}
-  .featured .ex{font-weight:400;font-size:20px;color:rgba(0,0,0,.55);line-height:1.5;max-width:560px}
-  .featured .meta{display:flex;align-items:center;gap:6px}
-  .featured .meta p{font-size:16px;color:var(--text-faint);line-height:1.5}
-  .featured .meta .dot{width:4px;height:4px;border-radius:14px;background:#5c5c5c}
-  .featured .read{align-self:flex-start;display:flex;align-items:center;gap:4px;background:#111;padding:12px 24px;color:var(--off-white);font-size:16px;transition:background .25s ease}
-  .featured .read img{width:20px;height:20px;filter:brightness(0) invert(1);transition:transform .25s ease}
-  .featured .read:hover{background:#000}
-  .featured .read:hover img{transform:translateX(4px)}
-
-  /* bloq kartlarına kiçik düzəliş */
-  .blog-grid .post{border-radius:var(--radius)}
-
-  @media(max-width:1200px){
-    .featured{flex-direction:column}
-    .featured .ph{width:100%;height:420px}
-    .featured .body{width:100%}
-    .featured .ex,.blog-hero .sub,.blog-hero h1{max-width:100%}
-    .blog-grid{flex-wrap:wrap}
-    .post{min-width:260px}
-  }
-  @media(max-width:640px){
-    .blog-grid{flex-direction:column}
-    .blog-hero h1{font-size:32px}
-    .featured h2{font-size:28px}
+<!-- Tailwind — sıra vacibdir: tema Tailwind compiler-indən ƏVVƏL DOM-a düşməlidir. -->
+<script src="archi-tw.js"></script>
+<!-- Səhifəyə xas komponent: filtr çipi 8 dəfə təkrarlanır -->
+<style type="text/tailwindcss">
+  @layer components {
+    .fchip {
+      @apply flex h-[60px] cursor-pointer items-center justify-center px-10 text-base font-normal whitespace-nowrap text-black/50 transition-[color,border-color] duration-200;
+      @apply hover:text-black;
+      @apply data-[on=true]:w-[180px] data-[on=true]:border-b data-[on=true]:border-black/80 data-[on=true]:px-3 data-[on=true]:text-black;
+    }
   }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body>
 
 <div data-archi="nav"></div>
 
 <!-- ===================== BLOG HERO ===================== -->
-<section class="blog-hero wrap">
-  <div class="inner">
-    <nav class="crumbs">
-      <a class="c1" href="index.html">Ana səhifə</a>
-      <span class="sep">/</span>
-      <span class="c2">Bloq</span>
+<section class="mx-auto max-w-[1440px] px-7 pt-12">
+  <div class="mx-auto flex max-w-[1384px] flex-col gap-10">
+    <nav class="flex items-center gap-1 leading-[1.5]">
+      <a class="text-sm text-black/50" href="index.html">Ana səhifə</a>
+      <span class="text-base text-black/55">/</span>
+      <span class="text-sm text-black/90">Bloq</span>
     </nav>
-    <div class="head">
-      <div class="tag"><span class="line"></span><p>Məqalələr</p></div>
-      <h1>Təmir bələdçisi</h1>
-      <p class="sub">Materialları seçməkdən büdcə planlamağa, etibarlı usta tapmaqdan ən çox edilən səhvlərə qədər — təmirinin hər mərhələsi üçün praktik məqalələr.</p>
+    <div class="flex max-w-[688px] flex-col">
+      <div class="flex items-center gap-3"><span class="h-1 w-8 rounded-[2px] bg-yellow"></span><p class="text-sm font-medium tracking-[1.4px] text-black/55 uppercase">Məqalələr</p></div>
+      <h1 class="max-w-[600px] pt-4 text-5xl leading-[1.25] font-semibold tracking-[-.4px] text-black/90 max-[1200px]:max-w-full max-[640px]:text-[32px]">Təmir bələdçisi</h1>
+      <p class="max-w-[560px] pt-2 text-xl leading-[1.5] font-normal text-black/55 max-[1200px]:max-w-full">Materialları seçməkdən büdcə planlamağa, etibarlı usta tapmaqdan ən çox edilən səhvlərə qədər — təmirinin hər mərhələsi üçün praktik məqalələr.</p>
     </div>
   </div>
 </section>
 
 <!-- ===================== MAIN ===================== -->
-<div class="blog-main wrap">
-  <div class="inner">
+<div class="mx-auto max-w-[1440px] px-7 pt-12 pb-20">
+  <div class="mx-auto flex max-w-[1384px] flex-col gap-20">
 
-    <div class="filter-block">
-      <div class="filter-bar">
-        <div class="filter-row">
-          <a class="fchip active">Bütün məqalələr</a>
+    <div>
+      <div class="border-y border-black/30">
+        <!-- scrollbar gizlədilir: Firefox üçün scrollbar-width, WebKit üçün pseudo-element -->
+        <div class="flex h-[60px] items-center overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <a class="fchip" data-on="true">Bütün məqalələr</a>
           <a class="fchip">Təmir</a>
           <a class="fchip">Materiallar</a>
           <a class="fchip">Büdcə</a>
@@ -106,28 +60,36 @@
           <a class="fchip">İzolyasiya</a>
         </div>
       </div>
-      <div class="featured" style="margin-top:80px">
-        <a class="ph"><img src="assets/blog-hero.jpg" alt=""></a>
-        <div class="body">
-          <div class="tag"><span class="line"></span><p>Təmir</p><span class="dot"></span><p>Bələdçi</p></div>
-          <h2>Təmirə hardan başlamaq lazımdır? Tam yol xəritəsi</h2>
-          <p class="ex">İlk addımlar, büdcə planı, ardıcıllıq və yeni başlayanların ən çox etdiyi səhvlər. Divarlardan tutmuş son təmizliyə qədər — başlamazdan əvvəl bilməli olduğun hər şeyi bir məqalədə topladıq.</p>
-          <div class="meta">
-            <p>Aysel Həsənova</p><span class="dot"></span>
-            <p>6 dəq oxu</p><span class="dot"></span>
-            <p>12 İyun 2026</p>
+
+      <div class="mt-20 flex items-start gap-10 max-[1200px]:flex-col" id="featured">
+        <a class="group h-[516px] w-[680px] shrink-0 overflow-hidden rounded-ds max-[1200px]:h-[420px] max-[1200px]:w-full">
+          <img class="size-full object-cover transition-transform duration-[600ms] group-hover:scale-105" src="assets/blog-hero.jpg" alt="">
+        </a>
+        <div class="flex flex-1 flex-col gap-5 max-[1200px]:w-full">
+          <div class="flex items-center gap-3">
+            <span class="h-1 w-8 rounded-[2px] bg-yellow"></span>
+            <p class="text-sm font-medium tracking-[1.4px] text-black/55 uppercase">Təmir</p>
+            <span class="size-1 rounded-[14px] bg-[#5c5c5c]"></span>
+            <p class="text-sm font-medium tracking-[1.4px] text-black/55 uppercase">Bələdçi</p>
           </div>
-          <a class="read">Ətraflı oxu <img src="assets/ic-arrow.svg" alt=""></a>
+          <h2 class="text-[40px] leading-[1.25] font-semibold tracking-[-.21px] text-[#141414] max-[640px]:text-[28px]">Təmirə hardan başlamaq lazımdır? Tam yol xəritəsi</h2>
+          <p class="max-w-[560px] text-xl leading-[1.5] font-normal text-black/55 max-[1200px]:max-w-full">İlk addımlar, büdcə planı, ardıcıllıq və yeni başlayanların ən çox etdiyi səhvlər. Divarlardan tutmuş son təmizliyə qədər — başlamazdan əvvəl bilməli olduğun hər şeyi bir məqalədə topladıq.</p>
+          <div class="flex items-center gap-1.5">
+            <p class="text-base leading-[1.5] text-black/40">Aysel Həsənova</p><span class="size-1 rounded-[14px] bg-[#5c5c5c]"></span>
+            <p class="text-base leading-[1.5] text-black/40">6 dəq oxu</p><span class="size-1 rounded-[14px] bg-[#5c5c5c]"></span>
+            <p class="text-base leading-[1.5] text-black/40">12 İyun 2026</p>
+          </div>
+          <a class="group/read flex cursor-pointer items-center gap-1 self-start bg-ink px-6 py-3 text-base text-off-white transition-[background] duration-[250ms] hover:bg-black">Ətraflı oxu <img class="size-5 brightness-0 invert transition-transform duration-[250ms] group-hover/read:translate-x-1" src="assets/ic-arrow.svg" alt=""></a>
         </div>
       </div>
     </div>
 
-    <div class="blog-section">
+    <div>
       <div class="sec-head">
         <div><div class="sec-tag"><span class="line"></span><p>Bloq</p></div><div class="sec-title">Faydalı məqalələr</div></div>
         <a class="sec-more"><p>Ətraflı bax</p><img src="assets/ic-arrow.svg" alt=""></a>
       </div>
-      <div class="blog-grid" id="blogGrid"></div>
+      <div class="blog-grid max-[1200px]:flex-wrap max-[640px]:flex-col" id="blogGrid"></div>
     </div>
 
   </div>
@@ -136,7 +98,7 @@
 <div data-archi="footer"></div>
 
 <script>
-  // ---- Bloq grid (4 kart) ----
+  // ---- Bloq grid (4 kart) · `.post` komponenti archi-tw.js-dədir ----
   const posts = [
     {time:"6 dəq oxu", title:"Təmirə hardan başlamaq lazımdır?", ex:"İlk addımlar, büdcə planı və ən çox edilən səhvlər — başlamazdan əvvəl bilməli olduqlar."},
     {time:"4 dəq oxu", title:"Düzgün laminant necə seçilir?", ex:"Sinif, qalınlıq, su davamlılığı — otağa görə hansını seçmək lazımdır."},
@@ -144,7 +106,7 @@
     {time:"6 dəq oxu", title:"Təmirə hardan başlamaq lazımdır?", ex:"İlk addımlar, büdcə planı və ən çox edilən səhvlər — başlamazdan əvvəl bilməli olduqlar."},
   ];
   document.getElementById('blogGrid').innerHTML = posts.map(p=>`
-    <a class="post">
+    <a class="post rounded-ds max-[1200px]:min-w-[260px]">
       <div class="ph"><img src="assets/blog.png" alt=""></div>
       <div class="body">
         <div class="time">${p.time}</div>
@@ -154,15 +116,15 @@
       </div>
     </a>`).join('');
 
-  // ---- Filtr tabları ----
+  // ---- Filtr tabları (aktiv vəziyyət `data-on` atributu ilə) ----
   document.querySelectorAll('.fchip').forEach(c=>c.addEventListener('click',e=>{
     e.preventDefault();
-    document.querySelectorAll('.fchip').forEach(x=>x.classList.remove('active'));
-    c.classList.add('active');
+    document.querySelectorAll('.fchip').forEach(x=>{ x.dataset.on='false'; });
+    c.dataset.on='true';
   }));
 
-  // ---- Scroll reveal ----
-  document.querySelectorAll('.featured, .sec-head').forEach(el=>el.classList.add('reveal'));
+  // ---- Scroll reveal (.reveal / .in / .d1-3 animasiyaları hələ archi.css-dədir) ----
+  document.querySelectorAll('#featured, .sec-head').forEach(el=>el.classList.add('reveal'));
   document.querySelectorAll('#blogGrid .post').forEach((el,i)=>el.classList.add('reveal','d'+((i%3)+1)));
   const io = new IntersectionObserver(entries=>{
     entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });

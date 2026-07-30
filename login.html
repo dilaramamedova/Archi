@@ -7,60 +7,45 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- archi.css hələ lazımdır: inject olunan navbar/footer onun class-larından istifadə edir. -->
 <link rel="stylesheet" href="archi.css">
-<style>
-  .auth{background:var(--gray-soft2);padding:64px 0;min-height:60vh}
-  .auth .inner{max-width:460px;margin:0 auto;padding:0 28px}
-  .auth-card{background:#fff;border:1px solid rgba(0,0,0,.12);box-shadow:-4px 4px 4px rgba(0,0,0,.05);padding:40px;display:flex;flex-direction:column;gap:24px}
-  .auth-head{display:flex;flex-direction:column;gap:8px}
-  .auth-head .tag{display:flex;align-items:center;gap:12px}
-  .auth-head .tag .line{width:32px;height:4px;border-radius:2px;background:var(--yellow)}
-  .auth-head .tag p{font-weight:500;font-size:13px;color:rgba(0,0,0,.55);text-transform:uppercase;letter-spacing:1.4px}
-  .auth-head h1{font-weight:600;font-size:32px;color:var(--text-primary);letter-spacing:-.4px}
-  .auth-head .sub{font-size:16px;color:rgba(0,0,0,.55);line-height:1.5}
-  .form{display:flex;flex-direction:column;gap:18px}
-  .field{display:flex;flex-direction:column;gap:8px}
-  .field label{font-weight:500;font-size:14px;color:var(--text-secondary)}
-  .field input{border:1px solid rgba(0,0,0,.2);padding:14px 16px;font-size:16px;color:#000;outline:none;transition:border-color .2s}
-  .field input:focus{border-color:#000}
-  .field input::placeholder{color:var(--text-faint)}
-  .row{display:flex;align-items:center;justify-content:space-between;font-size:14px}
-  .row .rem{display:flex;align-items:center;gap:8px;color:var(--text-secondary)}
-  .row .rem input{width:18px;height:18px;accent-color:var(--yellow)}
-  .row a{color:var(--text-secondary);border-bottom:1px solid var(--yellow-line)}
-  .submit{height:54px;background:var(--yellow);font-weight:600;font-size:18px;color:#111;border:none;cursor:pointer;transition:filter .2s}
-  .submit:hover{filter:brightness(.93)}
-  .alt{text-align:center;font-size:15px;color:rgba(0,0,0,.6)}
-  .alt a{font-weight:600;color:#111;border-bottom:2px solid var(--yellow-line)}
-  .ok-msg{display:none;background:#eafce9;border:1px solid var(--green);color:#0a7a14;padding:14px 16px;font-size:15px}
-  .ok-msg.show{display:block}
-  @media(max-width:640px){ .auth-card{padding:24px} .auth-head h1{font-size:26px} }
-</style>
+<!-- Tailwind — sıra vacibdir: tema Tailwind compiler-indən ƏVVƏL DOM-a düşməlidir. -->
+<script src="archi-tw.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body>
 
 <div data-archi="nav"></div>
 
-<section class="auth">
-  <div class="inner">
-    <div class="auth-card">
-      <div class="auth-head">
-        <div class="tag"><span class="line"></span><p>Xoş gəlmisən</p></div>
-        <h1>Daxil ol</h1>
-        <p class="sub">Hesabına gir — alıcı, satıcı və ya usta kabinetinə davam et.</p>
+<section class="min-h-[60vh] bg-gray-soft2 py-16">
+  <div class="mx-auto max-w-[460px] px-7">
+    <div class="flex flex-col gap-6 border border-black/12 bg-white p-10 shadow-[-4px_4px_4px_rgba(0,0,0,0.05)] max-[640px]:p-6">
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center gap-3">
+          <span class="h-1 w-8 rounded-[2px] bg-yellow"></span>
+          <p class="text-[13px] font-medium tracking-[1.4px] text-black/55 uppercase">Xoş gəlmisən</p>
+        </div>
+        <h1 class="text-[32px] font-semibold tracking-[-0.4px] text-black/90 max-[640px]:text-[26px]">Daxil ol</h1>
+        <p class="text-base leading-[1.5] text-black/55">Hesabına gir — alıcı, satıcı və ya usta kabinetinə davam et.</p>
       </div>
 
-      <div class="ok-msg" id="okMsg">Giriş uğurlu oldu! (demo — backend qoşulmayıb)</div>
+      <div class="hidden border border-green bg-[#eafce9] px-4 py-3.5 text-[15px] text-[#0a7a14]" id="okMsg">Giriş uğurlu oldu! (demo — backend qoşulmayıb)</div>
 
-      <form class="form" id="loginForm" onsubmit="return false">
-        <div class="field"><label>E-poçt və ya telefon</label><input type="text" placeholder="email@example.com" required></div>
-        <div class="field"><label>Şifrə</label><input type="password" placeholder="Şifrə" required></div>
-        <div class="row">
-          <label class="rem"><input type="checkbox"> Məni xatırla</label>
-          <a href="#">Şifrəni unutmusan?</a>
+      <form class="flex flex-col gap-[18px]" id="loginForm" onsubmit="return false">
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-medium text-black/70">E-poçt və ya telefon</label>
+          <input class="border border-black/20 px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 placeholder:text-black/40 focus:border-black" type="text" placeholder="email@example.com" required>
         </div>
-        <button class="submit" type="submit">Daxil ol</button>
-        <p class="alt">Hesabın yoxdur? <a href="register.html">Qeydiyyatdan keç</a></p>
+        <div class="flex flex-col gap-2">
+          <label class="text-sm font-medium text-black/70">Şifrə</label>
+          <input class="border border-black/20 px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 placeholder:text-black/40 focus:border-black" type="password" placeholder="Şifrə" required>
+        </div>
+        <div class="flex items-center justify-between text-sm">
+          <label class="flex items-center gap-2 text-black/70"><input class="size-[18px] accent-yellow" type="checkbox"> Məni xatırla</label>
+          <a class="border-b border-yellow-line text-black/70" href="#">Şifrəni unutmusan?</a>
+        </div>
+        <button class="h-[54px] cursor-pointer border-none bg-yellow text-lg font-semibold text-ink transition-[filter] duration-200 hover:brightness-[.93]" type="submit">Daxil ol</button>
+        <p class="text-center text-[15px] text-black/60">Hesabın yoxdur? <a class="border-b-2 border-yellow-line font-semibold text-ink" href="register.html">Qeydiyyatdan keç</a></p>
       </form>
     </div>
   </div>
@@ -70,7 +55,7 @@
 
 <script>
   document.getElementById('loginForm').addEventListener('submit',()=>{
-    document.getElementById('okMsg').classList.add('show');
+    document.getElementById('okMsg').classList.remove('hidden');
   });
 </script>
 <script src="archi.js"></script>

@@ -229,9 +229,22 @@ Figma-dakı bütün dəyişikliklər isə **artıq yadda saxlanılıb** (Figma r
 
 ---
 
-## 9. ⚠️ HTML tələsi — absolyut düzüm footer-i örtür
+## 9. ✅ HTML tələsi — absolyut düzüm footer-i örtürdü (2026-07-30-da HƏLL OLUNDU)
 
-`biznes-tamamlama-addim2.html` və `biznes-tamamlama-addim4.html` **hazırda qüsurludur** (2026-07-26-da brauzerdə ölçülərək təsdiqləndi):
+> **Status:** düzəldildi. Fayllar dizaynın 3 addımlıq axınına uyğun **adı dəyişdirilib**:
+> `biznes-tamamlama-addim2.html` → **`biznes-tamamlama-addim1.html`** (Şirkət məlumatları, Figma `1105:21876`)
+> `biznes-tamamlama-addim4.html` → **`biznes-tamamlama-addim3.html`** (İlk məhsul, Figma `1105:22589`)
+> Heç bir səhifə onlara link vermirdi, ona görə ad dəyişikliyi təhlükəsiz idi.
+>
+> Nə edildi: `.page`-in sabit hündürlüyü və `.head/.content/.footer`-in `position:absolute`-u
+> götürülüb normal axına keçirildi (`max-width:1440px;margin:0 auto`), ölü navbar/footer CSS-i
+> (addim1-də ~97 sətir, addim3-də ~46) və təkrar `:root` bloku silindi. Sonra hər ikisi
+> **tam Tailwind-ə çevrildi** (bax §12). `.kat-menu` `.form-card`-a nisbətən absolyutdur
+> (`.form-card`-da `position:relative` var) — `.page`-dən asılı deyildi, ona görə sınmadı.
+>
+> Aşağıdakı təsvir tarixi kontekst üçün saxlanılır.
+
+Köhnə vəziyyət (2026-07-26-da brauzerdə ölçülərək təsdiqlənmişdi):
 
 - səhifədə `.head{position:absolute;top:140px}` və `.content{position:absolute;top:268px}` var
 - `archi.js` isə `<div data-archi="footer">`-i **class-sız** `<footer>` ilə əvəz edir → səhifədəki `.footer{position:absolute;top:1095px}` qaydası **heç nəyə düşmür**
@@ -353,3 +366,134 @@ function setActive(nav, idx){
 - `media-card` (cover + avatar) **yalnız tab 1-dədir** — qalan tab-larda silinib. Cover şəklinin `imageHash`-i donor klonundan gəlir (use_figma xarici URL-dən şəkil çəkə bilmir).
 - Tab 1-də «✓ Təsdiqlənmiş» nişanının admin tərəfindən verildiyini izah edən **note bloku** var (§6 qərarı ilə uyğun).
 - Donor `1105:22829` frame-inin hündürlüyü **1697**-dir, məzmunu isə 2126 — yəni **B2B redaktə frame-lərində footer frame sərhədindən kənara çıxır** (`primaryAxisSizingMode = FIXED`). Yeni mütəxəssis frame-lərində bu `AUTO` edilib. B2B tərəfdə düzəltmək istəsən: `f.primaryAxisSizingMode = 'AUTO'`.
+
+---
+
+## 12. Tailwind CSS-ə köçürmə (2026-07-30-da başladı)
+
+İstifadəçi qərarı: **CDN ilə, build step YOXDUR**. Sıra: əvvəl qüsur düzəlişləri, sonra çevirmə.
+
+### Necə qurulub
+
+Hər çevrilmiş səhifənin `<head>`-inə bu iki sətir bu SIRA ilə əlavə olunur:
+
+```html
+<script src="archi-tw.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+```
+
+`archi-tw.js` — paylaşılan tema (`@theme` tokenləri). Yeni fayldır.
+
+### Üç qərar və onların səbəbi (bunları pozma)
+
+1. **Tema JS ilə inject olunur, ayrı `.css` faylı DEYİL.** Browser build-in mənbə kodu
+   yoxlanıldı: yalnız `document.querySelectorAll('style[type="text/tailwindcss"]')` oxuyur —
+   `<link>` görmür və xarici faylı `@import` edə bilmir («The browser build does not support
+   @import for ...»). Yalnız `tailwindcss`, `tailwindcss/preflight`, `tailwindcss/theme`,
+   `tailwindcss/utilities` daxili id-ləri həll olunur.
+
+2. **Utilities LAYER-SİZ import olunur.** CSS cascade qaydası: layer-siz bəyanlar layer-li
+   bəyanları üstələyir. `archi.css` layer-siz olduğu üçün `@layer utilities` variantında
+   onun `body{background:#fff}` qaydası `bg-gray-soft2`-ni sındırırdı. Layer-siz olanda
+   müqayisə specificity ilə gedir (`.bg-gray-soft2` 0,1,0 > `body` 0,0,1) və utility qazanır.
+
+3. **Preflight qəsdən YÜKLƏNMİR.** `archi.css`-in öz reset-i var. Preflight `h1`–`h6`-nı
+   `font-size:inherit`-ə salıb hələ çevrilməmiş səhifələrin başlıqlarını sındıracaqdı.
+   Qeyd: `@property --tw-border-style{initial-value:solid}` preflight olmadan da çıxışa
+   düşür — yoxlanıldı, `border-[1.5px]` işləyir.
+
+### Token uyğunluğu
+
+| Köhnə CSS dəyişəni | Tailwind |
+|---|---|
+| `--yellow` / `--yellow-line` / `--sel-bg` | `bg-yellow` / `bg-yellow-line` / `bg-sel-bg` |
+| `--black` (#111, #000 DEYİL) | `text-ink` / `bg-ink` |
+| `--gray-soft` / `--gray-soft2` | `bg-gray-soft` / `bg-gray-soft2` |
+| `--radius` 4 / `--radius-md` 8 / `--radius-pill` | `rounded-ds` / `rounded-ds-md` / `rounded-pill` |
+| `--text-primary/secondary/muted/faint` | `text-black/90` `/70` `/50` `/40` |
+| `--border` / `--border-strong` / `--border-hover` | `border-black/10` `/14` `/35` |
+
+Şəffaflıqlı tokenlər ayrıca token DEYİL — opacity modifikatoru ilə yazılır.
+Boşluq şkalası (4/8/12/16/20/24/28/32/40/48) Tailwind-in standartı ilə üst-üstə düşür
+(`--spacing`=4px → `p-1`…`p-12`), ayrıca spacing tokeni lazım deyil.
+`line-height:normal` üçün `leading-normal` YOX, **`leading-[normal]`** işlət (`leading-normal`=1.5).
+
+### Çevirmə necə yoxlanılır (brauzer olmadan)
+
+Scratchpad-də Tailwind CLI quraşdırılıb (**layihəyə build step əlavə etmir**), `verify-tw.js`
+`archi-tw.js`-dən temanı çıxarır, verilən HTML-lərə qarşı kompilyasiya edir və HTML-dəki hər
+class-ın çıxışda qarşılığı olduğunu yoxlayır — yazı səhvi olan utility dərhal görünür:
+
+```
+node verify-tw.js <html> [<html> ...]     # → "HEÇ YERDƏ TAPILMAYAN: (yoxdur) ✅"
+node check.js "size-7" "rounded-ds" ...   # → kompilyasiya olunmuş dəyəri göstərir
+```
+
+### Vəziyyət (2026-07-30 sessiyasının sonu)
+
+**Tam çevrilmiş 5 səhifə** (öz `<style>` bloku SIFIR sətir):
+`biznes-tamamlama-addim1` · `biznes-tamamlama-addim3` · `login` · `register` · `cart`
+
+**Paylaşılan kart komponentləri çevrildi** — `archi.css`-dən `archi-tw.js`-in
+`@layer components` blokuna köçürüldü (`.grid4`, `.pcard`, `.scard`, `.post`,
+`.blog-grid`, `.prod-cursor`, `.hascur`). `archi.css` 685 → 623 sətir.
+Ona görə **`index`, `product`, `catalog`, `search`, `blog`-a da Tailwind sətirləri
+qoşuldu** — yoxsa kart stilini itirərdilər. Bu 5 səhifənin öz `<style>` bloku hələ qalır.
+
+⚠️ `archi.css`-də kart class-larına istinad edən qaydalar QALDI və qalmalıdır:
+sətir ~442/457 (responsive wrap), ~489 (reveal animasiyası), ~500-503 (hover keçidi),
+~597-599 (reduced-motion / touch). Onlar layer-siz olduğu üçün `@layer components`
+bazasını düzgün üstələyir — hover/responsive override belə işləməlidir. Sonra
+animasiya/responsive bölmələri çevriləndə bunlar da köçürüləcək.
+
+| | |
+|---|---|
+| ✅ Tam çevrildi (köhnə `<style>` yox) | **9**: `addim1`, `addim3`, `login`, `register`, `cart`, `search`, `calculator`, `blog`, `sell` |
+| 🟡 Tailwind qoşuldu, öz CSS-i qalır | **3**: `index` (10 sətir), `catalog` (134), `product` (270) |
+| ⏳ Toxunulmadı | **11**: biznes kabineti ×7, `biznes-qeydiyyat` (113), `calculator-detailed` (112), `specialist` (138), `specialists` (152) |
+
+> ⚠️ **biznes-profil qrupu qrup kimi çevrilə bilməz.** Yeddi səhifə oxşar görünür, amma
+> CSS blokları ayrı-ayrı qurulub — `sirket` ilə `elaqe` arasında 295 sətir fərq var.
+> Hər birində ölü navbar CSS və sabit `width:1440px`/`min-width:1440px` var (yəni
+> `addim1`/`addim3`-dəki eyni problem sinfi). Tək-tək çevirmək lazımdır.
+| ⏳ Sonda | `archi.js`-dəki navbar/footer markup-ı + `archi.css`-in silinməsi |
+
+### `archi-tw.js`-dəki paylaşılan komponentlər (archi.css-dən köçürülüb)
+
+| Qrup | Class-lar |
+|---|---|
+| şəbəkə | `.grid4`, `.blog-grid` |
+| bölmə başlığı | `.section`, `.sec-head`, `.sec-tag`, `.sec-title`, `.sec-more` |
+| məhsul kartı | `.pcard` + alt elementləri, `.prod-cursor`, `.hascur` |
+| mütəxəssis kartı | `.scard` + alt elementləri |
+| bloq kartı | `.post` + alt elementləri |
+
+### Səhifəyə xas komponent naxışı
+
+Bir səhifədə çox təkrarlanan element üçün (məs. `calculator.html`-də `.qc-chip` 19 dəfə,
+`blog.html`-də `.fchip` 8 dəfə) utility sətrini təkrarlamaq yerinə səhifənin `<head>`-inə
+**öz `<style type="text/tailwindcss">` bloku** qoyulur. Browser build BÜTÜN belə
+elementləri birləşdirdiyi üçün bu da tam Tailwind-dir. **Blok CDN skriptindən ƏVVƏL
+gəlməlidir**, yoxsa compiler ilk qaçışda onu görmür.
+
+### JS naxışı — `.on`/`.active`/`.sel` class-ları → `data-*` atributları
+
+Vəziyyət class-ları (`.sel`, `.on`, `.active`, `.show`) Tailwind-də utility ilə idarə
+olunmur, ona görə `data-on` / `data-sel` atributuna keçirilib və markup-da
+`data-[on=true]:` / `group-data-[sel=true]:` variantları işlədilir. Dəyişdirilmiş
+JS-lər: `register` (rol seçimi), `search` (tab), `calculator` (chip + tier),
+`blog` (filtr), `cart` (`.ok-msg.show` → `hidden`).
+
+Bir tələ: `flex` utility-si UA-nın `[hidden]{display:none}` qaydasını üstələyir, ona görə
+JS `el.hidden` ilə gizlətdiyi flex elementlərə **`[&[hidden]]:hidden`** əlavə olunmalıdır
+(`register.html`-dəki şərtli sahələr). Specificity 0,2,0 verir və `flex`-i üstələyir.
+
+**Qeyd — `verify-tw.js` yanlış siqnalları:** (a) `class="${...}"` kimi JS interpolyasiyaları
+class adı deyil, ona görə atlanır (əlavə edildi); (b) səhifənin ÖZ `<style>` blokundaki
+class-lar (`pd-*`, `fs-*`, `sr-*`, `blog-*`) «tapılmadı» kimi görünür — normaldır, onlar
+hələ çevrilməyib. Skript yalnız `archi.css` ilə Tailwind-i ayırd edir.
+
+**Navbar/footer niyə SONDA:** onlar bütün səhifələrdə paylaşılır. Markup-ı Tailwind-ə
+çevirən an 23 səhifənin hamısı eyni vaxtda Tailwind-dən asılı olur. Ona görə əvvəl bütün
+səhifələr tək-tək çevrilir (bu müddətdə `archi.css` navbar/footer üçün qalır), navbar/footer
+ən sonda çevrilir və `archi.css` yalnız o zaman silinir. Belə olanda sayt hər addımda işlək qalır.

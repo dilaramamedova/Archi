@@ -8,119 +8,99 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="archi.css">
-<style>
-  /* ===== Sürətli kalkulyator ===== */
-  .qc-page{background:var(--gray-soft2);padding:48px 0 80px;min-height:60vh}
-  .qc-page>.inner{max-width:1384px;margin:0 auto}
-  .qc-crumbs{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--text-muted);margin-bottom:28px}
-  .qc-crumbs a{color:var(--text-muted)} .qc-crumbs .c2{color:var(--text-primary)}
-  .qc-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);max-width:620px;margin:0 auto;padding:28px;display:flex;flex-direction:column;gap:20px}
-  .qc-tag{display:flex;align-items:center;gap:10px}
-  .qc-tag .line{width:28px;height:4px;border-radius:var(--radius);background:var(--yellow-line)}
-  .qc-tag p{font-weight:600;font-size:12px;letter-spacing:1px;color:var(--text-muted);text-transform:uppercase}
-  .qc-card h1{font-weight:700;font-size:24px;color:#111;letter-spacing:-.3px}
-  .qc-card .qc-sub{font-size:14px;color:var(--text-muted);margin-top:2px}
-  .qc-group{display:flex;flex-direction:column;gap:10px}
-  .qc-group>label{font-weight:600;font-size:13px;color:#111}
-  .qc-chips{display:flex;flex-wrap:wrap;gap:8px}
-  .qc-chip{padding:9px 14px;border-radius:var(--radius);border:1px solid var(--border);background:#fff;font-weight:500;font-size:13px;color:var(--text-secondary);cursor:pointer;transition:all .15s;white-space:nowrap}
-  .qc-chip:hover{border-color:var(--border-hover)}
-  .qc-chip.on{background:#111;border-color:#111;color:#fff;font-weight:600}
-  .qc-field{display:flex;align-items:center;gap:6px;border:1px solid var(--border-strong);border-radius:var(--radius);padding:12px 16px;transition:border-color .2s}
-  .qc-field:focus-within{border-color:#111}
-  .qc-field input{border:none;outline:none;width:100%;font-size:20px;font-weight:700;color:#111;background:none;font-family:inherit}
-  .qc-field .u{font-size:14px;color:var(--text-muted)}
-  .qc-div{height:1px;background:var(--border);margin:2px 0}
-  .qc-rlbl{font-weight:600;font-size:13px;color:var(--text-muted)}
-  .qc-tiers{display:flex;gap:12px}
-  .qc-tier{flex:1;min-width:0;border-radius:var(--radius);border:1px solid var(--border);background:#f9f9fb;padding:16px;display:flex;flex-direction:column;gap:4px;cursor:pointer;transition:all .15s}
-  .qc-tier:hover{border-color:rgba(0,0,0,.3)}
-  .qc-tier.on{background:var(--sel-bg);border:2px solid var(--yellow-line);padding:15px}
-  .qc-tier .tn{font-weight:600;font-size:13px;color:#111}
-  .qc-tier .tp{display:flex;align-items:baseline;gap:3px}
-  .qc-tier .tp b{font-weight:700;font-size:19px;color:#111}
-  .qc-tier .tp span{font-size:11px;font-weight:500;color:var(--text-muted)}
-  .qc-tier .rec{font-size:11px;font-weight:500;color:#8c7f0d}
-  .qc-cta{display:flex;align-items:center;justify-content:center;gap:8px;height:50px;background:var(--yellow);border-radius:var(--radius);font-weight:600;font-size:15px;color:#111;text-decoration:none;transition:filter .2s;border:none;cursor:pointer}
-  .qc-cta:hover{filter:brightness(.93)}
-  .qc-links{display:flex;justify-content:center;gap:20px;flex-wrap:wrap}
-  .qc-links button{background:none;border:none;font-weight:500;font-size:13px;color:var(--text-faint);cursor:pointer;font-family:inherit}
-  .qc-links button:hover{color:#111}
-  @media(max-width:640px){ .qc-card{padding:20px} .qc-tiers{flex-direction:column} }
+<!-- Tailwind — sıra vacibdir: tema Tailwind compiler-indən ƏVVƏL DOM-a düşməlidir. -->
+<script src="archi-tw.js"></script>
+<!-- Səhifəyə xas komponent: `.qc-chip` bu səhifədə 19 dəfə təkrarlanır, ona görə
+     utility sətrini 19 dəfə yazmaq yerinə burada bir dəfə təyin olunur.
+     Bu blok CDN skriptindən ƏVVƏL gəlməlidir — compiler bütün
+     `style[type="text/tailwindcss"]` elementlərini başlayarkən oxuyur. -->
+<style type="text/tailwindcss">
+  @layer components {
+    .qc-chip {
+      @apply cursor-pointer rounded-ds border border-black/10 bg-white px-3.5 py-[9px] text-[13px] font-medium whitespace-nowrap text-black/70 transition-all duration-150;
+      @apply hover:border-black/35;
+      @apply data-[on=true]:border-ink data-[on=true]:bg-ink data-[on=true]:font-semibold data-[on=true]:text-white;
+    }
+  }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body>
 
 <div data-archi="nav"></div>
 
-<section class="qc-page">
-  <div class="inner">
-    <nav class="qc-crumbs">
-      <a href="index.html">Ana səhifə</a><span>/</span><span class="c2">Sürətli kalkulyator</span>
+<section class="min-h-[60vh] bg-gray-soft2 pt-12 pb-20">
+  <div class="mx-auto max-w-[1384px]">
+    <nav class="mb-7 flex items-center gap-1.5 text-sm text-black/50">
+      <a href="index.html">Ana səhifə</a><span>/</span><span class="text-black/90">Sürətli kalkulyator</span>
     </nav>
 
-    <div class="qc-card">
+    <div class="mx-auto flex max-w-[620px] flex-col gap-5 rounded-ds border border-black/10 bg-white p-7 max-[640px]:p-5">
       <div>
-        <div class="qc-tag"><span class="line"></span><p>Sürətli kalkulyator</p></div>
-        <h1 style="margin-top:8px">Təmirin təxmini dəyəri</h1>
-        <div class="qc-sub">Bir neçə parametr — 3 büdcə variantı.</div>
+        <div class="flex items-center gap-2.5"><span class="h-1 w-7 rounded-ds bg-yellow-line"></span><p class="text-xs font-semibold tracking-[1px] text-black/50 uppercase">Sürətli kalkulyator</p></div>
+        <h1 class="mt-2 text-2xl font-bold tracking-[-.3px] text-ink">Təmirin təxmini dəyəri</h1>
+        <div class="mt-0.5 text-sm text-black/50">Bir neçə parametr — 3 büdcə variantı.</div>
       </div>
 
-      <div class="qc-group">
-        <label>Obyektin növü</label>
-        <div class="qc-chips" data-key="obj">
-          <button class="qc-chip on" data-v="menzil" data-m="1">Mənzil</button>
+      <!-- chip qrupları — seçili vəziyyət `data-on` atributu ilə -->
+      <div class="flex flex-col gap-2.5">
+        <label class="text-[13px] font-semibold text-ink">Obyektin növü</label>
+        <div class="flex flex-wrap gap-2" data-key="obj">
+          <button class="qc-chip" data-v="menzil" data-m="1" data-on="true">Mənzil</button>
           <button class="qc-chip" data-v="ev" data-m="1.1">Fərdi ev</button>
           <button class="qc-chip" data-v="ofis" data-m="0.95">Ofis</button>
           <button class="qc-chip" data-v="kom" data-m="1.05">Kommersiya</button>
         </div>
       </div>
 
-      <div class="qc-group">
-        <label>Obyektin sahəsi</label>
-        <div class="qc-field"><input id="qcArea" type="number" min="1" value="80"><span class="u">m²</span></div>
+      <div class="flex flex-col gap-2.5">
+        <label class="text-[13px] font-semibold text-ink">Obyektin sahəsi</label>
+        <div class="flex items-center gap-1.5 rounded-ds border border-black/14 px-4 py-3 transition-[border-color] duration-200 focus-within:border-ink">
+          <input class="w-full border-none text-xl font-bold text-ink outline-none [background:none] [font-family:inherit]" id="qcArea" type="number" min="1" value="80">
+          <span class="text-sm text-black/50">m²</span>
+        </div>
       </div>
 
-      <div class="qc-group">
-        <label>Təmir növü</label>
-        <div class="qc-chips" data-key="type">
+      <div class="flex flex-col gap-2.5">
+        <label class="text-[13px] font-semibold text-ink">Təmir növü</label>
+        <div class="flex flex-wrap gap-2" data-key="type">
           <button class="qc-chip" data-v="qara" data-m="0.55">Qara</button>
           <button class="qc-chip" data-v="kosmetik" data-m="0.7">Kosmetik</button>
-          <button class="qc-chip on" data-v="esasli" data-m="1">Əsaslı</button>
+          <button class="qc-chip" data-v="esasli" data-m="1" data-on="true">Əsaslı</button>
           <button class="qc-chip" data-v="acar" data-m="1.25">Açar təslim</button>
         </div>
       </div>
 
-      <div class="qc-group">
-        <label>Otaqların sayı</label>
-        <div class="qc-chips" data-key="rooms">
+      <div class="flex flex-col gap-2.5">
+        <label class="text-[13px] font-semibold text-ink">Otaqların sayı</label>
+        <div class="flex flex-wrap gap-2" data-key="rooms">
           <button class="qc-chip" data-v="studio" data-m="0.95">Studio</button>
           <button class="qc-chip" data-v="1" data-m="1">1</button>
-          <button class="qc-chip on" data-v="2" data-m="1.03">2</button>
+          <button class="qc-chip" data-v="2" data-m="1.03" data-on="true">2</button>
           <button class="qc-chip" data-v="3" data-m="1.06">3</button>
           <button class="qc-chip" data-v="4" data-m="1.1">4+</button>
         </div>
       </div>
 
-      <div class="qc-group">
-        <label>Material səviyyəsi</label>
-        <div class="qc-chips" data-key="level">
+      <div class="flex flex-col gap-2.5">
+        <label class="text-[13px] font-semibold text-ink">Material səviyyəsi</label>
+        <div class="flex flex-wrap gap-2" data-key="level">
           <button class="qc-chip" data-v="ekonom">Ekonom</button>
-          <button class="qc-chip on" data-v="standart">Standart</button>
+          <button class="qc-chip" data-v="standart" data-on="true">Standart</button>
           <button class="qc-chip" data-v="premium">Premium</button>
         </div>
       </div>
 
-      <div class="qc-div"></div>
+      <div class="my-0.5 h-px bg-black/10"></div>
 
-      <div class="qc-rlbl" id="qcRlbl">80 m² üçün təxmini dəyər</div>
-      <div class="qc-tiers" id="qcTiers"></div>
+      <div class="text-[13px] font-semibold text-black/50" id="qcRlbl">80 m² üçün təxmini dəyər</div>
+      <div class="flex gap-3 max-[640px]:flex-col" id="qcTiers"></div>
 
-      <a class="qc-cta" id="qcNext" href="calculator-detailed.html">Ətraflı hesablamanı əldə et  →</a>
-      <div class="qc-links">
-        <button id="qcPdf">PDF yüklə</button>
-        <button id="qcWa">WhatsApp-a göndər</button>
-        <button id="qcSave">Yadda saxla</button>
+      <a class="flex h-[50px] cursor-pointer items-center justify-center gap-2 rounded-ds border-none bg-yellow text-[15px] font-semibold text-ink no-underline transition-[filter] duration-200 hover:brightness-[.93]" id="qcNext" href="calculator-detailed.html">Ətraflı hesablamanı əldə et  →</a>
+      <div class="flex flex-wrap justify-center gap-5">
+        <button class="cursor-pointer border-none text-[13px] font-medium text-black/40 [background:none] [font-family:inherit] hover:text-ink" id="qcPdf">PDF yüklə</button>
+        <button class="cursor-pointer border-none text-[13px] font-medium text-black/40 [background:none] [font-family:inherit] hover:text-ink" id="qcWa">WhatsApp-a göndər</button>
+        <button class="cursor-pointer border-none text-[13px] font-medium text-black/40 [background:none] [font-family:inherit] hover:text-ink" id="qcSave">Yadda saxla</button>
       </div>
     </div>
   </div>
@@ -134,14 +114,16 @@
     {key:"standart",name:"Standart", rate:900},
     {key:"premium", name:"Premium",  rate:1500}
   ];
+  // Tier kartının Tailwind class dəsti (JS-də qurulduğu üçün burada saxlanılır)
+  const TIER_CLS='flex min-w-0 flex-1 cursor-pointer flex-col gap-1 rounded-ds border border-black/10 bg-[#f9f9fb] p-4 transition-all duration-150 hover:border-black/30 data-[on=true]:border-2 data-[on=true]:border-yellow-line data-[on=true]:bg-sel-bg data-[on=true]:p-[15px]';
   const state={obj:1,type:1,rooms:1.03,level:"standart",area:80};
 
   // chip qrupları
-  document.querySelectorAll('.qc-chips').forEach(grp=>{
+  document.querySelectorAll('[data-key]').forEach(grp=>{
     grp.addEventListener('click',e=>{
-      const btn=e.target.closest('.qc-chip'); if(!btn) return;
-      grp.querySelectorAll('.qc-chip').forEach(b=>b.classList.remove('on'));
-      btn.classList.add('on');
+      const btn=e.target.closest('[data-v]'); if(!btn) return;
+      grp.querySelectorAll('[data-v]').forEach(b=>{ b.dataset.on='false'; });
+      btn.dataset.on='true';
       const key=grp.dataset.key;
       if(key==='level') state.level=btn.dataset.v;
       else state[key]=parseFloat(btn.dataset.m)||1;
@@ -160,16 +142,16 @@
     document.getElementById('qcRlbl').textContent=(state.area||0)+' m² üçün təxmini dəyər';
     document.getElementById('qcTiers').innerHTML=TIERS.map(t=>{
       const on=t.key===state.level;
-      return `<div class="qc-tier ${on?'on':''}" data-v="${t.key}">
-        <div class="tn">${t.name}</div>
-        <div class="tp"><b>${fmt(priceFor(t.rate))}</b><span>AZN-dən</span></div>
-        ${on?'<div class="rec">Tövsiyə</div>':''}
+      return `<div class="${TIER_CLS}" data-v="${t.key}" data-on="${on}">
+        <div class="text-[13px] font-semibold text-ink">${t.name}</div>
+        <div class="flex items-baseline gap-[3px]"><b class="text-[19px] font-bold text-ink">${fmt(priceFor(t.rate))}</b><span class="text-[11px] font-medium text-black/50">AZN-dən</span></div>
+        ${on?'<div class="text-[11px] font-medium text-[#8c7f0d]">Tövsiyə</div>':''}
       </div>`;
     }).join('');
-    document.querySelectorAll('#qcTiers .qc-tier').forEach(el=>{
+    document.querySelectorAll('#qcTiers [data-v]').forEach(el=>{
       el.addEventListener('click',()=>{
         state.level=el.dataset.v;
-        document.querySelectorAll('.qc-chips[data-key="level"] .qc-chip').forEach(b=>b.classList.toggle('on',b.dataset.v===state.level));
+        document.querySelectorAll('[data-key="level"] [data-v]').forEach(b=>{ b.dataset.on=String(b.dataset.v===state.level); });
         recalc();
       });
     });

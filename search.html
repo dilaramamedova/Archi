@@ -8,91 +8,60 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="archi.css">
-<style>
-  /* ===== Axtarış nəticələri səhifəsi (Figma 1105:18662 ilə 1:1, sr- prefiksli) ===== */
-  .sr{padding:32px 0 56px}
-  .sr .inner{max-width:1384px;margin:0 auto;padding:0 28px;display:flex;flex-direction:column;gap:24px}
-
-  .sr-head{display:flex;flex-direction:column;gap:12px}
-  .sr-tag{display:flex;align-items:center;gap:10px}
-  .sr-tag .line{width:32px;height:2px;background:var(--yellow)}
-  .sr-tag p{font-weight:500;font-size:13px;letter-spacing:.5px;color:#000;text-transform:uppercase}
-  .sr-title{display:flex;align-items:flex-end;gap:14px}
-  .sr-title h1{font-weight:600;font-size:38px;line-height:1.2;color:#000;letter-spacing:-.4px}
-  .sr-title .count{font-size:15px;color:#000;padding-bottom:7px}
-
-  .sr-tabs{display:flex;gap:8px;flex-wrap:wrap}
-  .sr-tab{padding:10px 16px;border-radius:4px;background:#fff;border:1px solid rgba(0,0,0,.14);font-weight:500;font-size:14px;color:#000;cursor:pointer;transition:border-color .2s,background .2s}
-  .sr-tab:hover{border-color:rgba(0,0,0,.35)}
-  .sr-tab.on{background:#111;border-color:#000;color:#fff;font-weight:600}
-
-  .sr-sec{display:flex;flex-direction:column;gap:24px}
-  .sr-sec-head{display:flex;align-items:flex-end;justify-content:space-between;padding-top:8px}
-  .sr-sec-head .l{display:flex;align-items:flex-end;gap:10px}
-  .sr-sec-head h2{font-weight:600;font-size:26px;color:#111;letter-spacing:-.2px}
-  .sr-sec-head .n{font-size:14px;color:#000;padding-bottom:4px}
-  .sr-all{position:relative;font-weight:500;font-size:12px;letter-spacing:.6px;color:#141414;text-transform:uppercase;padding-bottom:4px}
-  .sr-all::before{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--yellow-line)}
-  .sr-all::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:rgba(17,17,17,.7);transform:scaleX(0);transform-origin:left;transition:transform .35s ease}
-  .sr-all:hover::after{transform:scaleX(1)}
-
-  .sr .grid4{gap:12px}
-
-  @media(max-width:900px){
-    .sr-title h1{font-size:28px}
-    .sr-sec-head h2{font-size:22px}
-  }
-</style>
+<!-- Tailwind — sıra vacibdir: tema Tailwind compiler-indən ƏVVƏL DOM-a düşməlidir. -->
+<script src="archi-tw.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body>
 
 <div data-archi="nav"></div>
 
-<section class="sr">
-  <div class="inner">
+<!-- Axtarış nəticələri — Figma 1105:18662 ilə 1:1 -->
+<section class="pt-8 pb-14">
+  <div class="mx-auto flex max-w-[1384px] flex-col gap-6 px-7">
 
     <!-- başlıq -->
-    <div class="sr-head">
-      <div class="sr-tag"><span class="line"></span><p>Axtarış nəticələri</p></div>
-      <div class="sr-title">
-        <h1 id="srQuery">«kafel» üçün nəticələr</h1>
-        <span class="count">86 nəticə</span>
+    <div class="flex flex-col gap-3">
+      <div class="flex items-center gap-2.5"><span class="h-0.5 w-8 bg-yellow"></span><p class="text-[13px] font-medium tracking-[.5px] text-black uppercase">Axtarış nəticələri</p></div>
+      <div class="flex items-end gap-3.5">
+        <h1 class="text-[38px] leading-[1.2] font-semibold tracking-[-.4px] text-black max-[900px]:text-[28px]" id="srQuery">«kafel» üçün nəticələr</h1>
+        <span class="pb-[7px] text-[15px] text-black">86 nəticə</span>
       </div>
     </div>
 
-    <!-- tablar -->
-    <div class="sr-tabs" id="srTabs">
-      <button class="sr-tab on" data-t="all">Hamısı (86)</button>
-      <button class="sr-tab" data-t="prod">Məhsullar (64)</button>
-      <button class="sr-tab" data-t="usta">Ustalar (14)</button>
-      <button class="sr-tab" data-t="blog">Məqalələr (8)</button>
+    <!-- tablar — aktiv vəziyyət `data-on` atributu + Tailwind data variantı ilə -->
+    <div class="flex flex-wrap gap-2" id="srTabs">
+      <button class="cursor-pointer rounded-ds border border-black/14 bg-white px-4 py-2.5 text-sm font-medium text-black transition-[border-color,background] duration-200 hover:border-black/35 data-[on=true]:border-black data-[on=true]:bg-ink data-[on=true]:font-semibold data-[on=true]:text-white" data-t="all" data-on="true">Hamısı (86)</button>
+      <button class="cursor-pointer rounded-ds border border-black/14 bg-white px-4 py-2.5 text-sm font-medium text-black transition-[border-color,background] duration-200 hover:border-black/35 data-[on=true]:border-black data-[on=true]:bg-ink data-[on=true]:font-semibold data-[on=true]:text-white" data-t="prod">Məhsullar (64)</button>
+      <button class="cursor-pointer rounded-ds border border-black/14 bg-white px-4 py-2.5 text-sm font-medium text-black transition-[border-color,background] duration-200 hover:border-black/35 data-[on=true]:border-black data-[on=true]:bg-ink data-[on=true]:font-semibold data-[on=true]:text-white" data-t="usta">Ustalar (14)</button>
+      <button class="cursor-pointer rounded-ds border border-black/14 bg-white px-4 py-2.5 text-sm font-medium text-black transition-[border-color,background] duration-200 hover:border-black/35 data-[on=true]:border-black data-[on=true]:bg-ink data-[on=true]:font-semibold data-[on=true]:text-white" data-t="blog">Məqalələr (8)</button>
     </div>
 
-    <!-- Məhsullar -->
-    <div class="sr-sec" data-sec="prod">
-      <div class="sr-sec-head">
-        <div class="l"><h2>Məhsullar</h2><span class="n">64 nəticə</span></div>
-        <a class="sr-all">Hamısına bax →</a>
+    <!-- Məhsullar · `gap-3` layer-siz utility olduğu üçün `.grid4` komponentinin gap-2-sini üstələyir -->
+    <div class="flex flex-col gap-6" data-sec="prod">
+      <div class="flex items-end justify-between pt-2">
+        <div class="flex items-end gap-2.5"><h2 class="text-[26px] font-semibold tracking-[-.2px] text-ink max-[900px]:text-[22px]">Məhsullar</h2><span class="pb-1 text-sm text-black">64 nəticə</span></div>
+        <a class="relative pb-1 text-xs font-medium tracking-[.6px] text-[#141414] uppercase before:absolute before:inset-x-0 before:bottom-0 before:h-0.5 before:bg-yellow-line before:content-[''] after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:origin-left after:scale-x-0 after:bg-ink/70 after:transition-transform after:duration-[350ms] after:content-[''] hover:after:scale-x-100">Hamısına bax →</a>
       </div>
-      <div class="grid4" id="srProd"></div>
+      <div class="grid4 gap-3" id="srProd"></div>
     </div>
 
     <!-- Ustalar -->
-    <div class="sr-sec" data-sec="usta">
-      <div class="sr-sec-head">
-        <div class="l"><h2>Ustalar</h2><span class="n">14 nəticə</span></div>
-        <a class="sr-all">Hamısına bax →</a>
+    <div class="flex flex-col gap-6" data-sec="usta">
+      <div class="flex items-end justify-between pt-2">
+        <div class="flex items-end gap-2.5"><h2 class="text-[26px] font-semibold tracking-[-.2px] text-ink max-[900px]:text-[22px]">Ustalar</h2><span class="pb-1 text-sm text-black">14 nəticə</span></div>
+        <a class="relative pb-1 text-xs font-medium tracking-[.6px] text-[#141414] uppercase before:absolute before:inset-x-0 before:bottom-0 before:h-0.5 before:bg-yellow-line before:content-[''] after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:origin-left after:scale-x-0 after:bg-ink/70 after:transition-transform after:duration-[350ms] after:content-[''] hover:after:scale-x-100">Hamısına bax →</a>
       </div>
-      <div class="grid4" id="srUsta"></div>
+      <div class="grid4 gap-3" id="srUsta"></div>
     </div>
 
     <!-- Məqalələr -->
-    <div class="sr-sec" data-sec="blog">
-      <div class="sr-sec-head">
-        <div class="l"><h2>Məqalələr</h2><span class="n">8 nəticə</span></div>
-        <a class="sr-all" href="blog.html">Hamısına bax →</a>
+    <div class="flex flex-col gap-6" data-sec="blog">
+      <div class="flex items-end justify-between pt-2">
+        <div class="flex items-end gap-2.5"><h2 class="text-[26px] font-semibold tracking-[-.2px] text-ink max-[900px]:text-[22px]">Məqalələr</h2><span class="pb-1 text-sm text-black">8 nəticə</span></div>
+        <a class="relative pb-1 text-xs font-medium tracking-[.6px] text-[#141414] uppercase before:absolute before:inset-x-0 before:bottom-0 before:h-0.5 before:bg-yellow-line before:content-[''] after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:origin-left after:scale-x-0 after:bg-ink/70 after:transition-transform after:duration-[350ms] after:content-[''] hover:after:scale-x-100" href="blog.html">Hamısına bax →</a>
       </div>
-      <div class="grid4" id="srBlog"></div>
+      <div class="grid4 gap-3" id="srBlog"></div>
     </div>
 
   </div>
@@ -174,11 +143,11 @@
 
   // ---- Tab filtrləmə ----
   document.getElementById('srTabs').addEventListener('click', e=>{
-    const b = e.target.closest('.sr-tab'); if(!b) return;
-    document.querySelectorAll('.sr-tab').forEach(t=>t.classList.remove('on'));
-    b.classList.add('on');
+    const b = e.target.closest('[data-t]'); if(!b) return;
+    document.querySelectorAll('[data-t]').forEach(t=>{ t.dataset.on = 'false'; });
+    b.dataset.on = 'true';
     const t = b.dataset.t;
-    document.querySelectorAll('.sr-sec').forEach(s=>{
+    document.querySelectorAll('[data-sec]').forEach(s=>{
       s.style.display = (t==='all' || s.dataset.sec===t) ? '' : 'none';
     });
   });
@@ -186,7 +155,7 @@
   // ---- URL-dən tab seçimi (?tab=prod|usta|blog) — məs. ana səhifədən «Ətraflı bax» ----
   const tabParam = new URLSearchParams(location.search).get('tab');
   if(tabParam){
-    const tb = document.querySelector('.sr-tab[data-t="'+tabParam+'"]');
+    const tb = document.querySelector('[data-t="'+tabParam+'"]');
     if(tb) tb.click();
   }
 </script>

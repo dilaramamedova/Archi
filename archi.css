@@ -267,20 +267,6 @@
   .sc-close{position:absolute;top:23px;right:24px;width:40px;height:40px;background:#000;display:flex;align-items:center;justify-content:center}
   .sc-close img{width:24px;height:24px}
 
-  /* ============ SECTION COMMON ============ */
-  .section{padding:40px 0}
-  .sec-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
-  .sec-tag{display:flex;align-items:center;gap:10px;margin-bottom:16px}
-  .sec-tag .line{width:32px;height:2px;background:var(--yellow)}
-  .sec-tag p{font-weight:500;font-size:14px;color:rgba(0,0,0,.55);text-transform:uppercase}
-  .sec-title{font-weight:600;font-size:40px;color:#000}
-  .sec-more{position:relative;display:flex;align-items:center;gap:10px;padding-bottom:4px}
-  .sec-more::before{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:var(--yellow-line)}
-  .sec-more::after{content:"";position:absolute;left:0;right:0;bottom:0;height:2px;background:rgba(17,17,17,.7);transform:scaleX(0);transform-origin:left;transition:transform .35s ease}
-  .sec-more:hover::after{transform:scaleX(1)}
-  .sec-more p{font-weight:500;font-size:16px;color:#141414;text-transform:uppercase}
-  .sec-more img{width:24px;height:24px}
-
   /* ============ CATEGORIES ============ */
   .cat-row{display:flex;gap:8px;align-items:center}
   .cat-first{position:relative;width:340px;height:238px;flex-shrink:0;overflow:hidden}
@@ -304,56 +290,6 @@
   .cat-row:hover .cat-thumb.open:not(:hover){flex-grow:1}
   .cat-row:hover .cat-thumb.open:not(:hover) .ov{opacity:0}
   .cat-row:hover .cat-thumb.open:not(:hover) .info{opacity:0;transform:translateY(8px)}
-
-  /* ============ PRODUCTS / SPECIALISTS GRID ============ */
-  .grid4{display:flex;gap:8px}
-  .pcard{position:relative;flex:1;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:12px;display:flex;flex-direction:column;gap:12px;overflow:hidden}
-  /* .hascur — archi.js custom kursoru idarə etdiyi kartlara qoyur (.pcard, .sp-card, …) */
-  .hascur:hover{cursor:none}
-  .prod-cursor{position:absolute;left:0;top:0;width:110px;height:110px;border-radius:50%;background:#000;border:1px solid #000;display:flex;align-items:center;justify-content:center;text-align:center;padding:10px;
-    font-weight:500;font-size:16px;line-height:1.25;color:#fff;pointer-events:none;z-index:40;
-    opacity:0;transform:translate(-50%,-50%) scale(.4);transition:opacity .25s ease,transform .25s ease}
-  .cursing .prod-cursor{opacity:1;transform:translate(-50%,-50%) scale(1)}
-  .prod-cursor span{display:block;max-width:84px}
-  .pcard .ph{position:relative;height:316px;background:var(--gray-soft);overflow:hidden}
-  .pcard .ph>img.prod{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);height:90%;width:auto}
-  .pcard .heart{position:absolute;right:0;top:0;background:#fff;padding:8px;border-radius:37px;display:flex}
-  .pcard .heart img{width:20px;height:20px}
-  .pcard .badges{position:absolute;left:0;top:0;display:flex;gap:4px}
-  .pcard .badges .b{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:4px 8px;font-family:'Inter';font-size:14px;color:#000}
-  .pcard .dots{position:absolute;left:50%;transform:translateX(-50%);bottom:6px;display:flex;gap:2px;align-items:center}
-  .pcard .dots i{width:6px;height:6px;border-radius:17px;background:rgba(0,0,0,.3)}
-  .pcard .dots i.on{width:18px;background:rgba(0,0,0,.15)}
-  .pcard .rating{display:flex;align-items:center;gap:4px}
-  .pcard .rating img{width:20px;height:20px}
-  .pcard .rating p{font-family:'Inter';font-weight:500;font-size:14px;color:#000}
-  .pcard .rating p span{color:rgba(0,0,0,.3)}
-  .pcard .cat{font-weight:500;font-size:12px;color:var(--text-muted);text-transform:uppercase}
-  .pcard .name{font-weight:500;font-size:16px;color:#000}
-  .pcard .price{display:flex;align-items:flex-end;gap:12px}
-  .pcard .price .now{font-weight:500;font-size:20px;color:#000}
-  .pcard .price .old{font-weight:500;font-size:14px;color:rgba(0,0,0,.3);text-decoration:line-through}
-  .pcard .price .off{background:rgba(211,82,76,.2);border-radius:var(--radius);padding:2px 4px;font-family:'Inter';font-weight:700;font-size:10px;color:var(--red)}
-
-  /* specialist cards */
-  .scard{flex:1;background:#fff;border:1px solid var(--border);display:flex;flex-direction:column;gap:20px;padding:12px 12px 20px}
-  .scard .top{position:relative;height:201px;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
-  .scard .heart{position:absolute;right:0;top:0;background:#fff;padding:8px;border-radius:37px;display:flex}
-  .scard .heart img{width:20px;height:20px}
-  .scard .badges{position:absolute;left:0;top:0;display:flex;gap:4px}
-  .scard .badges .b{display:flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:4px 8px;font-size:14px;color:#000}
-  .scard .badges .b img{width:20px;height:20px}
-  .scard .badges .b.ok{color:var(--green)}
-  .scard .avatar{width:60px;height:60px;border-radius:51px;background:#fff;display:flex;align-items:center;justify-content:center;margin-top:14px}
-  .scard .avatar img{width:30px;height:30px}
-  .scard .role{font-weight:500;font-size:20px;color:#000}
-  .scard .rating{display:flex;align-items:center;gap:4px}
-  .scard .rating img{width:20px;height:20px}
-  .scard .rating p{font-family:'Inter';font-weight:500;font-size:14px;color:#000}
-  .scard .rating p span{color:var(--text-faint)}
-  .scard .name{font-weight:500;font-size:16px;color:rgba(0,0,0,.8)}
-  .scard .meta{display:flex;gap:12px;margin-top:12px}
-  .scard .meta span{font-weight:500;font-size:16px;color:var(--text-muted)}
 
   /* ============ CALCULATOR CTA ============ */
   .calc-cta{background:var(--gray-soft2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
@@ -413,19 +349,6 @@
   .lead .opt.sel .box{background:var(--yellow);border-color:var(--yellow)}
   .lead .opt.sel p{color:#000}
   .lead .submit{height:52px;background:var(--yellow);display:flex;align-items:center;justify-content:center;font-weight:500;font-size:20px;color:#111}
-
-  /* ============ BLOG ============ */
-  .blog-grid{display:flex;gap:8px}
-  .post{flex:1;background:#fff;border:1px solid #e4e2db;display:flex;flex-direction:column}
-  .post .ph{height:228px;background:#f5f4f0;overflow:hidden}
-  .post .ph img{width:100%;height:100%;object-fit:cover}
-  /* flex:1 + .read{margin-top:auto} — başlıq 1 və ya 2 sətir olsun, "Oxu →" kartın
-     altında eyni yerdə dayanır (kartlar sətir daxilində onsuz da eyni hündürlükdədir) */
-  .post .body{flex:1;padding:20px;display:flex;flex-direction:column;gap:8px}
-  .post .time{font-size:12px;color:#5c5c57}
-  .post h3{font-weight:500;font-size:21px;color:#141414;letter-spacing:-.21px}
-  .post .ex{font-size:14px;color:#5c5c57;line-height:1.25;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-  .post .read{margin-top:auto;align-self:flex-start;border-bottom:2px solid var(--yellow-line);font-weight:600;font-size:14px;color:#141414;padding-bottom:1px}
 
   /* ============ FOOTER ============ */
   footer{background:#000;color:#fff;width:100vw;margin-left:calc(50% - 50vw)}

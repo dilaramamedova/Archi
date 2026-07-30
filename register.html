@@ -7,124 +7,88 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!-- archi.css hələ lazımdır: inject olunan navbar/footer onun class-larından istifadə edir. -->
 <link rel="stylesheet" href="archi.css">
-<style>
-  /* ===== Auth (qeydiyyat / giriş) — ARCHİ stilində ===== */
-  .auth{background:var(--gray-soft2);padding:56px 0}
-  .auth .inner{max-width:760px;margin:0 auto;padding:0 28px}
-  .auth-card{background:#fff;border:1px solid rgba(0,0,0,.12);box-shadow:-4px 4px 4px rgba(0,0,0,.05);padding:40px;display:flex;flex-direction:column;gap:28px}
-  .auth-head{display:flex;flex-direction:column;gap:8px}
-  .auth-head .tag{display:flex;align-items:center;gap:12px}
-  .auth-head .tag .line{width:32px;height:4px;border-radius:2px;background:var(--yellow)}
-  .auth-head .tag p{font-weight:500;font-size:13px;color:rgba(0,0,0,.55);text-transform:uppercase;letter-spacing:1.4px}
-  .auth-head h1{font-weight:600;font-size:32px;color:var(--text-primary);letter-spacing:-.4px}
-  .auth-head .sub{font-size:16px;color:rgba(0,0,0,.55);line-height:1.5}
-
-  .group-label{font-weight:600;font-size:16px;color:#000;margin-bottom:-8px}
-
-  .roles{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-  .role{position:relative;border:1px solid rgba(0,0,0,.2);padding:20px;display:flex;flex-direction:column;gap:10px;cursor:pointer;transition:border-color .2s,background .2s;text-align:left}
-  .role:hover{border-color:#000}
-  .role.sel{border-color:var(--yellow);box-shadow:inset 0 0 0 1px var(--yellow);background:#fffdf0}
-  .role .ic{width:46px;height:46px;border-radius:var(--radius-pill);background:var(--gray-soft);display:flex;align-items:center;justify-content:center}
-  .role.sel .ic{background:var(--yellow)}
-  .role .ic img{width:24px;height:24px}
-  .role h4{font-weight:600;font-size:16px;color:#111}
-  .role p{font-size:13px;color:rgba(0,0,0,.55);line-height:1.35}
-  .role .tick{position:absolute;top:14px;right:14px;width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;opacity:0;transition:.2s}
-  .role .tick img{width:12px;height:12px;filter:brightness(0)}
-  .role.sel .tick{opacity:1;background:var(--yellow);border-color:var(--yellow)}
-
-  .form{display:flex;flex-direction:column;gap:18px}
-  .frow{display:flex;gap:14px}
-  .frow .field{flex:1}
-  .field{display:flex;flex-direction:column;gap:8px}
-  .field label{font-weight:500;font-size:14px;color:var(--text-secondary)}
-  .field input,.field select{border:1px solid rgba(0,0,0,.2);padding:14px 16px;font-size:16px;color:#000;outline:none;background:#fff;transition:border-color .2s}
-  .field input:focus,.field select:focus{border-color:#000}
-  .field input::placeholder{color:var(--text-faint)}
-  .field[hidden]{display:none}
-
-  .terms{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--text-secondary)}
-  .terms input{width:18px;height:18px;accent-color:var(--yellow)}
-  .terms a{border-bottom:1px solid var(--yellow-line)}
-  .submit{height:54px;background:var(--yellow);font-weight:600;font-size:18px;color:#111;border:none;cursor:pointer;transition:filter .2s}
-  .submit:hover{filter:brightness(.93)}
-  .alt{text-align:center;font-size:15px;color:rgba(0,0,0,.6)}
-  .alt a{font-weight:600;color:#111;border-bottom:2px solid var(--yellow-line)}
-  .ok-msg{display:none;background:#eafce9;border:1px solid var(--green);color:#0a7a14;padding:14px 16px;font-size:15px}
-  .ok-msg.show{display:block}
-
-  @media(max-width:640px){
-    .auth-card{padding:24px}
-    .roles{grid-template-columns:1fr}
-    .frow{flex-direction:column}
-    .auth-head h1{font-size:26px}
-  }
-</style>
+<!-- Tailwind — sıra vacibdir: tema Tailwind compiler-indən ƏVVƏL DOM-a düşməlidir. -->
+<script src="archi-tw.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body>
 
 <div data-archi="nav"></div>
 
-<section class="auth">
-  <div class="inner">
-    <div class="auth-card">
-      <div class="auth-head">
-        <div class="tag"><span class="line"></span><p>ARCHİ-yə qoşul</p></div>
-        <h1>Qeydiyyatdan keç</h1>
-        <p class="sub">Hesab növünü seç — alıcı, satıcı, yoxsa usta/mütəxəssis kimi davam et.</p>
+<section class="bg-gray-soft2 py-14">
+  <div class="mx-auto max-w-[760px] px-7">
+    <div class="flex flex-col gap-7 border border-black/12 bg-white p-10 shadow-[-4px_4px_4px_rgba(0,0,0,0.05)] max-[640px]:p-6">
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center gap-3">
+          <span class="h-1 w-8 rounded-[2px] bg-yellow"></span>
+          <p class="text-[13px] font-medium tracking-[1.4px] text-black/55 uppercase">ARCHİ-yə qoşul</p>
+        </div>
+        <h1 class="text-[32px] font-semibold tracking-[-0.4px] text-black/90 max-[640px]:text-[26px]">Qeydiyyatdan keç</h1>
+        <p class="text-base leading-[1.5] text-black/55">Hesab növünü seç — alıcı, satıcı, yoxsa usta/mütəxəssis kimi davam et.</p>
       </div>
 
-      <div class="ok-msg" id="okMsg">Qeydiyyat uğurla tamamlandı! (demo — backend qoşulmayıb)</div>
+      <div class="hidden border border-green bg-[#eafce9] px-4 py-3.5 text-[15px] text-[#0a7a14]" id="okMsg">Qeydiyyat uğurla tamamlandı! (demo — backend qoşulmayıb)</div>
 
-      <!-- Rol seçimi -->
+      <!-- Rol seçimi — seçili vəziyyət data-sel atributu + Tailwind group-data variantları ilə -->
       <div>
-        <div class="group-label" style="margin-bottom:12px">Hesab növü</div>
-        <div class="roles" id="roles">
-          <button type="button" class="role" data-role="alici">
-            <span class="tick"><img src="assets/ic-check.svg" alt=""></span>
-            <span class="ic"><img src="assets/ic-cart.svg" alt=""></span>
-            <h4>Alıcı</h4>
-            <p>Material al, usta tap, sifariş ver.</p>
+        <div class="mb-3 text-base font-semibold text-black">Hesab növü</div>
+        <div class="grid grid-cols-3 gap-3 max-[640px]:grid-cols-1" id="roles">
+          <button type="button" class="group relative flex cursor-pointer flex-col gap-2.5 border border-black/20 p-5 text-left transition-[border-color,background] duration-200 hover:border-black data-[sel=true]:border-yellow data-[sel=true]:bg-[#fffdf0] data-[sel=true]:shadow-[inset_0_0_0_1px_var(--color-yellow)]" data-role="alici">
+            <span class="absolute top-3.5 right-3.5 flex size-5 items-center justify-center rounded-full border border-black/30 opacity-0 transition duration-200 group-data-[sel=true]:border-yellow group-data-[sel=true]:bg-yellow group-data-[sel=true]:opacity-100"><img class="size-3 brightness-0" src="assets/ic-check.svg" alt=""></span>
+            <span class="flex size-[46px] items-center justify-center rounded-pill bg-gray-soft group-data-[sel=true]:bg-yellow"><img class="size-6" src="assets/ic-cart.svg" alt=""></span>
+            <h4 class="text-base font-semibold text-ink">Alıcı</h4>
+            <p class="text-[13px] leading-[1.35] text-black/55">Material al, usta tap, sifariş ver.</p>
           </button>
-          <button type="button" class="role" data-role="satici">
-            <span class="tick"><img src="assets/ic-check.svg" alt=""></span>
-            <span class="ic"><img src="assets/spec-ic-sirket.svg" alt=""></span>
-            <h4>Satıcı</h4>
-            <p>Məhsullarını yerləşdir və sat.</p>
+          <button type="button" class="group relative flex cursor-pointer flex-col gap-2.5 border border-black/20 p-5 text-left transition-[border-color,background] duration-200 hover:border-black data-[sel=true]:border-yellow data-[sel=true]:bg-[#fffdf0] data-[sel=true]:shadow-[inset_0_0_0_1px_var(--color-yellow)]" data-role="satici">
+            <span class="absolute top-3.5 right-3.5 flex size-5 items-center justify-center rounded-full border border-black/30 opacity-0 transition duration-200 group-data-[sel=true]:border-yellow group-data-[sel=true]:bg-yellow group-data-[sel=true]:opacity-100"><img class="size-3 brightness-0" src="assets/ic-check.svg" alt=""></span>
+            <span class="flex size-[46px] items-center justify-center rounded-pill bg-gray-soft group-data-[sel=true]:bg-yellow"><img class="size-6" src="assets/spec-ic-sirket.svg" alt=""></span>
+            <h4 class="text-base font-semibold text-ink">Satıcı</h4>
+            <p class="text-[13px] leading-[1.35] text-black/55">Məhsullarını yerləşdir və sat.</p>
           </button>
-          <button type="button" class="role" data-role="usta">
-            <span class="tick"><img src="assets/ic-check.svg" alt=""></span>
-            <span class="ic"><img src="assets/spec-ic-usta.svg" alt=""></span>
-            <h4>Usta / Mütəxəssis</h4>
-            <p>Xidmət göstər, müştəri qazan.</p>
+          <button type="button" class="group relative flex cursor-pointer flex-col gap-2.5 border border-black/20 p-5 text-left transition-[border-color,background] duration-200 hover:border-black data-[sel=true]:border-yellow data-[sel=true]:bg-[#fffdf0] data-[sel=true]:shadow-[inset_0_0_0_1px_var(--color-yellow)]" data-role="usta">
+            <span class="absolute top-3.5 right-3.5 flex size-5 items-center justify-center rounded-full border border-black/30 opacity-0 transition duration-200 group-data-[sel=true]:border-yellow group-data-[sel=true]:bg-yellow group-data-[sel=true]:opacity-100"><img class="size-3 brightness-0" src="assets/ic-check.svg" alt=""></span>
+            <span class="flex size-[46px] items-center justify-center rounded-pill bg-gray-soft group-data-[sel=true]:bg-yellow"><img class="size-6" src="assets/spec-ic-usta.svg" alt=""></span>
+            <h4 class="text-base font-semibold text-ink">Usta / Mütəxəssis</h4>
+            <p class="text-[13px] leading-[1.35] text-black/55">Xidmət göstər, müştəri qazan.</p>
           </button>
         </div>
       </div>
 
       <!-- Form -->
-      <form class="form" id="regForm" onsubmit="return false">
-        <div class="frow">
-          <div class="field"><label>Ad</label><input type="text" placeholder="Adınız" required></div>
-          <div class="field"><label>Soyad</label><input type="text" placeholder="Soyadınız" required></div>
+      <form class="flex flex-col gap-[18px]" id="regForm" onsubmit="return false">
+        <div class="flex gap-3.5 max-[640px]:flex-col">
+          <div class="flex flex-1 flex-col gap-2">
+            <label class="text-sm font-medium text-black/70">Ad</label>
+            <input class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 placeholder:text-black/40 focus:border-black" type="text" placeholder="Adınız" required>
+          </div>
+          <div class="flex flex-1 flex-col gap-2">
+            <label class="text-sm font-medium text-black/70">Soyad</label>
+            <input class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 placeholder:text-black/40 focus:border-black" type="text" placeholder="Soyadınız" required>
+          </div>
         </div>
 
-        <!-- satıcıya xas -->
-        <div class="field" data-for="satici" hidden><label>Şirkət / marka adı</label><input type="text" placeholder="Məsələn: ARCHI Build MMC"></div>
+        <!-- satıcıya xas · [&[hidden]]:hidden lazımdır, çünki `flex` UA-nın [hidden] qaydasını üstələyir -->
+        <div class="flex flex-col gap-2 [&[hidden]]:hidden" data-for="satici" hidden>
+          <label class="text-sm font-medium text-black/70">Şirkət / marka adı</label>
+          <input class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 placeholder:text-black/40 focus:border-black" type="text" placeholder="Məsələn: ARCHI Build MMC">
+        </div>
 
         <!-- ustaya xas -->
-        <div class="frow" data-for="usta" hidden>
-          <div class="field"><label>İxtisas</label>
-            <select>
+        <div class="flex gap-3.5 max-[640px]:flex-col [&[hidden]]:hidden" data-for="usta" hidden>
+          <div class="flex flex-1 flex-col gap-2">
+            <label class="text-sm font-medium text-black/70">İxtisas</label>
+            <select class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 focus:border-black">
               <option value="">Seçin</option>
               <option>Kafelçi</option><option>Elektrik</option><option>Santexnik</option>
               <option>Boyaçı</option><option>Gips-kartonçu</option><option>Memar</option>
               <option>İnteryer dizayner</option><option>Digər</option>
             </select>
           </div>
-          <div class="field"><label>Şəhər</label>
-            <select>
+          <div class="flex flex-1 flex-col gap-2">
+            <label class="text-sm font-medium text-black/70">Şəhər</label>
+            <select class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 focus:border-black">
               <option value="">Seçin</option>
               <option>Bakı</option><option>Sumqayıt</option><option>Gəncə</option>
               <option>Mingəçevir</option><option>Şirvan</option><option>Digər</option>
@@ -132,19 +96,31 @@
           </div>
         </div>
 
-        <div class="frow">
-          <div class="field"><label>E-poçt</label><input type="email" placeholder="email@example.com" required></div>
-          <div class="field"><label>Telefon</label><input type="tel" placeholder="+994 50 000 00 00" required></div>
+        <div class="flex gap-3.5 max-[640px]:flex-col">
+          <div class="flex flex-1 flex-col gap-2">
+            <label class="text-sm font-medium text-black/70">E-poçt</label>
+            <input class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 placeholder:text-black/40 focus:border-black" type="email" placeholder="email@example.com" required>
+          </div>
+          <div class="flex flex-1 flex-col gap-2">
+            <label class="text-sm font-medium text-black/70">Telefon</label>
+            <input class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 placeholder:text-black/40 focus:border-black" type="tel" placeholder="+994 50 000 00 00" required>
+          </div>
         </div>
-        <div class="frow">
-          <div class="field"><label>Şifrə</label><input type="password" placeholder="Ən azı 6 simvol" required></div>
-          <div class="field"><label>Şifrəni təkrarla</label><input type="password" placeholder="Şifrəni təkrarla" required></div>
+        <div class="flex gap-3.5 max-[640px]:flex-col">
+          <div class="flex flex-1 flex-col gap-2">
+            <label class="text-sm font-medium text-black/70">Şifrə</label>
+            <input class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 placeholder:text-black/40 focus:border-black" type="password" placeholder="Ən azı 6 simvol" required>
+          </div>
+          <div class="flex flex-1 flex-col gap-2">
+            <label class="text-sm font-medium text-black/70">Şifrəni təkrarla</label>
+            <input class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 placeholder:text-black/40 focus:border-black" type="password" placeholder="Şifrəni təkrarla" required>
+          </div>
         </div>
 
-        <label class="terms"><input type="checkbox" required> <span><a href="#">İstifadə şərtləri</a> və <a href="#">Məxfilik siyasəti</a> ilə razıyam</span></label>
+        <label class="flex items-center gap-2.5 text-sm text-black/70"><input class="size-[18px] accent-yellow" type="checkbox" required> <span><a class="border-b border-yellow-line" href="#">İstifadə şərtləri</a> və <a class="border-b border-yellow-line" href="#">Məxfilik siyasəti</a> ilə razıyam</span></label>
 
-        <button class="submit" type="submit">Qeydiyyatdan keç</button>
-        <p class="alt">Artıq hesabın var? <a href="login.html" data-login>Daxil ol</a></p>
+        <button class="h-[54px] cursor-pointer border-none bg-yellow text-lg font-semibold text-ink transition-[filter] duration-200 hover:brightness-[.93]" type="submit">Qeydiyyatdan keç</button>
+        <p class="text-center text-[15px] text-black/60">Artıq hesabın var? <a class="border-b-2 border-yellow-line font-semibold text-ink" href="login.html" data-login>Daxil ol</a></p>
       </form>
     </div>
   </div>
@@ -153,9 +129,9 @@
 <div data-archi="footer"></div>
 
 <script>
-  const roles = document.querySelectorAll('.role');
+  const roles = document.querySelectorAll('[data-role]');
   function pick(role){
-    roles.forEach(r=>r.classList.toggle('sel', r.dataset.role===role));
+    roles.forEach(r=>{ r.dataset.sel = String(r.dataset.role === role); });
     document.querySelectorAll('[data-for]').forEach(el=>{ el.hidden = (el.dataset.for !== role); });
   }
   roles.forEach(r=>r.addEventListener('click',()=>pick(r.dataset.role)));
@@ -166,7 +142,7 @@
 
   document.getElementById('regForm').addEventListener('submit',()=>{
     try{ localStorage.setItem('archi-auth','1'); }catch(e){}
-    const ok=document.getElementById('okMsg'); ok.classList.add('show');
+    document.getElementById('okMsg').classList.remove('hidden');
     window.scrollTo({top:0,behavior:'smooth'});
   });
 </script>

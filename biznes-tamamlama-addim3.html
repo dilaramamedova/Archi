@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>biznes — Tamamlama · Addım 3: İlk məhsul</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500&display=swap" rel="stylesheet">
+<!-- archi.css hələ lazımdır: inject olunan navbar/footer onun class-larından istifadə edir. -->
+<link rel="stylesheet" href="archi.css">
+<!-- Tailwind — sıra vacibdir: tema Tailwind compiler-indən ƏVVƏL DOM-a düşməlidir. -->
+<script src="archi-tw.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-gray-soft2 text-ink [word-break:break-word]">
+<div class="bg-gray-soft2">
+
+  <div data-archi="nav"></div>
+
+  <!-- ===== Head — Figma 1105:22591 (1440×128) ===== -->
+  <div class="mx-auto flex max-w-[1440px] flex-col items-start gap-5 bg-gray-soft2 px-7 pt-8 pb-5">
+    <p class="whitespace-pre text-sm font-medium leading-[normal] text-black/50">←  Mağaza panelinə qayıt</p>
+    <h1 class="whitespace-nowrap text-[32px] font-bold leading-[normal] tracking-[-0.5px] text-ink">İlk məhsulunu yerləşdir</h1>
+  </div>
+
+  <!-- ===== Content — Figma 1105:22594 ===== -->
+  <div class="mx-auto flex max-w-[1440px] items-start gap-8 bg-gray-soft2 px-7 pb-5">
+    <div class="flex w-[880px] shrink-0 flex-col items-start gap-2.5">
+
+      <!-- stepper — Figma 1105:22596 (880×72: pad 20 + aktiv dairə 32) -->
+      <div class="flex w-[880px] shrink-0 items-center justify-between border border-black/10 bg-white p-5">
+        <div class="flex shrink-0 items-center gap-2">
+          <div class="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-yellow-line">
+            <p class="whitespace-nowrap text-xs font-bold leading-[normal] text-ink">✓</p>
+          </div>
+          <p class="whitespace-nowrap text-sm font-medium leading-[normal] text-ink">Şirkət məlumatları</p>
+        </div>
+        <div class="h-0.5 w-5 shrink-0 bg-[#e0e3e8]"></div>
+        <div class="flex shrink-0 items-center gap-2">
+          <div class="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-yellow-line">
+            <p class="whitespace-nowrap text-xs font-bold leading-[normal] text-ink">✓</p>
+          </div>
+          <p class="whitespace-nowrap text-sm font-medium leading-[normal] text-ink">Əlaqə</p>
+        </div>
+        <div class="h-0.5 w-5 shrink-0 bg-[#e0e3e8]"></div>
+        <div class="flex shrink-0 items-center gap-2.5">
+          <div class="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-pill bg-ink">
+            <p class="whitespace-nowrap text-sm font-semibold leading-[normal] text-white">3</p>
+          </div>
+          <p class="whitespace-nowrap text-[13px] font-medium leading-[normal] text-ink">İlk məhsul</p>
+        </div>
+      </div>
+
+      <!-- form-card — Figma 1105:22608 -->
+      <div class="relative flex w-full shrink-0 flex-col items-start gap-5 overflow-hidden rounded-ds border border-black/10 bg-white px-8 py-7">
+
+        <div class="flex w-full shrink-0 flex-col items-start gap-2 overflow-hidden bg-white">
+          <p class="whitespace-nowrap text-[13px] font-semibold leading-[normal] text-ink">Məhsul şəkilləri * (ən azı 1)</p>
+          <div class="flex shrink-0 items-start gap-2.5 overflow-hidden bg-white">
+            <div class="flex size-[110px] shrink-0 flex-col items-center justify-center overflow-hidden rounded-ds border border-dashed border-black/14 bg-gray-soft2 text-center text-xs font-medium text-black/50">
+              <p class="whitespace-nowrap leading-[normal]">📷</p>
+              <p class="whitespace-nowrap leading-[normal]">+ Əsas şəkil</p>
+            </div>
+            <div class="flex size-[110px] shrink-0 flex-col items-center justify-center overflow-hidden rounded-ds border border-dashed border-black/14 bg-gray-soft2">
+              <p class="whitespace-nowrap text-center text-xl font-medium leading-[normal] text-black/50">+</p>
+            </div>
+            <div class="flex size-[110px] shrink-0 flex-col items-center justify-center overflow-hidden rounded-ds border border-dashed border-black/14 bg-gray-soft2">
+              <p class="whitespace-nowrap text-center text-xl font-medium leading-[normal] text-black/50">+</p>
+            </div>
+            <div class="flex size-[110px] shrink-0 flex-col items-center justify-center overflow-hidden rounded-ds border border-dashed border-black/14 bg-gray-soft2">
+              <p class="whitespace-nowrap text-center text-xl font-medium leading-[normal] text-black/50">+</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex w-full shrink-0 items-start gap-4 overflow-hidden bg-white">
+          <div class="flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden bg-white">
+            <p class="whitespace-nowrap text-[13px] font-semibold leading-[normal] text-ink">Məhsul adı *</p>
+            <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px]">
+              <p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black/40">məs. Keramik kafel 60×60, mat</p>
+            </div>
+          </div>
+          <div class="flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden bg-white">
+            <p class="whitespace-nowrap text-[13px] font-semibold leading-[normal] text-ink">Kateqoriya *</p>
+            <!-- açıq vəziyyət: 1.5px ink kontur -->
+            <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border-[1.5px] border-ink bg-white px-4 py-[13px]">
+              <p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black/40">Seçin</p>
+              <p class="text-xs leading-[normal] text-black/50">▴</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex w-full shrink-0 items-start gap-0 overflow-hidden bg-white">
+          <div class="flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden bg-white">
+            <p class="whitespace-nowrap text-[13px] font-semibold leading-[normal] text-ink">Brend (istəyə bağlı)</p>
+            <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px]">
+              <p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black/40">məs. Knauf, Caparol — yoxdursa boş burax</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex w-full shrink-0 items-start gap-4 overflow-hidden bg-white">
+          <div class="flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden bg-white">
+            <p class="whitespace-nowrap text-[13px] font-semibold leading-[normal] text-ink">Qiymət *</p>
+            <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px]">
+              <p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black/40">0.00 ₼</p>
+            </div>
+          </div>
+          <div class="flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden bg-white">
+            <p class="whitespace-nowrap text-[13px] font-semibold leading-[normal] text-ink">Vahid *</p>
+            <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px]">
+              <p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black/40">m² / ədəd / qutu</p>
+              <p class="text-xs leading-[normal] text-black/50">▾</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex w-full shrink-0 flex-col items-start gap-2 overflow-hidden bg-white">
+          <p class="whitespace-nowrap text-[13px] font-semibold leading-[normal] text-ink">Qısa təsvir</p>
+          <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px]">
+            <p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black/40">Ölçü, material, istifadə yeri…</p>
+          </div>
+        </div>
+
+        <div class="flex w-full shrink-0 items-center gap-2.5 overflow-hidden rounded-ds border border-yellow-line bg-sel-bg px-3.5 py-3">
+          <p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black">🎉</p>
+          <p class="min-w-px flex-[1_0_0] text-[13px] font-normal leading-[normal] text-black/70">Bu son addımdır! Məhsul sənədlər təsdiqlənən kimi avtomatik dərc olunacaq.</p>
+        </div>
+
+        <div class="flex shrink-0 items-center gap-3 overflow-hidden bg-white">
+          <div class="flex shrink-0 items-start overflow-hidden rounded-ds bg-yellow px-7 py-[15px]">
+            <p class="whitespace-pre text-[15px] font-semibold leading-[normal] text-ink">Məhsulu yerləşdir və mağazanı tamamla  ✓</p>
+          </div>
+          <p class="whitespace-nowrap text-sm font-medium leading-[normal] text-black/50">Sonra yerləşdirərəm</p>
+        </div>
+
+        <!-- kateqoriya menyusu — form-card-a nisbətən absolyut (Figma-da açıq vəziyyət) -->
+        <div class="absolute top-[252px] left-[447px] flex flex-col items-start overflow-hidden rounded-ds border border-black/10 bg-white shadow-[0px_4px_16px_0px_rgba(0,0,0,0.08)]">
+          <div class="flex h-[38px] w-full shrink-0 items-center justify-between overflow-hidden bg-white px-4 py-2.5"><p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black/70">Divarlar</p></div>
+          <div class="flex h-[38px] w-full shrink-0 items-center justify-between overflow-hidden bg-sel-bg px-4 py-2.5"><p class="whitespace-nowrap text-sm font-medium leading-[normal] text-ink">Döşəmə</p><p class="whitespace-nowrap text-[13px] font-bold leading-[normal] text-ink">✓</p></div>
+          <div class="flex h-[38px] w-full shrink-0 items-center justify-between overflow-hidden bg-white px-4 py-2.5"><p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black/70">Tavan</p></div>
+          <div class="flex h-[38px] w-full shrink-0 items-center justify-between overflow-hidden bg-white px-4 py-2.5"><p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black/70">Santexnika</p></div>
+          <div class="flex h-[38px] w-full shrink-0 items-center justify-between overflow-hidden bg-white px-4 py-2.5"><p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black/70">Elektrik</p></div>
+          <div class="flex h-[38px] w-full shrink-0 items-center justify-between overflow-hidden bg-white px-4 py-2.5"><p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black/70">İstilik sistemi</p></div>
+          <div class="flex h-[38px] w-full shrink-0 items-center justify-between overflow-hidden bg-white px-4 py-2.5"><p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black/70">Havalandırma</p></div>
+          <div class="flex h-[38px] w-full shrink-0 items-center justify-between overflow-hidden bg-white px-4 py-2.5"><p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black/70">Qapı və pəncərələr</p></div>
+          <div class="flex h-[38px] w-full shrink-0 items-center justify-between overflow-hidden bg-white px-4 py-2.5"><p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black/70">Dam və fasad</p></div>
+          <div class="flex h-[38px] w-full shrink-0 items-center justify-between overflow-hidden bg-white px-4 py-2.5"><p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black/70">Dizayn və dekor</p></div>
+          <div class="flex h-[38px] w-full shrink-0 items-center justify-between overflow-hidden bg-white px-4 py-2.5"><p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black/70">Tikinti materialları</p></div>
+          <div class="flex h-[38px] w-full shrink-0 items-center justify-between overflow-hidden bg-white px-4 py-2.5"><p class="whitespace-nowrap text-sm font-normal leading-[normal] text-black/70">Landşaft</p></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- side — Figma 1105:22682 (472×215) -->
+    <div class="flex min-w-px flex-[1_0_0] flex-col items-start gap-4 overflow-hidden bg-white">
+      <div class="flex w-full shrink-0 flex-col items-start gap-3 overflow-hidden rounded-ds border border-black/10 bg-white p-5">
+        <p class="whitespace-nowrap text-sm font-semibold leading-[normal] text-ink">Tamamlanma: 67% → 100% 🎉</p>
+        <div class="relative h-1.5 w-[280px] shrink-0 overflow-hidden rounded-ds bg-black/8">
+          <div class="absolute top-0 left-0 h-1.5 w-[210px] rounded-ds bg-yellow"></div>
+          <div class="absolute top-0 left-[210px] h-1.5 w-[70px] rounded-ds bg-yellow-line opacity-50"></div>
+        </div>
+        <p class="w-full text-[13px] font-normal leading-[normal] text-black/50">Son addım — bundan sonra mağazan tam aktivdir.</p>
+      </div>
+      <div class="flex w-full shrink-0 flex-col items-start gap-2 overflow-hidden rounded-ds border border-yellow-line bg-sel-bg p-4 text-[13px]">
+        <p class="whitespace-nowrap font-semibold leading-[normal] text-ink">💡 Məsləhət</p>
+        <p class="w-full font-normal leading-[1.5] text-black/70">Keyfiyyətli əsas şəkil satışı 2-3 dəfə artırır. Ağ fonda, yaxşı işıqda çək — kvadrat format kartlarda ən yaxşı görünür.</p>
+      </div>
+    </div>
+  </div>
+
+  <div data-archi="footer"></div>
+
+</div>
+<script src="archi.js"></script>
+<script data-logo-home>(function(){var s='.nav-logo,.ft-logo,.foot-logo,.logo,.nb-logo,.f-logo,.logo-top,.logo-footer';document.querySelectorAll(s).forEach(function(el){el.style.cursor='pointer';el.addEventListener('click',function(){location.href='index.html';});});})();</script>
+</body>
+</html>
