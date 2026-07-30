@@ -448,13 +448,44 @@ animasiya/responsive bölmələri çevriləndə bunlar da köçürüləcək.
 
 | | |
 |---|---|
-| ✅ Tam çevrildi (köhnə `<style>` yox) | **10**: `addim1`, `addim3`, `login`, `register`, `cart`, `search`, `calculator`, `blog`, `sell`, `biznes-qeydiyyat` |
+| ✅ Tam çevrildi (köhnə `<style>` yox) | **17** — aşağıda |
 | 🟡 Tailwind qoşuldu, öz CSS-i qalır | **3**: `index` (10 sətir), `catalog` (134), `product` (270) |
-| ⏳ Toxunulmadı | **10**: biznes kabineti ×7 (128–228), `calculator-detailed` (112), `specialist` (138), `specialists` (152) |
+| ⏳ Toxunulmadı | **3**: `biznes-profil-shourumlar` (164), `biznes-profil-mehsullar` (181), `biznes-profil` (228) |
 
-`biznes-qeydiyyat.html`-də çevirmə ilə yanaşı `addim1`/`addim3`-dəki eyni qüsur da düzəldildi:
-sabit `width:1440px` + `min-width:1440px`, `.auth-page{position:absolute;height:1160px}` və
-45 sətir ölü navbar CSS götürüldü, normal axına keçirildi. Dizaynda footer yoxdur — belə də saxlanıldı.
+**Çevrilmiş 17:** `addim1` · `addim3` · `login` · `register` · `cart` · `search` ·
+`calculator` · `blog` · `sell` · `biznes-qeydiyyat` · `calculator-detailed` ·
+`specialist` · `specialists` · `biznes-profil-sirket` · `biznes-profil-bildirisler` ·
+`biznes-profil-elaqe` · `biznes-profil-tehlukesizlik`
+
+### İki fərqli çevirmə üsulu — hansını nə vaxt
+
+1. **Markup-a utility** — səhifə kiçikdirsə və class-lar az təkrarlanırsa
+   (`login`, `register`, `cart`, `search`, `blog`, `sell`, `biznes-qeydiyyat`,
+   `addim1`, `addim3`, `calculator`). CSS bloku tamamilə silinir.
+2. **CSS-i `@apply`-a, class adlarını saxlamaqla** — markup JS template-lərində
+   qurulursa və ya onlarla class dəfələrlə təkrarlanırsa (`calculator-detailed`
+   ~60 class, `specialist`, `specialists`, bütün `biznes-profil-*`).
+   **Üstünlüyü: markup və JS-ə heç toxunmaq lazım gəlmir**, `.on`/`.active`/`.exp`
+   vəziyyət class-ları olduğu kimi işləyir. Blok səhifənin öz
+   `<style type="text/tailwindcss">`-ində saxlanılır.
+
+### ⚠️ Nə üçün biznes kabineti qabığı PAYLAŞILAN fayla qoyulmadı
+
+İlk baxışda 7 səhifə eyni qabığı paylaşır kimi görünür, amma **fərqli class adları
+ilə qurulublar**: `edit-title` / `page-title` / `head-title`, `badge-pub` /
+`status-chip`, `snav-item` / `sn-item` / `nav-link`. Ölçüldü: `sirket`-də 72 uyğun
+selektor, qalanlarda cəmi 3–19. Üstəlik `.page`, `.field`, `.input`, `.card`,
+`.crumbs`, `.save-bar` **generik adlardır** — `archi-tw.js`-ə düşsəydi başqa
+səhifələrə sızardı. Ona görə hər səhifə öz blokunu saxlayır.
+
+### Hər biznes-profil səhifəsində eyni üç qüsur var idi (düzəldildi)
+
+1. navbar/footer CSS-i tamamilə **ölü** (markup `data-archi="nav|footer"` ilə inject olunur) — 27–87 selektor
+2. `.page`/`.frame`-də sabit `width:1440px` və ya `body{min-width:1440px}`
+3. təkrar `:root` bloku (`archi.css`-də onsuz da var)
+
+`biznes-qeydiyyat.html`-də əlavə olaraq `.auth-page{position:absolute;height:1160px}`
+normal axına keçirildi (`addim1`/`addim3` ilə eyni qüsur sinfi).
 
 > ⚠️ **biznes-profil qrupu qrup kimi çevrilə bilməz.** Yeddi səhifə oxşar görünür, amma
 > CSS blokları ayrı-ayrı qurulub — `sirket` ilə `elaqe` arasında 295 sətir fərq var.
