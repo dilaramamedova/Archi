@@ -8,144 +8,129 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="archi.css">
-<style>
-  /* ============ MÜTƏXƏSSİS PROFİLİ (Figma node 777-2779 ilə 1:1, pp- prefiksli) ============ */
-  body{background:#fff}
-  /* Figma: content padding 40px, inner 1360px, bölmələr arası 48px */
-  .pp{max-width:1440px;margin:0 auto;padding:40px 40px 80px;display:flex;flex-direction:column;gap:48px}
+<!-- Tailwind — sıra vacibdir: tema Tailwind compiler-indən ƏVVƏL DOM-a düşməlidir. -->
+<script src="archi-tw.js"></script>
+<!-- Mütəxəssis profili (Figma 777:2779 ilə 1:1, `pp-` prefiksli). CSS @apply ilə
+     Tailwind-ə çevrildi, class adları saxlanıldı — markup toxunulmadı. -->
+<style type="text/tailwindcss">
+@layer components {
+  body { @apply bg-white; }
+
+  /* Figma: content padding 40, bölmələr arası 48 */
+  .pp { @apply mx-auto flex max-w-[1440px] flex-col gap-12 px-10 pt-10 pb-20
+               max-[900px]:gap-9 max-[900px]:px-5 max-[900px]:pt-7 max-[900px]:pb-14; }
 
   /* breadcrumb */
-  .pp-crumbs{display:flex;gap:8px;align-items:center;font-size:14px}
-  .pp-crumbs a{color:var(--text-muted)}
-  .pp-crumbs a:hover{color:var(--text-secondary)}
-  .pp-crumbs .sep{color:rgba(0,0,0,.3)}
-  .pp-crumbs .cur{font-weight:500;color:#111}
+  .pp-crumbs       { @apply flex items-center gap-2 text-sm; }
+  .pp-crumbs a     { @apply text-black/50 hover:text-black/70; }
+  .pp-crumbs .sep  { @apply text-black/30; }
+  .pp-crumbs .cur  { @apply font-medium text-ink; }
 
-  /* ---- bölmə başlığı (eyebrow + h2) ---- */
-  .pp-sechead{display:flex;flex-direction:column;gap:16px}
-  .pp-eyebrow{display:flex;align-items:center;gap:12px}
-  .pp-eyebrow .line{width:32px;height:2px;background:var(--yellow)}
-  .pp-eyebrow p{font-weight:500;font-size:14px;letter-spacing:.84px;color:rgba(0,0,0,.55);text-transform:uppercase}
-  .pp-sechead h2{font-weight:600;font-size:32px;color:#111}
+  /* bölmə başlığı */
+  .pp-sechead      { @apply flex flex-col gap-4; }
+  .pp-eyebrow      { @apply flex items-center gap-3; }
+  .pp-eyebrow .line{ @apply h-0.5 w-8 bg-yellow; }
+  .pp-eyebrow p    { @apply text-sm font-medium tracking-[.84px] text-black/55 uppercase; }
+  .pp-sechead h2   { @apply text-[32px] font-semibold text-ink max-[900px]:text-[24px]; }
 
-  /* ---- header: sol sütun + rezervasiya kartı ---- */
-  .pp-head{display:flex;gap:48px;align-items:flex-start}
-  .pp-head-l{flex:1;min-width:0;display:flex;flex-direction:column;gap:48px}
-  .pp-id{display:flex;gap:24px;align-items:flex-start}
+  /* header: sol sütun + rezervasiya kartı */
+  .pp-head    { @apply flex items-start gap-12 max-[1200px]:flex-col max-[1200px]:gap-8; }
+  .pp-head-l  { @apply flex min-w-0 flex-1 flex-col gap-12; }
+  .pp-id      { @apply flex items-start gap-6 max-[640px]:flex-col; }
 
-  .pp-ava{position:relative;width:238px;height:226px;flex-shrink:0;background:#f5fbff;border-radius:16px;overflow:hidden}
-  .pp-ava .ring{position:absolute;left:47px;top:41px;width:144px;height:144px;border-radius:50%;background:#fff;border:4.5px solid var(--yellow);display:flex;align-items:center;justify-content:center}
-  .pp-ava .ring img{width:60px;height:60px;object-fit:cover}
-  .pp-badge{position:absolute;left:6px;top:6px;display:flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:4px 8px;font-size:14px;color:#000;white-space:nowrap}
-  .pp-badge img{width:20px;height:20px}
-  .pp-fav{position:absolute;right:4px;top:4px;width:36px;height:36px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .2s}
-  .pp-fav img{width:20px;height:20px}
-  .pp-fav:hover{transform:scale(1.08)}
+  .pp-ava           { @apply relative h-[226px] w-[238px] shrink-0 overflow-hidden rounded-2xl bg-[#f5fbff]; }
+  .pp-ava .ring     { @apply absolute top-[41px] left-[47px] flex size-36 items-center justify-center rounded-full border-[4.5px] border-yellow bg-white; }
+  .pp-ava .ring img { @apply size-[60px] object-cover; }
+  .pp-badge         { @apply absolute top-1.5 left-1.5 flex items-center gap-1 rounded-ds border border-black/10 bg-white px-2 py-1 text-sm whitespace-nowrap text-black; }
+  .pp-badge img     { @apply size-5; }
+  .pp-fav           { @apply absolute top-1 right-1 flex size-9 cursor-pointer items-center justify-center rounded-full bg-white transition-transform duration-200 hover:scale-[1.08]; }
+  .pp-fav img       { @apply size-5; }
 
-  .pp-id-r{display:flex;flex-direction:column;gap:16px}
-  .pp-verified{align-self:flex-start;display:flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:4px 8px;font-size:14px;color:var(--green);white-space:nowrap}
-  .pp-verified img{width:20px;height:20px}
-  .pp-name{display:flex;flex-direction:column;gap:12px}
-  .pp-name h1{font-weight:600;font-size:36px;line-height:1.05;color:#111}
-  .pp-name .role{font-weight:500;font-size:20px;color:var(--text-muted);margin-top:8px}
-  .pp-rate{display:flex;align-items:center;gap:4px}
-  .pp-stars{display:flex;gap:4px}
-  .pp-stars img{width:16px;height:16px}
-  .pp-rate .v{font-weight:600;font-size:14px;color:#000}
-  .pp-rate .r{font-weight:500;font-size:14px;color:var(--text-faint)}
-  .pp-meta{font-weight:500;font-size:16px;color:var(--text-muted)}
-  .pp-meta .dot{padding:0 14px;color:rgba(0,0,0,.3)}
+  .pp-id-r        { @apply flex flex-col gap-4; }
+  .pp-verified    { @apply flex items-center gap-1 self-start rounded-ds border border-black/10 bg-white px-2 py-1 text-sm whitespace-nowrap text-green; }
+  .pp-verified img{ @apply size-5; }
+  .pp-name        { @apply flex flex-col gap-3; }
+  .pp-name h1     { @apply text-4xl leading-[1.05] font-semibold text-ink max-[900px]:text-[28px]; }
+  .pp-name .role  { @apply mt-2 text-xl font-medium text-black/50; }
+  .pp-rate        { @apply flex items-center gap-1; }
+  .pp-stars       { @apply flex gap-1; }
+  .pp-stars img   { @apply size-4; }
+  .pp-rate .v     { @apply text-sm font-semibold text-black; }
+  .pp-rate .r     { @apply text-sm font-medium text-black/40; }
+  .pp-meta        { @apply text-base font-medium text-black/50; }
+  .pp-meta .dot   { @apply px-3.5 text-black/30 max-[640px]:px-2; }
 
-  /* ---- haqqında ---- */
-  .pp-about{display:flex;flex-direction:column;gap:24px}
-  .pp-about .txt{font-size:16px;line-height:1.5;color:var(--text-secondary)}
-  .pp-tags{display:flex;flex-wrap:wrap;gap:8px}
-  .pp-tag{padding:6px 12px;background:var(--gray-soft);border-radius:var(--radius);font-size:14px;color:#111}
+  /* haqqında */
+  .pp-about      { @apply flex flex-col gap-6; }
+  .pp-about .txt { @apply text-base leading-[1.5] text-black/70; }
+  .pp-tags       { @apply flex flex-wrap gap-2; }
+  .pp-tag        { @apply rounded-ds bg-gray-soft px-3 py-1.5 text-sm text-ink; }
 
-  /* ---- rezervasiya kartı ---- */
-  .pp-book{width:360px;flex-shrink:0;background:#f5f7ff;padding:24px;display:flex;flex-direction:column;gap:16px}
-  .pp-book .ph{display:flex;flex-direction:column;gap:2px}
-  .pp-book .ph .lbl{font-size:14px;color:var(--text-muted)}
-  .pp-book .prow{display:flex;align-items:baseline;gap:8px}
-  .pp-book .prow .now{font-weight:600;font-size:32px;color:#111}
-  .pp-book .prow .sub{font-size:14px;color:var(--text-faint)}
-  .pp-btn{display:flex;align-items:center;justify-content:center;padding:16px 24px;font-weight:500;font-size:16px;color:#111;cursor:pointer;transition:filter .2s,border-color .2s}
-  .pp-btn.y{background:var(--yellow)}
-  .pp-btn.y:hover{filter:brightness(.95)}
-  .pp-btn.w{background:#fff;border:1px solid rgba(0,0,0,.2)}
-  .pp-btn.w:hover{border-color:#111}
-  .pp-book .div{height:1px;background:var(--border)}
-  .pp-stat{display:flex;align-items:center;justify-content:space-between;font-size:14px}
-  .pp-stat .k{color:var(--text-muted)}
-  .pp-stat .v{font-weight:500;color:#111}
-  .pp-free{display:flex;align-items:center;gap:8px;font-weight:600;font-size:12px;color:#229653}
-  .pp-free .d{width:8px;height:8px;border-radius:50%;background:#229653;flex-shrink:0}
+  /* rezervasiya kartı */
+  .pp-book              { @apply flex w-[360px] shrink-0 flex-col gap-4 bg-[#f5f7ff] p-6 max-[1200px]:w-full; }
+  .pp-book .ph          { @apply flex flex-col gap-0.5; }
+  .pp-book .ph .lbl     { @apply text-sm text-black/50; }
+  .pp-book .prow        { @apply flex items-baseline gap-2; }
+  .pp-book .prow .now   { @apply text-[32px] font-semibold text-ink; }
+  .pp-book .prow .sub   { @apply text-sm text-black/40; }
+  .pp-btn               { @apply flex cursor-pointer items-center justify-center px-6 py-4 text-base font-medium text-ink transition-[filter,border-color] duration-200; }
+  .pp-btn.y             { @apply bg-yellow hover:brightness-95; }
+  .pp-btn.w             { @apply border border-black/20 bg-white hover:border-ink; }
+  .pp-book .div         { @apply h-px bg-black/10; }
+  .pp-stat              { @apply flex items-center justify-between text-sm; }
+  .pp-stat .k           { @apply text-black/50; }
+  .pp-stat .v           { @apply font-medium text-ink; }
+  .pp-free              { @apply flex items-center gap-2 text-xs font-semibold text-[#229653]; }
+  .pp-free .d           { @apply size-2 shrink-0 rounded-full bg-[#229653]; }
 
-  /* ---- portfolio ---- */
-  .pp-sec{display:flex;flex-direction:column;gap:24px}
-  .pp-grid{display:flex;flex-direction:column;gap:16px}
-  .pp-grow{display:flex;gap:16px}
-  .pp-tile{position:relative;flex:1;min-width:0;height:230px;border-radius:var(--radius);overflow:hidden}
-  .pp-tile>img{width:100%;height:100%;object-fit:cover;transition:transform .5s ease}
-  .pp-tile:hover>img{transform:scale(1.04)}
-  .pp-tile .lb{position:absolute;left:12px;top:189px;background:rgba(255,255,255,.95);border-radius:var(--radius);padding:6px 10px;font-weight:600;font-size:12px;color:#111;white-space:nowrap}
-  .pp-tile.more{display:flex;align-items:center;justify-content:center}
-  .pp-tile.more .ov{position:absolute;inset:0;background:rgba(0,0,0,.55);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px}
-  .pp-tile.more .ov b{font-weight:700;font-size:22px;color:#fff}
-  .pp-tile.more .ov span{font-weight:500;font-size:13px;color:rgba(255,255,255,.85)}
+  /* portfolio */
+  .pp-sec              { @apply flex flex-col gap-6; }
+  .pp-grid             { @apply flex flex-col gap-4; }
+  .pp-grow             { @apply flex gap-4 max-[900px]:flex-wrap; }
+  .pp-tile             { @apply relative h-[230px] min-w-0 flex-1 overflow-hidden rounded-ds max-[900px]:flex-[1_1_calc(50%-8px)] max-[640px]:flex-[1_1_100%]; }
+  .pp-tile > img       { @apply size-full object-cover transition-transform duration-500; }
+  .pp-tile:hover > img { @apply scale-[1.04]; }
+  .pp-tile .lb         { @apply absolute top-[189px] left-3 rounded-ds bg-white/95 px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap text-ink; }
+  .pp-tile.more        { @apply flex items-center justify-center; }
+  .pp-tile.more .ov    { @apply absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-black/55; }
+  .pp-tile.more .ov b  { @apply text-[22px] font-bold text-white; }
+  .pp-tile.more .ov span { @apply text-[13px] font-medium text-white/85; }
 
-  /* ---- xidmətlər ---- */
-  .pp-svc-list{display:flex;flex-direction:column}
-  .pp-svc{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 0;cursor:pointer}
-  .pp-svc + .pp-svc{border-top:1px solid var(--border)}
-  .pp-svc .l{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
-  .pp-svc .t{font-weight:500;font-size:16px;color:#111}
-  .pp-svc .s{font-size:14px;color:var(--text-muted)}
-  .pp-svc .rr{display:flex;align-items:center;gap:16px;font-size:16px;white-space:nowrap}
-  .pp-svc .pr{font-weight:500;color:#111}
-  .pp-svc .ar{color:var(--text-muted);transition:transform .25s ease}
-  .pp-svc:hover .ar{transform:translateX(4px)}
+  /* xidmətlər */
+  .pp-svc-list        { @apply flex flex-col; }
+  .pp-svc             { @apply flex cursor-pointer items-center justify-between gap-4 py-4; }
+  .pp-svc + .pp-svc   { @apply border-t border-black/10; }
+  .pp-svc .l          { @apply flex min-w-0 flex-1 flex-col gap-1; }
+  .pp-svc .t          { @apply text-base font-medium text-ink; }
+  .pp-svc .s          { @apply text-sm text-black/50; }
+  .pp-svc .rr         { @apply flex items-center gap-4 text-base whitespace-nowrap; }
+  .pp-svc .pr         { @apply font-medium text-ink; }
+  .pp-svc .ar         { @apply text-black/50 transition-transform duration-[250ms]; }
+  .pp-svc:hover .ar   { @apply translate-x-1; }
 
-  /* ---- rəylər ---- */
-  .pp-score{display:flex;align-items:center;gap:6px}
-  .pp-score .n{font-weight:600;font-size:40px;color:#111}
-  .pp-score .c{display:flex;flex-direction:column;gap:6px}
-  .pp-score .ss{display:flex;gap:2px}
-  .pp-score .ss img{width:16px;height:16px}
-  .pp-score .cnt{font-size:13px;color:#1a1a1a}
-  .pp-revs{display:flex;gap:16px;align-items:stretch}
-  .pp-rev{flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:20px}
-  .pp-rev .hd{display:flex;align-items:center;gap:12px}
-  .pp-rev .av{width:40px;height:40px;flex-shrink:0;border-radius:50%;background:var(--gray-soft);display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px;color:#111}
-  .pp-rev .nm{display:flex;flex-direction:column;gap:2px}
-  .pp-rev .nm .n{font-weight:500;font-size:14px;color:#111}
-  .pp-rev .nm .d{font-size:12px;color:var(--text-faint)}
-  /* rəy ulduzları — 4.9 xalının yanındaki ic-star.svg ilə eyni ikon */
-  .pp-rev .st{display:flex;gap:2px}
-  .pp-rev .st img{width:16px;height:16px}
-  .pp-rev .tx{font-size:14px;line-height:1.5;color:var(--text-secondary)}
+  /* rəylər */
+  .pp-score        { @apply flex items-center gap-1.5; }
+  .pp-score .n     { @apply text-[40px] font-semibold text-ink; }
+  .pp-score .c     { @apply flex flex-col gap-1.5; }
+  .pp-score .ss    { @apply flex gap-0.5; }
+  .pp-score .ss img{ @apply size-4; }
+  .pp-score .cnt   { @apply text-[13px] text-[#1a1a1a]; }
+  .pp-revs         { @apply flex items-stretch gap-4 max-[900px]:flex-col; }
+  .pp-rev          { @apply flex min-w-0 flex-1 flex-col gap-3 rounded-ds border border-black/10 bg-white p-5; }
+  .pp-rev .hd      { @apply flex items-center gap-3; }
+  .pp-rev .av      { @apply flex size-10 shrink-0 items-center justify-center rounded-full bg-gray-soft text-base font-semibold text-ink; }
+  .pp-rev .nm      { @apply flex flex-col gap-0.5; }
+  .pp-rev .nm .n   { @apply text-sm font-medium text-ink; }
+  .pp-rev .nm .d   { @apply text-xs text-black/40; }
+  .pp-rev .st      { @apply flex gap-0.5; }
+  .pp-rev .st img  { @apply size-4; }
+  .pp-rev .tx      { @apply text-sm leading-[1.5] text-black/70; }
+
   /* .sec-more flex sütununda stretch olur — Figma-da yalnız mətn eni qədərdir */
-  .pp-sec .sec-more{align-self:flex-start}
-
-  /* responsiv */
-  @media(max-width:1200px){
-    .pp-head{flex-direction:column;gap:32px}
-    .pp-book{width:100%}
-  }
-  @media(max-width:900px){
-    .pp{padding:28px 20px 56px;gap:36px}
-    .pp-grow{flex-wrap:wrap}
-    .pp-tile{flex:1 1 calc(50% - 8px)}
-    .pp-revs{flex-direction:column}
-    .pp-name h1{font-size:28px}
-    .pp-sechead h2{font-size:24px}
-  }
-  @media(max-width:640px){
-    .pp-id{flex-direction:column}
-    .pp-tile{flex:1 1 100%}
-    .pp-meta .dot{padding:0 8px}
-  }
+  .pp-sec .sec-more { @apply self-start; }
+}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 <body>
 
