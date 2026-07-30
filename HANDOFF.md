@@ -448,9 +448,13 @@ animasiya/responsive bölmələri çevriləndə bunlar da köçürüləcək.
 
 | | |
 |---|---|
-| ✅ Tam çevrildi (köhnə `<style>` yox) | **9**: `addim1`, `addim3`, `login`, `register`, `cart`, `search`, `calculator`, `blog`, `sell` |
+| ✅ Tam çevrildi (köhnə `<style>` yox) | **10**: `addim1`, `addim3`, `login`, `register`, `cart`, `search`, `calculator`, `blog`, `sell`, `biznes-qeydiyyat` |
 | 🟡 Tailwind qoşuldu, öz CSS-i qalır | **3**: `index` (10 sətir), `catalog` (134), `product` (270) |
-| ⏳ Toxunulmadı | **11**: biznes kabineti ×7, `biznes-qeydiyyat` (113), `calculator-detailed` (112), `specialist` (138), `specialists` (152) |
+| ⏳ Toxunulmadı | **10**: biznes kabineti ×7 (128–228), `calculator-detailed` (112), `specialist` (138), `specialists` (152) |
+
+`biznes-qeydiyyat.html`-də çevirmə ilə yanaşı `addim1`/`addim3`-dəki eyni qüsur da düzəldildi:
+sabit `width:1440px` + `min-width:1440px`, `.auth-page{position:absolute;height:1160px}` və
+45 sətir ölü navbar CSS götürüldü, normal axına keçirildi. Dizaynda footer yoxdur — belə də saxlanıldı.
 
 > ⚠️ **biznes-profil qrupu qrup kimi çevrilə bilməz.** Yeddi səhifə oxşar görünür, amma
 > CSS blokları ayrı-ayrı qurulub — `sirket` ilə `elaqe` arasında 295 sətir fərq var.
