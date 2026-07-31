@@ -1,0 +1,44 @@
+<?php
+
+// Shared footer strings (EN).
+
+return [
+    'go_products' => 'Go to products',
+
+    'col_products' => 'Products',
+    'p_tiles' => 'Tiles & metlakh',
+    'p_paint' => 'Paint & enamel',
+    'p_plumbing' => 'Plumbing',
+    'p_insulation' => 'Insulation & heating',
+    'p_all' => 'All categories',
+
+    'col_specialists' => 'Specialists',
+    's_find' => 'Find a master',
+    's_top' => 'Top-rated masters',
+    's_all' => 'See all specialists',
+
+    'col_join' => 'Join ARCHİ',
+    'j_seller' => 'Become a seller',
+    'j_master' => 'Become a master',
+    'j_partner' => 'Partnership program',
+    'j_business' => 'Business cooperation',
+
+    'col_company' => 'Company & support',
+    'c_about' => 'About us',
+    'c_consult' => 'Free consultation',
+    'c_articles' => 'Articles',
+    'c_help' => 'Help center',
+    'c_contact' => 'Contact',
+
+    'news_title' => 'Stay updated with the world of renovation',
+    'news_sub' => 'Be the first to know about discounts, new products, useful articles and news.',
+    'news_email' => 'Your e-mail',
+    'news_submit' => 'Subscribe',
+
+    'legal_terms' => 'Terms of use',
+    'legal_privacy' => 'Privacy policy',
+    'legal_delivery' => 'Delivery & returns',
+    'legal_cookie' => 'Cookie policy',
+    'legal_sitemap' => 'Sitemap',
+    'copy' => '©2026 ARCHI — All rights reserved.',
+];

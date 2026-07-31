@@ -1,0 +1,91 @@
+{{--
+  Product card (.pcard). Ported from the `prodCard(p)` JS template in the old
+  index.html; catalog/search/product reuse the same markup.
+
+  Example:
+    <x-pcard
+        :cat="__('home.cards.tiles')"
+        :name="__('home.cards.tile_60')"
+        now="23.90 ₼"
+        old="45.99 ₼"
+        off="-48%"
+        rate="4.6"
+        :reviews="__('home.cards.reviews_1876')"
+        img="/assets/prod-kafel.png" />
+
+    // user's own listing (yellow badge)
+    <x-pcard :badges="[['label' => __('common.your_listing'), 'mine' => true], ['label' => '4.6']]" />
+
+  Props:
+    href     — card link (default: route('product'))
+    img      — image path, /assets/... (default: /assets/prod-kafel.png)
+    cat      — category line (rendered uppercase)
+    name     — product name
+    now      — current price
+    old      — previous price (null → hidden)
+    off      — discount badge, e.g. "-48%" (null → hidden)
+    rate     — rating text
+    reviews  — review count text
+    badges   — array of badges; each item is a string or
+               ['label' => '...', 'mine' => true] (yellow background).
+               null → defaults to common.badge_new + common.badge_in_stock
+    dots     — number of carousel dots (0 → hidden, default 3)
+    dot      — index of the active dot (default 0)
+    cursor   — text inside the round hover cursor (default __('common.go_to_product'))
+--}}
+@props([
+    'href' => null,
+    'img' => '/assets/prod-kafel.png',
+    'cat' => null,
+    'name' => null,
+    'now' => null,
+    'old' => null,
+    'off' => null,
+    'rate' => null,
+    'reviews' => null,
+    'badges' => null,
+    'dots' => 3,
+    'dot' => 0,
+    'cursor' => null,
+])
+@php
+    $badgeList = $badges ?? [
+        ['label' => __('common.badge_new')],
+        ['label' => __('common.badge_in_stock')],
+    ];
+@endphp
+<a {{ $attributes->merge(['class' => 'pcard', 'href' => $href ?? route('product')]) }}>
+  <div class="prod-cursor"><span>{{ $cursor ?? __('common.go_to_product') }}</span></div>
+  <div class="ph">
+    <img class="prod" src="{{ $img }}" alt="">
+    @if (! empty($badgeList))
+      <div class="badges">
+        @foreach ($badgeList as $b)
+          @php $label = is_array($b) ? ($b['label'] ?? '') : $b; @endphp
+          <span @class(['b', 'mine' => is_array($b) && ! empty($b['mine'])])>{{ $label }}</span>
+        @endforeach
+      </div>
+    @endif
+    <div class="heart"><img src="/assets/ic-heart2.svg" alt=""></div>
+    @if ($dots > 0)
+      <div class="dots">
+        @for ($i = 0; $i < $dots; $i++)
+          <i @class(['on' => $i === (int) $dot])></i>
+        @endfor
+      </div>
+    @endif
+  </div>
+  @if ($rate !== null)
+    <div class="rating"><img src="/assets/ic-star.svg" alt=""><p>{{ $rate }} <span>{{ $reviews }}</span></p></div>
+  @endif
+  @if ($cat !== null)<div class="cat">{{ $cat }}</div>@endif
+  @if ($name !== null)<div class="name">{{ $name }}</div>@endif
+  @if ($now !== null)
+    <div class="price">
+      <span class="now">{{ $now }}</span>
+      @if ($old)<span class="old">{{ $old }}</span>@endif
+      @if ($off)<span class="off">{{ $off }}</span>@endif
+    </div>
+  @endif
+  {{ $slot }}
+</a>

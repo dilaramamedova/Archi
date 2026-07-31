@@ -1,9 +1,481 @@
-@import 'tailwindcss';
+/* Single Tailwind entry point (Vite). File order matters — CSS requires every
+   @import to come first, so the 23 page files are imported before @theme/@layer.
+   Page agents never edit this file, only resources/css/pages/{slug}.css.
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
+   Cascade note: page CSS is imported BEFORE the shared rules below, so inside the
+   same layer and at equal specificity the shared rule wins. A page overriding a
+   shared component must therefore use higher specificity (e.g. `.sr .grid4`). */
 
+@import "tailwindcss";
+
+@import "./pages/home.css";
+@import "./pages/catalog.css";
+@import "./pages/product.css";
+@import "./pages/search.css";
+@import "./pages/specialists.css";
+@import "./pages/specialist.css";
+@import "./pages/blog.css";
+@import "./pages/sell.css";
+@import "./pages/login.css";
+@import "./pages/register.css";
+@import "./pages/cart.css";
+@import "./pages/calculator.css";
+@import "./pages/calculator-detailed.css";
+@import "./pages/business-register.css";
+@import "./pages/business-onboarding-step1.css";
+@import "./pages/business-onboarding-step3.css";
+@import "./pages/business-profile.css";
+@import "./pages/business-profile-company.css";
+@import "./pages/business-profile-contact.css";
+@import "./pages/business-profile-products.css";
+@import "./pages/business-profile-showrooms.css";
+@import "./pages/business-profile-notifications.css";
+@import "./pages/business-profile-security.css";
+
+@source "../views";
+@source "../js";
+
+/* Design tokens, mirrored from the old project's archi-tw.js (in sync with the
+   Figma "archi 2" collection). Translucent colors are NOT separate tokens — they
+   use the opacity modifier, e.g. rgba(0,0,0,.5) -> text-black/50,
+   rgba(0,0,0,.1) -> border-black/10. The 4/8/12/... spacing scale already matches
+   Tailwind's default scale. */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+  /* fonts */
+  --font-sans: 'Inter', sans-serif;
+  --font-b2b: 'Manrope', sans-serif;
+
+  /* brand */
+  --color-yellow: #fdfe00;
+  --color-yellow-line: #ffe600;
+  --color-sel-bg: #fffde0;
+
+  /* base — the ARCHI "black" is #111111, not #000 */
+  --color-ink: #111111;
+  --color-off-white: #efefef;
+
+  /* state */
+  --color-green: #00a613;
+  --color-red: #d3524c;
+  --color-star: #ffe600;
+
+  /* gray backgrounds */
+  --color-gray-soft: #f3f5f7;
+  --color-gray-soft2: #f5f7f9;
+
+  /* radius — Figma DS: 4 / 8 / pill */
+  --radius-ds: 4px;
+  --radius-ds-md: 8px;
+  --radius-pill: 100px;
+}
+
+/* The old project shipped its own reset and did NOT load preflight. Preflight is
+   active now, so the rules below restore the places where it differs from the old
+   behaviour and would otherwise shift pixels. */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: #000;
+    background: #fff;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a {
+    text-decoration: none;
+    color: inherit;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+  }
+
+  /* Preflight v4 sets `cursor: default` on buttons — the old reset used `pointer` */
+  button {
+    font: inherit;
+    cursor: pointer;
+    border: none;
+    background: none;
+  }
+
+  /* Preflight resets heading size/weight to `inherit`; the old project kept the
+     browser UA values, which `revert` restores. */
+  h1, h2, h3, h4, h5, h6 {
+    font-size: revert;
+    font-weight: revert;
+  }
+
+  /* Preflight strips the UA border/background/radius from form controls; the old
+     project kept them (e.g. the footer subscribe input was a white box). */
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+    border: revert;
+    background-color: revert;
+    border-radius: revert;
+  }
+
+  /* keyboard focus (a11y) — from the old archi.css */
+  :focus-visible {
+    outline: 2px solid var(--color-ink);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+}
+
+/* Shared components. Card rules come from archi-tw.js as-is; navbar/footer/mega-menu
+   rules come from archi.css converted to @apply with the original class names kept,
+   so the markup and JS keep working untouched.
+
+   Trap: for line-height:normal use `leading-[normal]` — `leading-normal` is 1.5. */
+@layer components {
+
+  /* ==========================================================================
+     SHELL (used on every page)
+     ========================================================================== */
+  .wrap  { @apply mx-auto max-w-[1440px] px-7; }
+  .inner { @apply mx-auto max-w-[1384px]; }
+
+  /* ==========================================================================
+     NAVBAR — row 1
+     ========================================================================== */
+  .topbar   { @apply sticky top-0 z-[60] w-full bg-white; }
+  .nav-row1 { @apply relative z-[2] flex h-20 w-full items-center gap-12 bg-white px-7; }
+  .logo     { @apply h-[50px] w-auto shrink-0; }
+  .search   { @apply relative flex flex-1 items-center gap-2 bg-gray-soft px-4 py-3; }
+  .search img   { @apply size-5; }
+  .search input { @apply flex-1 border-none bg-transparent font-sans text-base text-black outline-none placeholder:text-black/50; }
+
+  /* ---- search autocomplete (1:1 with Figma 1105:17790) ---- */
+  .search-overlay    { @apply invisible fixed inset-0 z-[1] bg-black/35 opacity-0;
+                       transition: opacity .2s ease; }
+  .search-overlay.on { @apply visible opacity-100; }
+  .search-dropdown   { @apply invisible absolute top-[calc(100%+9px)] left-0 z-[80] w-full min-w-[640px]
+                              -translate-y-1.5 overflow-hidden rounded-md bg-white opacity-0
+                              shadow-[0_12px_40px_rgba(0,0,0,.18)];
+                       transition: opacity .2s ease, transform .2s ease, visibility .2s; }
+  .search-dropdown.on{ @apply visible translate-y-0 opacity-100; }
+  .sd-head           { @apply px-[18px] pt-3.5 pb-2 text-[11px] font-semibold tracking-[.5px] text-black/45 uppercase; }
+  .sd-sug            { @apply flex cursor-pointer items-center gap-2.5 px-[18px] py-[9px] text-sm text-ink/60 hover:bg-gray-soft2; }
+  .sd-sug img        { @apply size-[15px] opacity-45; }
+  .sd-sug b          { @apply font-bold text-ink; }
+  .sd-div            { @apply h-px bg-black/8; }
+  .sd-prod           { @apply flex cursor-pointer items-center gap-3 px-[18px] py-2 hover:bg-gray-soft2; }
+  .sd-prod .im       { @apply relative size-[42px] shrink-0 overflow-hidden rounded-ds bg-gray-soft; }
+  .sd-prod .im img   { @apply absolute inset-0 size-full object-cover; }
+  .sd-prod .tx       { @apply min-w-0 flex-1; }
+  .sd-prod .t1       { @apply overflow-hidden text-sm font-semibold text-ellipsis whitespace-nowrap text-ink; }
+  .sd-prod .t2       { @apply mt-px text-xs text-black/45; }
+  .sd-prod .pr       { @apply text-sm font-bold whitespace-nowrap text-ink; }
+  .sd-master         { @apply flex cursor-pointer items-center gap-3 px-[18px] py-2 hover:bg-gray-soft2; }
+  .sd-master .av     { @apply flex size-10 shrink-0 items-center justify-center rounded-full bg-gray-soft2 text-[13px] font-bold text-ink; }
+  .sd-master .tx     { @apply min-w-0 flex-1; }
+  .sd-master .t1     { @apply text-sm font-semibold text-ink; }
+  .sd-master .t2     { @apply mt-px text-xs text-black/45; }
+  .sd-master .rt     { @apply flex items-center gap-1 text-[13px] font-semibold text-ink; }
+  .sd-master .rt .st { @apply font-normal text-star; }
+  .sd-all            { @apply block cursor-pointer bg-sel-bg p-[13px] text-center text-sm font-bold text-ink hover:brightness-[.98]; }
+
+  /* ---- right block: language · favorites · cart · sign in ---- */
+  .nav-menu        { @apply flex shrink-0 items-center gap-6; }
+  .nav-icons       { @apply flex items-center gap-6; }
+  .nav-icons > img { @apply size-6; }
+
+  .lang          { @apply relative flex cursor-pointer items-center gap-1 font-sans text-base font-medium select-none; }
+  .lang img      { @apply size-4 transition-transform duration-[250ms]; }
+  .lang.open img { @apply rotate-180; }
+  .lang-menu     { @apply invisible absolute top-[calc(100%+10px)] right-0 z-[80] min-w-24 -translate-y-2
+                          list-none border border-black/12 bg-white p-1.5 opacity-0
+                          shadow-[0_10px_30px_rgba(0,0,0,.12)];
+                   transition: .2s ease; }
+  .lang.open .lang-menu  { @apply visible translate-y-0 opacity-100; }
+  .lang-menu a           { @apply block rounded-md px-3.5 py-2.5 text-[15px] font-medium transition-colors duration-150 hover:bg-gray-soft; }
+  .lang-menu li.active a { @apply bg-yellow; }
+
+  .nav-cart               { @apply relative inline-flex items-center justify-center; }
+  .nav-cart > img         { @apply block size-6 transition-transform duration-200; }
+  .nav-cart:hover > img   { @apply scale-[1.15] cursor-pointer; }
+  .nav-cart:focus-visible { @apply outline-offset-4; }
+  .cart-badge             { @apply pointer-events-none absolute -top-1.5 -right-2 hidden h-4 min-w-4 items-center
+                                   justify-center rounded-ds-md bg-yellow px-1 text-[10px] leading-none font-bold text-ink; }
+
+  .signin        { @apply flex items-center gap-6; }
+  .divider       { @apply h-7 w-px bg-black/20; }
+  .signin .txt   { @apply font-sans text-base font-medium text-ink; }
+  .btn-post      { @apply flex items-center gap-1 bg-ink px-6 py-3; }
+  .btn-post img  { @apply size-5; }
+  .btn-post span { @apply text-base text-off-white; }
+
+  /* ==========================================================================
+     NAVBAR — row 2
+     ========================================================================== */
+  .nav-row2        { @apply border-y border-black/50; }
+  .nav-row2 .inner { @apply flex h-15 max-w-none items-center justify-between; }
+  .nav-left        { @apply flex h-15 items-stretch; }
+  .nav-item        { @apply flex w-[150px] items-center justify-center gap-1 border-r border-black/50
+                            px-3 font-sans text-base font-medium whitespace-nowrap text-black; }
+  .nav-item img         { @apply size-4; }
+  .nav-item.catalog     { @apply gap-2 border-x border-black/40 font-sans; }
+  .nav-item.catalog img { @apply size-5; }
+  /* active nav link — inset shadow instead of a border so the layout never shifts */
+  .nav-item.active { @apply shadow-[inset_0_-2px_0_var(--color-ink)]; }
+  .nav-calc        { @apply flex h-15 items-center justify-center gap-2 border-x border-black/50 px-6
+                            font-sans text-base font-medium text-black/80; }
+  .nav-calc img    { @apply size-6 transition-transform duration-[400ms]; }
+
+  /* ==========================================================================
+     MEGA DROPDOWN
+     ========================================================================== */
+  .mega-panel      { @apply invisible absolute inset-x-0 top-full z-[55] -translate-y-1.5 border-t
+                            border-black/10 bg-white opacity-0 shadow-[0_2px_4px_rgba(0,0,0,.25)];
+                     transition: opacity .22s ease, transform .22s ease, visibility .22s; }
+  .mega-panel.open { @apply visible translate-y-0 opacity-100; }
+  .mega-inner      { @apply mx-auto max-w-[1440px] p-10; }
+  .nav-item .mcaret             { @apply transition-transform duration-[250ms]; }
+  .nav-item.mega-active .mcaret { @apply rotate-180; }
+  .nav-item.mega-active         { @apply bg-gray-soft text-black; }
+
+  /* catalog grid (3x2) */
+  .mega-cats         { @apply grid grid-cols-3 gap-10; }
+  .mcat              { @apply flex cursor-pointer flex-col; }
+  .mcat .top         { @apply flex items-center; }
+  .mcat .top img     { @apply size-10 shrink-0; }
+  .mcat .top p       { @apply text-base font-medium tracking-[.2px] text-ink uppercase; }
+  .mcat .desc        { @apply pl-10 text-base leading-[22px] text-black/50; }
+  .mcat:hover .top p { @apply text-black; }
+  .mcat:hover .desc  { @apply text-black/70; }
+
+  /* specialists layout */
+  .mega-spec               { @apply flex items-center gap-12; }
+  .mega-spec .grid         { @apply grid grid-cols-[repeat(2,minmax(0,400px))] gap-x-20 gap-y-10 border-r border-black/10 pr-12; }
+  .mega-spec .promo        { @apply flex items-center gap-6; }
+  .mega-spec .promo img.ph { @apply h-52 w-48 shrink-0 rounded-ds object-cover; }
+  .mega-spec .promo .card  { @apply flex w-[230px] flex-col justify-center gap-5; }
+  .mega-spec .promo .card p     { @apply text-xl leading-[1.25] text-black/70; }
+  .mega-spec .promo .card .pill { @apply self-start bg-yellow px-[18px] py-3 text-base font-medium text-ink
+                                         transition-all duration-[250ms] hover:brightness-[.92]; }
+
+  /* blog layout (3 cards) */
+  .mega-blog          { @apply flex items-stretch; }
+  .mblog              { @apply flex items-center gap-3 border-r border-black/10 px-6; }
+  .mblog:first-child  { @apply pl-0; }
+  .mblog:last-child   { @apply border-r-0 pr-0; }
+  .mblog img.ph       { @apply h-52 w-48 shrink-0 rounded-ds object-cover transition-transform duration-500; }
+  .mblog:hover img.ph { @apply scale-[1.04]; }
+  .mblog .info        { @apply flex h-52 w-[230px] flex-col justify-center gap-3; }
+  .mblog .info h4     { @apply text-2xl leading-[1.25] font-medium text-ink; }
+  .mblog .info .d     { @apply text-sm leading-[1.25] text-black/70; }
+  .mblog .info .read  { @apply flex items-center gap-2 self-start border-b-2 border-yellow-line pb-0.5
+                               text-base font-medium text-[#141414] uppercase transition-[gap] duration-[250ms]; }
+  .mblog .info .read img       { @apply size-6 transition-transform duration-[250ms]; }
+  .mblog .info .read:hover     { @apply gap-3; }
+  .mblog .info .read:hover img { @apply translate-x-1; }
+  .mblog .info .pill  { @apply self-start bg-yellow px-6 py-3 text-base text-ink transition-all duration-[250ms] hover:brightness-[.92]; }
+
+  /* ==========================================================================
+     FOOTER
+     ========================================================================== */
+  footer                 { @apply ml-[calc(50%-50vw)] w-screen bg-black text-white; }
+  footer .inner          { @apply px-7 pt-16 pb-12; }
+  .foot-top              { @apply flex items-end justify-between; }
+  .foot-logo             { @apply h-[58px] w-auto; }
+  .foot-products         { @apply flex items-center gap-2 px-8 py-4; }
+  .foot-products p       { @apply text-base text-white; }
+  .foot-products img     { @apply size-6 transition-transform duration-[250ms]; }
+  .foot-line             { @apply m-0 h-px bg-white/12; }
+  .foot-cols             { @apply flex justify-between py-16; }
+  .foot-col              { @apply w-[195px]; }
+  .foot-col h5           { @apply mb-6 text-[17px] font-medium text-white; }
+  .foot-col a            { @apply mb-4 block text-base text-[#8f8f8f]; }
+  .foot-col a:last-child { @apply mb-0; }
+  .foot-news             { @apply flex items-center justify-between py-10; }
+  .foot-news .l          { @apply flex items-center gap-6 pr-12; }
+  .foot-news .l img      { @apply size-12; }
+  .foot-news h4          { @apply max-w-[616px] text-[22px] leading-[1.25] font-medium text-white; }
+  .foot-news .l p        { @apply mt-1.5 text-base text-[#9a9a9a]; }
+  .foot-news .form       { @apply flex h-13 w-[531px] flex-row items-stretch gap-2; }
+  .foot-news .form .ip   { @apply flex flex-1 items-center border border-white/12 px-[21px] text-lg text-[#9a9a9a]; }
+  .foot-news .form .sub  { @apply flex items-center bg-yellow px-6 text-xl text-ink hover:brightness-[.92]; }
+  .foot-bottom           { @apply flex items-center justify-between pt-8; }
+  .foot-legal            { @apply flex flex-col gap-3; }
+  .foot-legal .links     { @apply flex items-center; }
+  .foot-legal .links a   { @apply text-base text-white; }
+  .foot-legal .links .sep{ @apply px-5 text-white/35; }
+  .foot-legal .copy      { @apply text-[15px] text-[#8f8f8f]; }
+  .foot-social           { @apply flex gap-3; }
+  .foot-social a         { @apply flex size-13 items-center justify-center rounded-[26px] border border-white/25; }
+  .foot-social a img     { @apply size-5; }
+
+  /* ==========================================================================
+     SHARED CARD COMPONENTS — copied verbatim from archi-tw.js.
+     Used on 5 pages: home · product · catalog · search · blog
+     ========================================================================== */
+
+  /* ---- grids ---- */
+  .grid4     { @apply flex gap-2; }
+  .blog-grid { @apply flex gap-2; }
+
+  /* ---- section head (home · catalog · specialists · blog) ---- */
+  .section   { @apply py-10; }
+  .sec-head  { @apply mb-5 flex items-end justify-between; }
+  .sec-tag   { @apply mb-4 flex items-center gap-2.5; }
+  .sec-tag .line { @apply h-0.5 w-8 bg-yellow; }
+  .sec-tag p { @apply text-sm font-medium text-black/55 uppercase; }
+  .sec-title { @apply text-[40px] font-semibold text-black; }
+  /* underline: yellow bar (::before) + dark bar wiping in on hover (::after) */
+  .sec-more  { @apply relative flex items-center gap-2.5 pb-1
+                      before:absolute before:inset-x-0 before:bottom-0 before:h-0.5 before:bg-yellow-line before:content-['']
+                      after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:origin-left after:scale-x-0 after:bg-ink/70 after:transition-transform after:duration-[350ms] after:content-['']
+                      hover:after:scale-x-100; }
+  .sec-more p   { @apply text-base font-medium text-[#141414] uppercase; }
+  .sec-more img { @apply size-6 transition-transform duration-[250ms]; }
+  .sec-more:hover img { @apply translate-x-1; }
+
+  /* ---- product card ---- */
+  .pcard { @apply relative flex flex-1 flex-col gap-3 overflow-hidden rounded-ds border border-black/10 bg-white p-3; }
+  .pcard .ph { @apply relative h-[316px] overflow-hidden bg-gray-soft; }
+  .pcard .ph > img.prod { @apply absolute top-1/2 left-1/2 h-[90%] w-auto -translate-x-1/2 -translate-y-1/2; }
+  .pcard .heart { @apply absolute top-0 right-0 flex rounded-[37px] bg-white p-2; }
+  .pcard .heart img { @apply size-5; }
+  .pcard .badges { @apply absolute top-0 left-0 flex gap-1; }
+  .pcard .badges .b { @apply rounded-ds border border-black/10 bg-white px-2 py-1 font-sans text-sm text-black; }
+  /* "your listing" badge — the old index.html applied this with an inline style */
+  .pcard .badges .b.mine { @apply border-yellow bg-yellow; }
+  .pcard .dots { @apply absolute bottom-1.5 left-1/2 flex -translate-x-1/2 items-center gap-0.5; }
+  .pcard .dots i { @apply size-1.5 rounded-[17px] bg-black/30; }
+  .pcard .dots i.on { @apply w-[18px] bg-black/15; }
+  .pcard .rating { @apply flex items-center gap-1; }
+  .pcard .rating img { @apply size-5; }
+  .pcard .rating p { @apply font-sans text-sm font-medium text-black; }
+  .pcard .rating p span { @apply text-black/30; }
+  .pcard .cat { @apply text-xs font-medium text-black/50 uppercase; }
+  .pcard .name { @apply text-base font-medium text-black; }
+  .pcard .price { @apply flex items-end gap-3; }
+  .pcard .price .now { @apply text-xl font-medium text-black; }
+  .pcard .price .old { @apply text-sm font-medium text-black/30 line-through; }
+  .pcard .price .off { @apply rounded-ds bg-red/20 px-1 py-0.5 font-sans text-[10px] font-bold text-red; }
+
+  /* ---- custom cursor (driven by resources/js/shared/cursor.js via `.hascur`/`.cursing`) ---- */
+  .hascur:hover { @apply cursor-none; }
+  .prod-cursor {
+    @apply pointer-events-none absolute top-0 left-0 z-40 flex size-[110px] items-center justify-center rounded-full border border-black bg-black p-2.5 text-center text-base leading-[1.25] font-medium text-white opacity-0;
+    transform: translate(-50%, -50%) scale(.4);
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .cursing .prod-cursor { @apply opacity-100; transform: translate(-50%, -50%) scale(1); }
+  .prod-cursor span { @apply block max-w-[84px]; }
+
+  /* ---- specialist card ----
+     Note: `.scard .name` and `.scard .meta` were unstyled in the old project too —
+     they stay unstyled here on purpose, for pixel parity. */
+  .scard { @apply flex flex-1 flex-col gap-5 border border-black/10 bg-white px-3 pt-3 pb-5; }
+  .scard .top { @apply relative flex h-[201px] flex-col items-center justify-center gap-3 overflow-hidden; }
+  .scard .heart { @apply absolute top-0 right-0 flex rounded-[37px] bg-white p-2; }
+  .scard .heart img { @apply size-5; }
+  .scard .badges { @apply absolute top-0 left-0 flex gap-1; }
+  .scard .badges .b { @apply flex items-center gap-1 rounded-ds border border-black/10 bg-white px-2 py-1 text-sm text-black; }
+  .scard .badges .b img { @apply size-5; }
+  .scard .badges .b.ok { @apply text-green; }
+  .scard .avatar { @apply mt-3.5 flex size-[60px] items-center justify-center rounded-[51px] bg-white; }
+  .scard .avatar img { @apply size-[30px]; }
+  .scard .role { @apply text-xl font-medium text-black; }
+  .scard .rating { @apply flex items-center gap-1; }
+  .scard .rating img { @apply size-5; }
+  .scard .rating p { @apply font-sans text-sm font-medium text-black; }
+
+  /* ---- blog card ----
+     flex-1 + .read{mt-auto} keeps the "read" link pinned to the bottom whether the
+     title wraps to one line or two. */
+  .post { @apply flex flex-1 flex-col border border-[#e4e2db] bg-white; }
+  .post .ph { @apply h-[228px] overflow-hidden bg-[#f5f4f0]; }
+  .post .ph img { @apply size-full object-cover; }
+  .post .body { @apply flex flex-1 flex-col gap-2 p-5; }
+  .post .time { @apply text-xs text-[#5c5c57]; }
+  .post h3 { @apply text-[21px] font-medium tracking-[-0.21px] text-[#141414]; }
+  .post .ex { @apply mb-2 line-clamp-2 text-sm leading-[1.25] text-[#5c5c57]; }
+  .post .read { @apply mt-auto self-start border-b-2 border-yellow-line pb-px text-sm font-semibold text-[#141414]; }
+
+  /* ==========================================================================
+     SHARED TRANSITIONS / HOVERS (from the old archi.css)
+     ========================================================================== */
+  .nav-item, .nav-calc, .btn-post, .sec-more, .foot-col a, .foot-products, .foot-social a {
+    @apply transition-all duration-[250ms];
+  }
+  .nav-item:hover, .nav-calc:hover { @apply bg-gray-soft text-black; }
+  .nav-calc:hover img              { @apply scale-110 rotate-[-8deg]; }
+  .btn-post:hover                  { @apply bg-black; }
+  .lang:hover, .signin .txt:hover  { @apply cursor-pointer opacity-60; }
+  .nav-icons > img:hover           { @apply scale-[1.15] cursor-pointer; }
+  .nav-icons > img:focus-visible, .lang:focus-visible { @apply outline-offset-4; }
+  .foot-col a:hover                { @apply translate-x-1 text-white; }
+  .foot-products:hover img         { @apply translate-x-1; }
+  .foot-social a:hover             { @apply border-yellow bg-yellow; }
+  .foot-social a:hover img         { @apply brightness-0; }
+
+  /* card hover — the card does not move, only the border darkens slightly */
+  .pcard, .scard, .post { @apply transition-[border-color] duration-[250ms]; }
+  .pcard:hover, .scard:hover, .post:hover { @apply border-black/18; }
+  .pcard .heart, .scard .heart { @apply transition-transform duration-200; }
+  .pcard:hover .heart, .scard:hover .heart { @apply scale-[1.12]; }
+
+  /* ==========================================================================
+     SCROLL REVEAL — JS adds the `.in` class (home · product · blog)
+     ========================================================================== */
+  .reveal    { @apply translate-y-7 opacity-0; transition: opacity .6s ease, transform .6s ease; }
+  .reveal.in { @apply translate-y-0 opacity-100; }
+  .reveal.d1 { transition-delay: .08s; }
+  .reveal.d2 { transition-delay: .16s; }
+  .reveal.d3 { transition-delay: .24s; }
+
+  /* ==========================================================================
+     RESPONSIVE (shared part only — page-specific rules stay in the page CSS)
+     ========================================================================== */
+  @media (max-width: 1200px) {
+    .grid4, .blog-grid    { @apply flex-wrap; }
+    .pcard, .scard, .post { @apply min-w-[260px]; }
+  }
+  @media (max-width: 900px) {
+    .search          { @apply hidden; }
+    .nav-row2 .inner { @apply overflow-x-auto; }
+    .nav-left        { @apply flex; }
+    .nav-item        { @apply w-auto shrink-0 px-4; }
+    .foot-cols       { @apply flex-wrap gap-8; }
+    .foot-news       { @apply flex-col items-start gap-6; }
+    .foot-news .form { @apply w-full; }
+    .mega-inner      { @apply p-6; }
+    .mega-cats       { @apply grid-cols-2; }
+  }
+  @media (max-width: 640px) {
+    .grid4, .blog-grid     { @apply flex-col; }
+    .sec-title             { @apply text-[28px]; }
+    .foot-bottom           { @apply flex-col items-start gap-5; }
+    .mega-cats             { @apply grid-cols-1; }
+    .mega-spec, .mega-blog { @apply flex-col gap-6; }
+    .mega-spec .grid       { @apply grid-cols-1 border-r-0 pr-0; }
+    .mblog                 { @apply border-r-0 px-0 py-3; }
+    .mega-spec .promo      { @apply flex-col items-start; }
+  }
+  /* disable the custom cursor on touch devices */
+  @media (hover: none) {
+    .hascur:hover { @apply cursor-auto; }
+    .prod-cursor  { display: none !important; }
+    .pcard:hover, .scard:hover, .post:hover { @apply translate-y-0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reveal { @apply translate-y-0 opacity-100; }
+  }
 }

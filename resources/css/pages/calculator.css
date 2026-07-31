@@ -1,0 +1,4 @@
+/* Page CSS for "calculator" — only this page's agent edits this file.
+   Write rules inside @layer components { }, use @apply, keep the class names from the
+   old HTML, and give higher specificity when overriding a shared component
+   (e.g. `.sr .grid4`). Never edit app.css. */
