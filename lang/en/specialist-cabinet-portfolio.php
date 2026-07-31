@@ -60,7 +60,6 @@ return [
         'picker_label' => 'Portfolio photos',
     ],
     'hint' => [
-        'icon' => '↕',
         'text' => 'Drag the photos to reorder them · JPG/PNG, max 10 MB',
     ],
 

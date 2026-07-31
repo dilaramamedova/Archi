@@ -16,18 +16,41 @@
 @layer components {
   .scr-page { @apply font-sans antialiased; }
 
+  /* ---- settings nav: this frame's row box (legacy delta) ----
+     The shared .cab-snav-item carries the BUSINESS geometry — py-[11px] plus the 20px
+     line box of text-sm, i.e. a 44px row. The specialist frame is tighter: Figma
+     831:12780/12782/12785/12788/12790/12793/12795 are all 240x39 with the label text box
+     at y=11 h=17, giving the 43px pitch the shared gap-1 already produces. Pinning the
+     line box to 17 and paying the 1px border out of the padding lands the row on 39.
+     The shared .cab-snav adds its 1px border on top of px-3 py-3.5, which makes the box
+     264x409 instead of Figma 831:12779's 264x407 and shifts every row 1px — taking the
+     border out of that padding too restores the 240-wide content box and puts the first
+     row 1+13=14 from the top. Identical to the delta specialist-cabinet.css and
+     specialist-cabinet-schedule.css carry (the business pages keep the shared value). */
+  .scr-page .cab-snav           { @apply px-[11px] py-[13px]; }
+  .scr-page .cab-snav-item      { @apply py-[10px]; }
+  .scr-page .cab-snav-item .lbl { @apply leading-[17px]; }
+
+  /* Progress block, Figma 831:12797 = 78px: 14 + row 15 + 8 + bar 6 + 8 + hint 13 + 14.
+     text-xs would give the row a 16px line box and `normal` gives the 11px hint 14px. */
+  .scr-page .cab-snav-prog .row  { @apply leading-[15px]; }
+  .scr-page .cab-snav-prog .hint { @apply leading-[13px]; }
+
   /* rating summary in the card head (831:12810) */
   .scr-summary     { @apply flex shrink-0 items-center gap-2 leading-[normal] whitespace-nowrap; }
   .scr-summary .st { @apply text-lg font-normal text-[#e1a13c]; }
   .scr-summary .v  { @apply text-[22px] font-bold text-ink; }
   .scr-summary .n  { @apply text-[13px] font-medium text-black/50; }
 
-  /* filter tabs (831:12814) — the active one is the dark pill */
+  /* filter tabs (831:12814) — the active one is the dark pill.
+     The tab is 32x(28 + label) in Figma, with the label 16px tall at x14/y8; the
+     1px border is inside that inset, so the padding is 13/7 and the label's line
+     box is pinned to 16px (`leading-[normal]` gave 15.73 -> a 34px tall tab). */
   .scr-tabs { @apply flex w-full flex-wrap items-start gap-2; }
-  .scr-tab  { @apply flex shrink-0 cursor-pointer items-start overflow-hidden rounded-ds border px-3.5 py-2; }
+  .scr-tab  { @apply flex shrink-0 cursor-pointer items-start overflow-hidden rounded-ds border px-[13px] py-[7px]; }
   .scr-tab[data-on="false"]        { @apply border-black/14 bg-white transition-colors duration-150 hover:border-black/25; }
   .scr-tab[data-on="true"]         { @apply border-black bg-ink; }
-  .scr-tab .lbl                    { @apply text-[13px] leading-[normal] whitespace-nowrap; }
+  .scr-tab .lbl                    { @apply text-[13px] leading-[16px] whitespace-nowrap; }
   .scr-tab[data-on="false"] .lbl   { @apply font-medium text-black/70; }
   .scr-tab[data-on="true"] .lbl    { @apply font-semibold text-white; }
   /* the active label is one weight heavier, so its width is reserved up front with a
@@ -45,7 +68,13 @@
   .scr-rev .who    { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-px overflow-hidden leading-[normal]; }
   .scr-rev .who .n { @apply max-w-full truncate text-sm font-semibold text-ink; }
   .scr-rev .who .d { @apply max-w-full truncate text-[11px] font-normal text-black/45; }
-  .scr-rev .st     { @apply shrink-0 text-[13px] leading-[normal] font-normal whitespace-nowrap text-[#e1a13c]; }
+  /* ★ is not in Inter, so it renders from the system fallback, whose advance
+     (10.84px at 13px) is narrower than the 13.6px Figma lays out — the five-glyph
+     run came out 54.2px wide instead of 68 (831:12830). The tracking restores the
+     pitch; the run is right-aligned, so the -1.4px nudge (the side-bearing
+     difference) puts the ink back on the frame's x. Do NOT copy this to
+     `.scr-summary .st` — that single 18px star already sits where the frame puts it. */
+  .scr-rev .st     { @apply -mr-[1.4px] shrink-0 text-[13px] leading-[normal] font-normal tracking-[2.77px] whitespace-nowrap text-[#e1a13c]; }
   .scr-rev .tx     { @apply w-full text-[13px] leading-[1.5] font-normal text-black/75; }
 
   /* the specialist's answer (831:12832) — white box with the yellow left rule */

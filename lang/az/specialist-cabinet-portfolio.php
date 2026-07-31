@@ -60,7 +60,6 @@ return [
         'picker_label' => 'Portfolio şəkilləri',
     ],
     'hint' => [
-        'icon' => '↕',
         'text' => 'Şəkilləri sürükləyərək sıralaya bilərsiniz · JPG/PNG, max 10 MB',
     ],
 

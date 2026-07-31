@@ -9,6 +9,28 @@
    page CSS, so a bare `.sc-input` would lose to `.ui-control-b2b` at equal specificity
    (ARCHITECTURE.md §6.3). */
 @layer components {
+  /* ---- settings nav: this frame's row box (legacy delta) ----
+     The shared .cab-snav-item carries the BUSINESS geometry — py-[11px] plus the 20px
+     line box of text-sm, i.e. a 44px row (the old biznes-profil-*.html shipped the same
+     11px padding). The specialist frame is tighter: Figma 831:11239/11241/11244/11247/
+     11249/11252/11254 are all h=39 with the label text box at y=11 h=17, and the 43px
+     pitch is 39 + the shared gap-1. Reserving the 1px transparent border inside gives
+     1+10+17+10+1 = 39. Scoped to .sc-page so the six business pages keep their 44px.
+
+     The container itself is off by the same kind of rounding: Figma draws strokes inside
+     the frame, a CSS border sits outside an auto height, so the shared 12px and 14px
+     padding lands the box at 264x409 instead of Figma 831:11238's 264x407 and shifts
+     every row 1px. Paying for the border out of the padding restores both — content box
+     240 wide, first row 1+13=14 from the top. */
+  .sc-page .cab-snav           { @apply px-[11px] py-[13px]; }
+  .sc-page .cab-snav-item      { @apply py-[10px]; }
+  .sc-page .cab-snav-item .lbl { @apply leading-[17px]; }
+
+  /* Progress block, Figma 831:11256 = 78px: 14 + row 15 + 8 + bar 6 + 8 + hint 13 + 14.
+     text-xs would give the row a 16px line box and `normal` gives the 11px hint 14px. */
+  .sc-page .cab-snav-prog .row  { @apply leading-[15px]; }
+  .sc-page .cab-snav-prog .hint { @apply leading-[13px]; }
+
   /* ---- profile photo ---- */
   .sc-photo            { @apply flex items-center gap-4 overflow-hidden; }
   /* 88px avatar with a 3px yellow ring. Figma places "RM" absolutely (left 22 / top 28);
@@ -41,7 +63,11 @@
   .sc-skill .x         { @apply cursor-pointer text-[11px] leading-[normal] font-normal whitespace-nowrap text-black/40 transition-colors duration-150; }
   .sc-skill .x:hover   { @apply text-danger; }
 
-  .sc-skill-add        { @apply flex shrink-0 cursor-pointer items-start overflow-hidden rounded-ds border border-dashed border-black/30 px-3 py-2 text-[13px] leading-[normal] font-semibold whitespace-nowrap text-black/70 transition-colors duration-150; }
+  /* Every chip in the row is 32px (Figma 831:11327…831:11345). The filled ones get there
+     with py-2 + a 16px label box; the dashed one also pays for its 1px border, so its
+     padding is 7px and the label box is pinned to 16px (leading-[normal] resolves to 17
+     here, which pushed the whole .sc-skills row — and the card — 3px over). */
+  .sc-skill-add        { @apply flex shrink-0 cursor-pointer items-start overflow-hidden rounded-ds border border-dashed border-black/30 px-3 py-[7px] text-[13px] leading-[16px] font-semibold whitespace-nowrap text-black/70 transition-colors duration-150; }
   .sc-skill-add:hover  { @apply border-black/50 bg-gray-soft2; }
   .sc-skill-input      { @apply h-8 w-[180px] shrink-0 rounded-ds border border-black/14 bg-white px-3 font-sans text-[13px] leading-[normal] font-medium text-ink outline-none placeholder:text-black/40 focus:border-ink; }
   /* both are flex/inline boxes, so the UA [hidden] rule needs out-ranking (§6.5) */

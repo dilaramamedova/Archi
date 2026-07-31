@@ -3,7 +3,10 @@
    utilities (ARCHITECTURE.md §6.2, approach 1) and every control comes from the design
    system (.ui-field / .ui-label-b2b / .ui-control-b2b / .ui-chip / .ui-btn in app.css).
    This frame's deltas — square corners on the inputs and chips, the black/10 idle
-   stroke, the 12/14 input padding, the #808085 placeholder and the 1.5px selected chip
+   stroke, the 13/11 input padding, the #808085 placeholder and the 1.5px selected chip
    stroke — ride on the elements as utilities in the markup, which sit in a later layer
    than @layer components and therefore win without a specificity hack.
+   Every padding on this frame is the Figma value minus the 1px border: Figma draws the
+   stroke INSIDE the frame box, so adding a CSS border to the Figma padding rendered each
+   stroked box 2px over spec (the form card was 618 instead of 603).
    The file must stay — app.css imports it. */

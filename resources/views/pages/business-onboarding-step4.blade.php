@@ -1,10 +1,11 @@
-<x-layout page="business-onboarding-step4" :title="__('business-onboarding-step4.title')" bodyClass="bg-gray-soft2 text-ink [word-break:break-word]">
+<x-layout page="business-onboarding-step4" :title="__('business-onboarding-step4.title')" bodyClass="text-ink [word-break:break-word]">
 
-{{-- Figma 1105:21287 — the "İlk məhsul" screen with the category listbox OPEN.
+{{-- Figma 1105:21287 — the first-product screen with the category listbox OPEN.
      That open state is what this frame documents, so the markup ships open and the
      page module takes over from the first interaction. --}}
 
-{{-- Head — Figma 1105:21289 (1440x108). Gray background comes from <body>. --}}
+{{-- Head — Figma 1105:21289 (1440x108). The page background is white in this frame
+     (sampled from the Figma render), same as step 2, so no gray bodyClass tint. --}}
 <div class="mx-auto flex max-w-[1440px] flex-col items-start gap-5 px-7 pt-8">
   <a class="text-sm font-medium leading-[normal] whitespace-pre text-black/50" href="{{ route('business.profile') }}">{{ __('business-onboarding-step4.head.back') }}</a>
   <h1 class="text-[32px] font-bold tracking-[-0.5px] leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step4.head.title') }}</h1>
@@ -39,14 +40,19 @@
       </div>
     </div>
 
-    {{-- Form card — Figma 1105:21306 --}}
+    {{-- Form card — Figma 1105:21306 (880x666). Every control is 43px here, two less
+         than .ui-control-b2b's 13px padding gives, so the four inputs and the two custom
+         boxes carry a 12px vertical padding as a markup utility (later layer than
+         @layer components, so it wins without a specificity hack). --}}
     <x-ui.card class="flex shrink-0 flex-col items-start gap-5 px-8 py-7">
 
       <x-ui.field variant="b2b" tag="p" :label="__('business-onboarding-step4.form.images_label')"
                   class="w-full shrink-0 items-start overflow-hidden bg-white">
         <div class="flex shrink-0 items-start gap-2.5 overflow-hidden bg-white">
           <div class="flex size-[110px] shrink-0 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-ds border border-dashed border-black/14 bg-gray-soft2 text-center text-xs font-medium text-black/50">
-            <p class="leading-[normal] whitespace-nowrap">📷</p>
+            {{-- Own colour: the tile's black/50 would render the colour emoji at half
+                 opacity, washing it out against the tile. --}}
+            <p class="leading-[normal] whitespace-nowrap text-black">📷</p>
             <p class="leading-[normal] whitespace-nowrap">{{ __('business-onboarding-step4.form.images_main') }}</p>
           </div>
           <div class="flex size-[110px] shrink-0 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-ds border border-dashed border-black/14 bg-gray-soft2">
@@ -64,15 +70,16 @@
       <div class="flex w-full shrink-0 items-start gap-4 bg-white">
         <x-ui.field variant="b2b" :label="__('business-onboarding-step4.form.name_label')"
                     class="min-w-px flex-[1_0_0] items-start overflow-hidden bg-white">
-          <x-ui.input variant="b2b" :placeholder="__('business-onboarding-step4.form.name_placeholder')" />
+          <x-ui.input variant="b2b" class="py-3" :placeholder="__('business-onboarding-step4.form.name_placeholder')" />
         </x-ui.field>
 
         {{-- Category combobox — a JS-driven listbox, so it stays page-local (§4.7). --}}
         <x-ui.field variant="b2b" :label="__('business-onboarding-step4.form.category_label')"
                     class="relative min-w-px flex-[1_0_0] items-start bg-white">
           {{-- The 1.5px border is reserved in both states; only the colour changes, and the
-               padding compensates it so the box lines up with the 1px fields next to it. --}}
-          <div class="group flex w-full shrink-0 cursor-pointer items-center justify-between overflow-hidden rounded-ds border-[1.5px] border-black/14 bg-white px-[15.5px] py-[12.5px] data-[on=true]:border-ink"
+               padding compensates it (12 - 0.5) so the box lines up with the 1px fields
+               next to it and lands on the same 43px height. --}}
+          <div class="group flex w-full shrink-0 cursor-pointer items-center justify-between overflow-hidden rounded-ds border-[1.5px] border-black/14 bg-white px-[15.5px] py-[11.5px] data-[on=true]:border-ink"
                data-cat-trigger data-on="true" role="combobox" aria-expanded="true" aria-haspopup="listbox">
             <p class="text-sm font-normal leading-[normal] whitespace-nowrap text-black/40 data-[filled=true]:text-ink" data-cat-value>{{ __('business-onboarding-step4.form.category_placeholder') }}</p>
             <img class="size-4 shrink-0 transition-transform duration-200 group-data-[on=true]:rotate-180" src="/assets/ic-caret.svg" alt="">
@@ -101,20 +108,20 @@
       <div class="flex w-full shrink-0 items-start gap-0 overflow-hidden bg-white">
         <x-ui.field variant="b2b" :label="__('business-onboarding-step4.form.brand_label')"
                     class="min-w-px flex-[1_0_0] items-start overflow-hidden bg-white">
-          <x-ui.input variant="b2b" :placeholder="__('business-onboarding-step4.form.brand_placeholder')" />
+          <x-ui.input variant="b2b" class="py-3" :placeholder="__('business-onboarding-step4.form.brand_placeholder')" />
         </x-ui.field>
       </div>
 
       <div class="flex w-full shrink-0 items-start gap-4 overflow-hidden bg-white">
         <x-ui.field variant="b2b" :label="__('business-onboarding-step4.form.price_label')"
                     class="min-w-px flex-[1_0_0] items-start overflow-hidden bg-white">
-          <x-ui.input variant="b2b" :placeholder="__('business-onboarding-step4.form.price_placeholder')" />
+          <x-ui.input variant="b2b" class="py-3" :placeholder="__('business-onboarding-step4.form.price_placeholder')" />
         </x-ui.field>
 
         {{-- Unit picker: a static box in this frame, not a <select>. --}}
         <x-ui.field variant="b2b" :label="__('business-onboarding-step4.form.unit_label')"
                     class="min-w-px flex-[1_0_0] items-start overflow-hidden bg-white">
-          <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px]">
+          <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-3">
             <p class="text-sm font-normal leading-[normal] whitespace-nowrap text-black/40">{{ __('business-onboarding-step4.form.unit_placeholder') }}</p>
             <img class="size-4 shrink-0" src="/assets/ic-caret.svg" alt="">
           </div>
@@ -123,17 +130,22 @@
 
       <x-ui.field variant="b2b" :label="__('business-onboarding-step4.form.desc_label')"
                   class="w-full shrink-0 items-start overflow-hidden bg-white">
-        <x-ui.input variant="b2b" :placeholder="__('business-onboarding-step4.form.desc_placeholder')" />
+        <x-ui.input variant="b2b" class="py-3" :placeholder="__('business-onboarding-step4.form.desc_placeholder')" />
       </x-ui.field>
 
-      <div class="flex w-full shrink-0 items-center gap-2.5 overflow-hidden rounded-ds border border-yellow-line bg-sel-bg px-3.5 py-3">
+      {{-- Note strip — Figma 1105:21347 (816x40). Height is pinned, not padded: the 🎉
+           emoji raises the line box above the text's own, so vertical padding alone
+           would overshoot the 40px spec. --}}
+      <div class="flex h-10 w-full shrink-0 items-center gap-2.5 overflow-hidden rounded-ds border border-yellow-line bg-sel-bg px-3.5">
         <p class="text-sm font-normal leading-[normal] whitespace-nowrap text-black">🎉</p>
         <p class="min-w-px flex-[1_0_0] text-[13px] font-normal leading-[normal] text-black/70">{{ __('business-onboarding-step4.form.note') }}</p>
       </div>
 
       <div class="flex shrink-0 items-center gap-3 overflow-hidden bg-white">
         {{-- Last step of the funnel: completing the store lands on the shop panel. --}}
-        <x-ui.button variant="primary" :hover="false" :href="route('business.profile')" class="items-start px-7 py-[15px]">
+        {{-- Figma 1105:21351 (367x48). Height is pinned for the same reason as the note
+             strip: the trailing ✓ in the label raises the line box past 18px. --}}
+        <x-ui.button variant="primary" :hover="false" :href="route('business.profile')" class="h-12 px-7">
           <p class="font-sans text-[15px] font-semibold leading-[normal] whitespace-pre text-ink">{{ __('business-onboarding-step4.form.submit') }}</p>
         </x-ui.button>
         <p class="cursor-pointer text-sm font-medium leading-[normal] whitespace-nowrap text-black/50">{{ __('business-onboarding-step4.form.later') }}</p>

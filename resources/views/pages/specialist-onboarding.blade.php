@@ -1,8 +1,8 @@
-{{-- Specialist onboarding (Tamamlama) — Figma node 1054:9643 (1440x1560; navbar + banner + content).
+{{-- Specialist onboarding (profile completion) — Figma node 1054:9643 (1440x1560; navbar + banner + content).
      The navbar comes from the layout; the frame has no footer of its own. --}}
 @php
-    // The checklist rows. `done` renders the yellow ✓ pill + the green "Tamamlandı" label;
-    // every other row gets the gray number pill and the yellow "Əlavə et" button.
+    // The checklist rows. `done` renders the yellow check pill + the green completed label;
+    // every other row gets the gray number pill and the yellow add button.
     // Targets follow ARCHITECTURE §3.1: the checklist is the hub of the specialist cabinet.
     $steps = [
         ['key' => 'basics',    'n' => '✓', 'done' => true,  'href' => null],
@@ -35,8 +35,10 @@
   </div>
 </div>
 
-{{-- Content — Figma 1056:9742 (pad 40/28/0/28, gap 32) --}}
-<div class="mx-auto flex max-w-[1440px] items-start gap-8 px-7 pt-10 pb-10 max-[1200px]:flex-col">
+{{-- Content — Figma 1056:9742 (pad 40/28/0/28, gap 32). pt is 80, not 40: the frame
+     itself sits 40px below the banner (banner ends y=212, content starts y=252) and
+     then adds its own 40px top padding, so the banner→checklist gap is 80. --}}
+<div class="mx-auto flex max-w-[1440px] items-start gap-8 px-7 pt-20 pb-10 max-[1200px]:flex-col">
 
   {{-- Checklist — Figma 1056:9743 (880 wide, r4, stroke black@0.10) --}}
   <div class="onb-checklist flex w-full max-w-[880px] flex-col items-start overflow-hidden rounded-ds border border-black/10 bg-white max-[1200px]:max-w-none">

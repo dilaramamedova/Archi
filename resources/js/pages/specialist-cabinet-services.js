@@ -1,6 +1,6 @@
 // Page module for "specialist-cabinet-services" — the service & price list of the
 // specialist cabinet. Everything the Figma frame shows as interactive is wired: the
-// visibility switch, the price field, the unit select, "Sil", "＋ Xidmət əlavə et" and
+// visibility switch, the price field, the unit select, the delete and add-service buttons and
 // the ⠿ reorder handle. Save confirms inline inside the dark bar (no blocking alert),
 // Cancel discards the local state by reloading — same behaviour as the business cabinet.
 

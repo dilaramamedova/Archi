@@ -40,7 +40,7 @@ return [
         'repeat_label' => 'Repeat new password',
         'mask' => '••••••••',
         'value' => 'Archi2024',
-        'eye' => '👁',
+        'eye' => '👁️',
         'eye_label' => 'Show password',
         'submit' => 'Update password',
     ],

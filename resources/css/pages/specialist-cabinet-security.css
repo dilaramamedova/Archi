@@ -7,12 +7,22 @@
      button, not a form control;
    - the 2FA / danger rows (.spsec-row) are borderless split rows, not the gray .cab-row;
    - the session row's inner text block;
-   - two sidebar leading deltas the Figma frame needs (39px rows, 15px progress row). */
+   - the specialist settings-nav box (this frame's 39px rows / 407px card). */
 @layer components {
-  /* Figma: the sidebar label and the progress row are line-height:normal, which is what
-     keeps the nav rows at 39px and the progress row at 15px. */
-  .spsec-page .cab-snav-item .lbl { @apply leading-[normal]; }
-  .spsec-page .cab-snav-prog .row { @apply leading-[normal]; }
+  /* ---- settings nav: this frame's row box ----
+     Same delta as specialist-cabinet.css / specialist-cabinet-schedule.css — the shared
+     .cab-snav is drawn for the business cabinet, the specialist frame is 2px tighter per
+     row. Figma 831:13335/13337/13340/13343/13345/13348/13350 are all h=39 with the label
+     text box at h=17, pitched 43px (39 + the shared gap-1); `leading-[normal]` would give
+     the 14px label a 19px line box and a 41px row. Figma 831:13334 is 264x407, and since
+     Figma strokes sit inside the frame while a CSS border sits outside an auto height,
+     the border is paid for out of the shared px-3 py-3.5.
+     Progress block 831:13352 = 78px: 14 + row 15 + 8 + bar 6 + 8 + hint 13 + 14. */
+  .spsec-page .cab-snav            { @apply px-[11px] py-[13px]; }
+  .spsec-page .cab-snav-item       { @apply py-[10px]; }
+  .spsec-page .cab-snav-item .lbl  { @apply leading-[17px]; }
+  .spsec-page .cab-snav-prog .row  { @apply leading-[15px]; }
+  .spsec-page .cab-snav-prog .hint { @apply leading-[13px]; }
 
   /* Three equal columns side by side: the label stays one line so all three inputs share
      a baseline, truncating with an ellipsis instead of being cut. */
@@ -21,10 +31,11 @@
   /* password box — a fake input: a dot string plus a reveal button */
   .spsec-input        { @apply flex h-11 w-full items-center overflow-hidden rounded-ds border border-black/14 bg-white pr-3 pl-3.5; }
   .spsec-input .dots  { @apply min-w-0 flex-[1_0_0] text-sm leading-[normal] font-bold text-ink/60; }
-  /* Color-only hover/active — the eye sits inside a fixed-height input, so nothing here
-     may change its box. */
-  .spsec-input .eye   { @apply cursor-pointer bg-transparent text-[13px] leading-[normal] font-normal whitespace-nowrap text-black/40 transition-colors duration-150 hover:text-black/70; }
-  .spsec-input .eye[data-on="true"] { @apply text-ink; }
+  /* Figma 831:13369 draws the reveal control as the 13px COLOUR eye emoji, so the glyph
+     carries U+FE0F in the lang files and `color` no longer reaches it. Opacity-only
+     hover — the eye sits inside a fixed-height input, so nothing here may change its box.
+     The revealed state is carried by the .dots text swap and aria-pressed, not by ink. */
+  .spsec-input .eye   { @apply cursor-pointer bg-transparent text-[13px] leading-[normal] font-normal whitespace-nowrap transition-opacity duration-150 hover:opacity-65; }
 
   /* 2FA / danger row */
   .spsec-row       { @apply flex w-full items-center justify-between overflow-hidden; }

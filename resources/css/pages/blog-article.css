@@ -17,10 +17,15 @@
                       border border-black/15 bg-white text-[11px] font-semibold text-black/70
                       transition-colors duration-150 hover:border-black/35 hover:bg-gray-soft; }
 
-  /* Editorial type. */
-  .ba-lead { @apply text-[19px] leading-[1.65] font-medium text-ink/85; }
-  .ba-h2   { @apply text-[26px] leading-[1.3] font-bold text-ink; }
-  .ba-p    { @apply text-base leading-[1.7] text-black/72; }
+  /* Editorial type. The -0.0035em tracking is a font-metric calibration, not a design
+     value: Chrome sets Inter a hair wider than the Figma text engine, which flipped two
+     line breaks in 831:7823 (the pull quote and the body under heading 3).
+     At -0.0035em all 14 prose lines break exactly where Figma breaks them; the usable
+     window is -0.003em..-0.004em, so this sits in the middle of it. */
+  .ba-lead  { @apply text-[19px] leading-[1.65] font-medium tracking-[-0.0035em] text-ink/85; }
+  .ba-h2    { @apply text-[26px] leading-[1.3] font-bold text-ink; }
+  .ba-p     { @apply text-base leading-[1.7] tracking-[-0.0035em] text-black/72; }
+  .ba-quote { @apply text-lg leading-[1.6] font-medium tracking-[-0.0035em] text-ink/85; }
 
   /* Yellow "tip" callout. */
   .ba-tip      { @apply flex items-start gap-3 rounded-ds border border-yellow-line bg-sel-bg p-[18px]; }
@@ -39,6 +44,11 @@
   /* Figma draws the arrow inside the label, so the 24px icon is not rendered. */
   .ba-related .sec-more img { @apply hidden; }
   .ba-related .blog-grid    { @apply gap-3; }
+  /* `.post h3` sets no line-height, so it inherits preflight's 1.5 (31.5px at 21px).
+     Figma 831:7823 draws the card title on a 26px pitch (title box 52px for 2 lines),
+     which is what the old, preflight-less project rendered as `normal`. Scoped to this
+     page so the shared `.post` used by home/blog is untouched. */
+  .ba-related .post h3      { @apply leading-[26px]; }
 
   @media (max-width: 640px) {
     .ba-related .sec-title { @apply text-[28px]; }

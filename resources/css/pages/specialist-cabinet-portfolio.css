@@ -34,7 +34,9 @@
 
   /* drag/format hint under the grid (831:11990) */
   .scp-hint    { @apply flex items-center gap-2 whitespace-nowrap text-black/45; }
-  .scp-hint .ic { @apply text-[13px] leading-[normal]; }
+  /* 13x16 is the advance box Figma's U+2195 text node occupies, so the 8px gap after it
+     lands the hint text at x=21 exactly; the arrow itself is drawn in the blade. */
+  .scp-hint .ic { @apply block h-4 w-[13px] shrink-0; }
   .scp-hint .t  { @apply text-xs leading-[normal]; }
 
   /* The cabinet body stacks at 1100px (app.css), so the grid drops columns with it. */

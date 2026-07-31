@@ -190,7 +190,13 @@
   .topbar   { @apply sticky top-0 z-[60] w-full bg-white; }
   /* Figma 1039:14264 — row 1 gutter is 40px (logo x=40), row 2 is 28px (nav x=28) */
   .nav-row1 { @apply relative z-[2] flex h-20 w-full items-center gap-12 bg-white px-10; }
-  .logo     { @apply h-[50px] w-auto shrink-0; }
+  /* logo.png is a 1201x1200 SQUARE canvas — the wordmark is a 989x364 band centered in it
+     with ~34% blank padding baked in above and below. `w-auto` therefore sized the box
+     50x50 and the visible mark only 40x15. Figma's rect (1039:14264 -> 0:4) is 131.58x50
+     holding the same square file as an image FILL, i.e. object-cover: the mark then lands
+     at 108x40, which is exactly what the frame exports. The explicit width also restores
+     the search field to its Figma x: 40 (px-10) + 131.58 + 48 (gap-12) = 219.58 = node 0:5. */
+  .logo     { @apply h-[50px] w-[131.58px] shrink-0 object-cover; }
   .search   { @apply relative flex flex-1 items-center gap-2 bg-gray-soft px-4 py-3; }
   .search img   { @apply size-5; }
   .search input { @apply flex-1 border-none bg-transparent font-sans text-base text-black outline-none placeholder:text-black/50; }
@@ -332,24 +338,34 @@
      ========================================================================== */
   footer                 { @apply ml-[calc(50%-50vw)] w-screen bg-black text-white; }
   footer .inner          { @apply px-7 pt-16 pb-12; }
-  .foot-top              { @apply flex items-end justify-between; }
-  .foot-logo             { @apply h-[58px] w-auto; }
-  .foot-products         { @apply flex items-center gap-2 px-8 py-4; }
+  /* Figma 628:8305 — the logo row is a fixed 64-tall band and the divider sits
+     directly under it, so the row height (not a margin) sets the divider offset. */
+  .foot-top              { @apply flex h-16 items-center justify-between; }
+  /* Same square-canvas asset as .logo (see NAVBAR row 1): the footer rect is 144x58 with
+     an image FILL, which puts the wordmark at 118x44 — the app rendered it 48x18. */
+  .foot-logo             { @apply h-[58px] w-[144px] object-cover; }
+  .foot-products         { @apply flex items-center gap-2 self-end px-8 py-4; }
   .foot-products p       { @apply text-base text-white; }
   .foot-products img     { @apply size-6 transition-transform duration-[250ms]; }
   .foot-line             { @apply m-0 h-px bg-white/12; }
-  .foot-cols             { @apply flex justify-between py-16; }
-  .foot-col              { @apply w-[195px]; }
-  .foot-col h5           { @apply mb-6 text-[17px] font-medium text-white; }
-  .foot-col a            { @apply mb-4 block text-base text-[#8f8f8f]; }
+  .foot-cols             { @apply flex justify-between pt-16 pb-14; }
+  /* Figma 628:8325 — the column frames are a fixed 240 tall, which is what puts the
+     second divider 104px below the last link of the tallest column. */
+  .foot-col              { @apply min-h-60 w-[195px]; }
+  .foot-col h5           { @apply mb-6 text-[17px] leading-6 font-medium text-white; }
+  .foot-col a            { @apply mb-4 block text-base leading-4 text-[#8f8f8f]; }
   .foot-col a:last-child { @apply mb-0; }
-  .foot-news             { @apply flex items-center justify-between py-10; }
+  .foot-news             { @apply flex items-start justify-between py-10; }
   .foot-news .l          { @apply flex items-center gap-6 pr-12; }
   .foot-news .l img      { @apply size-12; }
-  .foot-news h4          { @apply max-w-[616px] text-[22px] leading-[1.25] font-medium text-white; }
+  .foot-news h4          { @apply max-w-[616px] text-[22px] leading-7 font-medium text-white; }
   .foot-news .l p        { @apply mt-1.5 text-base text-[#9a9a9a]; }
-  .foot-news .form       { @apply flex h-13 w-[531px] flex-row items-stretch gap-2; }
-  .foot-news .form .ip   { @apply flex flex-1 items-center border border-white/12 px-[21px] text-lg text-[#9a9a9a]; }
+  /* Figma 628:8387 — the field sits 8px below the top of the headline block. */
+  .foot-news .form       { @apply mt-2 flex h-13 w-[531px] flex-row items-stretch gap-2; }
+  /* bg-transparent overrides the UA background restored in the base layer — in Figma
+     628:8388 the field is a hairline outline on the black band, not a white box. */
+  .foot-news .form .ip   { @apply flex flex-1 items-center rounded-lg border border-white/12 bg-transparent px-[21px] text-lg
+                                  text-white placeholder:text-[#9a9a9a]; }
   .foot-news .form .sub  { @apply flex items-center bg-yellow px-6 text-xl text-ink hover:brightness-[.92]; }
   .foot-bottom           { @apply flex items-center justify-between pt-8; }
   .foot-legal            { @apply flex flex-col gap-3; }
@@ -421,8 +437,11 @@
   .prod-cursor span { @apply block max-w-[84px]; }
 
   /* ---- specialist card ----
-     Note: `.scard .name` and `.scard .meta` were unstyled in the old project too —
-     they stay unstyled here on purpose, for pixel parity. */
+     Note: `.scard .name` stays unstyled on purpose (it was in the old project too).
+     `.scard .meta` gets the row layout only: its spans carry no separator and no
+     markup whitespace, so without it the two values run together
+     (years-of-experience runs into project-count). Figma puts them 12px apart (0:30 x=0 w=111,
+     0:31 x=123). Typography stays inherited, exactly as before. */
   .scard { @apply flex flex-1 flex-col gap-5 border border-black/10 bg-white px-3 pt-3 pb-5; }
   .scard .top { @apply relative flex h-[201px] flex-col items-center justify-center gap-3 overflow-hidden; }
   .scard .heart { @apply absolute top-0 right-0 flex rounded-[37px] bg-white p-2; }
@@ -437,6 +456,7 @@
   .scard .rating { @apply flex items-center gap-1; }
   .scard .rating img { @apply size-5; }
   .scard .rating p { @apply font-sans text-sm font-medium text-black; }
+  .scard .meta { @apply flex flex-wrap gap-3; }
 
   /* ---- blog card ----
      flex-1 + .read{mt-auto} keeps the "read" link pinned to the bottom whether the
@@ -902,8 +922,11 @@
     .nav-left        { @apply flex; }
     .nav-item        { @apply w-auto shrink-0 px-4; }
     .foot-cols       { @apply flex-wrap gap-8; }
+    /* the fixed 240 column height is a desktop-only Figma detail — once the columns
+       wrap it would only add dead space between rows */
+    .foot-col        { @apply min-h-0; }
     .foot-news       { @apply flex-col items-start gap-6; }
-    .foot-news .form { @apply w-full; }
+    .foot-news .form { @apply mt-0 w-full; }
     .mega-inner      { @apply p-6; }
     .mega-cats       { @apply grid-cols-2; }
   }

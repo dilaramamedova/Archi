@@ -5,9 +5,9 @@
 > Wave 1 shipped 23 pages; wave 2 adds the 13 Figma-only pages of §3 (routes, stubs, CSS/JS
 > placeholders and every cross-page link are already wired — see §3.1).
 
-- **Working directory:** `C:/Users/mamed/ARCHI-laravel` (worktree, `laravel` branch)
-- **Reference (READ ONLY):** `C:/Users/mamed/OneDrive/Desktop/ARCHI` — the old static
-  project, verified 1:1 against Figma. **Never write there.**
+- **Working directory:** `<repo>/ARCHI-laravel` (worktree, `laravel` branch)
+- **Reference (READ ONLY):** the old static `ARCHI` project checkout — verified 1:1
+  against Figma. **Never write there.**
 - **Goal:** pixel parity + 3 languages (az / ru / en) + a clean Laravel structure.
 
 ---
@@ -842,7 +842,7 @@ For state driven from a parent use `group` + `group-data-[sel=true]:`.
 
 ## 8. Images / assets
 
-- Everything lives under `public/assets/` (64 files + `public/assets/fig/`).
+- Everything lives under `public/assets/` (66 files + `public/assets/fig/`, 16 more — 82 total).
 - Markup **always** uses `/assets/...`:
   - `src="assets/logo.png"` → `src="/assets/logo.png"`
   - `url(assets/hero.jpg)` → `url(/assets/hero.jpg)`
@@ -949,7 +949,7 @@ Additional checklist:
 
 ## 12. Useful references
 
-- Old project documentation: `C:/Users/mamed/OneDrive/Desktop/ARCHI/HANDOFF.md`
+- Old project documentation: `HANDOFF.md` in the old static ARCHI project
   (especially **§12 Tailwind migration** — token table, traps, Figma node IDs)
 - Old shared files (reference): `archi.css` · `archi-tw.js` · `archi.js`
 - Figma: fileKey `1VQNQO1hPMNJ657B1UH8SF` (archi-2). Node IDs are in HANDOFF.

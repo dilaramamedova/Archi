@@ -40,7 +40,7 @@ return [
         'repeat_label' => 'Yeni şifrəni təkrarla',
         'mask' => '••••••••',
         'value' => 'Archi2024',
-        'eye' => '👁',
+        'eye' => '👁️',
         'eye_label' => 'Şifrəni göstər',
         'submit' => 'Şifrəni yenilə',
     ],

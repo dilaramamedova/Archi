@@ -15,6 +15,25 @@
   .sch-page   { @apply font-sans antialiased; }
   .sch-page p { @apply [word-break:break-word]; }
 
+  /* ---- settings nav: this frame's row box (legacy delta) ----
+     The shared .cab-snav-item carries the BUSINESS geometry — py-[11px] plus the 20px
+     line box of text-sm, i.e. a 44px row. The specialist frame is tighter: Figma
+     831:12481/12483/12486/12489/12491/12494/12496 are all 240x39 with the label text box
+     at y=11 h=17, giving the 43px pitch the shared gap-1 already produces. Pinning the
+     line box to 17 and paying the 1px border out of the padding lands the row on 39.
+     The shared .cab-snav adds its 1px border on top of px-3 py-3.5, which makes the box
+     264x409 instead of Figma 831:12480's 264x407 and shifts every row 1px — taking the
+     border out of that padding too restores the 240-wide content box and puts the first
+     row 1+13=14 from the top. Identical to the delta specialist-cabinet.css carries. */
+  .sch-page .cab-snav           { @apply px-[11px] py-[13px]; }
+  .sch-page .cab-snav-item      { @apply py-[10px]; }
+  .sch-page .cab-snav-item .lbl { @apply leading-[17px]; }
+
+  /* Progress block, Figma 831:12498 = 78px: 14 + row 15 + 8 + bar 6 + 8 + hint 13 + 14.
+     text-xs would give the row a 16px line box and `normal` gives the 11px hint 14px. */
+  .sch-page .cab-snav-prog .row  { @apply leading-[15px]; }
+  .sch-page .cab-snav-prog .hint { @apply leading-[13px]; }
+
   /* Day row — the shared .cab-row is px-3.5 py-3; Figma uses 10px vertical padding, so
      the row lands on 56px with the 36px time fields inside. Higher specificity is
      required because app.css is imported after the page CSS (ARCHITECTURE.md 6.3). */

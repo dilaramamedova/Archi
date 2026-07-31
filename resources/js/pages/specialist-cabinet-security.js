@@ -36,7 +36,7 @@ export default function init() {
     })
   );
 
-  // "Çıxış et" removes the session row it belongs to.
+  // The log-out button removes the session row it belongs to.
   document.querySelectorAll('.spsec-logout').forEach((btn) =>
     btn.addEventListener('click', () => {
       const row = btn.closest('.cab-row');

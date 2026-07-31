@@ -17,16 +17,26 @@
      so the rows sit flush under it (head 4px gap is the shared .cab-card-head value). */
   .scn-card .cab-card-head { @apply pb-2; }
 
-  /* notification rows */
-  .scn-row          { @apply flex w-full items-center justify-between overflow-hidden border-b border-black/8 py-3.5; }
+  /* notification rows. Figma 831:13078 is 65px tall: 14 top pad + 37 content + 14 bottom,
+     with the 1px divider drawn INSIDE the bottom padding. A CSS border adds to the box, so
+     the bottom padding is 13px and the border restores the 65. The two line-heights are
+     pinned to the Figma text-node heights (18 / 16) — `leading-[normal]` resolves ~1px
+     taller per line and pushed every row to 67px. */
+  .scn-row          { @apply flex w-full items-center justify-between overflow-hidden border-b border-black/8 pt-3.5 pb-[13px]; }
   /* The .s line is a full sentence — it must wrap instead of being clipped in ru/en. The
      row is `items-center`, so a two-line description only makes the row taller. */
   .scn-row .txt     { @apply flex min-w-px flex-[1_0_0] flex-col items-start gap-[3px] overflow-hidden pr-4; }
-  .scn-row .txt .t  { @apply w-full overflow-hidden text-[15px] leading-[normal] font-semibold text-ellipsis whitespace-nowrap text-ink; }
-  .scn-row .txt .s  { @apply w-full text-[13px] leading-[normal] font-normal text-black/50; }
+  .scn-row .txt .t  { @apply w-full overflow-hidden text-[15px] leading-[18px] font-semibold text-ellipsis whitespace-nowrap text-ink; }
+  .scn-row .txt .s  { @apply w-full text-[13px] leading-[16px] font-normal text-black/50; }
 
   /* channel chip row */
   .scn-chips { @apply flex items-start gap-2 overflow-hidden pt-3; }
+  /* Chip geometry is the caller's (ARCHITECTURE.md §4): Figma 831:13118 is 38x38-tall with
+     the 18px box 14px from the OUTER edge and 16px of trailing space. The shared md padding
+     (10/14/16) is measured inside the 1px border, which makes the chip 40px tall and 2px
+     too wide, so the page trims each side by the border. Specificity 0,3,0 beats the
+     app.css rule. */
+  .scn-chips .ui-chip[data-size="md"] { @apply py-[9px] pr-[15px] pl-[13px]; }
 
   /* RESPONSIVE — the Figma frame is a fixed 1440 layout and the sidebar is a fixed 264px.
      The two columns stack via the shared .cab-body rule; only the chips are ours. */

@@ -73,3 +73,7 @@ App code is deliberately almost empty: `app/` holds only `AppServiceProvider`.
 **Read [`ARCHITECTURE.md`](ARCHITECTURE.md) before changing anything.** It is the contract
 for this codebase and covers the golden rules, the route table, the Blade component APIs,
 the translation-key pattern, the CSS token table and the JS state conventions.
+
+Porting this front end into a real backend application? See
+[`INTEGRATION.md`](INTEGRATION.md) — what to copy, what to leave behind, and the migration
+path from closure routes and demo content to controllers and models.

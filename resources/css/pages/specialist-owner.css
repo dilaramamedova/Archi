@@ -51,11 +51,17 @@
   .spo .spo-sechead .spo-eyebrow p { @apply text-sm tracking-[.84px] text-black/55; }
   .spo-sechead h2 { @apply text-[32px] leading-[normal] font-semibold text-ink max-[900px]:text-2xl; }
 
-  /* dashed "edit" chip pinned to the section's top-right (831:11632) */
-  .spo-edit { @apply absolute top-5 right-[18px] flex items-center gap-1.5 rounded-ds border border-dashed
-                     border-black/25 bg-white px-3 py-[7px] text-xs leading-[normal] font-semibold whitespace-nowrap
+  /* dashed "edit" chip pinned to the section's top-right (831:11632). Figma 831:11695 is
+     102x29 with a 12px gutter: pen ink 12px wide, 3px to the label. */
+  .spo-edit { @apply absolute top-5 right-[18px] flex items-center gap-[3px] rounded-ds border border-dashed
+                     border-black/25 bg-white px-3 py-1.5 text-xs leading-[normal] font-semibold whitespace-nowrap
                      text-ink/80 transition-colors duration-150 hover:border-ink/60 hover:bg-gray-soft
                      max-[900px]:top-0 max-[900px]:right-0; }
+
+  /* inline pencil replacing the "✎" glyph (see the $pencil note in the blade). Sized to the
+     Figma ink box: 12x8 in the chip (831:11695), 13x9 in the banner button (831:11541). */
+  .spo-pen               { @apply block h-2 w-3 shrink-0; }
+  .spo-banner-r .spo-pen { @apply h-[9px] w-[13px]; }
 
   /* header (831:11574) */
   .spo-head   { @apply flex w-full items-start gap-8 max-[1200px]:flex-col; }
@@ -74,7 +80,8 @@
   .spo-rate .v img { @apply size-4; }
   .spo-rate .r     { @apply text-black/30; }
   .spo-meta      { @apply text-base leading-[normal] font-medium text-black/50; }
-  .spo-meta .dot { @apply px-3.5 max-[640px]:px-2; }
+  /* 831:11590 is one 439px text run: 26.5px of air on each side of every "·" separator. */
+  .spo-meta .dot { @apply px-[25px] max-[640px]:px-3; }
 
   /* booking card (831:11592) — #f5f7ff has no token, see the file header */
   .spo-book         { @apply flex w-[360px] shrink-0 flex-col gap-4 rounded-ds bg-[#f5f7ff] p-6 max-[1200px]:w-full; }
@@ -110,8 +117,11 @@
   .spo-svc            { @apply flex items-center justify-between gap-4 py-4 leading-[normal]; }
   .spo-svc + .spo-svc { @apply border-t border-black/10; }
   .spo-svc .l         { @apply flex min-w-0 flex-1 flex-col gap-1; }
-  .spo-svc .t         { @apply text-base font-medium text-ink; }
-  .spo-svc .s         { @apply text-sm text-black/50; }
+  /* leading-[normal] is not inherited through text-base/text-sm — those utilities set a
+     line-height of their own (24px / 20px), which stretched the 72px Figma row to 80px.
+     19px is the exact height of 831:11666; Chrome's own `normal` rounds it up to 20. */
+  .spo-svc .t         { @apply text-base leading-[19px] font-medium text-ink; }
+  .spo-svc .s         { @apply text-sm leading-[normal] text-black/50; }
   .spo-svc .rr        { @apply flex items-center gap-4 text-base whitespace-nowrap; }
   .spo-svc .pr        { @apply font-medium text-ink; }
   .spo-svc .ar        { @apply text-black/50 transition-transform duration-[250ms]; }
@@ -121,7 +131,8 @@
   .spo-summ        { @apply flex items-center gap-5 leading-[normal]; }
   .spo-summ .n     { @apply text-[40px] font-semibold text-ink; }
   .spo-summ .c     { @apply flex flex-col gap-0.5; }
-  .spo-summ .ss    { @apply flex gap-0.5; }
+  /* 831:11706 is a 5-glyph "★★★★★" run 84px wide -> 16px stars on a 17px pitch. */
+  .spo-summ .ss    { @apply flex gap-px; }
   .spo-summ .ss img{ @apply size-4; }
   .spo-summ .cnt   { @apply text-sm text-black/50; }
   .spo-revs        { @apply flex w-full items-stretch gap-4 max-[900px]:flex-col; }
@@ -132,7 +143,8 @@
   .spo-rev .nm     { @apply flex flex-col gap-0.5 leading-[normal]; }
   .spo-rev .nm .n  { @apply text-sm font-medium text-ink; }
   .spo-rev .nm .d  { @apply text-xs text-black/40; }
-  .spo-rev .st     { @apply flex gap-0.5; }
-  .spo-rev .st img { @apply size-4; }
+  /* the card star row is the smaller 14px one (831:11716 is 74px wide, not 84px) */
+  .spo-rev .st     { @apply flex gap-px; }
+  .spo-rev .st img { @apply size-[14px]; }
   .spo-rev .tx     { @apply text-sm leading-[1.5] text-black/70; }
 }

@@ -1,7 +1,7 @@
 // Page module for "specialist-cabinet-reviews": the two interactions the Figma frame
-// shows — the filter tabs above the list, and the "↩ Cavab yaz" button that opens an
+// shows — the filter tabs above the list, and the reply button that opens an
 // inline composer and turns the review into the answered state (the yellow-ruled
-// "Sizin cavabınız" block of the first card). Nothing is posted anywhere: the reply is
+// answer block of the first card). Nothing is posted anywhere: the reply is
 // rendered client-side only. Shared behaviour (navbar, cursor) lives in resources/js/shared/.
 export default function init() {
   const root = document.querySelector('.scr-page');

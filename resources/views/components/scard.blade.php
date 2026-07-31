@@ -26,8 +26,9 @@
               common.badge_verified (green). Custom item format:
               ['label' => '...', 'icon' => '/assets/ic-crown.svg', 'ok' => false]
 
-  `.name` and `.meta` were unstyled in the old project — do not add CSS for them,
-  pixel parity depends on it.
+  `.name` is unstyled — do not add CSS for it, pixel parity depends on it.
+  `.meta` carries only a `flex + gap-3` row rule (see app.css): the spans are
+  whitespace-free, so the two values would otherwise render as one run-on string.
 --}}
 @props([
     'href' => null,

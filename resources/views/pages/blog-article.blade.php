@@ -1,5 +1,5 @@
 {{--
-  Blog article detail — Figma node 831:7823 ("blog-article — Təmirə hardan başlamaq").
+  Blog article detail — Figma node 831:7823 (the "where to start a renovation" article).
   The frame's navbar/footer are rendered by <x-layout>, so only `article-page`
   (831:7860) is built here: head · hero · body · tags/author · related.
 --}}
@@ -72,8 +72,10 @@
         @endforeach
       </ul>
 
-      <blockquote class="flex flex-col gap-2 border-l-4 border-yellow py-1.5 pl-[22px]">
-        <p class="text-lg leading-[1.6] font-medium text-ink/85">{{ __('blog-article.body.quote') }}</p>
+      {{-- Figma 831:7917 — the text box starts 22px from the frame edge, bar included,
+           so the 4px rule and the 18px padding together make the 22px inset (738px column). --}}
+      <blockquote class="flex flex-col gap-2 border-l-4 border-yellow py-1.5 pl-[18px]">
+        <p class="ba-quote">{{ __('blog-article.body.quote') }}</p>
         <p class="text-[13px] leading-[normal] text-black/50">{{ __('blog-article.body.quote_author') }}</p>
       </blockquote>
 

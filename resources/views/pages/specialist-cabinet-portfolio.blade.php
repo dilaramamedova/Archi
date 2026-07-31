@@ -65,8 +65,16 @@
       </button>
     </div>
 
+    {{-- The Figma hint marker (831:11991) is the character U+2195 set in Inter, but the
+         Google Fonts build of Inter subsets that codepoint away, so the browser fell back
+         to a system font and drew a thinner, narrower arrow in a 5px-wide box instead of
+         Inter's 8px one -- which also pulled the hint text 6px left. Drawing the glyph
+         inline drops the font dependency and pins the 13x16 advance box Figma uses. --}}
     <p class="scp-hint">
-      <span class="ic" aria-hidden="true">{{ __('specialist-cabinet-portfolio.hint.icon') }}</span>
+      <svg class="ic" viewBox="0 0 13 16" fill="none" aria-hidden="true" focusable="false">
+        <path d="M5 2.53V15.47M1.5 6.03 5 2.53 8.5 6.03M1.5 11.97 5 15.47 8.5 11.97"
+              stroke="currentColor" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
       <span class="t">{{ __('specialist-cabinet-portfolio.hint.text') }}</span>
     </p>
 

@@ -12,7 +12,7 @@
       <a class="foot-products" href="{{ route('catalog') }}"><p>{{ __('footer.go_products') }}</p><img src="/assets/ic-arrow-wt.svg" alt=""></a>
     </div>
 
-    <div class="foot-line" style="margin-top:64px"></div>
+    <div class="foot-line"></div>
 
     <div class="foot-cols">
       <div class="foot-col">
