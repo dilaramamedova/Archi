@@ -12,14 +12,12 @@
 
 <main class="pp">
 
-  {{-- breadcrumb --}}
-  <nav class="pp-crumbs">
-    <a href="{{ route('home') }}">{{ __('specialist.crumb_home') }}</a>
-    <span class="sep">/</span>
-    <a href="{{ route('specialists') }}">{{ __('specialist.crumb_specialists') }}</a>
-    <span class="sep">/</span>
-    <span class="cur">{{ __('specialist.crumb_current') }}</span>
-  </nav>
+  {{-- breadcrumb — text-sm is this page's delta over the 13px design-system default --}}
+  <x-ui.breadcrumbs class="pp-crumbs text-sm" :items="[
+      ['label' => __('specialist.crumb_home'), 'href' => route('home')],
+      ['label' => __('specialist.crumb_specialists'), 'href' => route('specialists')],
+      ['label' => __('specialist.crumb_current')],
+  ]" />
 
   {{-- header --}}
   <div class="pp-head">
@@ -40,9 +38,7 @@
               <p class="role">{{ __('specialist.id.role') }}</p>
             </div>
             <div class="pp-rate">
-              <span class="pp-stars">
-                @for ($i = 0; $i < 5; $i++)<img src="/assets/ic-star-amber.svg" alt="">@endfor
-              </span>
+              <span class="pp-stars"><x-ui.stars icon="/assets/ic-star-amber.svg" /></span>
               <span class="v">{{ __('specialist.id.rate') }}</span>
               <span class="r">{{ __('specialist.id.reviews') }}</span>
             </div>
@@ -54,7 +50,7 @@
       {{-- about --}}
       <section class="pp-about">
         <div class="pp-sechead">
-          <div class="pp-eyebrow"><span class="line"></span><p>{{ __('specialist.about.eyebrow') }}</p></div>
+          <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3" :label="__('specialist.about.eyebrow')" />
           <h2>{{ __('specialist.about.title') }}</h2>
         </div>
         <p class="txt">{{ __('specialist.about.text') }}</p>
@@ -86,7 +82,7 @@
   {{-- portfolio --}}
   <section class="pp-sec">
     <div class="pp-sechead">
-      <div class="pp-eyebrow"><span class="line"></span><p>{{ __('specialist.portfolio.eyebrow') }}</p></div>
+      <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3" :label="__('specialist.portfolio.eyebrow')" />
       <h2>{{ __('specialist.portfolio.title') }}</h2>
     </div>
     <div class="pp-grid">
@@ -110,7 +106,7 @@
   {{-- services --}}
   <section class="pp-sec">
     <div class="pp-sechead">
-      <div class="pp-eyebrow"><span class="line"></span><p>{{ __('specialist.services.eyebrow') }}</p></div>
+      <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3" :label="__('specialist.services.eyebrow')" />
       <h2>{{ __('specialist.services.title') }}</h2>
     </div>
     <div class="pp-svc-list">
@@ -126,15 +122,13 @@
   {{-- reviews --}}
   <section class="pp-sec">
     <div class="pp-sechead">
-      <div class="pp-eyebrow"><span class="line"></span><p>{{ __('specialist.reviews.eyebrow') }}</p></div>
+      <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3" :label="__('specialist.reviews.eyebrow')" />
       <h2>{{ __('specialist.reviews.title') }}</h2>
     </div>
     <div class="pp-score">
       <span class="n">{{ __('specialist.reviews.score') }}</span>
       <span class="c">
-        <span class="ss">
-          @for ($i = 0; $i < 5; $i++)<img src="/assets/ic-star.svg" alt="">@endfor
-        </span>
+        <span class="ss"><x-ui.stars /></span>
         <span class="cnt">{{ __('specialist.reviews.count') }}</span>
       </span>
     </div>
@@ -145,7 +139,7 @@
             <span class="av">{{ __('specialist.reviews.items.' . $rev . '.initial') }}</span>
             <span class="nm"><span class="n">{{ __('specialist.reviews.items.' . $rev . '.name') }}</span><span class="d">{{ __('specialist.reviews.items.' . $rev . '.date') }}</span></span>
           </div>
-          <div class="st">@for ($i = 0; $i < 5; $i++)<img src="/assets/ic-star.svg" alt="">@endfor</div>
+          <div class="st"><x-ui.stars /></div>
           <p class="tx">{{ __('specialist.reviews.items.' . $rev . '.text') }}</p>
         </article>
       @endforeach

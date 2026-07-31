@@ -1,13 +1,9 @@
-/* Page CSS for "sell". Only the repeated pieces live here: the form field appears 6
-   times and the condition chip twice. Copied from the old sell.html
-   <style type="text/tailwindcss"> block.
+/* Page CSS for "sell". The form controls now come from the design system
+   (.ui-field / .ui-label / .ui-control in app.css); only the condition chip is
+   page-specific — it is square, has no checkbox box and draws its selected state
+   with an inset ring, so <x-ui.chip> cannot reproduce it.
    The success modal uses the lmIn/fadeIn keyframes that used to sit in archi.css. */
 @layer components {
-  .sl-in {
-    @apply border border-black/20 bg-white px-[15px] py-[13px] text-[15px] text-black outline-none transition-[border-color] duration-200 [font-family:inherit];
-    @apply placeholder:text-black/40 focus:border-black;
-  }
-  .sl-lbl { @apply text-sm font-medium text-black/70; }
   /* The selected state must not change the box: the inset ring draws the extra border
      and the font weight stays fixed, so toggling a chip never re-measures the row. */
   .sl-chip {

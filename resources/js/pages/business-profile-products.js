@@ -8,13 +8,13 @@
 // A row's status is derived, not stored: flipping the visibility switch has to move the
 // row between the "active" / "low" / "hidden" buckets immediately.
 function statusOf(row) {
-  if (row.querySelector('.bpp-toggle')?.dataset.on !== 'true') return 'hidden';
-  return row.querySelector('.bpp-badge')?.dataset.tone === 'warn' ? 'low' : 'active';
+  if (row.querySelector('.ui-toggle')?.dataset.on !== 'true') return 'hidden';
+  return row.querySelector('.ui-badge')?.dataset.tone === 'warn' ? 'low' : 'active';
 }
 
 // Returns the function that re-applies the current filter state to the rows.
 function initFilters(card) {
-  const rows = Array.from(card.querySelectorAll('.bpp-row'));
+  const rows = Array.from(card.querySelectorAll('.cab-row'));
   const empty = card.querySelector('.bpp-empty');
   const pager = card.querySelector('.bpp-pager');
   const input = card.querySelector('.bpp-search input');
@@ -124,9 +124,9 @@ function initPager(card) {
 }
 
 export default function init() {
-  const card = document.querySelector('.bpp-card');
-  const bar = document.querySelector('.bpp-save-bar');
-  const msg = bar ? bar.querySelector('.bpp-save-msg') : null;
+  const card = document.querySelector('.cab-card');
+  const bar = document.querySelector('.cab-save-bar');
+  const msg = bar ? bar.querySelector('.msg') : null;
   const unsavedText = msg ? msg.textContent : '';
   const savedText = bar ? (bar.dataset.savedMessage || '').trim() : '';
 
@@ -139,7 +139,7 @@ export default function init() {
 
   const apply = card ? initFilters(card) : () => {};
 
-  document.querySelectorAll('.bpp-toggle').forEach((toggle) => {
+  document.querySelectorAll('.ui-toggle').forEach((toggle) => {
     toggle.addEventListener('click', () => {
       const on = toggle.dataset.on !== 'true';
       toggle.dataset.on = on ? 'true' : 'false';
@@ -152,8 +152,8 @@ export default function init() {
   if (card) initPager(card);
 
   if (bar) {
-    const saveBtn = bar.querySelector('.bpp-save-btn');
-    const cancelBtn = bar.querySelector('.bpp-cancel-btn');
+    const saveBtn = bar.querySelector('[data-save]');
+    const cancelBtn = bar.querySelector('[data-cancel]');
     if (saveBtn) saveBtn.addEventListener('click', () => setSaved(true));
     if (cancelBtn) cancelBtn.addEventListener('click', () => window.location.reload());
   }

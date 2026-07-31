@@ -26,7 +26,9 @@ export default function init() {
     } catch (err) {
       /* storage unavailable */
     }
-    document.getElementById('okMsg')?.classList.remove('hidden');
+    // <x-ui.alert> visibility is driven by data-on (ARCHITECTURE.md 7.1).
+    const ok = document.getElementById('okMsg');
+    if (ok) ok.dataset.on = 'true';
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 }

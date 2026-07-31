@@ -47,8 +47,8 @@
   .bp-page .id-info         { @apply flex shrink-0 flex-col items-start gap-2 overflow-hidden; }
   .bp-page .id-name-row     { @apply flex shrink-0 items-center gap-3 overflow-hidden; }
   .bp-page .id-name         { @apply shrink-0 text-[32px] leading-[normal] font-bold whitespace-nowrap text-ink; }
-  .bp-page .id-badge        { @apply flex shrink-0 items-center overflow-hidden rounded-ds bg-[#e9f6ed] px-2.5 py-1; }
-  .bp-page .id-badge p      { @apply text-xs leading-[normal] font-semibold whitespace-nowrap text-[#229653]; }
+  /* The verified badge is <x-ui.badge tone="ok" size="sm"> — tone and box come from the
+     design system; only the 12px label size is passed as a utility. */
   .bp-page .id-meta         { @apply flex shrink-0 items-center gap-2.5 overflow-hidden text-sm leading-[normal] whitespace-nowrap; }
   .bp-page .id-meta .m      { @apply font-medium text-black/55; }
   .bp-page .id-meta .d      { @apply font-normal text-black/30; }
@@ -58,14 +58,9 @@
   .bp-page .id-rating .lbl  { @apply text-[13px] font-normal text-black/45; }
   .bp-page .id-rating .dot  { @apply text-[13px] font-normal text-black/30; }
   .bp-page .id-rating .cnt  { @apply text-[13px] font-semibold text-black/70; }
-  /* The two identity CTAs: "go to products" is a real link, "follow" is a button with no
-     destination yet — both need a pointer + hover so they do not read as dead text.
-     Hover only changes filter/colour, never a box size. */
+  /* The two identity CTAs are <x-ui.button variant="primary|outline">; the 46px height,
+     the 24px side padding and the label size travel with the caller. */
   .bp-page .id-actions        { @apply flex shrink-0 items-start gap-3 overflow-hidden; }
-  .bp-page .btn-yellow        { @apply flex h-[46px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-6 transition-[filter] duration-200 hover:brightness-95; }
-  .bp-page .btn-yellow p      { @apply text-sm leading-[normal] font-bold whitespace-nowrap text-ink; }
-  .bp-page .btn-outline       { @apply flex h-[46px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white px-6 transition-colors duration-200 hover:border-black/35 hover:bg-gray-soft2; }
-  .bp-page .btn-outline span  { @apply text-sm leading-[normal] font-semibold whitespace-nowrap text-ink; }
 
   /* ==========================================================================
      BODY
@@ -73,9 +68,7 @@
   .bp-page .bp-body   { @apply flex w-full shrink-0 items-start gap-8 overflow-hidden px-7 py-6; }
   .bp-page .bp-left   { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-9 overflow-hidden; }
   .bp-page .sec-head  { @apply mb-0 flex w-full shrink-0 flex-col items-start justify-start gap-2.5 overflow-hidden; }
-  .bp-page .kicker    { @apply flex shrink-0 items-center gap-2.5 overflow-hidden; }
-  .bp-page .kicker .bar { @apply h-0.5 w-8 shrink-0 bg-yellow; }
-  .bp-page .kicker p  { @apply text-xs leading-[normal] font-medium tracking-[1px] whitespace-nowrap text-black/55; }
+  /* The three section kickers are <x-ui.eyebrow variant="kicker"> (app.css). */
   .bp-page .sec-title { @apply shrink-0 text-[28px] leading-[normal] font-semibold whitespace-nowrap text-black; }
   .bp-page .about-p   { @apply w-full shrink-0 text-[15px] leading-[1.65] font-normal [word-break:break-word] text-black/68; }
 
@@ -88,7 +81,7 @@
   .bp-page .catalog-head          { @apply flex w-full shrink-0 items-end justify-between overflow-hidden; }
   .bp-page .catalog-head .sec-head{ @apply w-auto; }
   .bp-page .see-all               { @apply flex shrink-0 cursor-pointer items-start overflow-hidden border-b-2 border-yellow-line pb-0.5 transition-colors duration-200 hover:border-ink; }
-  .bp-page .see-all p             { @apply text-xs leading-[normal] font-medium whitespace-nowrap text-[#141414]; }
+  .bp-page .see-all p             { @apply text-xs leading-[normal] font-medium whitespace-nowrap text-ink-alt; }
 
   /* ==========================================================================
      PRODUCT CARD — specific to this page (separate from the shared .pcard).
@@ -149,10 +142,8 @@
   .bp-page .sb-langs .lbl    { @apply text-[13px] leading-[normal] font-normal whitespace-nowrap text-black/55; }
   .bp-page .sb-chip          { @apply flex shrink-0 items-start overflow-hidden rounded-ds border border-black/15 bg-white px-2 py-[3px]; }
   .bp-page .sb-chip p        { @apply text-[11px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
-  .bp-page .sb-btn-yellow       { @apply flex h-[50px] w-full shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow transition-[filter] duration-200 hover:brightness-95; }
-  .bp-page .sb-btn-yellow span  { @apply text-[15px] leading-[normal] font-bold whitespace-nowrap text-ink; }
-  .bp-page .sb-btn-outline      { @apply flex h-12 w-full shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white transition-colors duration-200 hover:border-black/35 hover:bg-gray-soft2; }
-  .bp-page .sb-btn-outline span { @apply text-sm leading-[normal] font-semibold whitespace-nowrap text-ink; }
+  /* The two sidebar CTAs are <x-ui.button variant="primary|outline"> with w-full and
+     their own height passed by the caller. */
 
   /* ==========================================================================
      RESPONSIVE — the Figma frame is a fixed 1440 layout, so below that the two-column

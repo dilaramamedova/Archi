@@ -13,11 +13,14 @@
 
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-  /* breadcrumb */
-  .pd-crumb       { @apply mb-6 flex flex-wrap items-center gap-2 text-[13px] text-black/50; }
-  .pd-crumb a:hover { @apply text-black; }
-  .pd-crumb .sep  { @apply text-black/25; }
-  .pd-crumb .cur  { @apply text-black; }
+  /* breadcrumb — the shape comes from <x-ui.breadcrumbs> (.ui-crumbs) */
+  /* legacy delta: this crumb wraps, has a lighter separator and a plain current item,
+     and its line boxes are the inherited 1.5 (19.5px) rather than leading-[normal] —
+     without this the whole page below the crumb moves up 4px. */
+  .pd-crumb                { @apply mb-6 flex-wrap; }
+  .pd-crumb.ui-crumbs      { @apply leading-normal; }
+  .pd-crumb .sep           { @apply text-black/25; }
+  .pd-crumb.ui-crumbs .cur { @apply font-normal text-black; }
 
   /* top block: gallery | info */
   .pd-top { @apply grid grid-cols-[minmax(0,1fr)_452px] items-start gap-12 max-[980px]:grid-cols-1 max-[980px]:gap-8; }
@@ -189,5 +192,5 @@
   .rev-card .help .n   { @apply tabular-nums; }
   .rev-all             { @apply mt-6 flex justify-center; }
   /* not a link (there is no reviews route) — no `cursor-pointer` affordance */
-  .sec-more2           { @apply inline-flex items-center border-b border-yellow-line pb-1 text-base font-medium text-[#141414]; }
+  .sec-more2           { @apply inline-flex items-center border-b border-yellow-line pb-1 text-base font-medium text-ink-alt; }
 }

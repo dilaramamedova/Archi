@@ -38,16 +38,15 @@
 <main class="wrap spec-cat">
 
   {{-- breadcrumbs --}}
-  <nav class="sp-crumbs">
-    <a href="{{ route('home') }}">{{ __('specialists.crumb_home') }}</a>
-    <span class="sep">/</span>
-    <span class="cur">{{ __('specialists.crumb_current') }}</span>
-  </nav>
+  <x-ui.breadcrumbs class="sp-crumbs" :items="[
+      ['label' => __('specialists.crumb_home'), 'href' => route('home')],
+      ['label' => __('specialists.crumb_current')],
+  ]" />
 
   {{-- heading --}}
   <div class="sp-head">
     <div class="sp-head-l">
-      <div class="sp-eyebrow"><span class="line"></span><p>{{ __('specialists.head.eyebrow') }}</p></div>
+      <x-ui.eyebrow variant="flat" class="sp-eyebrow" :label="__('specialists.head.eyebrow')" />
       <div class="sp-title">
         <h1>{{ __('specialists.head.title') }}</h1>
         <span class="count">{{ __('specialists.head.count') }}</span>
@@ -129,11 +128,13 @@
       {{-- switches --}}
       <div class="sp-toggle">
         <span class="lbl">{{ __('specialists.filters.verified_only') }}</span>
-        <div class="sp-switch" id="spVerified" data-on="true"><span class="knob"></span></div>
+        <x-ui.toggle id="spVerified" :on="true" size="sm" :hover="false"
+                     :aria-label="__('specialists.filters.verified_only')" />
       </div>
       <div class="sp-toggle">
         <span class="lbl">{{ __('specialists.filters.free_this_week') }}</span>
-        <div class="sp-switch" id="spFree" data-on="false"><span class="knob"></span></div>
+        <x-ui.toggle id="spFree" :on="false" size="sm" :hover="false"
+                     :aria-label="__('specialists.filters.free_this_week')" />
       </div>
 
      </div>{{-- /.fside-scroll --}}

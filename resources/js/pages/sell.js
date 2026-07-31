@@ -88,11 +88,11 @@ export default function init() {
     const err = $('slErr');
 
     if (!name || !cat || isNaN(price) || !(price >= 0)) {
-      err.classList.remove('hidden');
+      err.dataset.on = 'true'; // <x-ui.alert> visibility contract
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
-    err.classList.add('hidden');
+    err.dataset.on = 'false';
 
     const old = parseFloat($('pOld').value);
     const hasOld = !isNaN(old) && old > price;
@@ -156,23 +156,23 @@ export default function init() {
   const ov = $('okOv');
 
   function openModal() {
-    // replaces the old `.sl-ov.open{display:flex}` rule
-    ov.classList.remove('hidden');
-    ov.classList.add('flex', 'animate-[fadeIn_0.2s_ease]');
+    // <x-ui.modal> visibility contract: data-on flips the overlay to display:flex
+    ov.dataset.on = 'true';
+    ov.classList.add('animate-[fadeIn_0.2s_ease]');
     document.body.dataset.lmLock = 'true';
     const first = $('okBtns').firstElementChild;
     if (first) setTimeout(() => first.focus(), 60);
   }
 
   function closeModal() {
-    if (ov.classList.contains('hidden')) return;
-    ov.classList.add('hidden');
-    ov.classList.remove('flex', 'animate-[fadeIn_0.2s_ease]');
+    if (ov.dataset.on !== 'true') return;
+    ov.dataset.on = 'false';
+    ov.classList.remove('animate-[fadeIn_0.2s_ease]');
     delete document.body.dataset.lmLock;
     $('pSubmit').focus();
   }
 
-  $('okClose').addEventListener('click', closeModal);
+  ov.querySelector('[data-modal-close]').addEventListener('click', closeModal);
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeModal();
   });

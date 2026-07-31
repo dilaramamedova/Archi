@@ -1,3 +1,4 @@
 /* Page CSS for "business-onboarding-step3".
-   The page is built entirely from Tailwind utilities in the markup (ARCHITECTURE.md §6.2,
-   approach 1), so it needs no page-specific rules. The file must stay — app.css imports it. */
+   The page is built from the <x-ui.*> design-system components plus Tailwind utilities
+   in the markup (ARCHITECTURE.md §6.2, approach 1), so it needs no page-specific rules
+   and no legacy delta overrides. The file must stay — app.css imports it. */

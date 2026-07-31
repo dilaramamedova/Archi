@@ -3,6 +3,12 @@
    The selected state comes from the data-on attribute (set by pages/calculator.js). */
 
 @layer components {
+  /* legacy delta: this page's breadcrumbs are 14px/20px with a 6px gap and a
+     normal-weight current item, while the shared .ui-crumbs is 13px/normal,
+     gap-2 and font-medium. Higher specificity, because app.css is loaded last. */
+  .qc-crumbs.ui-crumbs      { @apply gap-1.5 text-sm leading-5 text-black/50; }
+  .qc-crumbs.ui-crumbs .cur { @apply font-normal; }
+
   .qc-chip {
     /* font-weight stays constant in both states: a heavier selected label would
        re-measure the chip and reflow the whole wrapping group. Selection is carried

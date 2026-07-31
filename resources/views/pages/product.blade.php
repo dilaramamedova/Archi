@@ -48,12 +48,12 @@
   <div class="wrap"><div class="inner">
 
     {{-- breadcrumb --}}
-    <nav class="pd-crumb">
-      <a href="{{ route('home') }}">{{ __('common.home') }}</a><span class="sep">/</span>
-      <a href="#">{{ __('product.crumb.flooring') }}</a><span class="sep">/</span>
-      <a href="#">{{ __('product.crumb.category') }}</a><span class="sep">/</span>
-      <span class="cur">{{ __('product.crumb.current') }}</span>
-    </nav>
+    <x-ui.breadcrumbs class="pd-crumb" :items="[
+        ['label' => __('common.home'), 'href' => route('home')],
+        ['label' => __('product.crumb.flooring'), 'href' => '#'],
+        ['label' => __('product.crumb.category'), 'href' => '#'],
+        ['label' => __('product.crumb.current')],
+    ]" />
 
     {{-- ===================== TOP: gallery + info ===================== --}}
     <div class="pd-top">
@@ -78,7 +78,7 @@
 
         <div class="pd-meta">
           <div class="pd-stars">
-            <span class="s">@for ($i = 0; $i < 5; $i++)<img src="/assets/ic-star.svg" alt="">@endfor</span>
+            <span class="s"><x-ui.stars /></span>
             <b>4.6</b>
           </div>
           <span class="rev" data-goto="reviews">{{ __('product.info.reviews') }}</span>
@@ -217,7 +217,7 @@
       <div class="rev-summary">
         <div class="rs-score">
           <div class="num">4.3</div>
-          <div class="s">@for ($i = 0; $i < 5; $i++)<img src="/assets/ic-star.svg" alt="">@endfor</div>
+          <div class="s"><x-ui.stars /></div>
           <div class="c1">{{ __('product.reviews.ratings') }}</div>
           <div class="c2">{{ __('product.reviews.written') }}</div>
         </div>
@@ -256,7 +256,7 @@
                 <div class="vf"><img src="/assets/ic-check.svg" alt="">{{ __('product.reviews.verified') }}</div>
               </div>
             </div>
-            <div class="sd"><span class="s">@for ($i = 0; $i < 5; $i++)<img src="/assets/ic-star.svg" alt="">@endfor</span><span class="date">{{ __('product.reviews.date_' . $r['i']) }}</span></div>
+            <div class="sd"><span class="s"><x-ui.stars /></span><span class="date">{{ __('product.reviews.date_' . $r['i']) }}</span></div>
             <div class="txt">{{ __('product.reviews.text_' . $r['i']) }}</div>
             <button type="button" class="help" data-on="false" aria-pressed="false">{{ __('product.reviews.helpful') }}&nbsp;&nbsp;·&nbsp;&nbsp;<span class="n">{{ $r['help'] }}</span></button>
           </div>

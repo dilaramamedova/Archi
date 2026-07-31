@@ -2,9 +2,11 @@
 // (the .dots text swaps between data-mask and data-value, both styled the same so the
 // field does not reflow), the 2FA switch flips its data-on state, and the save bar
 // confirms inline (no blocking alert) while Cancel discards the local state by reloading.
+// Selectors follow the shared cabinet contract: .cab-save-bar / .msg / [data-save] /
+// [data-cancel] (see components/cabinet/save-bar.blade.php) and .ui-toggle.
 export default function init() {
-  const bar = document.querySelector('.bpsec-save-bar');
-  const msg = bar ? bar.querySelector('.bpsec-save-msg') : null;
+  const bar = document.querySelector('.cab-save-bar');
+  const msg = bar ? bar.querySelector('.msg') : null;
   const unsavedText = msg ? msg.textContent : '';
   const savedText = bar ? (bar.dataset.savedMessage || '').trim() : '';
 
@@ -24,7 +26,7 @@ export default function init() {
     })
   );
 
-  document.querySelectorAll('.bpsec-toggle').forEach((toggle) =>
+  document.querySelectorAll('.ui-toggle').forEach((toggle) =>
     toggle.addEventListener('click', () => {
       const on = toggle.dataset.on !== 'true';
       toggle.dataset.on = String(on);
@@ -34,8 +36,8 @@ export default function init() {
   );
 
   if (bar) {
-    const saveBtn = bar.querySelector('.bpsec-btn-save');
-    const cancelBtn = bar.querySelector('.bpsec-btn-cancel');
+    const saveBtn = bar.querySelector('[data-save]');
+    const cancelBtn = bar.querySelector('[data-cancel]');
     if (saveBtn) saveBtn.addEventListener('click', () => setSaved(true));
     if (cancelBtn) cancelBtn.addEventListener('click', () => window.location.reload());
   }

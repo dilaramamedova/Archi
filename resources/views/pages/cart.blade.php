@@ -38,7 +38,13 @@
          data-promos="{{ json_encode($promos) }}"
          data-i18n="{{ json_encode($strings) }}">
   <div class="wrap-narrow flex flex-col gap-6">
-    <nav class="flex gap-1.5 text-sm text-black/50"><a href="{{ route('home') }}">{{ __('common.home') }}</a><span>/</span><span class="text-black/90">{{ __('cart.breadcrumb') }}</span></nav>
+    {{-- geometry + type come from the caller; the shared .ui-crumbs owns tone and state.
+         leading-5 restores the 20px line-height text-sm pairs with (.ui-crumbs sets
+         --tw-leading:normal, which text-sm would otherwise pick up). --}}
+    <x-ui.breadcrumbs class="gap-1.5 text-sm leading-5" :items="[
+        ['label' => __('common.home'), 'href' => route('home')],
+        ['label' => __('cart.breadcrumb')],
+    ]" />
     <h1 class="text-[30px] font-bold tracking-[-0.4px] text-ink">{{ __('cart.heading') }}</h1>
     <div class="grid grid-cols-[1fr_380px] items-start gap-6 max-[900px]:grid-cols-1">
 
@@ -47,7 +53,10 @@
         <div class="flex flex-col gap-3" id="ctRows"></div>
         <div class="rounded-ds border border-black/10 bg-white px-6 py-[60px] text-center" id="ctEmpty" hidden>
           <p class="mb-5 text-base text-black/55">{{ __('cart.empty.text') }}</p>
-          <a class="inline-block rounded-ds bg-yellow px-7 py-[13px] font-semibold text-ink no-underline" href="{{ route('home') }}">{{ __('cart.empty.cta') }}</a>
+          {{-- inline-flex keeps the old inline-block flow inside the centered box;
+               overflow-visible keeps the text baseline (a clipped inline box would
+               baseline on its bottom edge and grow the line box by ~11px) --}}
+          <x-ui.button variant="primary" :hover="false" :href="route('home')" class="inline-flex overflow-visible px-7 py-[13px] font-semibold">{{ __('cart.empty.cta') }}</x-ui.button>
         </div>
       </div>
 
@@ -59,7 +68,7 @@
           <label class="text-[13px] font-semibold text-ink">{{ __('cart.promo.label') }}</label>
           <div class="flex gap-2">
             <input class="flex-1 rounded-ds border border-black/15 px-3.5 py-[11px] text-sm uppercase outline-none [font-family:inherit] focus:border-ink" id="ctPromo" placeholder="ARCHI15" value="">
-            <button class="cursor-pointer rounded-ds border-none bg-ink px-[18px] text-sm font-semibold text-white [font-family:inherit]" id="ctApply">{{ __('cart.promo.apply') }}</button>
+            <x-ui.button variant="dark" :hover="false" id="ctApply" class="px-[18px] text-sm font-semibold [font-family:inherit]">{{ __('cart.promo.apply') }}</x-ui.button>
           </div>
           {{-- state colour comes from data-ok (ARCHITECTURE.md §7.1) --}}
           <div class="text-[13px] font-medium data-[ok=true]:text-[#237a37] data-[ok=false]:text-[#c0392b]" id="ctMsg" hidden></div>
@@ -76,7 +85,8 @@
 
         <div class="flex items-baseline justify-between border-t border-black/10 pt-3.5"><span class="text-base font-bold">{{ __('cart.summary.total') }}</span><span class="text-[26px] font-bold text-ink" id="ctTotal"></span></div>
 
-        <button class="h-[52px] cursor-pointer rounded-ds border-none bg-yellow text-base font-semibold text-ink transition-[filter] duration-200 [font-family:inherit] hover:brightness-[.93]" id="ctCheckout">{{ __('cart.summary.checkout') }}</button>
+        {{-- duration-200 / brightness-.93 keep the old timing over the .ui-btn defaults --}}
+        <x-ui.button variant="primary" id="ctCheckout" class="h-[52px] text-base font-semibold duration-200 [font-family:inherit] hover:brightness-[.93]">{{ __('cart.summary.checkout') }}</x-ui.button>
       </aside>
 
     </div>

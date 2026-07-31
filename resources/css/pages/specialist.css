@@ -1,7 +1,10 @@
 /* Page CSS for "specialist" (Figma 777:2779), ported from the old specialist.html
    <style type="text/tailwindcss"> block. Class names are kept; the old `body { bg-white }`
    rule is dropped because app.css already sets it, and the heart's `.on` state became
-   data-on per ARCHITECTURE.md §7.1 (it only swaps the icon, so it needs no rule). */
+   data-on per ARCHITECTURE.md §7.1 (it only swaps the icon, so it needs no rule).
+
+   The breadcrumb and the four eyebrows now come from <x-ui.breadcrumbs> /
+   <x-ui.eyebrow>; only this page's deltas over those shared rules are left below. */
 @layer components {
   /* Figma 777:2779 -> content 777:2816 is 1440 wide and inner 777:2817 sits at x=40 with
      width 1360, so the 40px gutter is deliberate and differs from the shared .wrap (28px,
@@ -10,17 +13,19 @@
   .pp { @apply mx-auto flex max-w-[1440px] flex-col gap-12 px-10 pt-10 pb-20
                max-[900px]:gap-9 max-[900px]:px-5 max-[900px]:pt-7 max-[900px]:pb-14; }
 
-  /* breadcrumb */
-  .pp-crumbs       { @apply flex items-center gap-2 text-sm; }
-  .pp-crumbs a     { @apply text-black/50 hover:text-black/70; }
-  .pp-crumbs .sep  { @apply text-black/30; }
-  .pp-crumbs .cur  { @apply font-medium text-ink; }
+  /* breadcrumb — <x-ui.breadcrumbs class="pp-crumbs text-sm"> owns the layout, the
+     14px size comes from the utility in the markup. legacy delta: black/30 separator
+     and an ink (not black/90) current item. Both selectors need one class more than
+     the .ui-crumbs rule they override (ARCHITECTURE.md §6.3). */
+  .pp .pp-crumbs      { @apply leading-5; }
+  .pp .pp-crumbs .sep { @apply text-black/30; }
+  .pp .pp-crumbs .cur { @apply text-ink; }
 
-  /* section heading */
+  /* section heading — <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3">.
+     legacy delta: 14px label, .84px tracking, black/55 (the flat variant is 13px /
+     .5px / solid black). Three classes beat .ui-eyebrow[data-variant="flat"] p. */
   .pp-sechead      { @apply flex flex-col gap-4; }
-  .pp-eyebrow      { @apply flex items-center gap-3; }
-  .pp-eyebrow .line{ @apply h-0.5 w-8 bg-yellow; }
-  .pp-eyebrow p    { @apply text-sm font-medium tracking-[.84px] text-black/55 uppercase; }
+  .pp .pp-sechead .pp-eyebrow p { @apply text-sm tracking-[.84px] text-black/55; }
   .pp-sechead h2   { @apply text-[32px] font-semibold text-ink max-[900px]:text-[24px]; }
 
   /* header: left column + booking card */
@@ -70,8 +75,8 @@
   .pp-stat              { @apply flex items-center justify-between text-sm; }
   .pp-stat .k           { @apply text-black/50; }
   .pp-stat .v           { @apply font-medium text-ink; }
-  .pp-free              { @apply flex items-center gap-2 text-xs font-semibold text-[#229653]; }
-  .pp-free .d           { @apply size-2 shrink-0 rounded-full bg-[#229653]; }
+  .pp-free              { @apply flex items-center gap-2 text-xs font-semibold text-ok; }
+  .pp-free .d           { @apply size-2 shrink-0 rounded-full bg-ok; }
 
   /* portfolio */
   .pp-sec              { @apply flex flex-col gap-6; }

@@ -10,18 +10,22 @@
      <a class="nav-item catalog"> and drag its border lines down. */
   main.catalog { @apply pt-8 pb-16; }
 
-  /* breadcrumbs */
-  .cat-crumbs      { @apply flex h-4 items-center gap-2 text-[13px]; }
-  .cat-crumbs a    { @apply text-black/50 hover:text-black/70; }
-  .cat-crumbs .sep { @apply text-black/40; }
-  .cat-crumbs .cur { @apply font-medium text-black/70; }
+  /* breadcrumbs — the shape is <x-ui.breadcrumbs> / `.ui-crumbs` in app.css */
+  .cat-crumbs { @apply h-4; }
+  /* legacy delta: this page's separator is black/40 and its current crumb black/70,
+     the design system uses black/50 and black/90. Its crumbs also inherited the 1.5
+     of <html> (20px line boxes) rather than the leading-[normal] of .ui-crumbs, which
+     would move the text inside the fixed h-4 box. */
+  .catalog .cat-crumbs      { @apply leading-normal; }
+  .catalog .cat-crumbs .sep { @apply text-black/40; }
+  .catalog .cat-crumbs .cur { @apply text-black/70; }
 
   /* header row */
   .cat-head                 { @apply mt-9 flex items-end justify-between; }
   .cat-head-l               { @apply flex flex-col; }
-  .cat-head-l .eyebrow      { @apply mb-3.5 flex items-center gap-2.5; }
-  .cat-head-l .eyebrow .line{ @apply h-0.5 w-8 bg-yellow; }
-  .cat-head-l .eyebrow p    { @apply text-sm font-medium text-black/55 uppercase; }
+  /* legacy delta: the flat eyebrow label is 14px here, with no letter-spacing and a
+     black/55 tint (the design system flat variant is 13px / .5px / black) */
+  .catalog .cat-head-l .ui-eyebrow p { @apply text-sm tracking-normal text-black/55; }
   .cat-head-l .title-row    { @apply flex items-baseline gap-3.5; }
   .cat-head-l h1            { @apply text-[40px] leading-none font-semibold text-black; }
   .cat-head-l .count        { @apply text-lg font-normal text-black/50; }

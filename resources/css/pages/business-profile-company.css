@@ -1,63 +1,51 @@
-/* Page CSS for "business-profile-company" (Figma 1105:22829), ported from the old
-   biznes-profil-sirket.html <style type="text/tailwindcss"> block.
+/* Page CSS for "business-profile-company" (Figma 1105:22829).
 
-   The old block used generic names (.page, .field, .input, .card-*, .crumbs, .save-bar).
-   They were page-local there, but every page CSS file now compiles into ONE bundle, so
-   each top-level name is prefixed with `bpc-` to keep it from leaking into the six sibling
-   business-profile pages. Child names (.c1, .lbl, .cnt, .dot, .fill, .overlay) stay as they
-   are — they only match inside a prefixed parent.
+   The cabinet shell, the header, the settings nav, the cards, the fields and the save bar
+   now come from the shared design system (.cab-* / .ui-* in app.css, rendered by
+   <x-cabinet.*> / <x-ui.*>). Only two things are left here:
 
-   State classes became data-* attributes (ARCHITECTURE.md 7.1):
-   .snav-item.active -> [data-on="true"], .snav-item.contact -> [data-strong="true"].
-   The two 8px status dots were <img> tags pointing at expired Figma asset URLs; they are
-   plain colored circles now. */
+   1. LEGACY DELTAS. This page is the outlier of the six cabinet pages: it was ported
+      without hover states and without `leading-[normal]`, so the shared rules — which took
+      the majority value — are pulled back to this page's values with a higher-specificity
+      `.bpc-page …` selector (ARCHITECTURE.md §6.3). `.bpc-page` is kept on the shell only
+      as the hook for them.
+   2. The cover / logo block of the media card, which has no design-system equivalent. */
 @layer components {
   .bpc-page input,
-  .bpc-page textarea    { @apply [font-family:inherit]; }
+  .bpc-page textarea { @apply [font-family:inherit]; }
 
-  /* The gray cabinet background is declared once, on <body> (layout bodyClass). */
-  .bpc-page             { @apply mx-auto flex w-full max-w-[1440px] flex-col items-start font-sans text-ink antialiased; }
-  .bpc-edit             { @apply flex w-full flex-col items-start gap-5 px-7 pt-8 pb-14; }
+  /* legacy delta: this page never set leading-[normal] on the header type */
+  .bpc-page .cab-title           { @apply leading-normal; }
+  .bpc-page .ui-crumbs           { @apply leading-normal; }
+  .bpc-page .cab-snav-prog .hint { @apply leading-normal; }
+  .bpc-page .cab-card-title      { @apply leading-7 whitespace-nowrap; }
 
-  /* header */
-  .bpc-head             { @apply flex w-full items-end justify-between overflow-hidden; }
-  .bpc-head-left        { @apply flex flex-col items-start gap-2.5 overflow-hidden whitespace-nowrap; }
-  .bpc-crumbs           { @apply flex items-center gap-2 overflow-hidden text-[13px]; }
-  .bpc-crumbs .c1       { @apply font-normal text-black/50; }
-  .bpc-crumbs .c2       { @apply font-medium text-black/90; }
-  .bpc-title            { @apply text-[34px] font-bold text-ink; }
-  .bpc-head-right       { @apply flex items-center gap-3 overflow-hidden; }
-  .bpc-badge-pub        { @apply flex items-center gap-2 overflow-hidden rounded-ds bg-[#e9f6ed] px-3.5 py-2; }
-  .bpc-badge-pub .dot   { @apply size-2 shrink-0 rounded-full bg-[#229653]; }
-  .bpc-badge-pub p      { @apply text-[13px] font-semibold whitespace-nowrap text-[#229653]; }
-  .bpc-btn-view         { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white px-5; }
-  .bpc-btn-view p       { @apply text-[13px] font-semibold whitespace-nowrap text-ink; }
+  /* legacy delta: same for the form labels, the status badges and the inputs. The
+     textarea is excluded — it is the one control that did set leading-[normal]. */
+  .bpc-page .ui-label-b2b        { @apply leading-normal; }
+  .bpc-page .ui-badge            { @apply leading-normal; }
+  .bpc-page input.ui-control-b2b { @apply leading-5; }
 
-  /* body: settings nav + main column */
-  .bpc-body             { @apply flex w-full items-start gap-6; }
-  .bpc-snav             { @apply sticky top-[158px] flex w-[264px] shrink-0 flex-col items-start gap-1 self-start overflow-hidden rounded-ds border border-black/10 bg-white px-3 py-3.5; }
-  .bpc-snav-item        { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds px-3 py-[11px] text-inherit no-underline; }
-  .bpc-snav-item .lbl   { @apply text-sm font-medium whitespace-nowrap text-black/70; }
-  .bpc-snav-item .cnt   { @apply text-xs font-semibold text-black/40; }
-  .bpc-snav-item[data-strong="true"] .lbl { @apply text-black; }
-  .bpc-snav-item[data-on="true"]          { @apply bg-sel-bg; }
-  .bpc-snav-item[data-on="true"] .lbl     { @apply text-sm font-bold text-black/70; }
+  /* legacy delta: and for the "view profile" button, the settings-nav counter and the
+     save bar — none of them set leading-[normal] here either. */
+  .bpc-page .cab-btn-view        { @apply leading-normal; }
+  .bpc-page .cab-snav-item .cnt  { @apply leading-4; }
+  .bpc-page .cab-save-bar .msg   { @apply leading-normal; }
+  .bpc-page .cab-btn-save,
+  .bpc-page .cab-btn-cancel      { @apply leading-5; }
 
-  .bpc-snav-progress          { @apply flex w-full flex-col items-start gap-2 overflow-hidden rounded-ds bg-gray-soft2 px-3 py-3.5; }
-  .bpc-snav-progress .top     { @apply flex w-full items-start justify-between overflow-hidden text-xs text-ink; }
-  .bpc-snav-progress .top .l  { @apply font-semibold; }
-  .bpc-snav-progress .top .r  { @apply font-bold; }
-  .bpc-snav-bar               { @apply relative h-1.5 w-full overflow-hidden rounded-[3px] bg-black/10; }
-  .bpc-snav-bar .fill         { @apply absolute top-0 left-0 h-1.5 rounded-[3px] bg-yellow; }
-  .bpc-snav-progress .note    { @apply text-[11px] font-normal whitespace-nowrap text-black/50; }
+  /* legacy delta: this page's settings nav has no reserved border, no transition,
+     no hover, a bg-only active state and a black/70 active label */
+  .bpc-page .cab-snav-item { @apply border-0 transition-none; }
+  .bpc-page .cab-snav-item:not([data-on="true"]):hover { @apply bg-transparent; }
+  .bpc-page .cab-snav-item[data-on="true"] .lbl    { @apply font-bold text-black/70; }
+  .bpc-page .cab-snav-item[data-strong="true"] .lbl { @apply text-black; }
 
-  .bpc-main { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-5 overflow-hidden; }
+  /* page-specific: the company card heading is 20px, not the 18px of .cab-card-title */
+  .bpc-card-company h2    { @apply text-xl font-bold whitespace-nowrap text-ink; }
+  .bpc-card-company .desc { @apply text-[13px] font-normal whitespace-nowrap text-black/50; }
 
-  /* logo / cover card */
-  .bpc-card-media          { @apply flex w-full flex-col items-start gap-[18px] overflow-hidden rounded-ds border border-black/10 bg-white p-6; }
-  .bpc-card-media-head     { @apply flex w-full flex-col items-start gap-1 overflow-hidden; }
-  .bpc-card-media-head h3  { @apply text-lg font-bold whitespace-nowrap text-ink; }
-  .bpc-card-media-head p   { @apply w-full text-[13px] leading-[1.45] font-normal text-black/50; }
+  /* cover + logo block of the media card */
   .bpc-cover               { @apply relative h-[180px] w-full overflow-hidden rounded-ds; }
   .bpc-cover .bg           { @apply pointer-events-none absolute inset-0 rounded-ds; }
   .bpc-cover .bg img       { @apply absolute size-full max-w-none rounded-ds object-cover; }
@@ -75,33 +63,4 @@
   .bpc-logo-info           { @apply flex shrink-0 flex-col items-start gap-2 overflow-hidden; }
   .bpc-logo-info > p       { @apply text-[13px] font-normal whitespace-nowrap text-black/55; }
   .bpc-logo-btns           { @apply flex items-start gap-2 overflow-hidden; }
-  .bpc-btn-change          { @apply flex cursor-pointer items-start overflow-hidden rounded-ds border border-black/20 bg-white px-3.5 py-2; }
-  .bpc-btn-change p        { @apply text-[13px] font-semibold whitespace-nowrap text-ink; }
-  .bpc-btn-del             { @apply flex cursor-pointer items-start overflow-hidden rounded-ds px-3.5 py-2; }
-  .bpc-btn-del p           { @apply text-[13px] font-medium whitespace-nowrap text-[#d33c32]; }
-
-  /* form card + fields */
-  .bpc-card-company        { @apply flex w-full flex-col items-start gap-5 overflow-hidden rounded-ds border border-black/10 bg-white px-7 pt-6 pb-7; }
-  .bpc-card-company h2     { @apply text-xl font-bold whitespace-nowrap text-ink; }
-  .bpc-card-company .desc  { @apply text-[13px] font-normal whitespace-nowrap text-black/50; }
-  .bpc-row2                { @apply flex w-full items-start gap-4 overflow-hidden; }
-  .bpc-field               { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-2 overflow-hidden; }
-  .bpc-field.full          { @apply w-full flex-none; }
-  .bpc-field-lbl           { @apply flex shrink-0 items-center gap-2 overflow-hidden; }
-  .bpc-field-lbl p         { @apply text-[13px] font-semibold whitespace-nowrap text-ink; }
-  .bpc-badge-ok            { @apply flex shrink-0 items-start overflow-hidden rounded-ds bg-green/12 px-2 py-[3px]; }
-  .bpc-badge-ok p          { @apply text-[11px] font-medium whitespace-nowrap text-green; }
-  .bpc-input               { @apply flex w-full items-center overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px] text-sm font-normal text-ink outline-none focus:border-ink; }
-  .bpc-textarea            { @apply h-24 w-full resize-none rounded-ds border border-black/14 bg-white px-4 py-[13px] text-sm leading-[normal] font-normal text-ink outline-none focus:border-ink; }
-
-  /* save bar */
-  .bpc-save-bar         { @apply flex w-full items-center justify-between overflow-hidden rounded-ds bg-ink px-6 py-4; }
-  .bpc-save-left        { @apply flex shrink-0 items-center gap-2 overflow-hidden; }
-  .bpc-save-left .dot   { @apply size-2 shrink-0 rounded-full bg-yellow; }
-  .bpc-save-left p      { @apply text-[13px] font-medium whitespace-nowrap text-white/85; }
-  .bpc-save-right       { @apply flex items-start gap-2.5 overflow-hidden; }
-  .bpc-btn-cancel       { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-white/35 bg-transparent px-[18px]; }
-  .bpc-btn-cancel p     { @apply text-sm font-medium whitespace-nowrap text-white/85; }
-  .bpc-btn-save         { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds border-none bg-yellow px-[26px]; }
-  .bpc-btn-save p       { @apply text-sm font-bold whitespace-nowrap text-ink; }
 }

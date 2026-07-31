@@ -3,11 +3,8 @@
 
 {{-- Auth card — Figma 1105:21830 (auth-page 1440x1160, 640-wide card, 80 top padding). --}}
 <section class="bg-gray-soft2 py-20 max-[700px]:px-4 max-[700px]:py-10">
-  <div class="mx-auto flex w-full max-w-[640px] flex-col items-start gap-6 overflow-hidden border border-black/10 bg-white px-12 py-10 max-[700px]:px-6">
-    <div class="flex items-center gap-2.5 overflow-hidden bg-white">
-      <div class="h-1 w-8 shrink-0 rounded-ds bg-yellow-line"></div>
-      <p class="text-xs font-semibold tracking-[1px] whitespace-nowrap text-black/50 uppercase">{{ __('business-register.head.tag') }}</p>
-    </div>
+  <div class="br-card mx-auto flex w-full max-w-[640px] flex-col items-start gap-6 overflow-hidden border border-black/10 bg-white px-12 py-10 max-[700px]:px-6">
+    <x-ui.eyebrow variant="b2b" :label="__('business-register.head.tag')" class="overflow-hidden bg-white" />
     <p class="text-[32px] font-bold tracking-[-0.5px] whitespace-nowrap text-ink">{{ __('business-register.head.title') }}</p>
     <p class="text-sm font-normal whitespace-nowrap text-black/50 max-[700px]:whitespace-normal">{{ __('business-register.head.subtitle') }}</p>
 
@@ -30,31 +27,22 @@
       </div>
     </div>
 
-    <div class="flex w-full flex-col items-start gap-2 overflow-hidden bg-white">
-      <label class="text-[13px] font-semibold whitespace-nowrap text-ink">{{ __('business-register.form.name_label') }}</label>
-      <div class="flex w-full items-center overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px] focus-within:border-ink">
-        <input class="w-full border-none bg-transparent font-sans text-sm font-normal text-ink outline-none placeholder:text-black/40" type="text" placeholder="{{ __('business-register.form.name_placeholder') }}">
-      </div>
-    </div>
-    <div class="flex w-full flex-col items-start gap-2 overflow-hidden bg-white">
-      <label class="text-[13px] font-semibold whitespace-nowrap text-ink">{{ __('business-register.form.contact_label') }}</label>
-      <div class="flex w-full items-center overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px] focus-within:border-ink">
-        <input class="w-full border-none bg-transparent font-sans text-sm font-normal text-ink outline-none placeholder:text-black/40" type="text" placeholder="{{ __('business-register.form.contact_placeholder') }}">
-      </div>
-    </div>
-    <div class="flex w-full flex-col items-start gap-2 overflow-hidden bg-white">
-      <label class="text-[13px] font-semibold whitespace-nowrap text-ink">{{ __('business-register.form.password_label') }}</label>
-      <div class="flex w-full items-center overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px] focus-within:border-ink">
-        <input class="w-full border-none bg-transparent font-sans text-sm font-normal text-ink outline-none placeholder:text-black/40" type="password" placeholder="{{ __('business-register.form.password_placeholder') }}">
-      </div>
-    </div>
+    <x-ui.field variant="b2b" :label="__('business-register.form.name_label')" class="w-full items-start overflow-hidden bg-white">
+      <x-ui.input variant="b2b" :placeholder="__('business-register.form.name_placeholder')" />
+    </x-ui.field>
+    <x-ui.field variant="b2b" :label="__('business-register.form.contact_label')" class="w-full items-start overflow-hidden bg-white">
+      <x-ui.input variant="b2b" :placeholder="__('business-register.form.contact_placeholder')" />
+    </x-ui.field>
+    <x-ui.field variant="b2b" :label="__('business-register.form.password_label')" class="w-full items-start overflow-hidden bg-white">
+      <x-ui.input variant="b2b" type="password" :placeholder="__('business-register.form.password_placeholder')" />
+    </x-ui.field>
 
     <label class="flex items-center gap-2.5 overflow-hidden bg-white">
       <input type="checkbox" class="br-terms-box">
       <p class="text-[13px] font-normal whitespace-nowrap text-black/70 max-[700px]:whitespace-normal">{{ __('business-register.form.terms') }}</p>
     </label>
 
-    <button class="flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-ds border-none bg-yellow py-4" type="button"><p class="font-sans text-base font-semibold whitespace-nowrap text-ink">{{ __('business-register.form.submit') }}</p></button>
+    <x-ui.button variant="primary" :hover="false" class="w-full py-4"><p class="font-sans text-base font-semibold whitespace-nowrap text-ink">{{ __('business-register.form.submit') }}</p></x-ui.button>
 
     <div class="flex w-full items-center gap-2.5 overflow-hidden rounded-ds bg-gray-soft2 px-3.5 py-3 font-normal">
       <p class="shrink-0 text-sm whitespace-nowrap text-black">ℹ️</p>

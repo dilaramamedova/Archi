@@ -35,7 +35,7 @@
             <div class="id-info">
                 <div class="id-name-row">
                     <p class="id-name">{{ __('business-profile.identity.name') }}</p>
-                    <div class="id-badge"><p>{{ __('business-profile.identity.verified') }}</p></div>
+                    <x-ui.badge tone="ok" size="sm" class="px-2.5 py-1 text-xs">{{ __('business-profile.identity.verified') }}</x-ui.badge>
                 </div>
                 <div class="id-meta">
                     <p class="m">{{ __('business-profile.identity.location') }}</p>
@@ -56,8 +56,10 @@
             </div>
         </div>
         <div class="id-actions">
-            <a class="btn-yellow" href="{{ route('search', ['tab' => 'prod']) }}"><p>{{ __('business-profile.identity.go_to_products') }}</p></a>
-            <button type="button" class="btn-outline"><span>{{ __('business-profile.identity.follow') }}</span></button>
+            <x-ui.button variant="primary" :href="route('search', ['tab' => 'prod'])"
+                class="h-[46px] px-6 text-sm leading-[normal] font-bold whitespace-nowrap">{{ __('business-profile.identity.go_to_products') }}</x-ui.button>
+            <x-ui.button variant="outline"
+                class="h-[46px] px-6 text-sm leading-[normal] font-semibold whitespace-nowrap">{{ __('business-profile.identity.follow') }}</x-ui.button>
         </div>
     </div>
 
@@ -66,14 +68,14 @@
         <div class="bp-left">
 
             <div class="sec-head">
-                <div class="kicker"><div class="bar"></div><p>{{ __('business-profile.about.kicker') }}</p></div>
+                <x-ui.eyebrow variant="kicker" :label="__('business-profile.about.kicker')" />
                 <p class="sec-title">{{ __('business-profile.about.title') }}</p>
             </div>
 
             <p class="about-p">{{ __('business-profile.about.text') }}</p>
 
             <div class="sec-head">
-                <div class="kicker"><div class="bar"></div><p>{{ __('business-profile.showrooms.kicker') }}</p></div>
+                <x-ui.eyebrow variant="kicker" :label="__('business-profile.showrooms.kicker')" />
                 <p class="sec-title">{{ __('business-profile.showrooms.title') }}</p>
             </div>
 
@@ -89,7 +91,7 @@
 
             <div class="catalog-head">
                 <div class="sec-head">
-                    <div class="kicker"><div class="bar"></div><p>{{ __('business-profile.catalog.kicker') }}</p></div>
+                    <x-ui.eyebrow variant="kicker" :label="__('business-profile.catalog.kicker')" />
                     <p class="sec-title">{{ __('business-profile.catalog.title') }}</p>
                 </div>
                 <a class="see-all" href="{{ route('search', ['tab' => 'prod']) }}"><p>{{ __('business-profile.catalog.see_all') }}</p></a>
@@ -145,8 +147,10 @@
                 <div class="sb-chip"><p>RU</p></div>
                 <div class="sb-chip"><p>EN</p></div>
             </div>
-            <button type="button" class="sb-btn-yellow"><span>{{ __('business-profile.contact.get_in_touch') }}</span></button>
-            <button type="button" class="sb-btn-outline"><span>{{ __('business-profile.contact.send_message') }}</span></button>
+            <x-ui.button variant="primary"
+                class="h-[50px] w-full text-[15px] leading-[normal] font-bold whitespace-nowrap">{{ __('business-profile.contact.get_in_touch') }}</x-ui.button>
+            <x-ui.button variant="outline"
+                class="h-12 w-full text-sm leading-[normal] font-semibold whitespace-nowrap">{{ __('business-profile.contact.send_message') }}</x-ui.button>
             <div class="sb-line"></div>
             <div class="sb-row"><p class="k">{{ __('business-profile.contact.response_time') }}</p><p class="v">{{ __('business-profile.contact.response_time_value') }}</p></div>
             <div class="sb-row"><p class="k">{{ __('business-profile.contact.products') }}</p><p class="v">1,240</p></div>

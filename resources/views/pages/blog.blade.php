@@ -8,13 +8,12 @@
 {{-- ===================== BLOG HERO ===================== --}}
 <section class="wrap pt-12">
   <div class="inner flex flex-col gap-10">
-    <nav class="flex items-center gap-1 leading-[1.5]">
-      <a class="text-sm text-black/50" href="{{ route('home') }}">{{ __('common.home') }}</a>
-      <span class="text-base text-black/55">/</span>
-      <span class="text-sm text-black/90">{{ __('blog.crumb_current') }}</span>
-    </nav>
+    <x-ui.breadcrumbs id="blogCrumbs" class="gap-1 text-sm leading-[1.5]" :items="[
+        ['label' => __('common.home'), 'href' => route('home')],
+        ['label' => __('blog.crumb_current')],
+    ]" />
     <div class="flex max-w-[688px] flex-col">
-      <div class="flex items-center gap-3"><span class="h-1 w-8 rounded-[2px] bg-yellow"></span><p class="text-sm font-medium tracking-[1.4px] text-black/55 uppercase">{{ __('blog.hero.tag') }}</p></div>
+      <x-ui.eyebrow variant="lg" :label="__('blog.hero.tag')" />
       <h1 class="max-w-[600px] pt-4 text-5xl leading-[1.25] font-semibold tracking-[-.4px] text-black/90 max-[1200px]:max-w-full max-[640px]:text-[32px]">{{ __('blog.hero.title') }}</h1>
       <p class="max-w-[560px] pt-2 text-xl leading-[1.5] font-normal text-black/55 max-[1200px]:max-w-full">{{ __('blog.hero.subtitle') }}</p>
     </div>
@@ -45,20 +44,19 @@
           <img class="size-full object-cover transition-transform duration-[600ms] group-hover:scale-105" src="/assets/blog-hero.jpg" alt="">
         </a>
         <div class="flex flex-1 flex-col gap-5 max-[1200px]:w-full">
-          <div class="flex items-center gap-3">
-            <span class="h-1 w-8 rounded-[2px] bg-yellow"></span>
-            <p class="text-sm font-medium tracking-[1.4px] text-black/55 uppercase">{{ __('blog.featured.tag_1') }}</p>
+          <x-ui.eyebrow variant="lg" :label="__('blog.featured.tag_1')">
             <span class="size-1 rounded-[14px] bg-[#5c5c5c]"></span>
-            <p class="text-sm font-medium tracking-[1.4px] text-black/55 uppercase">{{ __('blog.featured.tag_2') }}</p>
-          </div>
-          <h2 class="text-[40px] leading-[1.25] font-semibold tracking-[-.21px] text-[#141414] max-[640px]:text-[28px]">{{ __('blog.featured.title') }}</h2>
+            <p>{{ __('blog.featured.tag_2') }}</p>
+          </x-ui.eyebrow>
+          <h2 class="text-[40px] leading-[1.25] font-semibold tracking-[-.21px] text-ink-alt max-[640px]:text-[28px]">{{ __('blog.featured.title') }}</h2>
           <p class="max-w-[560px] text-xl leading-[1.5] font-normal text-black/55 max-[1200px]:max-w-full">{{ __('blog.featured.excerpt') }}</p>
           <div class="flex items-center gap-1.5">
             <p class="text-base leading-[1.5] text-black/40">{{ __('blog.featured.author') }}</p><span class="size-1 rounded-[14px] bg-[#5c5c5c]"></span>
             <p class="text-base leading-[1.5] text-black/40">{{ __('blog.featured.read_time') }}</p><span class="size-1 rounded-[14px] bg-[#5c5c5c]"></span>
             <p class="text-base leading-[1.5] text-black/40">{{ __('blog.featured.date') }}</p>
           </div>
-          <a class="group/read flex cursor-pointer items-center gap-1 self-start bg-ink px-6 py-3 text-base text-off-white transition-[background] duration-[250ms] hover:bg-black" href="#">{{ __('common.read_more') }} <img class="size-5 brightness-0 invert transition-transform duration-[250ms] group-hover/read:translate-x-1" src="/assets/ic-arrow.svg" alt=""></a>
+          <x-ui.button variant="dark" :hover="false" href="#"
+                       class="group/read gap-1 self-start rounded-none px-6 py-3 text-base text-off-white transition-[background] duration-[250ms] hover:bg-black">{{ __('common.read_more') }} <img class="size-5 brightness-0 invert transition-transform duration-[250ms] group-hover/read:translate-x-1" src="/assets/ic-arrow.svg" alt=""></x-ui.button>
         </div>
       </div>
     </div>

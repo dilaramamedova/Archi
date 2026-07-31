@@ -22,15 +22,17 @@
 
 <section class="min-h-[60vh] bg-gray-soft2 pt-12 pb-20">
   <div class="wrap"><div class="inner">
-    <nav class="mb-7 flex items-center gap-1.5 text-sm text-black/50">
-      <a href="{{ route('home') }}">{{ __('common.home') }}</a><span>/</span><span class="text-black/90">{{ __('calculator.breadcrumb') }}</span>
-    </nav>
+    <x-ui.breadcrumbs class="qc-crumbs mb-7" :items="[
+        ['label' => __('common.home'), 'href' => route('home')],
+        ['label' => __('calculator.breadcrumb')],
+    ]" />
 
     <div class="mx-auto flex max-w-[620px] flex-col gap-5 rounded-ds border border-black/10 bg-white p-7 max-[640px]:p-5"
          id="qcCalc"
          data-labels="{{ json_encode($calcLabels, JSON_UNESCAPED_UNICODE) }}">
       <div>
-        <div class="flex items-center gap-2.5"><span class="h-1 w-7 rounded-ds bg-yellow-line"></span><p class="text-xs font-semibold tracking-[1px] text-black/50 uppercase">{{ __('calculator.head.tag') }}</p></div>
+        {{-- the rule is 28px here, the b2b default is 32px --}}
+        <x-ui.eyebrow variant="b2b" class="[&_.rule]:w-7" :label="__('calculator.head.tag')" />
         <h1 class="mt-2 text-2xl font-bold tracking-[-.3px] text-ink">{{ __('calculator.head.title') }}</h1>
         <div class="mt-0.5 text-sm text-black/50">{{ __('calculator.head.subtitle') }}</div>
       </div>
@@ -89,7 +91,8 @@
       <div class="text-[13px] font-semibold text-black/50" id="qcRlbl">{{ __('calculator.result.label', ['area' => 80]) }}</div>
       <div class="flex gap-3 max-[640px]:flex-col" id="qcTiers"></div>
 
-      <a class="flex h-[50px] cursor-pointer items-center justify-center gap-2 rounded-ds border-none bg-yellow text-[15px] font-semibold text-ink no-underline transition-[filter] duration-200 hover:brightness-[.93]" id="qcNext" href="{{ route('calculator.detailed') }}">{{ __('calculator.actions.next') }}</a>
+      <x-ui.button variant="primary" id="qcNext" :href="route('calculator.detailed')"
+                   class="h-[50px] gap-2 text-[15px] font-semibold duration-200 hover:brightness-[.93]">{{ __('calculator.actions.next') }}</x-ui.button>
       <div class="flex flex-wrap justify-center gap-5">
         <button class="cursor-pointer border-none text-[13px] font-medium text-black/40 [background:none] [font-family:inherit] hover:text-ink" id="qcPdf">{{ __('calculator.actions.pdf') }}</button>
         <button class="cursor-pointer border-none text-[13px] font-medium text-black/40 [background:none] [font-family:inherit] hover:text-ink" id="qcWa">{{ __('calculator.actions.whatsapp') }}</button>

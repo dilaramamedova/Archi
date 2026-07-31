@@ -12,15 +12,12 @@
   <div class="mx-auto max-w-[760px] px-7">
     <div class="flex flex-col gap-7 border border-black/12 bg-white p-10 shadow-[-4px_4px_4px_rgba(0,0,0,0.05)] max-[640px]:p-6">
       <div class="flex flex-col gap-2">
-        <div class="flex items-center gap-3">
-          <span class="h-1 w-8 rounded-[2px] bg-yellow"></span>
-          <p class="text-[13px] font-medium tracking-[1.4px] text-black/55 uppercase">{{ __('register.head.tag') }}</p>
-        </div>
+        <x-ui.eyebrow :label="__('register.head.tag')" />
         <h1 class="text-[32px] font-semibold tracking-[-0.4px] text-black/90 max-[640px]:text-[26px]">{{ __('register.head.title') }}</h1>
         <p class="text-base leading-[1.5] text-black/55">{{ __('register.head.subtitle') }}</p>
       </div>
 
-      <div class="hidden border border-green bg-[#eafce9] px-4 py-3.5 text-[15px] text-[#0a7a14]" id="okMsg">{{ __('register.success') }}</div>
+      <x-ui.alert tone="ok" id="okMsg">{{ __('register.success') }}</x-ui.alert>
 
       {{-- Role selection — the selected state is a data-sel attribute + Tailwind group-data variants. --}}
       <div>
@@ -49,68 +46,49 @@
 
       <form class="flex flex-col gap-[18px]" id="regForm">
         <div class="flex gap-3.5 max-[640px]:flex-col">
-          <div class="flex flex-1 flex-col gap-2">
-            <label class="text-sm font-medium text-black/70">{{ __('register.form.first_name_label') }}</label>
-            <input class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 placeholder:text-black/40 focus:border-black" type="text" placeholder="{{ __('register.form.first_name_placeholder') }}" required>
-          </div>
-          <div class="flex flex-1 flex-col gap-2">
-            <label class="text-sm font-medium text-black/70">{{ __('register.form.last_name_label') }}</label>
-            <input class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 placeholder:text-black/40 focus:border-black" type="text" placeholder="{{ __('register.form.last_name_placeholder') }}" required>
-          </div>
+          <x-ui.field class="flex-1" :label="__('register.form.first_name_label')">
+            <x-ui.input type="text" :placeholder="__('register.form.first_name_placeholder')" required />
+          </x-ui.field>
+          <x-ui.field class="flex-1" :label="__('register.form.last_name_label')">
+            <x-ui.input type="text" :placeholder="__('register.form.last_name_placeholder')" required />
+          </x-ui.field>
         </div>
 
         {{-- Seller only · [&[hidden]]:hidden is required because `flex` beats the UA [hidden] rule. --}}
-        <div class="flex flex-col gap-2 [&[hidden]]:hidden" data-for="seller" @if ($role !== 'seller') hidden @endif>
-          <label class="text-sm font-medium text-black/70">{{ __('register.form.company_label') }}</label>
-          <input class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 placeholder:text-black/40 focus:border-black" type="text" placeholder="{{ __('register.form.company_placeholder') }}">
-        </div>
+        <x-ui.field class="[&[hidden]]:hidden" data-for="seller" :hidden="$role !== 'seller'" :label="__('register.form.company_label')">
+          <x-ui.input type="text" :placeholder="__('register.form.company_placeholder')" />
+        </x-ui.field>
 
         {{-- Master only --}}
         <div class="flex gap-3.5 max-[640px]:flex-col [&[hidden]]:hidden" data-for="master" @if ($role !== 'master') hidden @endif>
-          <div class="flex flex-1 flex-col gap-2">
-            <label class="text-sm font-medium text-black/70">{{ __('register.form.specialization_label') }}</label>
-            <select class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 focus:border-black">
-              <option value="">{{ __('register.form.select_placeholder') }}</option>
-              @foreach (__('register.specializations') as $specialization)
-                <option>{{ $specialization }}</option>
-              @endforeach
-            </select>
-          </div>
-          <div class="flex flex-1 flex-col gap-2">
-            <label class="text-sm font-medium text-black/70">{{ __('register.form.city_label') }}</label>
-            <select class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 focus:border-black">
-              <option value="">{{ __('register.form.select_placeholder') }}</option>
-              @foreach (__('register.cities') as $city)
-                <option>{{ $city }}</option>
-              @endforeach
-            </select>
-          </div>
+          <x-ui.field class="flex-1" :label="__('register.form.specialization_label')">
+            <x-ui.select :placeholder="__('register.form.select_placeholder')" :options="__('register.specializations')" />
+          </x-ui.field>
+          <x-ui.field class="flex-1" :label="__('register.form.city_label')">
+            <x-ui.select :placeholder="__('register.form.select_placeholder')" :options="__('register.cities')" />
+          </x-ui.field>
         </div>
 
         <div class="flex gap-3.5 max-[640px]:flex-col">
-          <div class="flex flex-1 flex-col gap-2">
-            <label class="text-sm font-medium text-black/70">{{ __('register.form.email_label') }}</label>
-            <input class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 placeholder:text-black/40 focus:border-black" type="email" placeholder="{{ __('register.form.email_placeholder') }}" required>
-          </div>
-          <div class="flex flex-1 flex-col gap-2">
-            <label class="text-sm font-medium text-black/70">{{ __('register.form.phone_label') }}</label>
-            <input class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 placeholder:text-black/40 focus:border-black" type="tel" placeholder="{{ __('register.form.phone_placeholder') }}" required>
-          </div>
+          <x-ui.field class="flex-1" :label="__('register.form.email_label')">
+            <x-ui.input type="email" :placeholder="__('register.form.email_placeholder')" required />
+          </x-ui.field>
+          <x-ui.field class="flex-1" :label="__('register.form.phone_label')">
+            <x-ui.input type="tel" :placeholder="__('register.form.phone_placeholder')" required />
+          </x-ui.field>
         </div>
         <div class="flex gap-3.5 max-[640px]:flex-col">
-          <div class="flex flex-1 flex-col gap-2">
-            <label class="text-sm font-medium text-black/70">{{ __('register.form.password_label') }}</label>
-            <input class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 placeholder:text-black/40 focus:border-black" type="password" placeholder="{{ __('register.form.password_placeholder') }}" required>
-          </div>
-          <div class="flex flex-1 flex-col gap-2">
-            <label class="text-sm font-medium text-black/70">{{ __('register.form.password_confirm_label') }}</label>
-            <input class="border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 placeholder:text-black/40 focus:border-black" type="password" placeholder="{{ __('register.form.password_confirm_placeholder') }}" required>
-          </div>
+          <x-ui.field class="flex-1" :label="__('register.form.password_label')">
+            <x-ui.input type="password" :placeholder="__('register.form.password_placeholder')" required />
+          </x-ui.field>
+          <x-ui.field class="flex-1" :label="__('register.form.password_confirm_label')">
+            <x-ui.input type="password" :placeholder="__('register.form.password_confirm_placeholder')" required />
+          </x-ui.field>
         </div>
 
-        <label class="flex items-center gap-2.5 text-sm text-black/70"><input class="size-[18px] accent-yellow" type="checkbox" required> <span><a class="border-b border-yellow-line" href="#">{{ __('register.form.terms_link') }}</a> {{ __('register.form.terms_and') }} <a class="border-b border-yellow-line" href="#">{{ __('register.form.privacy_link') }}</a> {{ __('register.form.terms_agree') }}</span></label>
+        <x-ui.checkbox required class="gap-2.5"><span><a class="border-b border-yellow-line" href="#">{{ __('register.form.terms_link') }}</a> {{ __('register.form.terms_and') }} <a class="border-b border-yellow-line" href="#">{{ __('register.form.privacy_link') }}</a> {{ __('register.form.terms_agree') }}</span></x-ui.checkbox>
 
-        <button class="h-[54px] cursor-pointer border-none bg-yellow text-lg font-semibold text-ink transition-[filter] duration-200 hover:brightness-[.93]" type="submit">{{ __('register.form.submit') }}</button>
+        <x-ui.button variant="primary" type="submit" class="h-[54px] rounded-none text-lg font-semibold hover:brightness-[.93]">{{ __('register.form.submit') }}</x-ui.button>
         <p class="text-center text-[15px] text-black/60">{{ __('register.form.have_account') }} <a class="border-b-2 border-yellow-line font-semibold text-ink" href="{{ route('login') }}">{{ __('register.form.sign_in') }}</a></p>
       </form>
     </div>

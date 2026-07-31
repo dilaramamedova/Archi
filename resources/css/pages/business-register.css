@@ -3,6 +3,12 @@
    approach 1); only the terms checkbox needs a rule, because its checked glyph is a
    background image that cannot be expressed as a utility. */
 @layer components {
+  /* legacy delta: this page's label and control inherit the 1.5 body line-height,
+     while the design system pins line-height:normal on .ui-label-b2b / .ui-control-b2b.
+     leading-normal = 1.5 (19.5px label), leading-5 = 20px = text-sm's own line-height. */
+  .br-card .ui-label-b2b   { @apply leading-normal; }
+  .br-card .ui-control-b2b { @apply leading-5; }
+
   .br-terms-box          { @apply m-0 size-[18px] shrink-0 cursor-pointer appearance-none rounded-ds border border-black/14 bg-white; }
   /* Checked state carries a tick, not only the yellow fill: an 11x11 ic:baseline-check
      glyph inlined as a data URI (no network request, no extra file in public/assets).

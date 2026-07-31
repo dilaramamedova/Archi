@@ -4,9 +4,9 @@
 // (medium -> bold) and reflowed the row for one frame before the browser navigated away.
 // Shared behaviour (navbar, cursor) lives in resources/js/shared/.
 export default function init() {
-  const bar = document.querySelector('.bpc-save-bar');
-  const saveBtn = document.querySelector('.bpc-btn-save');
-  const cancelBtn = document.querySelector('.bpc-btn-cancel');
+  const bar = document.querySelector('.cab-save-bar');
+  const saveBtn = bar?.querySelector('[data-save]');
+  const cancelBtn = bar?.querySelector('[data-cancel]');
 
   if (saveBtn && bar) {
     saveBtn.addEventListener('click', () => window.alert(bar.dataset.savedMessage || ''));

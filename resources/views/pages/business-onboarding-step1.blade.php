@@ -37,35 +37,38 @@
     </div>
 
     {{-- Form card — Figma 1105:21898 (pad 28/32, r4, stroke black@0.10).
-         No overflow-hidden: the city menu is absolutely positioned and must escape the card. --}}
+         No overflow-hidden: the city menu is absolutely positioned and must escape the card.
+         The fields are <x-ui.field variant="b2b"> + <x-ui.input variant="b2b">: .ui-control-b2b
+         is the same box the old wrapper <div> drew, so the border/padding now sit on the
+         control itself and the wrapper is gone. --}}
     <div class="flex w-full flex-col items-start gap-5 rounded-ds border border-black/10 bg-white px-8 py-7">
       <div class="flex w-full items-start gap-4 overflow-hidden bg-white max-[640px]:flex-col">
-        <div class="relative flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden bg-white max-[640px]:w-full">
-          <label class="shrink-0 whitespace-nowrap text-[13px] font-semibold leading-[normal] text-ink" for="onb1-legal-name">{{ __('business-onboarding-step1.form.legal_name_label') }}</label>
-          <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px]">
-            <input class="w-full border-none bg-transparent font-sans text-sm font-normal leading-[normal] text-ink outline-none placeholder:text-black/40" id="onb1-legal-name" type="text" name="legal_name" autocomplete="organization" placeholder="{{ __('business-onboarding-step1.form.legal_name_placeholder') }}">
-          </div>
-        </div>
-        <div class="relative flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden bg-white max-[640px]:w-full">
-          <label class="shrink-0 whitespace-nowrap text-[13px] font-semibold leading-[normal] text-ink" for="onb1-brand">{{ __('business-onboarding-step1.form.brand_label') }}</label>
-          <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px]">
-            <input class="w-full border-none bg-transparent font-sans text-sm font-normal leading-[normal] text-ink outline-none placeholder:text-black/40" id="onb1-brand" type="text" name="brand" placeholder="{{ __('business-onboarding-step1.form.brand_placeholder') }}">
-          </div>
-        </div>
+        <x-ui.field variant="b2b" :label="__('business-onboarding-step1.form.legal_name_label')" for="onb1-legal-name"
+                    class="relative min-w-px flex-[1_0_0] items-start overflow-hidden bg-white max-[640px]:w-full">
+          <x-ui.input variant="b2b" id="onb1-legal-name" name="legal_name" autocomplete="organization"
+                      :placeholder="__('business-onboarding-step1.form.legal_name_placeholder')" />
+        </x-ui.field>
+        <x-ui.field variant="b2b" :label="__('business-onboarding-step1.form.brand_label')" for="onb1-brand"
+                    class="relative min-w-px flex-[1_0_0] items-start overflow-hidden bg-white max-[640px]:w-full">
+          <x-ui.input variant="b2b" id="onb1-brand" name="brand"
+                      :placeholder="__('business-onboarding-step1.form.brand_placeholder')" />
+        </x-ui.field>
       </div>
 
       <div class="flex w-full items-start gap-0 overflow-hidden bg-white">
-        <div class="relative flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden bg-white">
-          <label class="shrink-0 whitespace-nowrap text-[13px] font-semibold leading-[normal] text-ink" for="onb1-tax-id">{{ __('business-onboarding-step1.form.tax_id_label') }}</label>
-          <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px]">
-            <input class="w-full border-none bg-transparent font-sans text-sm font-normal leading-[normal] text-ink outline-none placeholder:text-black/40" id="onb1-tax-id" type="text" name="tax_id" inputmode="numeric" maxlength="10" placeholder="{{ __('business-onboarding-step1.form.tax_id_placeholder') }}">
-          </div>
-        </div>
+        <x-ui.field variant="b2b" :label="__('business-onboarding-step1.form.tax_id_label')" for="onb1-tax-id"
+                    class="relative min-w-px flex-[1_0_0] items-start overflow-hidden bg-white">
+          <x-ui.input variant="b2b" id="onb1-tax-id" name="tax_id" inputmode="numeric" maxlength="10"
+                      :placeholder="__('business-onboarding-step1.form.tax_id_placeholder')" />
+        </x-ui.field>
       </div>
 
       <div class="flex w-full items-start gap-4 bg-white max-[640px]:flex-col">
-        <div class="relative flex min-w-px flex-[1_0_0] flex-col items-start gap-2 bg-white max-[640px]:w-full">
-          <p class="shrink-0 whitespace-nowrap text-[13px] font-semibold leading-[normal] text-ink" id="onb1-city-label">{{ __('business-onboarding-step1.form.city_label') }}</p>
+        {{-- City — a listbox widget, not a <select>, so the control stays page-local.
+             The label is a <p> with an id (aria-labelledby), which is why it is written
+             out instead of passed as the field's :label. --}}
+        <x-ui.field variant="b2b" class="relative min-w-px flex-[1_0_0] items-start bg-white max-[640px]:w-full">
+          <p class="ui-label-b2b" id="onb1-city-label">{{ __('business-onboarding-step1.form.city_label') }}</p>
           {{-- Border width is reserved in the closed state; the open state only changes the
                colour. Padding compensates the 1.5px border so the box matches the 1px fields. --}}
           <div class="flex w-full shrink-0 cursor-pointer items-center justify-between overflow-hidden rounded-ds border-[1.5px] border-black/14 bg-white px-[15.5px] py-[12.5px] data-[on=true]:border-ink"
@@ -86,59 +89,59 @@
               </div>
             @endforeach
           </div>
-        </div>
-        <div class="relative flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden bg-white max-[640px]:w-full">
-          <label class="shrink-0 whitespace-nowrap text-[13px] font-semibold leading-[normal] text-ink" for="onb1-address">{{ __('business-onboarding-step1.form.address_label') }}</label>
-          <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px]">
-            <input class="w-full border-none bg-transparent font-sans text-sm font-normal leading-[normal] text-ink outline-none placeholder:text-black/40" id="onb1-address" type="text" name="address" autocomplete="street-address" placeholder="{{ __('business-onboarding-step1.form.address_placeholder') }}">
-          </div>
-        </div>
+        </x-ui.field>
+        <x-ui.field variant="b2b" :label="__('business-onboarding-step1.form.address_label')" for="onb1-address"
+                    class="relative min-w-px flex-[1_0_0] items-start overflow-hidden bg-white max-[640px]:w-full">
+          <x-ui.input variant="b2b" id="onb1-address" name="address" autocomplete="street-address"
+                      :placeholder="__('business-onboarding-step1.form.address_placeholder')" />
+        </x-ui.field>
       </div>
 
-      {{-- Compact fields — stroke black@0.10, pad 12/14. Both halves are identical columns:
-           no height clamp (the natural height is ~65px) and no extra wrapper, so they always
-           end at the same y even when a label wraps. --}}
+      {{-- Compact fields — stroke black@0.10, pad 12/14, gray placeholder: the three deltas
+           ride on .ui-control-b2b as utilities. Both halves are identical columns: no height
+           clamp (the natural height is ~65px), so they always end at the same y. --}}
       <div class="flex w-full items-start gap-4 overflow-hidden bg-white max-[640px]:flex-col">
-        <div class="relative flex min-w-px flex-[1_0_0] flex-col items-start gap-1.5 max-[640px]:w-full">
-          <label class="shrink-0 whitespace-nowrap text-[13px] font-semibold leading-[normal] text-ink" for="onb1-phone">{{ __('business-onboarding-step1.form.phone_label') }}</label>
-          <div class="flex w-full shrink-0 items-start rounded-ds border border-black/10 px-3.5 py-3">
-            <input class="w-full border-none bg-transparent font-sans text-sm font-normal leading-[normal] text-ink outline-none placeholder:text-[#808085]" id="onb1-phone" type="tel" name="phone" autocomplete="tel" placeholder="{{ __('business-onboarding-step1.form.phone_placeholder') }}">
-          </div>
-        </div>
-        <div class="relative flex min-w-px flex-[1_0_0] flex-col items-start gap-1.5 max-[640px]:w-full">
-          <label class="shrink-0 whitespace-nowrap text-[13px] font-semibold leading-[normal] text-ink" for="onb1-showroom">{{ __('business-onboarding-step1.form.showroom_label') }}</label>
-          <div class="flex w-full shrink-0 items-start rounded-ds border border-black/10 px-3.5 py-3">
-            <input class="w-full border-none bg-transparent font-sans text-sm font-normal leading-[normal] text-ink outline-none placeholder:text-[#808085]" id="onb1-showroom" type="text" name="showroom" placeholder="{{ __('business-onboarding-step1.form.showroom_placeholder') }}">
-          </div>
-        </div>
+        <x-ui.field variant="b2b" :label="__('business-onboarding-step1.form.phone_label')" for="onb1-phone"
+                    class="relative min-w-px flex-[1_0_0] items-start gap-1.5 max-[640px]:w-full">
+          <x-ui.input variant="b2b" id="onb1-phone" type="tel" name="phone" autocomplete="tel"
+                      class="border-black/10 px-3.5 py-3 placeholder:text-[#808085]"
+                      :placeholder="__('business-onboarding-step1.form.phone_placeholder')" />
+        </x-ui.field>
+        <x-ui.field variant="b2b" :label="__('business-onboarding-step1.form.showroom_label')" for="onb1-showroom"
+                    class="relative min-w-px flex-[1_0_0] items-start gap-1.5 max-[640px]:w-full">
+          <x-ui.input variant="b2b" id="onb1-showroom" name="showroom"
+                      class="border-black/10 px-3.5 py-3 placeholder:text-[#808085]"
+                      :placeholder="__('business-onboarding-step1.form.showroom_placeholder')" />
+        </x-ui.field>
       </div>
 
       {{-- Upload zone — DS: radius 0, dashed black@0.25, pad 22. The <label> wraps a visually
-           hidden file input, so the whole dashed box is the picker. --}}
+           hidden file input, so the whole dashed box is the picker; the field title is a <p>
+           (tag="p") because the real <label> belongs to the picker. --}}
       <div class="flex w-full flex-none items-start">
-        <div class="relative flex min-w-px flex-[1_0_0] flex-col items-start gap-1.5">
-          <p class="shrink-0 whitespace-nowrap text-[13px] font-semibold leading-[normal] text-ink">{{ __('business-onboarding-step1.form.logo_label') }}</p>
+        <x-ui.field variant="b2b" tag="p" :label="__('business-onboarding-step1.form.logo_label')"
+                    class="relative min-w-px flex-[1_0_0] items-start gap-1.5">
           <label class="flex w-full shrink-0 cursor-pointer items-center justify-center border border-dashed border-black/25 p-[22px]" for="onb1-logo">
             <input class="sr-only" id="onb1-logo" type="file" name="logo" accept=".png,.svg,image/png,image/svg+xml" data-logo-input data-empty-label="{{ __('business-onboarding-step1.form.logo_upload') }}">
             <p class="min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-pre text-sm font-semibold leading-[normal] text-[#595966]" data-logo-text>{{ __('business-onboarding-step1.form.logo_upload') }}</p>
           </label>
-        </div>
+        </x-ui.field>
       </div>
 
-      <div class="flex w-full shrink-0 flex-col items-start gap-2 overflow-hidden bg-white">
-        <label class="shrink-0 whitespace-nowrap text-[13px] font-semibold leading-[normal] text-ink" for="onb1-about">{{ __('business-onboarding-step1.form.about_label') }}</label>
-        <div class="flex h-24 w-full shrink-0 items-stretch overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px]">
-          <textarea class="min-w-px flex-[1_0_0] resize-none border-none bg-transparent font-sans text-sm font-normal leading-[normal] text-ink outline-none placeholder:text-black/40" id="onb1-about" name="about" placeholder="{{ __('business-onboarding-step1.form.about_placeholder') }}"></textarea>
-        </div>
-      </div>
+      <x-ui.field variant="b2b" :label="__('business-onboarding-step1.form.about_label')" for="onb1-about"
+                  class="w-full shrink-0 items-start overflow-hidden bg-white">
+        <x-ui.textarea variant="b2b" id="onb1-about" name="about" class="h-24 resize-none"
+                       :placeholder="__('business-onboarding-step1.form.about_placeholder')" />
+      </x-ui.field>
     </div>
 
-    {{-- Action bar — Figma 1105:21942 (880x96) --}}
+    {{-- Action bar — Figma 1105:21942 (880x96). The label keeps its own <p>: the AZ string
+         holds a double space before the arrow, which whitespace-pre must preserve. --}}
     <div class="flex w-full shrink-0 flex-col items-start overflow-hidden rounded-ds border border-black/10 bg-white p-6">
       <div class="flex w-full items-center gap-3 overflow-hidden bg-white">
-        <a class="flex shrink-0 items-center justify-center overflow-hidden rounded-ds bg-yellow px-7 py-[15px]" href="{{ route('business.onboarding.step3') }}">
+        <x-ui.button variant="primary" :hover="false" :href="route('business.onboarding.step3')" class="px-7 py-[15px]">
           <p class="shrink-0 whitespace-pre text-[15px] font-semibold leading-[normal] text-ink">{{ __('business-onboarding-step1.actions.save') }}</p>
-        </a>
+        </x-ui.button>
         <a class="shrink-0 whitespace-nowrap text-sm font-medium leading-[normal] text-black/50" href="{{ route('business.profile') }}">{{ __('business-onboarding-step1.actions.later') }}</a>
       </div>
     </div>
@@ -149,6 +152,7 @@
   <div class="relative flex min-w-px flex-[1_0_0] flex-col items-start gap-4 overflow-hidden bg-white max-[1200px]:w-full max-[1200px]:flex-none">
     <div class="flex w-full shrink-0 flex-col items-start gap-3 overflow-hidden rounded-ds border border-black/10 bg-white p-5">
       <p class="shrink-0 whitespace-nowrap text-sm font-semibold leading-[normal] text-ink">{{ __('business-onboarding-step1.side.progress_title') }}</p>
+      {{-- Not <x-ui.progress>: two stacked fills with a 50% tail and rounded-ds, not the 3px cabinet bar. --}}
       <div class="relative h-1.5 w-full max-w-[280px] shrink-0 overflow-hidden rounded-ds bg-black/8">
         <div class="absolute top-0 left-0 h-1.5 w-[70px] rounded-ds bg-yellow"></div>
         <div class="absolute top-0 left-[70px] h-1.5 w-[70px] rounded-ds bg-yellow-line opacity-50"></div>

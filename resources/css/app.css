@@ -59,11 +59,29 @@
   --color-red: #d3524c;
   --color-star: #ffe600;
 
+  /* semantic status palette — these were hardcoded hexes on the six business-cabinet
+     pages (#229653 appeared 23x, #e9f6ed 10x, #d33c32 10x). They drive
+     <x-ui.badge>, <x-ui.toggle>, <x-ui.alert> and the cabinet status chip. */
+  --color-ok: #229653;            /* verified · published · switch ON */
+  --color-ok-soft: #e9f6ed;       /* its 8% tint — status chip background */
+  --color-warn: #c88200;
+  --color-warn-soft: #fff4db;
+  --color-danger: #d33c32;        /* destructive action (delete · logout · danger zone) */
+  --color-success: #0a7a14;       /* form success message text */
+  --color-success-soft: #eafce9;
+  --color-error: #b4322c;         /* form error message text */
+  --color-error-soft: #fdeaea;
+  --color-neutral-soft: #f0f1f3;  /* "hidden" / inactive badge background */
+
+  /* the near-black used by editorial type (post title · read-more · sec-more) */
+  --color-ink-alt: #141414;
+
   /* gray backgrounds */
   --color-gray-soft: #f3f5f7;
   --color-gray-soft2: #f5f7f9;
 
-  /* radius — Figma DS: 4 / 8 / pill */
+  /* radius — Figma DS: 3 / 4 / 8 / pill */
+  --radius-ds-sm: 3px;
   --radius-ds: 4px;
   --radius-ds-md: 8px;
   --radius-pill: 100px;
@@ -579,6 +597,235 @@
   @keyframes lm-in {
     from { opacity: 0; transform: translateY(16px); }
     to { opacity: 1; transform: none; }
+  }
+
+  /* ==========================================================================
+     DESIGN SYSTEM — UI PRIMITIVES
+     Rendered by resources/views/components/ui/*.blade.php. This is the single
+     source of truth for the look of buttons, chips, badges, switches, fields and
+     breadcrumbs: change a rule here and every page follows. Every color and radius
+     comes from @theme above — no hex literals below this line.
+
+     Convention: the base class carries the invariants (radius · tone · states) and
+     the CALLER supplies geometry/typography through $attributes->merge, because the
+     same button is 42px tall in the cabinet and 54px tall on the auth pages. Named
+     size classes exist only where a size actually repeats (.cab-btn-*, [data-size]).
+     ========================================================================== */
+
+  /* ---- button (<x-ui.button>) ----
+     Tone only. data-hover="false" renders the static variant (no transition, no
+     hover) — business-profile-company is the one page whose buttons never had one. */
+  .ui-btn                            { @apply flex shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds; }
+  .ui-btn-primary                    { @apply bg-yellow text-ink; }
+  .ui-btn-primary[data-hover="true"] { @apply transition-[filter] duration-150 hover:brightness-95; }
+  .ui-btn-dark                       { @apply bg-ink text-white; }
+  .ui-btn-dark[data-hover="true"]    { @apply transition-[filter] duration-150 hover:brightness-110; }
+  .ui-btn-outline                    { @apply border border-black/20 bg-white text-ink; }
+  .ui-btn-outline[data-hover="true"] { @apply transition-colors duration-150 hover:border-black/35 hover:bg-gray-soft2; }
+  .ui-btn-ghost                      { @apply bg-transparent text-danger; }
+  .ui-btn-ghost[data-hover="true"]   { @apply transition-colors duration-150 hover:bg-danger/10; }
+  .ui-btn-danger                     { @apply border border-danger/80 bg-white text-danger; }
+  .ui-btn-danger[data-hover="true"]  { @apply transition-colors duration-150 hover:border-danger hover:bg-danger/8; }
+  /* on a dark surface (the cabinet save bar) */
+  .ui-btn-on-ink                     { @apply border border-white/35 bg-transparent text-white/85; }
+  .ui-btn-on-ink[data-hover="true"]  { @apply transition-colors duration-150 hover:border-white/60 hover:bg-white/10; }
+
+  /* ---- eyebrow / kicker (<x-ui.eyebrow>) — yellow rule + uppercase label ----
+     variant: default (auth) · lg (blog) · flat (search) · b2b · kicker */
+  .ui-eyebrow                              { @apply flex items-center gap-3; }
+  .ui-eyebrow .rule                        { @apply h-1 w-8 shrink-0 rounded-[2px] bg-yellow; }
+  .ui-eyebrow p                            { @apply text-[13px] font-medium tracking-[1.4px] text-black/55 uppercase; }
+  .ui-eyebrow[data-variant="lg"] p         { @apply text-sm; }
+  .ui-eyebrow[data-variant="flat"]         { @apply gap-2.5; }
+  .ui-eyebrow[data-variant="flat"] .rule   { @apply h-0.5 rounded-none; }
+  .ui-eyebrow[data-variant="flat"] p       { @apply tracking-[.5px] text-black; }
+  .ui-eyebrow[data-variant="b2b"]          { @apply gap-2.5; }
+  .ui-eyebrow[data-variant="b2b"] .rule    { @apply rounded-ds bg-yellow-line; }
+  .ui-eyebrow[data-variant="b2b"] p        { @apply text-xs font-semibold tracking-[1px] whitespace-nowrap text-black/50; }
+  .ui-eyebrow[data-variant="kicker"]       { @apply gap-2.5; }
+  .ui-eyebrow[data-variant="kicker"] .rule { @apply h-0.5 rounded-none; }
+  .ui-eyebrow[data-variant="kicker"] p     { @apply text-xs leading-[normal] tracking-[1px] whitespace-nowrap; }
+
+  /* ---- breadcrumbs (<x-ui.breadcrumbs>) ---- */
+  .ui-crumbs                 { @apply flex items-center gap-2 overflow-hidden text-[13px] leading-[normal]; }
+  .ui-crumbs a,
+  .ui-crumbs p,
+  .ui-crumbs span            { @apply font-normal text-black/50; }
+  .ui-crumbs a:hover         { @apply text-black/70; }
+  .ui-crumbs .cur            { @apply font-medium text-black/90; }
+
+  /* ---- badge / status chip (<x-ui.badge>) ---- */
+  .ui-badge                  { @apply flex shrink-0 items-center gap-2 overflow-hidden rounded-ds leading-[normal] font-semibold whitespace-nowrap; }
+  .ui-badge .dot             { @apply size-2 shrink-0 rounded-full bg-current; }
+  /* The wrapper is the only place the badge's type is declared, so the label must
+     inherit it — but a badge often sits inside a row whose page CSS styles bare <p>
+     (e.g. `.bpsec-session-title p`), and that rule would otherwise win over plain
+     inheritance. Declaring the inheritance explicitly makes it out-rank such rules
+     while still letting the wrapper (and any utility the caller passes) decide. */
+  .ui-badge p {
+    font-size: inherit; font-weight: inherit; line-height: inherit;
+    letter-spacing: inherit; white-space: inherit; color: inherit; text-transform: inherit;
+  }
+  .ui-badge[data-size="md"]  { @apply px-3.5 py-2 text-[13px]; }
+  .ui-badge[data-size="sm"]  { @apply px-2.5 py-1 text-[11px]; }
+  .ui-badge[data-size="xs"]  { @apply px-2 py-0.5 text-[10px]; }
+  .ui-badge[data-tone="ok"]    { @apply bg-ok-soft text-ok; }
+  .ui-badge[data-tone="warn"]  { @apply bg-warn-soft text-warn; }
+  .ui-badge[data-tone="muted"] { @apply bg-neutral-soft text-black/50; }
+  .ui-badge[data-tone="green"] { @apply bg-green/12 text-green; }
+
+  /* ---- selectable chip (<x-ui.chip>) — checkbox chip of the cabinet pages ---- */
+  .ui-chip                        { @apply flex shrink-0 cursor-pointer items-center gap-2 overflow-hidden rounded-ds border text-left; }
+  .ui-chip[data-on="false"]       { @apply border-black/14 bg-white; }
+  .ui-chip[data-on="true"]        { @apply border-yellow-line bg-sel-bg; }
+  .ui-chip[data-size="sm"]        { @apply py-[9px] pr-3.5 pl-3; }
+  .ui-chip[data-size="sm"] .lbl   { @apply text-[13px]; }
+  .ui-chip[data-size="md"]        { @apply py-2.5 pr-4 pl-3.5; }
+  .ui-chip[data-size="md"] .lbl   { @apply text-sm; }
+  .ui-chip .lbl                   { @apply leading-[normal] whitespace-nowrap; }
+  .ui-chip[data-on="false"] .lbl  { @apply font-medium text-black/70; }
+  .ui-chip[data-on="true"] .lbl   { @apply font-semibold text-black; }
+  /* the selected label is one weight heavier, so its width is reserved up front with a
+     zero-height bold copy — otherwise toggling a chip reflows the whole row */
+  .ui-chip .lbl::after            { content: attr(data-label); @apply invisible block h-0 overflow-hidden font-semibold; }
+  .ui-chip .cbox                  { @apply relative size-[18px] shrink-0 rounded-ds border border-black/25 bg-white; }
+  .ui-chip[data-on="true"] .cbox  { @apply border-transparent bg-ink; }
+  .ui-chip[data-on="true"] .cbox::after {
+    content: "";
+    @apply absolute top-[3.5px] left-[6.5px] h-[9px] w-[5px] rotate-45 border-r-2 border-b-2 border-white;
+  }
+  /* tick="svg": borderless box + an inlined 11x11 ic:baseline-check glyph */
+  .ui-chip[data-tick="svg"][data-on="true"] .cbox { @apply border-0; }
+  .ui-chip[data-tick="svg"][data-on="true"] .cbox::after {
+    @apply top-[3.5px] left-[3.5px] size-[11px] rotate-0 border-0 bg-contain bg-center bg-no-repeat;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%23fff' d='M7.5 13.475L4.025 10L2.84167 11.175L7.5 15.8333L17.5 5.83333L16.325 4.65833Z'/%3E%3C/svg%3E");
+  }
+  .ui-chip:focus-visible          { @apply outline-2 outline-offset-2 outline-ink; }
+
+  /* ---- switch (<x-ui.toggle>) — green ON state standardised in phase 2 ---- */
+  .ui-toggle                       { @apply relative shrink-0 cursor-pointer rounded-pill bg-black/15 transition-colors duration-200; }
+  .ui-toggle .knob                 { @apply absolute block rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,0.25)] transition-transform duration-200; }
+  .ui-toggle[data-size="md"]       { @apply h-6 w-11; }
+  .ui-toggle[data-size="md"] .knob { @apply top-0.5 left-0.5 size-5; }
+  .ui-toggle[data-size="md"][data-on="true"] .knob { @apply translate-x-5; }
+  .ui-toggle[data-size="sm"]       { @apply h-[22px] w-10; }
+  .ui-toggle[data-size="sm"] .knob { @apply top-[3px] left-[3px] size-4; }
+  .ui-toggle[data-size="sm"][data-on="true"] .knob { @apply translate-x-[18px]; }
+  .ui-toggle[data-on="true"]                     { @apply bg-ok; }
+  .ui-toggle[data-tone="yellow"][data-on="true"] { @apply bg-yellow; }
+  .ui-toggle[data-hover="true"]    { @apply hover:brightness-95; }
+
+  /* ---- progress bar (<x-ui.progress>) ---- */
+  .ui-progress       { @apply relative h-1.5 w-full overflow-hidden rounded-ds-sm bg-black/10; }
+  .ui-progress .fill { @apply absolute top-0 left-0 h-1.5 rounded-ds-sm bg-yellow; }
+
+  /* ---- form controls (<x-ui.field> · <x-ui.input> · <x-ui.textarea> · <x-ui.select>) ----
+     Two families: the consumer pages (login · register · sell · cart) and the b2b
+     pages (business-register · onboarding · cabinet), which use a smaller 13px label,
+     a 4px radius and the black/14 border of the Figma b2b kit. */
+  .ui-field         { @apply flex flex-col gap-2; }
+  .ui-label         { @apply text-sm font-medium text-black/70; }
+  .ui-control       { @apply border border-black/20 bg-white px-4 py-3.5 text-base text-black outline-none transition-[border-color] duration-200 placeholder:text-black/40 focus:border-black; }
+  .ui-label-b2b     { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
+  .ui-control-b2b   { @apply w-full rounded-ds border border-black/14 bg-white px-4 py-[13px] font-sans text-sm leading-[normal] font-normal text-ink outline-none placeholder:text-black/40 focus:border-ink; }
+  .ui-check         { @apply size-[18px] accent-yellow; }
+  .ui-check-row     { @apply flex items-center gap-2 text-sm text-black/70; }
+
+  /* ---- message box (<x-ui.alert>) ---- */
+  .ui-alert                    { @apply hidden; }
+  .ui-alert[data-on="true"]    { @apply block; }
+  .ui-alert[data-tone="ok"]    { @apply border border-green bg-success-soft px-4 py-3.5 text-[15px] text-success; }
+  .ui-alert[data-tone="error"] { @apply border border-red bg-error-soft px-[15px] py-3 text-sm text-error; }
+
+  /* ---- surface (<x-ui.card>) — padding/gap come from the caller ---- */
+  .ui-card { @apply w-full rounded-ds border border-black/10 bg-white; }
+
+  /* ---- modal shell (<x-ui.modal>) — shared by the login modal and the sell success
+     dialog; both were byte-identical strings before ---- */
+  .ui-modal-overlay { @apply fixed inset-0 z-[1000] hidden items-center justify-center bg-black/55 p-6 backdrop-blur-[2px]; }
+  .ui-modal-overlay[data-on="true"] { @apply flex; }
+  .ui-modal-close   { @apply absolute top-[14px] right-[14px] flex size-[34px] cursor-pointer items-center justify-center border border-black/15 bg-white text-[22px] leading-none text-black/80 transition-[background] duration-200 hover:bg-gray-soft; }
+
+  /* ==========================================================================
+     BUSINESS CABINET SHELL
+     Rendered by resources/views/components/cabinet/*.blade.php. The six cabinet
+     pages (business-profile-company · -contact · -showrooms · -products ·
+     -notifications · -security) shipped ~90% identical CSS under six different
+     prefixes (bpc- · bpco- · bpsh- · bpp- · bpn- · bpsec-). That shared part lives
+     here now; a page keeps only its true specifics, as a higher-specificity
+     override (ARCHITECTURE.md §6.3).
+     ========================================================================== */
+  .cab-page       { @apply mx-auto flex w-full max-w-[1440px] flex-col items-start gap-5 px-7 pt-8 pb-14; }
+
+  .cab-head       { @apply flex w-full items-end justify-between overflow-hidden; }
+  .cab-head-left  { @apply flex flex-col items-start gap-2.5 overflow-hidden whitespace-nowrap; }
+  .cab-head-right { @apply flex items-center gap-3 overflow-hidden; }
+  .cab-title      { @apply text-[34px] leading-[normal] font-bold text-ink; }
+
+  .cab-body       { @apply flex w-full items-start gap-6; }
+  .cab-main       { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-5 overflow-hidden; }
+
+  /* settings sidebar. The 1px border is reserved in the default state so flipping
+     data-on never resizes the row (Figma strokes do not grow the box). */
+  .cab-snav              { @apply sticky top-[158px] flex w-[264px] shrink-0 flex-col items-start gap-1 self-start overflow-hidden rounded-ds border border-black/10 bg-white px-3 py-3.5; }
+  .cab-snav-item         { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds border border-transparent px-3 py-[11px] text-inherit no-underline transition-colors duration-150; }
+  .cab-snav-item .lbl    { @apply text-sm font-medium whitespace-nowrap text-black/70; }
+  .cab-snav-item .cnt    { @apply text-xs leading-[normal] font-semibold whitespace-nowrap text-black/40; }
+  .cab-snav-item:not([data-on="true"]):hover { @apply bg-gray-soft2; }
+  .cab-snav-item[data-on="true"]      { @apply border-yellow-line bg-sel-bg; }
+  .cab-snav-item[data-on="true"] .lbl { @apply font-bold text-black; }
+  .cab-snav-prog         { @apply flex w-full flex-col items-start gap-2 overflow-hidden rounded-ds bg-gray-soft2 px-3 py-3.5; }
+  .cab-snav-prog .row    { @apply flex w-full items-start justify-between overflow-hidden text-xs whitespace-nowrap text-ink; }
+  .cab-snav-prog .row .l { @apply font-semibold; }
+  .cab-snav-prog .row .v { @apply font-bold; }
+  .cab-snav-prog .hint   { @apply text-[11px] leading-[normal] font-normal whitespace-nowrap text-black/50; }
+
+  /* card. Gap and padding are props, because they differ per card (0 / 1 / 3.5 / 4 / 5 / 18px). */
+  .cab-card          { @apply flex w-full flex-col items-start overflow-hidden rounded-ds border border-black/10 bg-white; }
+  .cab-card-head     { @apply flex w-full flex-col items-start gap-1 overflow-hidden; }
+  .cab-card-head-row { @apply flex w-full items-center justify-between overflow-hidden; }
+  .cab-card-head-txt { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-1 overflow-hidden; }
+  .cab-card-title    { @apply w-full text-lg leading-[normal] font-bold text-ink; }
+  /* stacked head: the description is a paragraph and wraps at 1.45 */
+  .cab-card-desc     { @apply w-full text-[13px] leading-[1.45] font-normal text-black/50; }
+  /* row head (head + action button): one-line summary */
+  .cab-card-sub      { @apply w-full text-[13px] leading-[normal] font-normal text-black/50; }
+
+  /* field */
+  .cab-field      { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-2 overflow-hidden; }
+  .cab-field-full { @apply w-full flex-none; }
+  .cab-field-row  { @apply flex w-full items-start gap-4 overflow-hidden; }
+
+  /* list row — products · showrooms · active sessions */
+  .cab-row { @apply flex w-full items-center gap-3.5 overflow-hidden rounded-ds bg-gray-soft2 px-3.5 py-3; }
+  /* flex beats the UA [hidden] rule — ARCHITECTURE.md §6.5 */
+  .cab-row[hidden] { @apply hidden; }
+
+  /* button geometries that repeat across the cabinet — combine with a .ui-btn tone:
+     <button class="ui-btn ui-btn-outline cab-btn-view" data-hover="true"> */
+  .cab-btn-view   { @apply h-11 px-5 text-[13px] leading-[normal] font-semibold whitespace-nowrap; }
+  .cab-btn-add    { @apply h-[42px] px-[18px] text-[13px] leading-[normal] font-bold whitespace-nowrap; }
+  .cab-btn-edit   { @apply px-3.5 py-2 text-[13px] leading-[normal] font-semibold whitespace-nowrap; }
+  .cab-btn-del    { @apply px-3 py-2 text-[13px] leading-[normal] font-medium whitespace-nowrap; }
+  .cab-btn-save   { @apply h-11 px-[26px] text-sm leading-[normal] font-bold whitespace-nowrap; }
+  .cab-btn-cancel { @apply h-11 px-[18px] text-sm leading-[normal] font-medium whitespace-nowrap; }
+
+  /* save bar */
+  .cab-save-bar        { @apply flex w-full items-center justify-between overflow-hidden rounded-ds bg-ink px-6 py-4; }
+  .cab-save-bar .left  { @apply flex shrink-0 items-center gap-2 overflow-hidden; }
+  .cab-save-bar .right { @apply flex shrink-0 items-start gap-2.5 overflow-hidden; }
+  .cab-save-bar .dot   { @apply size-2 shrink-0 rounded-full bg-yellow; }
+  /* saved: only the dot color and the message change, the bar keeps its size */
+  .cab-save-bar[data-saved="true"] .dot { @apply bg-green; }
+  .cab-save-bar .msg   { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-white/85; }
+  /* the shared :focus-visible ring is ink-colored — invisible on the dark bar */
+  .cab-save-bar .ui-btn:focus-visible { @apply outline-2 outline-offset-2 outline-white; }
+
+  /* The Figma cabinet frame is a fixed 1440 layout with a fixed 264px sidebar, so
+     below ~1100px the two columns stack. Nothing here changes 1440px. */
+  @media (max-width: 1100px) {
+    .cab-body { @apply flex-col; }
+    .cab-snav { @apply static w-full; }
   }
 
   /* ==========================================================================

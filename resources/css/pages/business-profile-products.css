@@ -1,71 +1,31 @@
 /* Page CSS for "business-profile-products" — business cabinet, product list
-   (Figma 1105:24229), ported from the old biznes-profil-mehsullar.html
-   <style type="text/tailwindcss"> block (ARCHITECTURE.md 6.2, approach 2).
+   (Figma 1105:24229).
 
-   Naming: the old block used generic names (.page, .card, .crumbs, .filters, .p-row,
-   .pg, .save-bar) that are page-local no more — all 23 page files compile into ONE
-   bundle and the sibling business-profile-* pages define the same names with different
-   values. Every top-level name is therefore prefixed with `bpp-`; child names
-   (.c, .cur, .lbl, .num, .h, .s, .n, .dot, .fill, .knob) only match inside a prefixed
-   parent and stay as they were.
+   The page shell, header, settings sidebar, card, list row, status badge, switch,
+   buttons and save bar now come from the shared design system
+   (<x-cabinet.*> / <x-ui.*>, styled in app.css). Only this page's own widgets are
+   left here: the filter row (search + two dropdowns), the thumbnail/info/price
+   cells of a row, the empty state and the pager.
 
-   State classes became data-* attributes (ARCHITECTURE.md 7.1):
-   .sn-item.active -> [data-on="true"], .pg.active -> [data-on="true"],
-   .pg.dots -> [data-dots="true"], .p-badge.g/.w -> [data-tone="ok"/"warn"].
+   State classes are data-* attributes (ARCHITECTURE.md 7.1):
+   .pg.active -> [data-on="true"], .pg.dots -> [data-dots="true"].
 
-   Images: the 8px status dots and the two on/off switches were <img> tags pointing at
-   Figma asset URLs that now return 404; they are plain CSS shapes with the same
-   geometry and colors (pill 40x22, knob r8 at x=11/29, dot 8px). */
+   Images: the pager arrows and the search icon are the only assets; the 8px status
+   dots and the switches are CSS shapes owned by the design system. */
 @layer components {
 
-  /* The gray cabinet background is declared once, on <body> (layout bodyClass). */
-  .bpp-page          { @apply mx-auto flex w-full max-w-[1440px] flex-col items-start font-sans antialiased; }
-  .bpp-edit          { @apply flex w-full flex-col items-start gap-5 px-7 pt-8 pb-14; }
+  /* The gray cabinet background is declared once, on <body> (layout bodyClass).
+     .cab-page does not carry these two: <body> already sets font-family Inter and
+     -webkit-font-smoothing, but not -moz-osx-font-smoothing — kept for zero drift. */
+  .bpp-page { @apply font-sans antialiased; }
 
-  /* header */
-  .bpp-head          { @apply flex w-full items-end justify-between overflow-hidden; }
-  .bpp-head-l        { @apply flex flex-col items-start gap-2.5 overflow-hidden whitespace-nowrap; }
-  .bpp-crumbs        { @apply flex items-center gap-2 overflow-hidden text-[13px] leading-[normal]; }
-  .bpp-crumbs .c     { @apply font-normal text-black/50; }
-  .bpp-crumbs .cur   { @apply font-medium text-black/90; }
-  .bpp-title         { @apply text-[34px] leading-[normal] font-bold text-ink; }
-  .bpp-head-r        { @apply flex items-center gap-3 overflow-hidden; }
-  .bpp-status        { @apply flex shrink-0 items-center gap-2 overflow-hidden rounded-ds bg-[#e9f6ed] px-3.5 py-2; }
-  .bpp-status .dot   { @apply size-2 shrink-0 rounded-full bg-[#229653]; }
-  .bpp-status p      { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-[#229653]; }
-  .bpp-view-btn      { @apply flex h-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white px-5 transition-colors duration-150 hover:border-black/35 hover:bg-gray-soft2; }
-  .bpp-view-btn p    { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
+  /* legacy delta: this page sets leading-[normal] on the sidebar label and on the
+     progress row; the shared .cab-snav rules took the majority (no leading). */
+  .bpp-page .cab-snav-item .lbl { @apply leading-[normal]; }
+  .bpp-page .cab-snav-prog .row { @apply leading-[normal]; }
 
-  /* body + sidebar */
-  .bpp-body                    { @apply flex w-full items-start gap-6; }
-  .bpp-snav                    { @apply sticky top-[158px] flex w-[264px] shrink-0 flex-col items-start gap-1 self-start overflow-hidden rounded-ds border border-black/10 bg-white px-3 py-3.5; }
-  /* The border is reserved in the default state so the active row is exactly as tall as
-     its siblings (Figma strokes do not grow the box) and flipping data-on never resizes it.
-     The label weight change is safe: justify-between pins .num to the right edge, so a
-     wider label cannot displace anything. */
-  .bpp-snav-item               { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds border border-transparent px-3 py-[11px] text-inherit no-underline transition-colors duration-150; }
-  .bpp-snav-item p.lbl         { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-black/70; }
-  .bpp-snav-item p.num         { @apply text-xs leading-[normal] font-semibold whitespace-nowrap text-black/40; }
-  .bpp-snav-item:not([data-on="true"]):hover { @apply bg-gray-soft2; }
-  .bpp-snav-item[data-on="true"]       { @apply border-yellow-line bg-sel-bg; }
-  .bpp-snav-item[data-on="true"] p.lbl { @apply font-bold text-black; }
-  .bpp-snav-prog               { @apply flex w-full flex-col items-start gap-2 overflow-hidden rounded-ds bg-gray-soft2 px-3 py-3.5; }
-  .bpp-snav-prog .top          { @apply flex w-full items-start justify-between overflow-hidden text-xs leading-[normal] whitespace-nowrap text-ink; }
-  .bpp-snav-prog .top .t       { @apply font-semibold; }
-  .bpp-snav-prog .top .p       { @apply font-bold; }
-  .bpp-snav-bar                { @apply relative h-1.5 w-full overflow-hidden rounded-[3px] bg-black/10; }
-  .bpp-snav-bar .fill          { @apply absolute top-0 left-0 h-1.5 w-[184px] rounded-[3px] bg-yellow; }
-  .bpp-snav-prog .hint         { @apply text-[11px] leading-[normal] font-normal whitespace-nowrap text-black/50; }
-
-  /* main card */
-  .bpp-main           { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-5 overflow-hidden; }
-  .bpp-card           { @apply flex w-full flex-col items-start gap-3.5 overflow-hidden rounded-ds border border-black/10 bg-white p-6; }
-  .bpp-card-head      { @apply flex w-full items-center justify-between overflow-hidden; }
-  .bpp-card-head-l    { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-1 overflow-hidden whitespace-nowrap; }
-  .bpp-card-head-l .h { @apply text-lg leading-[normal] font-bold text-ink; }
-  .bpp-card-head-l .s { @apply text-[13px] leading-[normal] font-normal text-black/50; }
-  .bpp-add-btn        { @apply flex h-[42px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[18px] transition-[filter] duration-150 hover:brightness-95; }
-  .bpp-add-btn p      { @apply text-[13px] leading-[normal] font-bold whitespace-nowrap text-ink; }
+  /* legacy delta: this card's head block never wraps (the shared one may). */
+  .bpp-page .cab-card-head-txt { @apply whitespace-nowrap; }
 
   /* filters — no overflow-hidden on the row: the dropdown menus escape their trigger. */
   .bpp-filters        { @apply flex w-full items-start gap-2.5; }
@@ -89,7 +49,7 @@
 
   /* right-aligned: both triggers sit at the right end of the filter row and the option
      labels are wider than them, so a left-anchored menu would grow past the card edge
-     and be cut off by .bpp-card's overflow-hidden. */
+     and be cut off by .cab-card's overflow-hidden. */
   .bpp-drop-menu      { @apply absolute top-[calc(100%+6px)] right-0 z-20 hidden min-w-full rounded-ds border border-black/14 bg-white p-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.12)]; }
   .bpp-drop-wrap[data-open="true"] .bpp-drop-menu { @apply block; }
   .bpp-drop-menu li   { @apply cursor-pointer list-none rounded-ds px-2.5 py-2.5 text-[13px] leading-[normal] font-medium whitespace-nowrap text-black/70 hover:bg-gray-soft hover:text-ink; }
@@ -99,10 +59,7 @@
   .bpp-drop-menu li[data-on="true"]         { @apply bg-sel-bg text-ink; }
   .bpp-drop-menu li[data-on="true"]::before { @apply text-ink; }
 
-  /* product row */
-  .bpp-row            { @apply flex w-full items-center gap-3.5 overflow-hidden rounded-ds bg-gray-soft2 px-3.5 py-3; }
-  /* flex beats the UA [hidden] rule — ARCHITECTURE.md 6.5 */
-  .bpp-row[hidden]    { @apply hidden; }
+  /* product row cells — the row itself is <x-cabinet.row> (.cab-row) */
   .bpp-empty          { @apply w-full rounded-ds bg-gray-soft2 px-3.5 py-7 text-center text-[13px] leading-[normal] font-medium text-black/50; }
   .bpp-thumb          { @apply relative size-[52px] shrink-0 rounded-ds; }
   .bpp-thumb img      { @apply pointer-events-none absolute inset-0 size-full max-w-none rounded-ds object-cover; }
@@ -110,20 +67,6 @@
   .bpp-info .n        { @apply w-full overflow-hidden text-sm leading-[normal] font-semibold text-ellipsis text-ink; }
   .bpp-info .c        { @apply w-full overflow-hidden text-xs leading-[normal] font-normal text-ellipsis text-black/50; }
   .bpp-price          { @apply shrink-0 text-sm leading-[normal] font-bold whitespace-nowrap text-ink; }
-  .bpp-badge          { @apply flex shrink-0 items-start overflow-hidden rounded-ds px-2.5 py-1; }
-  .bpp-badge p        { @apply text-[11px] leading-[normal] font-semibold whitespace-nowrap; }
-  .bpp-badge[data-tone="ok"]     { @apply bg-[#e9f6ed]; }
-  .bpp-badge[data-tone="ok"] p   { @apply text-[#229653]; }
-  .bpp-badge[data-tone="warn"]   { @apply bg-[#fff4db]; }
-  .bpp-badge[data-tone="warn"] p { @apply text-[#c88200]; }
-  /* Same switch motion as .bpn-toggle / .bpsec-toggle: colors + transform, 200ms.
-     The track is 40x22 here (Figma), 44x24 on the other two pages. */
-  .bpp-toggle         { @apply relative h-[22px] w-10 shrink-0 cursor-pointer rounded-pill bg-black/15 transition-colors duration-200 hover:brightness-95; }
-  .bpp-toggle .knob   { @apply absolute top-[3px] left-[3px] block size-4 rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,0.25)] transition-transform duration-200; }
-  .bpp-toggle[data-on="true"]       { @apply bg-[#229653]; }
-  .bpp-toggle[data-on="true"] .knob { @apply translate-x-[18px]; }
-  .bpp-edit-btn       { @apply flex shrink-0 cursor-pointer items-start overflow-hidden rounded-ds border border-black/20 bg-white px-3.5 py-2 transition-colors duration-150 hover:border-black/35 hover:bg-gray-soft2; }
-  .bpp-edit-btn p     { @apply text-xs leading-[normal] font-semibold whitespace-nowrap text-ink; }
 
   /* pagination */
   .bpp-pager          { @apply flex w-full items-start justify-center gap-1.5 overflow-hidden pt-1.5; }
@@ -141,29 +84,10 @@
   /* Prev/next at the edge of the range: opacity only, the 36px square is untouched. */
   .bpp-pg:disabled    { @apply cursor-default opacity-40; }
 
-  /* save bar */
-  .bpp-save-bar       { @apply flex w-full items-center justify-between overflow-hidden rounded-ds bg-ink px-6 py-4; }
-  .bpp-save-l         { @apply flex items-center gap-2 overflow-hidden; }
-  .bpp-save-l .dot    { @apply size-2 shrink-0 rounded-full bg-yellow; }
-  /* Saved state: only the dot color and the message text change, the bar keeps its size. */
-  .bpp-save-bar[data-saved="true"] .dot { @apply bg-green; }
-  .bpp-save-l p       { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-white/85; }
-  .bpp-save-r         { @apply flex items-start gap-2.5 overflow-hidden; }
-  .bpp-cancel-btn     { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-white/35 px-[18px] transition-colors duration-150 hover:border-white/60 hover:bg-white/10; }
-  .bpp-cancel-btn p   { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-white/85; }
-  .bpp-save-btn       { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[26px] transition-[filter] duration-150 hover:brightness-95; }
-  .bpp-save-btn p     { @apply text-sm leading-[normal] font-bold whitespace-nowrap text-ink; }
-  /* The shared :focus-visible ring is ink-colored — invisible on the dark save bar. */
-  .bpp-cancel-btn:focus-visible,
-  .bpp-save-btn:focus-visible { @apply outline-2 outline-offset-2 outline-white; }
-
-  /* RESPONSIVE — the Figma frame is a fixed 1440 layout and the sidebar is a fixed 264px,
-     so below ~1100px the main column gets too narrow for the product rows. Nothing here
-     changes the rendering at 1440px. The old page shipped no responsive rules at all. */
+  /* RESPONSIVE — the two columns stack below 1100px in app.css (.cab-body / .cab-snav);
+     only the product row needs extra help down there. Nothing changes at 1440px. */
   @media (max-width: 1100px) {
-    .bpp-body { @apply flex-col; }
-    .bpp-snav { @apply static w-full; }
-    .bpp-row  { @apply flex-wrap; }
-    .bpp-info { @apply whitespace-normal; }
+    .bpp-page .cab-row { @apply flex-wrap; }
+    .bpp-info          { @apply whitespace-normal; }
   }
 }

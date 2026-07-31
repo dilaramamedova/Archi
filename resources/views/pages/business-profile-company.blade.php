@@ -1,147 +1,76 @@
 {{-- Business cabinet — company details (Figma 1105:22829) --}}
 <x-layout page="business-profile-company" :title="__('business-profile-company.title')" bodyClass="bg-gray-soft2">
 
-<div class="bpc-page">
-  <div class="bpc-edit">
+{{-- This page is the cabinet outlier: it was ported without hover states, so the shell,
+     the header/save-bar buttons and the media buttons all pass :hover="false". --}}
+<x-cabinet.shell ns="business-profile-company" active="company" :strong="['contact']" :hover="false" class="bpc-page text-ink">
 
-    {{-- header --}}
-    <div class="bpc-head">
-      <div class="bpc-head-left">
-        <div class="bpc-crumbs">
-          <p class="c1">{{ __('business-profile-company.crumbs.panel') }}</p>
-          <p class="c1">{{ __('business-profile-company.crumbs.sep') }}</p>
-          <p class="c2">{{ __('business-profile-company.crumbs.current') }}</p>
-        </div>
-        <p class="bpc-title">{{ __('business-profile-company.heading') }}</p>
+  {{-- logo & cover card --}}
+  <x-cabinet.card tag="h3" gap="gap-[18px]"
+      :title="__('business-profile-company.media.heading')"
+      :desc="__('business-profile-company.media.desc')">
+
+    <div class="bpc-cover">
+      <div class="bg">
+        <img src="/assets/fig/576cb03803aa.jpg" alt="">
+        <div class="overlay"></div>
       </div>
-      <div class="bpc-head-right">
-        <div class="bpc-badge-pub">
-          <span class="dot"></span>
-          <p>{{ __('business-profile-company.status.published') }}</p>
+      <div class="bpc-cover-btn"><p>{{ __('business-profile-company.media.change_cover') }}</p></div>
+    </div>
+
+    <div class="bpc-logo-row">
+      <div class="bpc-logo-box"><p>{{ __('business-profile-company.media.logo_initials') }}</p></div>
+      <div class="bpc-logo-info">
+        <p>{{ __('business-profile-company.media.logo_hint') }}</p>
+        <div class="bpc-logo-btns">
+          <x-ui.button variant="outline" :hover="false" class="cab-btn-edit items-start leading-normal">{{ __('business-profile-company.media.change') }}</x-ui.button>
+          <x-ui.button variant="ghost" :hover="false" class="cab-btn-del items-start px-3.5 leading-normal">{{ __('business-profile-company.media.delete') }}</x-ui.button>
         </div>
-        <div class="bpc-btn-view"><p>{{ __('business-profile-company.status.view_profile') }}</p></div>
       </div>
     </div>
 
-    <div class="bpc-body">
+  </x-cabinet.card>
 
-      {{-- settings nav --}}
-      <div class="bpc-snav">
-        <a class="bpc-snav-item" data-on="true" href="{{ route('business.profile.company') }}">
-          <p class="lbl">{{ __('business-profile-company.nav.company') }}</p>
-        </a>
-        <a class="bpc-snav-item" data-on="false" data-strong="true" href="{{ route('business.profile.contact') }}">
-          <p class="lbl">{{ __('business-profile-company.nav.contact') }}</p>
-        </a>
-        <a class="bpc-snav-item" data-on="false" href="{{ route('business.profile.showrooms') }}">
-          <p class="lbl">{{ __('business-profile-company.nav.showrooms') }}</p>
-          <p class="cnt">{{ __('business-profile-company.nav.showrooms_count') }}</p>
-        </a>
-        <a class="bpc-snav-item" data-on="false" href="{{ route('business.profile.products') }}">
-          <p class="lbl">{{ __('business-profile-company.nav.products') }}</p>
-          <p class="cnt">{{ __('business-profile-company.nav.products_count') }}</p>
-        </a>
-        <a class="bpc-snav-item" data-on="false" href="{{ route('business.profile.notifications') }}">
-          <p class="lbl">{{ __('business-profile-company.nav.notifications') }}</p>
-        </a>
-        <a class="bpc-snav-item" data-on="false" href="{{ route('business.profile.security') }}">
-          <p class="lbl">{{ __('business-profile-company.nav.security') }}</p>
-        </a>
+  {{-- company card. The heading is 20px here, not the 18px of .cab-card-title, so it
+       stays page markup (see business-profile-company.css). --}}
+  <x-cabinet.card gap="gap-5" pad="px-7 pt-6 pb-7" class="bpc-card-company">
 
-        <div class="bpc-snav-progress">
-          <div class="top">
-            <p class="l">{{ __('business-profile-company.progress.label') }}</p>
-            <p class="r">{{ __('business-profile-company.progress.value') }}</p>
-          </div>
-          <div class="bpc-snav-bar"><div class="fill w-[184px]"></div></div>
-          <p class="note">{{ __('business-profile-company.progress.note') }}</p>
-        </div>
-      </div>
+    <h2>{{ __('business-profile-company.company.heading') }}</h2>
+    <p class="desc">{{ __('business-profile-company.company.desc') }}</p>
 
-      {{-- main column --}}
-      <div class="bpc-main">
-
-        {{-- logo & cover card --}}
-        <div class="bpc-card-media">
-          <div class="bpc-card-media-head">
-            <h3>{{ __('business-profile-company.media.heading') }}</h3>
-            <p>{{ __('business-profile-company.media.desc') }}</p>
-          </div>
-          <div class="bpc-cover">
-            <div class="bg">
-              <img src="/assets/fig/576cb03803aa.jpg" alt="">
-              <div class="overlay"></div>
-            </div>
-            <div class="bpc-cover-btn"><p>{{ __('business-profile-company.media.change_cover') }}</p></div>
-          </div>
-          <div class="bpc-logo-row">
-            <div class="bpc-logo-box"><p>{{ __('business-profile-company.media.logo_initials') }}</p></div>
-            <div class="bpc-logo-info">
-              <p>{{ __('business-profile-company.media.logo_hint') }}</p>
-              <div class="bpc-logo-btns">
-                <div class="bpc-btn-change"><p>{{ __('business-profile-company.media.change') }}</p></div>
-                <div class="bpc-btn-del"><p>{{ __('business-profile-company.media.delete') }}</p></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {{-- company card --}}
-        <div class="bpc-card-company">
-          <h2>{{ __('business-profile-company.company.heading') }}</h2>
-          <p class="desc">{{ __('business-profile-company.company.desc') }}</p>
-
-          <div class="bpc-row2">
-            <div class="bpc-field">
-              <div class="bpc-field-lbl"><p>{{ __('business-profile-company.company.legal_name') }}</p></div>
-              <input class="bpc-input" type="text" value="{{ __('business-profile-company.company.legal_name_value') }}">
-            </div>
-            <div class="bpc-field">
-              <div class="bpc-field-lbl"><p>{{ __('business-profile-company.company.brand_name') }}</p></div>
-              <input class="bpc-input" type="text" value="{{ __('business-profile-company.company.brand_name_value') }}">
-            </div>
-          </div>
-
-          <div class="bpc-row2">
-            <div class="bpc-field">
-              <div class="bpc-field-lbl">
-                <p>{{ __('business-profile-company.company.tax_id') }}</p>
-                <div class="bpc-badge-ok"><p>{{ __('business-profile-company.company.tax_id_verified') }}</p></div>
-              </div>
-              <input class="bpc-input" type="text" value="{{ __('business-profile-company.company.tax_id_value') }}">
-            </div>
-            <div class="bpc-field">
-              <div class="bpc-field-lbl"><p>{{ __('business-profile-company.company.city') }}</p></div>
-              <input class="bpc-input" type="text" value="{{ __('business-profile-company.company.city_value') }}">
-            </div>
-          </div>
-
-          <div class="bpc-field full">
-            <div class="bpc-field-lbl"><p>{{ __('business-profile-company.company.address') }}</p></div>
-            <input class="bpc-input" type="text" value="{{ __('business-profile-company.company.address_value') }}">
-          </div>
-
-          <div class="bpc-field full">
-            <div class="bpc-field-lbl"><p>{{ __('business-profile-company.company.about') }}</p></div>
-            <textarea class="bpc-textarea">{{ __('business-profile-company.company.about_value') }}</textarea>
-          </div>
-        </div>
-
-        {{-- save bar --}}
-        <div class="bpc-save-bar" data-saved-message="{{ __('business-profile-company.save.saved_alert') }}">
-          <div class="bpc-save-left">
-            <span class="dot"></span>
-            <p>{{ __('business-profile-company.save.unsaved') }}</p>
-          </div>
-          <div class="bpc-save-right">
-            <div class="bpc-btn-cancel"><p>{{ __('business-profile-company.save.cancel') }}</p></div>
-            <div class="bpc-btn-save"><p>{{ __('business-profile-company.save.save') }}</p></div>
-          </div>
-        </div>
-
-      </div>
+    <div class="cab-field-row">
+      <x-cabinet.field :label="__('business-profile-company.company.legal_name')" for="bpc-legal-name">
+        <x-ui.input variant="b2b" id="bpc-legal-name" :value="__('business-profile-company.company.legal_name_value')" />
+      </x-cabinet.field>
+      <x-cabinet.field :label="__('business-profile-company.company.brand_name')" for="bpc-brand-name">
+        <x-ui.input variant="b2b" id="bpc-brand-name" :value="__('business-profile-company.company.brand_name_value')" />
+      </x-cabinet.field>
     </div>
-  </div>
-</div>
+
+    <div class="cab-field-row">
+      <x-cabinet.field :label="__('business-profile-company.company.tax_id')" for="bpc-tax-id">
+        <x-slot:badge>
+          <x-ui.badge tone="green" size="sm" class="px-2 py-[3px] font-medium">{{ __('business-profile-company.company.tax_id_verified') }}</x-ui.badge>
+        </x-slot:badge>
+        <x-ui.input variant="b2b" id="bpc-tax-id" :value="__('business-profile-company.company.tax_id_value')" />
+      </x-cabinet.field>
+      <x-cabinet.field :label="__('business-profile-company.company.city')" for="bpc-city">
+        <x-ui.input variant="b2b" id="bpc-city" :value="__('business-profile-company.company.city_value')" />
+      </x-cabinet.field>
+    </div>
+
+    <x-cabinet.field full :label="__('business-profile-company.company.address')" for="bpc-address">
+      <x-ui.input variant="b2b" id="bpc-address" :value="__('business-profile-company.company.address_value')" />
+    </x-cabinet.field>
+
+    <x-cabinet.field full :label="__('business-profile-company.company.about')" for="bpc-about">
+      <x-ui.textarea variant="b2b" id="bpc-about" class="h-24 resize-none">{{ __('business-profile-company.company.about_value') }}</x-ui.textarea>
+    </x-cabinet.field>
+
+  </x-cabinet.card>
+
+  <x-cabinet.save-bar ns="business-profile-company" :hover="false" />
+
+</x-cabinet.shell>
 
 </x-layout>

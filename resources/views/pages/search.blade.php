@@ -40,7 +40,7 @@
 
     {{-- heading --}}
     <div class="flex flex-col gap-3">
-      <div class="flex items-center gap-2.5"><span class="h-0.5 w-8 bg-yellow"></span><p class="text-[13px] font-medium tracking-[.5px] text-black uppercase">{{ __('search.tag') }}</p></div>
+      <x-ui.eyebrow variant="flat" :label="__('search.tag')" />
       <div class="flex items-end gap-3.5">
         <h1 class="sr-h1">{{ __('search.heading', ['query' => $query]) }}</h1>
         <span class="pb-[7px] text-[15px] text-black">{{ __('search.total') }}</span>

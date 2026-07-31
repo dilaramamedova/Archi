@@ -15,4 +15,14 @@
   .fchip[data-on="true"] {
     @apply border-black/80 text-black;
   }
+
+  /* legacy delta: blog's crumbs use a 16px separator and a normal-weight current
+     item; the id keeps the override off every other page's <x-ui.breadcrumbs>.
+     (gap-1 / text-sm / leading-[1.5] are passed as utilities in the markup.) */
+  #blogCrumbs.ui-crumbs .sep { @apply text-base text-black/55; }
+  #blogCrumbs.ui-crumbs .cur { @apply font-normal text-black/90; }
+  /* the link and the current item were `text-sm` elements (14px/20px); inheriting the
+     nav's 1.5 instead would make their line boxes 21px and push the hero down */
+  #blogCrumbs.ui-crumbs a,
+  #blogCrumbs.ui-crumbs .cur { @apply leading-5; }
 }

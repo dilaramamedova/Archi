@@ -1,118 +1,38 @@
-/* Page CSS for "business-profile-showrooms" (Figma 1105:23687), ported from the old
-   biznes-profil-shourumlar.html <style type="text/tailwindcss"> block.
+/* Page CSS for "business-profile-showrooms" (Figma 1105:23687).
 
-   The old block used generic names (.page, .card, .crumbs, .save-bar, .edit-*). They were
-   page-local there, but all 23 page CSS files compile into ONE bundle, so every top-level
-   name is prefixed with `bpsh-` to keep it out of the six sibling business-profile pages.
-   Child names (.c1, .lbl, .cnt, .dot, .fill, .note) stay as they are — they only match
-   inside a prefixed parent.
+   The cabinet shell (page frame, header, settings nav, card, list row, save bar) is now
+   the shared design system: <x-cabinet.*> / <x-ui.*> in resources/views/components/ and
+   the ".cab-* / .ui-*" rules in app.css. Everything that used to be duplicated here under
+   the `bpsh-` prefix was deleted with the markup that produced it. What is left is this
+   page's own showroom row content plus one verified legacy delta.
 
-   State classes became data-* attributes (ARCHITECTURE.md 7.1):
-   .sn-item.active -> [data-on="true"], .sh-badge.aktiv/.gizli -> [data-state="active"/"hidden"].
-   The two 8px status dots and the showroom pin were <img> tags pointing at expired Figma
-   asset URLs; the dots are plain colored circles now and the pin is an inline SVG.
-
-   `leading-[normal]` is added to every rule that sets an ARBITRARY font size
-   (text-[34px]/[15px]/[13px]/[11px]): the old build ran without Tailwind preflight, so those
-   nodes inherited line-height:normal, while this build ships preflight's `html{line-height:1.5}`
-   (ARCHITECTURE.md 6.5). Rules on the named scale (text-lg/text-sm/text-xs) are intentionally
-   left alone — those utilities already carry their own line-height in both builds. */
+   `leading-[normal]` is used on rules that set an ARBITRARY font size (text-[15px]/[13px]):
+   the old build ran without Tailwind preflight, so those nodes inherited line-height:normal,
+   while this build ships preflight's `html{line-height:1.5}` (ARCHITECTURE.md 6.5). */
 @layer components {
-  /* The gray cabinet background is declared once, on <body> (layout bodyClass). */
-  .bpsh-page              { @apply mx-auto flex w-full max-w-[1440px] flex-col items-start font-sans text-ink antialiased; }
-  .bpsh-edit              { @apply flex w-full flex-col items-start gap-5 px-7 pt-8 pb-14; }
+  /* legacy delta: this card heading kept the text-lg default line-height (28px);
+     the shared .cab-card-title is leading-[normal]. */
+  .bpsh-page .cab-card-title { @apply leading-7; }
 
-  /* header */
-  .bpsh-head              { @apply flex w-full items-end justify-between overflow-hidden; }
-  .bpsh-head-left         { @apply flex shrink-0 flex-col items-start gap-2.5 overflow-hidden whitespace-nowrap; }
-  .bpsh-crumbs            { @apply flex shrink-0 items-center gap-2 overflow-hidden text-[13px] leading-[normal]; }
-  .bpsh-crumbs .c1        { @apply font-normal text-black/50; }
-  .bpsh-crumbs .c2        { @apply font-medium text-black/90; }
-  .bpsh-title             { @apply shrink-0 text-[34px] leading-[normal] font-bold text-ink; }
-  .bpsh-head-right        { @apply flex shrink-0 items-center gap-3 overflow-hidden; }
-  .bpsh-badge-pub         { @apply flex shrink-0 items-center gap-2 overflow-hidden rounded-ds bg-[#e9f6ed] px-3.5 py-2; }
-  .bpsh-badge-pub .dot    { @apply size-2 shrink-0 rounded-full bg-[#229653]; }
-  .bpsh-badge-pub p       { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-[#229653]; }
-  .bpsh-btn-view          { @apply flex h-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white px-5 transition-colors duration-150 hover:border-black/35 hover:bg-gray-soft2; }
-  .bpsh-btn-view p        { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
+  /* legacy delta: the settings-nav counter and the save-bar buttons never set
+     leading-[normal] on this page either. */
+  .bpsh-page .cab-snav-item .cnt { @apply leading-4; }
+  .bpsh-page .cab-btn-save,
+  .bpsh-page .cab-btn-cancel     { @apply leading-5; }
 
-  /* body: settings nav + main column */
-  .bpsh-body              { @apply flex w-full items-start gap-6; }
-  .bpsh-snav              { @apply sticky top-[158px] flex w-[264px] shrink-0 flex-col items-start gap-1 self-start overflow-hidden rounded-ds border border-black/10 bg-white px-3 py-3.5; }
-  /* The border is reserved in the default state so the active row is exactly as tall as
-     its siblings (Figma strokes do not grow the box) and flipping data-on never resizes it.
-     The label weight change is safe: justify-between pins .cnt to the right edge, so a
-     wider label cannot displace anything. */
-  .bpsh-snav-item         { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds border border-transparent px-3 py-[11px] whitespace-nowrap text-inherit no-underline transition-colors duration-150; }
-  .bpsh-snav-item .lbl    { @apply text-sm font-medium text-black/70; }
-  .bpsh-snav-item .cnt    { @apply text-xs font-semibold text-black/40; }
-  .bpsh-snav-item:not([data-on="true"]):hover { @apply bg-gray-soft2; }
-  .bpsh-snav-item[data-on="true"]      { @apply border-yellow-line bg-sel-bg; }
-  .bpsh-snav-item[data-on="true"] .lbl { @apply text-sm font-bold text-black; }
-
-  .bpsh-snav-progress         { @apply flex w-full flex-col items-start gap-2 overflow-hidden rounded-ds bg-gray-soft2 px-3 py-3.5; }
-  .bpsh-snav-progress .top    { @apply flex w-full items-start justify-between overflow-hidden text-xs whitespace-nowrap text-ink; }
-  .bpsh-snav-progress .top .l { @apply font-semibold; }
-  .bpsh-snav-progress .top .r { @apply font-bold; }
-  .bpsh-snav-bar              { @apply relative h-1.5 w-full overflow-hidden rounded-[3px] bg-black/10; }
-  .bpsh-snav-bar .fill        { @apply absolute top-0 left-0 h-1.5 rounded-[3px] bg-yellow; }
-  .bpsh-snav-progress .note   { @apply text-[11px] leading-[normal] font-normal whitespace-nowrap text-black/50; }
-
-  .bpsh-main              { @apply flex min-w-px flex-[1_0_0] flex-col items-start gap-5 overflow-hidden; }
-
-  /* showrooms card */
-  .bpsh-card              { @apply flex w-full flex-col items-start gap-4 overflow-hidden rounded-ds border border-black/10 bg-white p-6; }
-  .bpsh-card-head         { @apply flex w-full items-center justify-between overflow-hidden; }
-  /* No nowrap on the heading block: the ru/en strings are sentences and used to be cut
-     mid-word by the inherited overflow-hidden once the main column narrowed. */
-  .bpsh-card-head-txt     { @apply flex min-w-px flex-[1_0_0] flex-col items-start gap-1 overflow-hidden; }
-  .bpsh-card-head-txt h2  { @apply text-lg font-bold text-ink; }
-  .bpsh-card-head-txt p   { @apply text-[13px] leading-[normal] font-normal text-black/50; }
-  .bpsh-btn-add           { @apply flex h-[42px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[18px] transition-[filter] duration-150 hover:brightness-95; }
-  .bpsh-btn-add p         { @apply text-[13px] leading-[normal] font-bold whitespace-nowrap text-ink; }
-
-  /* showroom row */
-  .bpsh-showroom          { @apply flex w-full items-center gap-4 overflow-hidden rounded-ds bg-gray-soft2 p-4; }
-  .bpsh-sh-icon           { @apply relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-[22px] border border-black/12 bg-white text-ink; }
-  .bpsh-sh-icon svg       { @apply size-5; }
-  .bpsh-sh-info           { @apply flex min-w-px flex-[1_0_0] flex-col items-start gap-[3px] overflow-hidden; }
-  .bpsh-sh-info b         { @apply w-full overflow-hidden text-[15px] leading-[normal] font-bold text-ellipsis whitespace-nowrap text-ink; }
+  /* showroom row content — the row box itself is <x-cabinet.row> (.cab-row) */
+  .bpsh-sh-icon    { @apply relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-[22px] border border-black/12 bg-white text-ink; }
+  .bpsh-sh-icon svg{ @apply size-5; }
+  .bpsh-sh-info    { @apply flex min-w-px flex-[1_0_0] flex-col items-start gap-[3px] overflow-hidden; }
+  .bpsh-sh-info b  { @apply w-full overflow-hidden text-[15px] leading-[normal] font-bold text-ellipsis whitespace-nowrap text-ink; }
   /* pre-wrap, not pre: the double spaces around the "·" are part of the design, but the
      ru address strings are ~25% longer than the az ones and must be allowed to wrap. */
-  .bpsh-sh-info p         { @apply text-[13px] leading-[normal] font-normal whitespace-pre-wrap text-black/55; }
-  .bpsh-sh-badge          { @apply flex shrink-0 items-center overflow-hidden rounded-ds px-[9px] py-1; }
-  .bpsh-sh-badge[data-state="active"]   { @apply bg-[#e9f6ed]; }
-  .bpsh-sh-badge[data-state="active"] p { @apply text-[11px] leading-[normal] font-semibold whitespace-nowrap text-[#229653]; }
-  .bpsh-sh-badge[data-state="hidden"]   { @apply bg-[#f0f1f3]; }
-  .bpsh-sh-badge[data-state="hidden"] p { @apply text-[11px] leading-[normal] font-semibold whitespace-nowrap text-black/50; }
-  .bpsh-sh-actions        { @apply flex shrink-0 items-start gap-2 overflow-hidden; }
-  .bpsh-btn-edit          { @apply flex shrink-0 cursor-pointer items-start overflow-hidden rounded-ds border border-black/20 bg-white px-3.5 py-2 transition-colors duration-150 hover:border-black/35 hover:bg-gray-soft2; }
-  .bpsh-btn-edit p        { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
-  /* Background-only hover — a hover border would make this borderless button 2px taller. */
-  .bpsh-btn-del           { @apply flex shrink-0 cursor-pointer items-start overflow-hidden rounded-ds px-3 py-2 transition-colors duration-150 hover:bg-[#d33c32]/10; }
-  .bpsh-btn-del p         { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-[#d33c32]; }
+  .bpsh-sh-info p  { @apply text-[13px] leading-[normal] font-normal whitespace-pre-wrap text-black/55; }
+  .bpsh-sh-actions { @apply flex shrink-0 items-start gap-2 overflow-hidden; }
 
-  /* save bar */
-  .bpsh-save-bar          { @apply flex w-full items-center justify-between overflow-hidden rounded-ds bg-ink px-6 py-4; }
-  .bpsh-save-left         { @apply flex shrink-0 items-center gap-2 overflow-hidden; }
-  .bpsh-save-left .dot    { @apply size-2 shrink-0 rounded-full bg-yellow; }
-  /* Saved state: only the dot color and the message text change, the bar keeps its size. */
-  .bpsh-save-bar[data-saved="true"] .dot { @apply bg-green; }
-  .bpsh-save-left p       { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-white/85; }
-  .bpsh-save-right        { @apply flex shrink-0 items-start gap-2.5 overflow-hidden; }
-  .bpsh-btn-cancel        { @apply flex h-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-white/35 bg-transparent px-[18px] transition-colors duration-150 hover:border-white/60 hover:bg-white/10; }
-  .bpsh-btn-cancel p      { @apply text-sm font-medium whitespace-nowrap text-white/85; }
-  .bpsh-btn-save          { @apply flex h-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border-none bg-yellow px-[26px] transition-[filter] duration-150 hover:brightness-95; }
-  .bpsh-btn-save p        { @apply text-sm font-bold whitespace-nowrap text-ink; }
-  /* The shared :focus-visible ring is ink-colored — invisible on the dark save bar. */
-  .bpsh-btn-cancel:focus-visible,
-  .bpsh-btn-save:focus-visible { @apply outline-2 outline-offset-2 outline-white; }
-
-  /* RESPONSIVE — the Figma frame is a fixed 1440 layout and the sidebar is a fixed 264px,
-     so below ~1100px the showroom rows run out of room. Nothing here changes 1440px. */
+  /* RESPONSIVE — the two columns stack at 1100px in app.css; only the showroom row
+     needs a page rule. Nothing here changes 1440px. */
   @media (max-width: 1100px) {
-    .bpsh-body     { @apply flex-col; }
-    .bpsh-snav     { @apply static w-full; }
-    .bpsh-showroom { @apply flex-wrap; }
+    .bpsh-page .cab-row { @apply flex-wrap; }
   }
 }

@@ -22,7 +22,7 @@
      shifts the whole row (worst in ru, where the labels are longest) */
   .sr-tab::after          { @apply invisible block h-0 overflow-hidden font-semibold; content: attr(data-label); }
 
-  .sr-more              { @apply relative pb-1 text-xs font-medium tracking-[.6px] text-[#141414] uppercase; }
+  .sr-more              { @apply relative pb-1 text-xs font-medium tracking-[.6px] text-ink-alt uppercase; }
   .sr-more::before      { @apply absolute inset-x-0 bottom-0 h-0.5 bg-yellow-line content-['']; }
   .sr-more::after       { @apply absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 bg-ink/70 transition-transform duration-[350ms] content-['']; }
   .sr-more:hover::after { @apply scale-x-100; }

@@ -15,7 +15,7 @@
 | # | Rule |
 |---|---|
 | 1 | **Change only YOUR files.** Do not step outside the "Your files" list below. |
-| 2 | **Do NOT touch `resources/css/app.css`.** It holds the shared CSS; 23 agents writing there at once would conflict. |
+| 2 | **Do NOT touch `resources/css/app.css` or `resources/views/components/`.** They hold the design system (§4); 23 agents writing there at once would conflict. Need a variant the components do not have? Report it — do not fork it. |
 | 3 | **Do NOT touch `resources/js/app.js`.** The registry already covers all 23 slugs. |
 | 4 | **Do NOT touch `routes/web.php`.** Every route already exists. |
 | 5 | **No global commands:** `npm run build`, `npm run dev`, `php artisan serve`, `git commit/push` — only the Gate agent runs those. |
@@ -58,8 +58,10 @@ ARCHI-laravel/
 │  │  ├─ shared/cursor.js           ← shared (round .pcard cursor)
 │  │  └─ pages/{slug}.js            ← your file
 │  └─ views/
-│     ├─ components/                ← shared Blade components
-│     │  layout · navbar · footer · pcard · scard · post · section-head
+│     ├─ components/                ← shared Blade components — DO NOT TOUCH
+│     │  ├─ layout · navbar · footer · login-modal · section-head · pcard · scard · post
+│     │  ├─ ui/                     ← design system primitives  <x-ui.*>   (§4.1–4.8)
+│     │  └─ cabinet/                ← business cabinet shell   <x-cabinet.*> (§4.9)
 │     └─ pages/{slug}.blade.php     ← your file
 └─ vite.config.js                   ← do not touch
 ```
@@ -159,7 +161,275 @@ const url = el.dataset.urlProduct;
 
 ## 4. Blade components (API)
 
-### 4.1 `<x-section-head>` — section head (`.sec-head`)
+```
+resources/views/components/
+├─ layout · navbar · footer · login-modal      ← page shell (never call navbar/footer yourself)
+├─ section-head · pcard · scard · post         ← content components
+├─ ui/                                         ← DESIGN SYSTEM primitives  <x-ui.*>
+│  button · eyebrow · breadcrumbs · badge · chip · toggle · field · input ·
+│  textarea · select · checkbox · alert · card · progress · stars · modal
+└─ cabinet/                                    ← business-cabinet shell  <x-cabinet.*>
+   shell · header · sidebar · card · field · save-bar · row
+```
+
+**The design system is the single source of truth.** A component owns *tone, radius,
+state and hover*; the **caller** supplies *geometry and typography* through
+`$attributes->merge`. That split exists because the same yellow button is 42 px tall in
+the cabinet and 54 px on the auth pages — one size scale would be a lie. Tailwind
+utilities sit in a later layer than `@layer components`, so `class="h-11 px-3.5 text-xs"`
+always beats the component defaults.
+
+All of the CSS lives in **`resources/css/app.css`**, in two blocks:
+`DESIGN SYSTEM — UI PRIMITIVES` and `BUSINESS CABINET SHELL`. No hex literal appears in
+either — every color and radius comes from `@theme` (§4.0).
+
+---
+
+### 4.0 Tokens the components are built from
+
+| Token | Value | Utilities | Drives |
+|---|---|---|---|
+| `--color-yellow` | `#fdfe00` | `bg-yellow` | primary button · progress fill · active chip rule |
+| `--color-yellow-line` | `#ffe600` | `border-yellow-line` | selected chip / nav border · link underline |
+| `--color-sel-bg` | `#fffde0` | `bg-sel-bg` | selected chip / active sidebar row |
+| `--color-ink` | `#111111` | `text-ink` `bg-ink` | dark button · save bar · checkbox tick box |
+| `--color-ink-alt` | `#141414` | `text-ink-alt` | editorial type (`.post h3`, `.sec-more p`, `.sr-more`) |
+| `--color-ok` | `#229653` | `text-ok` `bg-ok` | switch ON · "published" chip · verified badge |
+| `--color-ok-soft` | `#e9f6ed` | `bg-ok-soft` | background of those chips |
+| `--color-warn` / `-soft` | `#c88200` / `#fff4db` | `text-warn` `bg-warn-soft` | low-stock badge |
+| `--color-danger` | `#d33c32` | `text-danger` `border-danger/80` `bg-danger/8` | delete · logout · danger zone |
+| `--color-success` / `-soft` | `#0a7a14` / `#eafce9` | `text-success` `bg-success-soft` | success message box |
+| `--color-error` / `-soft` | `#b4322c` / `#fdeaea` | `text-error` `bg-error-soft` | error message box |
+| `--color-neutral-soft` | `#f0f1f3` | `bg-neutral-soft` | "hidden" badge |
+| `--color-green` | `#00a613` | `text-green` `bg-green/12` | saved dot · verified tint |
+| `--radius-ds-sm` / `-ds` / `-ds-md` / `-pill` | 3 / 4 / 8 / 100 px | `rounded-ds-sm` … | progress bar · every DS box · logo box · switch |
+| `--font-sans` / `--font-b2b` | Inter / Manrope | `font-sans` `font-b2b` | site / business pages |
+
+**Never write a hex that a token already covers.** If you find one in an old page,
+replace it with the utility and say so in your report.
+
+---
+
+### 4.1 `<x-ui.button>`
+
+```blade
+<x-ui.button variant="primary" class="cab-btn-save">{{ __('…save') }}</x-ui.button>
+<x-ui.button variant="outline" class="cab-btn-view" :href="route('business.profile')">…</x-ui.button>
+<x-ui.button variant="primary" type="submit" class="h-[54px] rounded-none text-lg font-semibold hover:brightness-[.93]">…</x-ui.button>
+```
+
+| Prop | Default | Description |
+|---|---|---|
+| `variant` | `primary` | `primary` (yellow) · `dark` (ink) · `outline` (white + black/20) · `ghost` (borderless, danger text) · `danger` (red outline) · `on-ink` (for the dark save bar) |
+| `href` | `null` | renders an `<a>` instead of a `<button>` |
+| `type` | `button` | `<button type>`; ignored when `href` is set |
+| `hover` | `true` | `false` → no transition and no hover (`business-profile-company` is the only page that needs it) |
+| `icon` / `iconClass` | `null` / `size-5` | icon rendered before the label |
+
+> The base is **square-cornered at `rounded-ds` (4 px)**. Pages whose button is a sharp
+> rectangle (login · register · sell) must pass `rounded-none`.
+
+Repeating cabinet geometries live in app.css and compose with the tone:
+`.cab-btn-view` `.cab-btn-add` `.cab-btn-edit` `.cab-btn-del` `.cab-btn-save` `.cab-btn-cancel`.
+
+### 4.2 `<x-ui.eyebrow>` — the yellow rule + uppercase label
+
+```blade
+<x-ui.eyebrow :label="__('login.head.tag')" />
+<x-ui.eyebrow variant="b2b" :label="__('business-register.head.tag')" />
+```
+
+| `variant` | Rule | Label | Used by |
+|---|---|---|---|
+| *(default)* | `h-1 w-8` rounded 2 px, yellow | 13 px / 1.4 px tracking / black-55 | login · register · sell · login modal |
+| `lg` | same | 14 px | blog |
+| `flat` | `h-0.5 w-8` square | 13 px / .5 px / black | search · specialists · specialist · catalog |
+| `b2b` | `h-1 w-8` rounded-ds, yellow-line | 12 px semibold / 1 px / black-50 | business-register · calculator |
+| `kicker` | `h-0.5 w-8` square | 12 px medium / 1 px / black-55 | business-profile |
+
+Never type the label in CAPS — `uppercase` is in the CSS.
+
+### 4.3 `<x-ui.breadcrumbs>`
+
+```blade
+<x-ui.breadcrumbs :items="[
+    ['label' => __('common.home'), 'href' => route('home')],
+    ['label' => __('common.catalog'), 'href' => '#'],
+    ['label' => __('catalog.crumb_current')],
+]" />
+```
+
+| Prop | Default | Description |
+|---|---|---|
+| `items` | `[]` | `['label' => …, 'href' => …]`; the **last** item is the current page (`.cur`) and is never a link |
+| `sep` | `/` | separator glyph (the cabinet passes a translated one) |
+
+Canonical: `gap-2`, 13 px, `leading-[normal]`, links `black/50`, current `font-medium black/90`.
+
+### 4.4 `<x-ui.badge>` — status chip (non-interactive)
+
+```blade
+<x-ui.badge tone="ok" size="md" dot>{{ __('…status.published') }}</x-ui.badge>
+```
+
+| Prop | Values |
+|---|---|
+| `tone` | `ok` · `warn` · `muted` · `green` |
+| `size` | `md` (14/8 px pad · 13 px) · `sm` (10/4 · 11 px) · `xs` (8/2 · 10 px) |
+| `dot` | `false` — the 8 px dot inherits the tone color via `bg-current` |
+
+### 4.5 `<x-ui.chip>` — selectable chip with a checkbox box
+
+```blade
+<x-ui.chip :label="__('…languages.az')" :on="true" size="sm" tick="svg" />
+```
+
+| Prop | Default | Description |
+|---|---|---|
+| `label` | `null` | also written to `data-label`, which reserves the **semibold** width so toggling never reflows the row |
+| `on` | `false` | selected state (`data-on`) |
+| `size` | `md` | `sm` (13 px, 9/14/12 pad) · `md` (14 px, 10/16/14 pad) |
+| `box` | `true` | render the 18 px checkbox square |
+| `tick` | `css` | `css` = rotated-border tick · `svg` = borderless box + inlined check glyph |
+| `role` | `checkbox` | pass `radio` for single-select groups |
+
+### 4.6 `<x-ui.toggle>` — switch
+
+```blade
+<x-ui.toggle :on="$row['on']" size="sm" :aria-label="__('…toggle')" />
+```
+
+| Prop | Default | Description |
+|---|---|---|
+| `on` | `false` | ON state |
+| `size` | `md` | `md` 44×24 (knob 20 @2) · `sm` 40×22 (knob 16 @3) |
+| `tone` | `ok` | `ok` → `--color-ok` track · `yellow` → `--color-yellow` |
+| `hover` | `true` | brightness hover |
+
+### 4.7 Form: `<x-ui.field>` · `<x-ui.input>` · `<x-ui.textarea>` · `<x-ui.select>` · `<x-ui.checkbox>`
+
+Two families, chosen with `variant`:
+
+| | *(default)* — consumer | `b2b` — business |
+|---|---|---|
+| label | 14 px medium black/70 | 13 px semibold ink |
+| control | square, `border-black/20`, `px-4 py-3.5`, 16 px, `focus:border-black` | `rounded-ds`, `border-black/14`, `px-4 py-[13px]`, 14 px ink, `focus:border-ink` |
+| used by | login · register · sell · cart | business-register · onboarding · cabinet |
+
+```blade
+<x-ui.field :label="__('login.form.identifier_label')" for="loginIdentifier">
+  <x-ui.input id="loginIdentifier" :placeholder="__('…')" required />
+</x-ui.field>
+
+<x-ui.field variant="b2b" :label="__('…legal_name_label')">
+  <x-ui.input variant="b2b" :value="__('…legal_name_value')" />
+</x-ui.field>
+
+<x-ui.select :placeholder="__('register.form.select_placeholder')" :options="__('register.cities')" />
+<x-ui.checkbox required>{{ __('login.form.remember') }}</x-ui.checkbox>
+```
+
+`<x-ui.field>` also takes `tag="p"` for controls that cannot be labelled (the onboarding
+city combobox). The custom, JS-driven dropdowns are **not** `<x-ui.select>` — they are
+listbox widgets and stay page-local.
+
+### 4.8 Small pieces
+
+| Component | Props | Notes |
+|---|---|---|
+| `<x-ui.alert>` | `tone` (`ok` · `error`) · `on` | hidden until `data-on="true"` |
+| `<x-ui.card>` | — | `rounded-ds` + `border-black/10` + white; padding/gap from the caller |
+| `<x-ui.progress>` | `fill` (`w-[184px]`) | 6 px bar, `rounded-ds-sm`, yellow fill |
+| `<x-ui.stars>` | `count` (5) · `icon` | replaces the `@for` star loops |
+| `<x-ui.modal>` | `dialog` · `closeLabel` · `on` | overlay + close button only; the dialog box is the caller's |
+
+---
+
+### 4.9 Business cabinet — `<x-cabinet.*>`
+
+The six cabinet pages (`business-profile-company` · `-contact` · `-showrooms` ·
+`-products` · `-notifications` · `-security`) shipped ~90 % identical CSS under six
+prefixes. One shell renders all of it:
+
+```blade
+<x-layout page="business-profile-products" :title="__('business-profile-products.title')" bodyClass="bg-gray-soft2">
+  <x-cabinet.shell ns="business-profile-products" active="products" class="bpp-page">
+
+    <x-cabinet.card layout="row" gap="gap-3.5"
+        :title="__('business-profile-products.list.title')"
+        :desc="__('business-profile-products.list.summary')">
+      <x-slot:action>
+        <x-ui.button variant="primary" class="cab-btn-add">{{ __('…list.add') }}</x-ui.button>
+      </x-slot:action>
+      …rows…
+    </x-cabinet.card>
+
+    <x-cabinet.save-bar ns="business-profile-products" />
+
+  </x-cabinet.shell>
+</x-layout>
+```
+
+| Component | Props |
+|---|---|
+| `<x-cabinet.shell>` | `ns` · `active` · `heading` · `viewHref` · `strong` · `hover` · `progressFill` |
+| `<x-cabinet.header>` | `ns` · `heading` · `viewHref` · `hover` |
+| `<x-cabinet.sidebar>` | `ns` · `active` · `strong` · `fill` |
+| `<x-cabinet.card>` | `title` · `desc` · `layout` (`stack`/`row`) · `tag` · `gap` · `pad` + `<x-slot:action>` |
+| `<x-cabinet.field>` | `label` · `for` · `full` · `tag` + `<x-slot:badge>` |
+| `<x-cabinet.save-bar>` | `ns` · `saved` · `hover` |
+| `<x-cabinet.row>` | — (the gray list row) |
+
+**`ns` is the page's own translation namespace** — no shared cabinet lang file exists and
+none is needed. The shell reads:
+
+```
+{ns}.crumbs.panel · {ns}.crumbs.current · {ns}.crumbs.sep | {ns}.crumbs.separator
+{ns}.heading
+{ns}.status.published | {ns}.status          {ns}.status.view_profile | {ns}.view_profile
+{ns}.nav.company … {ns}.nav.security · {ns}.nav.showrooms_count · {ns}.nav.products_count
+{ns}.progress.label · {ns}.progress.value · {ns}.progress.note | {ns}.progress.hint
+{ns}.save.unsaved · {ns}.save.saved | {ns}.save.saved_alert · {ns}.save.cancel · {ns}.save.save
+```
+
+Both key spellings are accepted (the six lang files were written independently), so **no
+lang file changes** when a page adopts the shell.
+
+**JS contract of the save bar:** `.cab-save-bar` (`data-saved` flips the dot to green) ·
+`.cab-save-bar .msg` (`aria-live`) · `data-saved-message` · `[data-save]` / `[data-cancel]`.
+
+**Legacy deltas.** Where the six pages disagreed, the shared class took the majority value
+and the minority page keeps a one-line, higher-specificity override in its page CSS,
+marked `/* legacy delta */`. They are listed per page in the refactor map; the largest set
+belongs to `business-profile-company`, which was ported without hover states and without
+`leading-[normal]`.
+
+---
+
+### 4.10 How to change X site-wide
+
+| I want to change… | Edit exactly this |
+|---|---|
+| the radius of **every** DS box | `@theme --radius-ds` in `app.css` |
+| the button radius only | `.ui-btn { … rounded-ds }` |
+| the primary (yellow) button color | `@theme --color-yellow` |
+| the switch ON color | `@theme --color-ok` |
+| the status-chip background | `@theme --color-ok-soft` |
+| every destructive color | `@theme --color-danger` |
+| the input border / focus color | `.ui-control` and `.ui-control-b2b` |
+| the label size of a b2b form | `.ui-label-b2b` |
+| the breadcrumb separator color | `.ui-crumbs .sep` |
+| the cabinet sidebar width | `.cab-snav { … w-[264px] }` |
+| the cabinet sticky offset under the navbar | `.cab-snav { … top-[158px] }` |
+| the cabinet page gutter | `.cab-page { … px-7 }` |
+| the default cabinet card padding | the `pad` default in `components/cabinet/card.blade.php` |
+| the save-bar look | `.cab-save-bar` |
+| the cabinet nav order / a new tab | `components/cabinet/sidebar.blade.php` (`$items`) + one key per lang file |
+| the chip tick glyph | `.ui-chip[data-on="true"] .cbox::after` |
+
+---
+
+### 4.11 `<x-section-head>` — section head (`.sec-head`)
 
 ```blade
 <x-section-head
@@ -179,7 +449,7 @@ const url = el.dataset.urlProduct;
 The output markup is **identical** to the old HTML:
 `<div class="sec-head"><div><div class="sec-tag">…</div><div class="sec-title">…</div></div><a class="sec-more">…</a></div>`
 
-### 4.2 `<x-pcard>` — product card (`.pcard`)
+### 4.12 `<x-pcard>` — product card (`.pcard`)
 
 ```blade
 <x-pcard
@@ -212,7 +482,7 @@ Extra utility classes are merged through `$attributes->merge`:
 <x-pcard class="max-[1200px]:min-w-[260px]" … />
 ```
 
-### 4.3 `<x-scard>` — specialist card (`.scard`)
+### 4.13 `<x-scard>` — specialist card (`.scard`)
 
 ```blade
 <x-scard
@@ -235,7 +505,7 @@ Extra utility classes are merged through `$attributes->merge`:
 > `.scard .name` and `.scard .meta` were **unstyled** in the old project too (no CSS rule
 > existed). **Do not add CSS** for them — pixel parity depends on it.
 
-### 4.4 `<x-post>` — blog card (`.post`)
+### 4.14 `<x-post>` — blog card (`.post`)
 
 ```blade
 <x-post
@@ -253,7 +523,7 @@ Extra utility classes are merged through `$attributes->merge`:
 | `time` `title` `excerpt` | `null` | text values |
 | `read` | `__('common.read_arrow')` | bottom link text |
 
-### 4.5 `<x-navbar>` / `<x-footer>`
+### 4.15 `<x-navbar>` / `<x-footer>`
 
 The layout renders them — **you never call them**. Their text lives in `lang/*/nav.php`
 and `lang/*/footer.php`. The navbar has the **language switcher** (`AZ · RU · EN`,
@@ -381,6 +651,11 @@ override, **use higher specificity**:
 The spacing scale (4/8/12/16/20/24/28/32/40/48) matches Tailwind's default — `p-1`…`p-12`.
 Translucent colors are not separate tokens; use the opacity modifier.
 
+The **semantic status tokens** (`--color-ok` `--color-ok-soft` `--color-warn` `--color-danger`
+`--color-success` `--color-error` `--color-neutral-soft` `--color-ink-alt` `--radius-ds-sm`)
+are listed in **§4.0** — use those instead of the hex literals `#229653` `#e9f6ed` `#d33c32`
+`#0a7a14` `#eafce9` `#b4322c` `#fdeaea` `#f0f1f3` `#141414` `#fff4db` `#c88200`.
+
 ### 6.5 Traps
 
 | Trap | Correct form |
@@ -474,6 +749,8 @@ For state driven from a parent use `group` + `group-data-[sel=true]:`.
 | specialist card | `.scard` + children |
 | blog card | `.post` + children |
 | filter sidebar + sort dropdown (catalog · specialists) | `.fside` `.fside-scroll` `.fside-apply-sep` `.fside-apply` `.fside-box` (checked state comes from the row: `[data-on="true"] > .fside-box`) `.fsort` `.fsort-menu` — the skeleton only; per-page sizes/tints stay in the page CSS |
+| **design system** (§4.1–4.8) | `.ui-btn` + 6 tones · `.ui-eyebrow` · `.ui-crumbs` · `.ui-badge` · `.ui-chip` · `.ui-toggle` · `.ui-progress` · `.ui-field` `.ui-label` `.ui-control` `.ui-label-b2b` `.ui-control-b2b` `.ui-check` `.ui-check-row` · `.ui-alert` · `.ui-card` · `.ui-modal-overlay` `.ui-modal-close` |
+| **business cabinet** (§4.9) | `.cab-page` `.cab-head` `.cab-head-left/right` `.cab-title` `.cab-body` `.cab-main` · `.cab-snav` `.cab-snav-item` `.cab-snav-prog` · `.cab-card` `.cab-card-head` `.cab-card-head-row` `.cab-card-head-txt` `.cab-card-title` `.cab-card-desc` `.cab-card-sub` · `.cab-field` `.cab-field-row` `.cab-field-full` · `.cab-row` · `.cab-btn-view/add/edit/del/save/cancel` · `.cab-save-bar` |
 | animation | `.reveal` `.reveal.in` `.reveal.d1–d3` |
 | responsive | 1200 / 900 / 640 px + `hover:none` + `prefers-reduced-motion` (navbar/footer/cards only) |
 

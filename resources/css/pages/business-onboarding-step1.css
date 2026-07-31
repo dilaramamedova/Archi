@@ -2,4 +2,7 @@
    The old page was already fully converted to Tailwind (its <style type="text/tailwindcss">
    block was empty), so the markup carries every utility (ARCHITECTURE.md §6.2, approach 1)
    — including the max-[1200px]/max-[640px] variants that collapse the two-column shell.
+   The form now uses the design system (.ui-field / .ui-label-b2b / .ui-control-b2b /
+   .ui-btn from app.css), and its three deltas — the compact fields' black/10 border,
+   12/14 padding and gray placeholder — ride on the control as utilities in the markup.
    No page-specific rule is needed. The file must stay — app.css imports it. */

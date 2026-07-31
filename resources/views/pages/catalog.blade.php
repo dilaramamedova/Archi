@@ -54,17 +54,15 @@
 
 <main class="wrap catalog">
 
-  <nav class="cat-crumbs">
-    <a href="{{ route('home') }}">{{ __('common.home') }}</a>
-    <span class="sep">/</span>
-    <a href="#">{{ __('common.catalog') }}</a>
-    <span class="sep">/</span>
-    <span class="cur">{{ __('catalog.crumb_current') }}</span>
-  </nav>
+  <x-ui.breadcrumbs class="cat-crumbs" :items="[
+      ['label' => __('common.home'), 'href' => route('home')],
+      ['label' => __('common.catalog'), 'href' => '#'],
+      ['label' => __('catalog.crumb_current')],
+  ]" />
 
   <div class="cat-head">
     <div class="cat-head-l">
-      <div class="eyebrow"><span class="line"></span><p>{{ __('catalog.head.eyebrow') }}</p></div>
+      <x-ui.eyebrow variant="flat" class="mb-3.5" :label="__('catalog.head.eyebrow')" />
       <div class="title-row">
         <h1>{{ __('catalog.head.title') }}</h1>
         <span class="count">{{ __('catalog.head.count') }}</span>

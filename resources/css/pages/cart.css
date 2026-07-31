@@ -1,5 +1,12 @@
 /* Page CSS for "cart".
 
-   The cart page is built entirely from Tailwind utilities in the markup (and in the
-   row templates of resources/js/pages/cart.js, which `@source "../js"` scans), so
-   there is no page-specific rule to declare here. Shared classes come from app.css. */
+   The cart page is built from Tailwind utilities in the markup (and in the row
+   templates of resources/js/pages/cart.js, which `@source "../js"` scans), so the
+   only rule here is one legacy delta against the shared design system. */
+
+@layer components {
+  /* legacy delta: the cart crumb trail was ported before <x-ui.breadcrumbs> and
+     keeps the current crumb at the normal weight (.ui-crumbs .cur is font-medium).
+     Size, gap and line-height are caller utilities on the element itself. */
+  #ctPage .ui-crumbs .cur { @apply font-normal; }
+}

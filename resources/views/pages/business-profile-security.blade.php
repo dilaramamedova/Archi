@@ -1,145 +1,83 @@
 <x-layout page="business-profile-security" :title="__('business-profile-security.title')" bodyClass="bg-gray-soft2">
 
 {{-- Business cabinet — security (Figma 1105:23405) --}}
-<div class="bpsec-page">
+<x-cabinet.shell ns="business-profile-security" active="security" class="bpsec-page">
 
-  {{-- Header --}}
-  <div class="bpsec-head">
-    <div class="bpsec-head-l">
-      <div class="bpsec-crumb">
-        <p class="c1">{{ __('business-profile-security.crumbs.panel') }}</p>
-        <p class="c1">{{ __('business-profile-security.crumbs.separator') }}</p>
-        <p class="c2">{{ __('business-profile-security.crumbs.current') }}</p>
-      </div>
-      <p class="bpsec-title">{{ __('business-profile-security.heading') }}</p>
+  {{-- Change password --}}
+  <x-cabinet.card gap="gap-4"
+      :title="__('business-profile-security.password.title')"
+      :desc="__('business-profile-security.password.desc')">
+    <div class="cab-field-row">
+      <x-cabinet.field :label="__('business-profile-security.password.current_label')">
+        <div class="bpsec-input">
+          <p class="dots" data-mask="{{ __('business-profile-security.password.mask') }}" data-value="{{ __('business-profile-security.password.value') }}">{{ __('business-profile-security.password.mask') }}</p>
+          <button type="button" class="eye" data-on="false" aria-pressed="false">{{ __('business-profile-security.password.eye') }}</button>
+        </div>
+      </x-cabinet.field>
+      <x-cabinet.field :label="__('business-profile-security.password.new_label')">
+        <div class="bpsec-input">
+          <p class="dots" data-mask="{{ __('business-profile-security.password.mask') }}" data-value="{{ __('business-profile-security.password.value') }}">{{ __('business-profile-security.password.mask') }}</p>
+          <button type="button" class="eye" data-on="false" aria-pressed="false">{{ __('business-profile-security.password.eye') }}</button>
+        </div>
+      </x-cabinet.field>
+      <x-cabinet.field :label="__('business-profile-security.password.repeat_label')">
+        <div class="bpsec-input">
+          <p class="dots" data-mask="{{ __('business-profile-security.password.mask') }}" data-value="{{ __('business-profile-security.password.value') }}">{{ __('business-profile-security.password.mask') }}</p>
+          <button type="button" class="eye" data-on="false" aria-pressed="false">{{ __('business-profile-security.password.eye') }}</button>
+        </div>
+      </x-cabinet.field>
     </div>
-    <div class="bpsec-head-r">
-      <div class="bpsec-badge-pub">
-        <div class="bpsec-dot"></div>
-        <p>{{ __('business-profile-security.status') }}</p>
-      </div>
-      <a class="bpsec-btn-view" href="{{ route('business.profile') }}"><p>{{ __('business-profile-security.view_profile') }}</p></a>
+    <x-ui.button variant="primary" class="h-11 px-[22px] text-[13px] leading-[normal] font-bold whitespace-nowrap">{{ __('business-profile-security.password.submit') }}</x-ui.button>
+  </x-cabinet.card>
+
+  {{-- Two-factor authentication --}}
+  <x-cabinet.card gap="gap-4" :title="__('business-profile-security.twofa.title')">
+    <div class="bpsec-row">
+      <p class="desc">{{ __('business-profile-security.twofa.desc') }}</p>
+      <x-ui.toggle :on="true" size="md" tone="ok" :aria-label="__('business-profile-security.twofa.title')" />
     </div>
-  </div>
+  </x-cabinet.card>
 
-  <div class="bpsec-body">
-
-    {{-- Settings nav --}}
-    <div class="bpsec-snav">
-      <a class="bpsec-snav-item" data-on="false" href="{{ route('business.profile.company') }}"><p>{{ __('business-profile-security.nav.company') }}</p></a>
-      <a class="bpsec-snav-item" data-on="false" href="{{ route('business.profile.contact') }}"><p>{{ __('business-profile-security.nav.contact') }}</p></a>
-      <a class="bpsec-snav-item" data-on="false" href="{{ route('business.profile.showrooms') }}"><p>{{ __('business-profile-security.nav.showrooms') }}</p><p class="count">{{ __('business-profile-security.nav.showrooms_count') }}</p></a>
-      <a class="bpsec-snav-item" data-on="false" href="{{ route('business.profile.products') }}"><p>{{ __('business-profile-security.nav.products') }}</p><p class="count">{{ __('business-profile-security.nav.products_count') }}</p></a>
-      <a class="bpsec-snav-item" data-on="false" href="{{ route('business.profile.notifications') }}"><p>{{ __('business-profile-security.nav.notifications') }}</p></a>
-      <a class="bpsec-snav-item" data-on="true" href="{{ route('business.profile.security') }}"><p>{{ __('business-profile-security.nav.security') }}</p></a>
-      <div class="bpsec-snav-prog">
-        <div class="row">
-          <p class="l">{{ __('business-profile-security.progress.label') }}</p>
-          <p class="r">{{ __('business-profile-security.progress.value') }}</p>
+  {{-- Active sessions --}}
+  <x-cabinet.card gap="gap-4" :title="__('business-profile-security.sessions.title')">
+    <x-cabinet.row class="justify-between">
+      <div class="bpsec-session-info">
+        <div class="bpsec-session-title">
+          <p>{{ __('business-profile-security.sessions.s1_device') }}</p>
+          <x-ui.badge tone="ok" size="xs">{{ __('business-profile-security.sessions.this_device') }}</x-ui.badge>
         </div>
-        <div class="bpsec-snav-bar"><div class="fill"></div></div>
-        <p class="hint">{{ __('business-profile-security.progress.hint') }}</p>
+        <p class="bpsec-session-sub">{{ __('business-profile-security.sessions.s1_meta') }}</p>
       </div>
+    </x-cabinet.row>
+    <x-cabinet.row class="justify-between">
+      <div class="bpsec-session-info">
+        <div class="bpsec-session-title nogap"><p>{{ __('business-profile-security.sessions.s2_device') }}</p></div>
+        <p class="bpsec-session-sub">{{ __('business-profile-security.sessions.s2_meta') }}</p>
+      </div>
+      <button type="button" class="bpsec-logout">{{ __('business-profile-security.sessions.logout') }}</button>
+    </x-cabinet.row>
+    <x-cabinet.row class="justify-between">
+      <div class="bpsec-session-info">
+        <div class="bpsec-session-title nogap"><p>{{ __('business-profile-security.sessions.s3_device') }}</p></div>
+        <p class="bpsec-session-sub">{{ __('business-profile-security.sessions.s3_meta') }}</p>
+      </div>
+      <button type="button" class="bpsec-logout">{{ __('business-profile-security.sessions.logout') }}</button>
+    </x-cabinet.row>
+  </x-cabinet.card>
+
+  {{-- Danger zone --}}
+  <x-cabinet.card class="bpsec-card danger border-danger/50" gap="gap-4"
+      :title="__('business-profile-security.danger.title')"
+      :desc="__('business-profile-security.danger.desc')">
+    <div class="bpsec-row">
+      <p class="desc">{{ __('business-profile-security.danger.deactivate_desc') }}</p>
+      <x-ui.button variant="danger" class="h-[42px] px-[18px] text-[13px] leading-[normal] font-semibold whitespace-nowrap">{{ __('business-profile-security.danger.deactivate') }}</x-ui.button>
     </div>
+  </x-cabinet.card>
 
-    {{-- Main --}}
-    <div class="bpsec-main">
+  {{-- Save bar --}}
+  <x-cabinet.save-bar ns="business-profile-security" />
 
-      {{-- Change password --}}
-      <div class="bpsec-card">
-        <div class="bpsec-card-head">
-          <h2>{{ __('business-profile-security.password.title') }}</h2>
-          <p class="sub">{{ __('business-profile-security.password.desc') }}</p>
-        </div>
-        <div class="bpsec-fields">
-          <div class="bpsec-field">
-            <label>{{ __('business-profile-security.password.current_label') }}</label>
-            <div class="bpsec-input">
-              <p class="dots" data-mask="{{ __('business-profile-security.password.mask') }}" data-value="{{ __('business-profile-security.password.value') }}">{{ __('business-profile-security.password.mask') }}</p>
-              <button type="button" class="eye" data-on="false" aria-pressed="false">{{ __('business-profile-security.password.eye') }}</button>
-            </div>
-          </div>
-          <div class="bpsec-field">
-            <label>{{ __('business-profile-security.password.new_label') }}</label>
-            <div class="bpsec-input">
-              <p class="dots" data-mask="{{ __('business-profile-security.password.mask') }}" data-value="{{ __('business-profile-security.password.value') }}">{{ __('business-profile-security.password.mask') }}</p>
-              <button type="button" class="eye" data-on="false" aria-pressed="false">{{ __('business-profile-security.password.eye') }}</button>
-            </div>
-          </div>
-          <div class="bpsec-field">
-            <label>{{ __('business-profile-security.password.repeat_label') }}</label>
-            <div class="bpsec-input">
-              <p class="dots" data-mask="{{ __('business-profile-security.password.mask') }}" data-value="{{ __('business-profile-security.password.value') }}">{{ __('business-profile-security.password.mask') }}</p>
-              <button type="button" class="eye" data-on="false" aria-pressed="false">{{ __('business-profile-security.password.eye') }}</button>
-            </div>
-          </div>
-        </div>
-        <button type="button" class="bpsec-btn-yellow"><p>{{ __('business-profile-security.password.submit') }}</p></button>
-      </div>
-
-      {{-- Two-factor authentication --}}
-      <div class="bpsec-card">
-        <div class="bpsec-card-head single"><h2>{{ __('business-profile-security.twofa.title') }}</h2></div>
-        <div class="bpsec-row">
-          <p class="desc">{{ __('business-profile-security.twofa.desc') }}</p>
-          <button type="button" class="bpsec-toggle" data-on="true" aria-pressed="true" aria-label="{{ __('business-profile-security.twofa.title') }}"><span class="knob"></span></button>
-        </div>
-      </div>
-
-      {{-- Active sessions --}}
-      <div class="bpsec-card">
-        <div class="bpsec-card-head single"><h2>{{ __('business-profile-security.sessions.title') }}</h2></div>
-        <div class="bpsec-session">
-          <div class="bpsec-session-info">
-            <div class="bpsec-session-title">
-              <p>{{ __('business-profile-security.sessions.s1_device') }}</p>
-              <div class="bpsec-badge-this"><p>{{ __('business-profile-security.sessions.this_device') }}</p></div>
-            </div>
-            <p class="bpsec-session-sub">{{ __('business-profile-security.sessions.s1_meta') }}</p>
-          </div>
-        </div>
-        <div class="bpsec-session">
-          <div class="bpsec-session-info">
-            <div class="bpsec-session-title nogap"><p>{{ __('business-profile-security.sessions.s2_device') }}</p></div>
-            <p class="bpsec-session-sub">{{ __('business-profile-security.sessions.s2_meta') }}</p>
-          </div>
-          <button type="button" class="bpsec-logout">{{ __('business-profile-security.sessions.logout') }}</button>
-        </div>
-        <div class="bpsec-session">
-          <div class="bpsec-session-info">
-            <div class="bpsec-session-title nogap"><p>{{ __('business-profile-security.sessions.s3_device') }}</p></div>
-            <p class="bpsec-session-sub">{{ __('business-profile-security.sessions.s3_meta') }}</p>
-          </div>
-          <button type="button" class="bpsec-logout">{{ __('business-profile-security.sessions.logout') }}</button>
-        </div>
-      </div>
-
-      {{-- Danger zone --}}
-      <div class="bpsec-card danger">
-        <div class="bpsec-card-head">
-          <h2>{{ __('business-profile-security.danger.title') }}</h2>
-          <p class="sub">{{ __('business-profile-security.danger.desc') }}</p>
-        </div>
-        <div class="bpsec-row">
-          <p class="desc">{{ __('business-profile-security.danger.deactivate_desc') }}</p>
-          <button type="button" class="bpsec-btn-danger"><p>{{ __('business-profile-security.danger.deactivate') }}</p></button>
-        </div>
-      </div>
-
-      {{-- Save bar --}}
-      <div class="bpsec-save-bar" data-saved="false" data-saved-message="{{ __('business-profile-security.save.saved') }}">
-        <div class="bpsec-save-l">
-          <div class="bpsec-dot"></div>
-          <p class="bpsec-save-msg" aria-live="polite">{{ __('business-profile-security.save.unsaved') }}</p>
-        </div>
-        <div class="bpsec-save-r">
-          <button type="button" class="bpsec-btn-cancel"><p>{{ __('business-profile-security.save.cancel') }}</p></button>
-          <button type="button" class="bpsec-btn-save"><p>{{ __('business-profile-security.save.save') }}</p></button>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</div>
+</x-cabinet.shell>
 
 </x-layout>
