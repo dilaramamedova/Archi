@@ -1,0 +1,36 @@
+/* Page CSS for "specialist-cabinet-notifications" — specialist cabinet, notification
+   settings (Figma 831:12996).
+
+   The shell, header, settings sidebar, cards, switch, channel chip and save bar all come
+   from the shared design system (<x-cabinet.*> / <x-ui.*>, styled in app.css). Only this
+   page's own pieces live here: the 8px card-head bottom padding, the notification rows
+   and the chip row.
+
+   State classes are data-* attributes (ARCHITECTURE.md 7.1) — the switch and the chips
+   are [data-on] pairs, both drawn by the design system. */
+@layer components {
+  /* The gray cabinet background is declared once, on <body> (layout bodyClass). */
+  .scn-page   { @apply font-sans antialiased; }
+  .scn-page p { @apply [word-break:break-word]; }
+
+  /* Figma: the card head carries 8px of bottom padding and the card itself has no gap,
+     so the rows sit flush under it (head 4px gap is the shared .cab-card-head value). */
+  .scn-card .cab-card-head { @apply pb-2; }
+
+  /* notification rows */
+  .scn-row          { @apply flex w-full items-center justify-between overflow-hidden border-b border-black/8 py-3.5; }
+  /* The .s line is a full sentence — it must wrap instead of being clipped in ru/en. The
+     row is `items-center`, so a two-line description only makes the row taller. */
+  .scn-row .txt     { @apply flex min-w-px flex-[1_0_0] flex-col items-start gap-[3px] overflow-hidden pr-4; }
+  .scn-row .txt .t  { @apply w-full overflow-hidden text-[15px] leading-[normal] font-semibold text-ellipsis whitespace-nowrap text-ink; }
+  .scn-row .txt .s  { @apply w-full text-[13px] leading-[normal] font-normal text-black/50; }
+
+  /* channel chip row */
+  .scn-chips { @apply flex items-start gap-2 overflow-hidden pt-3; }
+
+  /* RESPONSIVE — the Figma frame is a fixed 1440 layout and the sidebar is a fixed 264px.
+     The two columns stack via the shared .cab-body rule; only the chips are ours. */
+  @media (max-width: 1100px) {
+    .scn-chips { @apply flex-wrap; }
+  }
+}

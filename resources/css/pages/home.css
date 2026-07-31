@@ -94,7 +94,7 @@
   /* `.cat-first` was dropped: it existed in the old style block but no page ever
      used the class (dead CSS, like the removed `.calc-cta`). */
   .cat-row          { @apply flex items-center gap-2; }
-  .cat-thumb        { @apply relative h-[238px] min-w-0 flex-[1_1_0] cursor-pointer overflow-hidden bg-[#e3e3e3] transition-[flex-grow] duration-[450ms] ease-[cubic-bezier(.4,0,.2,1)]; }
+  .cat-thumb        { @apply relative h-[238px] min-w-0 flex-[1_1_0] cursor-pointer overflow-hidden bg-[#e3e3e3] transition-[flex-grow] duration-300 ease-[cubic-bezier(.4,0,.2,1)]; }
   .cat-thumb:hover,
   .cat-thumb.open   { @apply grow-[2.7]; }
   .cat-thumb > img  { @apply size-full object-cover; }
@@ -104,7 +104,9 @@
   }
   .cat-thumb:hover .ov,
   .cat-thumb.open .ov   { @apply opacity-100; }
-  .cat-thumb .info      { @apply absolute inset-x-0 bottom-0 z-[2] flex translate-y-2 items-end justify-between gap-2 p-3.5 opacity-0 transition-[opacity,transform] delay-[50ms] duration-[350ms]; }
+  /* `translate` is named alongside `transform`: translate-y-2 compiles to the `translate`
+     property in Tailwind v4, so a transform-only list left the label snapping into place. */
+  .cat-thumb .info      { @apply absolute inset-x-0 bottom-0 z-[2] flex translate-y-2 items-end justify-between gap-2 p-3.5 opacity-0 transition-[opacity,translate,transform] delay-[50ms] duration-[350ms]; }
   .cat-thumb:hover .info,
   .cat-thumb.open .info { @apply translate-y-0 opacity-100; }
   .cat-thumb .info h4   { @apply text-lg leading-[1.2] font-semibold whitespace-nowrap text-white; }
@@ -114,6 +116,16 @@
   .cat-row:hover .cat-thumb.open:not(:hover)       { @apply grow; }
   .cat-row:hover .cat-thumb.open:not(:hover) .ov   { @apply opacity-0; }
   .cat-row:hover .cat-thumb.open:not(:hover) .info { @apply translate-y-2 opacity-0; }
+
+  /* home.js also puts `.reveal` on these tiles, and `.reveal` (app.css) rewrites the whole
+     `transition` shorthand on the same element — flex-grow fell out of the property list,
+     so the tile snapped open the instant the pointer touched it. Restored at higher
+     specificity; the reveal stagger stays on the entrance properties, so the hover itself
+     never waits for a delay. */
+  .cat-row .cat-thumb.reveal    { transition: flex-grow .3s cubic-bezier(.4,0,.2,1) 0s, opacity .6s ease, translate .6s ease, transform .6s ease; }
+  .cat-row .cat-thumb.reveal.d1 { transition-delay: 0s, .08s, .08s, .08s; }
+  .cat-row .cat-thumb.reveal.d2 { transition-delay: 0s, .16s, .16s, .16s; }
+  .cat-row .cat-thumb.reveal.d3 { transition-delay: 0s, .24s, .24s, .24s; }
 
   /* Touch devices have no hover: without this the first tile stays expanded forever and
      the other six never reveal their label. Show every tile at equal width instead. */

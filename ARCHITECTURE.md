@@ -1,7 +1,9 @@
 # ARCHI — Laravel architecture (contract for page agents)
 
-> This document is **binding**. 23 page agents work in parallel; if everyone does not
+> This document is **binding**. Page agents work in parallel; if everyone does not
 > follow the same rules the result will not merge. When in doubt, look here — do not guess.
+> Wave 1 shipped 23 pages; wave 2 adds the 13 Figma-only pages of §3 (routes, stubs, CSS/JS
+> placeholders and every cross-page link are already wired — see §3.1).
 
 - **Working directory:** `C:/Users/mamed/ARCHI-laravel` (worktree, `laravel` branch)
 - **Reference (READ ONLY):** `C:/Users/mamed/OneDrive/Desktop/ARCHI` — the old static
@@ -15,9 +17,9 @@
 | # | Rule |
 |---|---|
 | 1 | **Change only YOUR files.** Do not step outside the "Your files" list below. |
-| 2 | **Do NOT touch `resources/css/app.css` or `resources/views/components/`.** They hold the design system (§4); 23 agents writing there at once would conflict. Need a variant the components do not have? Report it — do not fork it. |
-| 3 | **Do NOT touch `resources/js/app.js`.** The registry already covers all 23 slugs. |
-| 4 | **Do NOT touch `routes/web.php`.** Every route already exists. |
+| 2 | **Do NOT touch `resources/css/app.css` or `resources/views/components/`.** They hold the design system (§4); a dozen agents writing there at once would conflict. Need a variant the components do not have? Report it — do not fork it. |
+| 3 | **Do NOT touch `resources/js/app.js`.** The registry already covers all 36 slugs. |
+| 4 | **Do NOT touch `routes/web.php`.** Every route already exists (all 36 pages). |
 | 5 | **No global commands:** `npm run build`, `npm run dev`, `php artisan serve`, `git commit/push` — only the Gate agent runs those. |
 | 6 | **No controllers, no custom PHP classes, no database, no migrations.** |
 | 7 | **English everywhere** — file names, code, comments, translation keys, CSS class names, JS identifiers. Azerbaijani appears **only as translation values** inside `lang/az/`. Keep comments minimal and in English; no banner or ASCII-art comment blocks. |
@@ -145,7 +147,79 @@ Convert every `href` with this table. **`href="catalog.html"` → `href="{{ rout
 | `biznes-profil-tehlukesizlik.html` | `/business/profile/security` | `business.profile.security` | `pages.business-profile-security` | `business-profile-security` |
 | — | `/lang/{az\|ru\|en}` | `lang` | — | — |
 
-**Links that never existed** (`haqqimizda.html`, `#`, empty `<a>`) → keep `href="#"`.
+**Wave 2 — 13 pages that exist only in Figma** (no old `.html` reference; build them from
+the node, not from a file):
+
+| Figma node | URL | Route name | View | data-page (slug) |
+|---|---|---|---|---|
+| `831:7539` | `/about` | `about` | `pages.about` | `about` |
+| `831:7823` | `/blog/article` | `blog.article` | `pages.blog-article` | `blog-article` |
+| `831:11493` | `/specialist/owner` | `specialist.owner` | `pages.specialist-owner` | `specialist-owner` |
+| `1054:9643` | `/specialist/onboarding` | `specialist.onboarding` | `pages.specialist-onboarding` | `specialist-onboarding` |
+| `831:11186` | `/specialist/cabinet` | `specialist.cabinet` | `pages.specialist-cabinet` | `specialist-cabinet` |
+| `831:11867` | `/specialist/cabinet/portfolio` | `specialist.cabinet.portfolio` | `pages.specialist-cabinet-portfolio` | `specialist-cabinet-portfolio` |
+| `831:12139` | `/specialist/cabinet/services` | `specialist.cabinet.services` | `pages.specialist-cabinet-services` | `specialist-cabinet-services` |
+| `831:12428` | `/specialist/cabinet/schedule` | `specialist.cabinet.schedule` | `pages.specialist-cabinet-schedule` | `specialist-cabinet-schedule` |
+| `831:12727` | `/specialist/cabinet/reviews` | `specialist.cabinet.reviews` | `pages.specialist-cabinet-reviews` | `specialist-cabinet-reviews` |
+| `831:12996` | `/specialist/cabinet/notifications` | `specialist.cabinet.notifications` | `pages.specialist-cabinet-notifications` | `specialist-cabinet-notifications` |
+| `831:13282` | `/specialist/cabinet/security` | `specialist.cabinet.security` | `pages.specialist-cabinet-security` | `specialist-cabinet-security` |
+| `1105:21043` | `/business/onboarding/step-2` | `business.onboarding.step2` | `pages.business-onboarding-step2` | `business-onboarding-step2` |
+| `1105:21287` | `/business/onboarding/step-4` | `business.onboarding.step4` | `pages.business-onboarding-step4` | `business-onboarding-step4` |
+
+**Links that never existed** (`#`, empty `<a>`) → keep `href="#"`. `haqqimizda.html` is no
+longer one of them: the About page now exists, so the navbar and footer link `route('about')`.
+
+---
+
+### 3.1 Wiring the wave-2 pages
+
+The 13 pages are not islands. Where an existing page had a dead `href="#"` that Figma
+shows pointing at one of them, it is **already rewired** — do not undo it:
+
+| From | To |
+|---|---|
+| navbar "Haqqımızda" · footer "Haqqımızda" | `route('about')` |
+| navbar mega-blog teaser cards | `route('blog.article')` |
+| `blog` hero image · hero "Read more" button · every `<x-post>` | `route('blog.article')` |
+| `home` blog section `<x-post>` ×4 | `route('blog.article')` |
+| `business-onboarding-step1` "Yadda saxla və davam et" | `route('business.onboarding.step2')` |
+
+**Reached only after login — deliberately not linked from any public page:**
+`specialist-owner` · `specialist-onboarding` · the seven `specialist-cabinet-*` pages.
+The public `specialist` page shows a visitor's view and has no owner affordance in Figma,
+so nothing links to them from outside. They link to **each other**, and those links are the
+page agent's job:
+
+- `specialist-owner` — the yellow owner banner's "Profili redaktə et" and every section's
+  "Redaktə et" → the matching cabinet tab (`specialist.cabinet`,
+  `specialist.cabinet.portfolio`, `specialist.cabinet.services`, `specialist.cabinet.reviews`).
+- `specialist-onboarding` — the "Profili tamamla — 4 addım" checklist rows are the hub:
+  row 2 (İxtisas və şəhər) → `specialist.cabinet`, row 3 (Portfolio) →
+  `specialist.cabinet.portfolio`, row 4 (İş qrafiki və qiymət) →
+  `specialist.cabinet.schedule`. The banner button "Profili tamamla" stays on the page.
+- every `specialist-cabinet-*` — `viewHref="{{ route('specialist.owner') }}"` on the shell
+  (see §4.9.1); the sidebar handles the rest.
+
+> Footer "Usta ol" keeps pointing at `route('register')` — a logged-out visitor registers
+> first; onboarding is the post-registration screen. Intentional, do not "fix" it.
+
+**The business onboarding funnel has THREE steps, not four.** Every frame's stepper reads
+`Əsas məlumat → Əlaqə → İlk məhsul`. The route names are historical (they follow the old
+`biznes-tamamlama-addimN.html` file names), so they do **not** line up with the step numbers:
+
+| Route | Funnel step | Screen |
+|---|---|---|
+| `business.onboarding.step1` | 1 | Əsas məlumat / Şirkət məlumatları |
+| `business.onboarding.step2` | 2 | Əlaqə — node `1105:21043` (h1 still reads "Şirkət məlumatları") |
+| `business.onboarding.step3` | 3 | İlk məhsul — last step, its submit lands on `business.profile` |
+| `business.onboarding.step4` | — | **not a step.** Node `1105:21287` is the step-3 screen with the category listbox open |
+
+So the chain is `step1 → step2 → step3 → business.profile`. `step2`'s "next" must target
+`business.onboarding.step3`. `step4` is scaffolded but has no place in the funnel — its two
+deltas against step 3 (open category listbox; progress `75% → 100%` instead of the shipped
+`67% → 100%`) belong in `business-onboarding-step3`, not in a duplicate page.
+
+---
 **Links with a query:** `search.html?tab=usta` → `{{ route('search', ['tab' => 'usta']) }}`.
 
 If JS needs a route, **do not hardcode it** — pass it from Blade as a `data-*` attribute:
@@ -372,7 +446,7 @@ prefixes. One shell renders all of it:
 
 | Component | Props |
 |---|---|
-| `<x-cabinet.shell>` | `ns` · `active` · `heading` · `viewHref` · `strong` · `hover` · `progressFill` |
+| `<x-cabinet.shell>` | `ns` · `active` · `navItems` · `heading` · `viewHref` · `strong` · `hover` · `progressFill` |
 | `<x-cabinet.header>` | `ns` · `heading` · `viewHref` · `hover` |
 | `<x-cabinet.sidebar>` | `ns` · `active` · `strong` · `fill` |
 | `<x-cabinet.card>` | `title` · `desc` · `layout` (`stack`/`row`) · `tag` · `gap` · `pad` + `<x-slot:action>` |
@@ -397,6 +471,52 @@ lang file changes** when a page adopts the shell.
 
 **JS contract of the save bar:** `.cab-save-bar` (`data-saved` flips the dot to green) ·
 `.cab-save-bar .msg` (`aria-live`) · `data-saved-message` · `[data-save]` / `[data-cancel]`.
+
+#### 4.9.1 The specialist cabinet reuses this shell — it is not a second one
+
+The seven `specialist-cabinet-*` frames are the business cabinet with different rows: same
+breadcrumbs + 34 px title, same green "Dərc olunub" badge + outline "Profilə bax ↗" button,
+same 264 px sidebar with a "Profil tamlığı" progress block, same cards, same dark save bar.
+**Build them with `<x-cabinet.*>`. Do not fork the shell and do not add a `spec-*` prefix.**
+
+Only two things were business-specific, and both are now props:
+
+- **the sidebar rows** — `<x-cabinet.sidebar>` took a hardcoded six-row array. It now
+  accepts `items`, and `<x-cabinet.shell>` forwards it as `navItems`. The business default
+  is unchanged, so the six business pages pass nothing.
+- **the "view profile" target** — `<x-cabinet.header>` defaults to `route('business.profile')`.
+  A specialist page **must** pass `viewHref`.
+
+```blade
+@php
+    $specNav = [
+        ['key' => 'main',          'route' => 'specialist.cabinet'],
+        ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count'],
+        ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count'],
+        ['key' => 'schedule',      'route' => 'specialist.cabinet.schedule'],
+        ['key' => 'reviews',       'route' => 'specialist.cabinet.reviews',       'count' => 'reviews_count'],
+        ['key' => 'notifications', 'route' => 'specialist.cabinet.notifications'],
+        ['key' => 'security',      'route' => 'specialist.cabinet.security'],
+    ];
+@endphp
+<x-layout page="specialist-cabinet" :title="__('specialist-cabinet.title')" bodyClass="bg-gray-soft2">
+  <x-cabinet.shell ns="specialist-cabinet" active="main" :nav-items="$specNav"
+                   :view-href="route('specialist.owner')">
+    …cards…
+    <x-cabinet.save-bar ns="specialist-cabinet" />
+  </x-cabinet.shell>
+</x-layout>
+```
+
+> **All seven agents must copy that `$specNav` array verbatim** — same seven keys, same
+> order, only `active` differs. The keys double as lang keys, so a typo silently prints the
+> key. Because `ns` is the page's own namespace, each of the seven lang files repeats the
+> seven `nav.*` labels, the three `nav.*_count` values, `crumbs.*`, `heading`, `status.*`
+> and `progress.*` — that duplication is deliberate (it is what keeps the six business
+> pages conflict-free in parallel).
+
+`progressFill` is a width utility, so the 78 % bar is `progressFill="w-[184px]"`-style —
+measure it in Figma rather than reusing the business value.
 
 **Legacy deltas.** Where the six pages disagreed, the shared class took the majority value
 and the minority page keeps a one-line, higher-specificity override in its page CSS,
@@ -671,8 +791,9 @@ are listed in **§4.0** — use those instead of the hex literals `#229653` `#e9
 
 ## 7. JS rules
 
-`resources/js/pages/{slug}.js` is the page module. `app.js` imports it dynamically **only**
-when `<body data-page="{slug}">` is rendered (its own Vite chunk).
+`resources/js/pages/{slug}.js` is the page module. It must `export default` an `init`
+function and **must not call it itself** — `app.js` imports every page module statically
+(one single Vite bundle) and calls only the `init` matching `<body data-page="{slug}">`.
 
 ```js
 // Page module for "catalog".
@@ -685,10 +806,9 @@ export default function init() {
     })
   );
 }
-init();
 ```
 
-- The module loads after `<body>` exists (`@vite` scripts are `defer`) — no need to wait
+- The bundle loads after `<body>` exists (`@vite` scripts are `defer`) — no need to wait
   for `DOMContentLoaded`.
 - **Do not duplicate shared code**: navbar/mega/search/language/cart → `shared/navbar.js`,
   the round cursor → `shared/cursor.js`.

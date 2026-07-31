@@ -22,4 +22,3 @@ export default function init() {
     cancelBtn.addEventListener('click', () => window.location.reload());
   }
 }
-init();

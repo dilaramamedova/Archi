@@ -130,5 +130,12 @@
      instead of being clipped by the card's overflow-hidden. */
   .sp-card .foot                 { @apply flex flex-wrap items-center justify-between gap-2; }
   .sp-card .price                { @apply text-sm font-bold whitespace-nowrap text-ink; }
-  .sp-card .btn                  { @apply flex h-[38px] shrink-0 items-center justify-center rounded-ds bg-yellow px-4 text-[13px] font-semibold whitespace-nowrap text-ink transition-[filter] duration-200 hover:brightness-95; }
+  /* `.sp-card .btn` is gone — the card's CTA now carries `.ui-btn .ui-btn-primary`.
+     `.ui-btn` brings `cursor-pointer`, which the old rule did not: the card is a
+     `.hascur` target (round cursor from shared/cursor.js), so the arrow would flash back
+     over the CTA. Keep the card's cursor decision. */
+  .sp-card.hascur:hover .ui-btn { @apply cursor-none; }
+  @media (hover: none) {
+    .sp-card.hascur:hover .ui-btn { @apply cursor-auto; }
+  }
 }

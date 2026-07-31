@@ -40,7 +40,7 @@
       </div>
 
       <div class="mt-20 flex items-start gap-10 max-[1200px]:flex-col" id="featured">
-        <a class="group h-[516px] w-[680px] shrink-0 overflow-hidden rounded-ds max-[1200px]:h-[420px] max-[1200px]:w-full" href="#">
+        <a class="group h-[516px] w-[680px] shrink-0 overflow-hidden rounded-ds max-[1200px]:h-[420px] max-[1200px]:w-full" href="{{ route('blog.article') }}">
           <img class="size-full object-cover transition-transform duration-[600ms] group-hover:scale-105" src="/assets/blog-hero.jpg" alt="">
         </a>
         <div class="flex flex-1 flex-col gap-5 max-[1200px]:w-full">
@@ -55,7 +55,7 @@
             <p class="text-base leading-[1.5] text-black/40">{{ __('blog.featured.read_time') }}</p><span class="size-1 rounded-[14px] bg-[#5c5c5c]"></span>
             <p class="text-base leading-[1.5] text-black/40">{{ __('blog.featured.date') }}</p>
           </div>
-          <x-ui.button variant="dark" :hover="false" href="#"
+          <x-ui.button variant="dark" :hover="false" :href="route('blog.article')"
                        class="group/read gap-1 self-start rounded-none px-6 py-3 text-base text-off-white transition-[background] duration-[250ms] hover:bg-black">{{ __('common.read_more') }} <img class="size-5 brightness-0 invert transition-transform duration-[250ms] group-hover/read:translate-x-1" src="/assets/ic-arrow.svg" alt=""></x-ui.button>
         </div>
       </div>
@@ -69,6 +69,7 @@
            role="tabpanel" aria-labelledby="fchip-all" tabindex="0">
         @foreach ($postCats as $i => $cat)
           <x-post class="rounded-ds max-[1200px]:min-w-[260px]" data-cat="{{ $cat }}"
+                  :href="route('blog.article')"
                   :time="__('blog.posts.time_' . $i)"
                   :title="__('blog.posts.title_' . $i)"
                   :excerpt="__('blog.posts.excerpt_' . $i)" />

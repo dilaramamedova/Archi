@@ -196,5 +196,3 @@ export default function init() {
   initScrollToReviews();
   initReveal();
 }
-
-init();

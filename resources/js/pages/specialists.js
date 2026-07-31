@@ -199,5 +199,3 @@ export default function init() {
   const applyBtn = document.getElementById('spApply');
   if (applyBtn) applyBtn.addEventListener('click', applyFilters);
 }
-
-init();

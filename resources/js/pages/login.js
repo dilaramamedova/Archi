@@ -18,4 +18,3 @@ export default function init() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 }
-init();

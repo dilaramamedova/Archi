@@ -19,10 +19,14 @@
                   {ns}.status.view_profile | {ns}.view_profile
                   {ns}.nav.* · {ns}.progress.label|value|note|hint
     active    — nav key that is ON: company · contact · showrooms · products ·
-                notifications · security
+                notifications · security (or a key from a custom navItems list)
+    navItems  — override the sidebar rows; see <x-cabinet.sidebar>. Defaults to the six
+                business rows, so the business pages pass nothing. The specialist cabinet
+                passes its own seven rows.
     heading   — override the <h1> text (default {ns}.heading)
     viewHref  — target of the "view profile" button (default route('business.profile'));
-                false renders a <button> with no destination
+                false renders a <button> with no destination. Any non-business cabinet
+                must pass this (the specialist cabinet: route('specialist.owner')).
     strong    — nav keys rendered with data-strong="true" (legacy: company page marks
                 "contact"); see ARCHITECTURE.md "cabinet legacy deltas"
     hover     — false → header/sidebar buttons get no hover (business-profile-company)
@@ -33,6 +37,7 @@
 @props([
     'ns' => null,
     'active' => null,
+    'navItems' => null,
     'heading' => null,
     'viewHref' => null,
     'strong' => [],
@@ -44,7 +49,7 @@
   <x-cabinet.header :ns="$ns" :heading="$heading" :view-href="$viewHref" :hover="$hover" />
 
   <div class="cab-body">
-    <x-cabinet.sidebar :ns="$ns" :active="$active" :strong="$strong" :fill="$progressFill" />
+    <x-cabinet.sidebar :ns="$ns" :active="$active" :items="$navItems" :strong="$strong" :fill="$progressFill" />
     <div class="cab-main">
       {{ $slot }}
     </div>

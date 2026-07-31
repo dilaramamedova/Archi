@@ -1,0 +1,65 @@
+/* Page CSS for "specialist-cabinet" (Figma 831:11186).
+
+   The shell, the header, the settings nav, the cards, the fields and the save bar all come
+   from the shared design system (.cab-* / .ui-* in app.css, rendered by <x-cabinet.*> /
+   <x-ui.*>). Only the three blocks that have no design-system equivalent live here: the
+   avatar row, the select chevron + this frame's control geometry, and the skill tags.
+
+   The control rules are scoped under `.sc-page` on purpose: app.css is imported AFTER the
+   page CSS, so a bare `.sc-input` would lose to `.ui-control-b2b` at equal specificity
+   (ARCHITECTURE.md §6.3). */
+@layer components {
+  /* ---- profile photo ---- */
+  .sc-photo            { @apply flex items-center gap-4 overflow-hidden; }
+  /* 88px avatar with a 3px yellow ring. Figma places "RM" absolutely (left 22 / top 28);
+     centering renders identically at 1440 and survives the longer ru initials. */
+  .sc-avatar           { @apply flex size-[88px] shrink-0 items-center justify-center overflow-hidden rounded-full border-[3px] border-yellow bg-gray-soft2; }
+  .sc-avatar p         { @apply text-[26px] leading-[normal] font-bold whitespace-nowrap text-ink; }
+  .sc-photo-info       { @apply flex shrink-0 flex-col items-start gap-2 overflow-hidden; }
+  .sc-photo-info .hint { @apply text-[13px] leading-[normal] font-normal whitespace-nowrap text-black/55; }
+  .sc-photo-btns       { @apply flex items-start gap-2 overflow-hidden; }
+
+  /* ---- form controls ----
+     This frame's inputs are 44px tall with a 14/12px gutter and a semibold value, where
+     .ui-control-b2b is 13px-padded and regular. Tone, radius, border and focus stay the
+     design system's. */
+  .sc-page .sc-input     { @apply h-11 py-0 pr-3 pl-3.5 text-sm leading-[normal] font-semibold text-ink; }
+  .sc-page .sc-textarea  { @apply h-[100px] resize-none px-3.5 pt-[13px] pb-3.5 text-sm leading-[1.55] font-normal text-ink/85; }
+
+  /* the two listboxes: a native <select> with the UA arrow removed and the 16px chevron
+     of the design placed 12px from the right edge */
+  .sc-select                    { @apply relative w-full; }
+  .sc-page .sc-select-control   { @apply appearance-none pr-9; }
+  .sc-select .car               { @apply pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2; }
+
+  .sc-counter          { @apply w-full text-right text-xs leading-[normal] font-medium text-black/45; }
+
+  /* ---- skills ---- */
+  .sc-skills           { @apply flex w-full flex-wrap items-start gap-2 overflow-hidden; }
+  .sc-skill            { @apply flex shrink-0 items-center gap-2 overflow-hidden rounded-ds bg-gray-soft2 py-2 pr-2.5 pl-3; }
+  .sc-skill .lbl       { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-black/80; }
+  .sc-skill .x         { @apply cursor-pointer text-[11px] leading-[normal] font-normal whitespace-nowrap text-black/40 transition-colors duration-150; }
+  .sc-skill .x:hover   { @apply text-danger; }
+
+  .sc-skill-add        { @apply flex shrink-0 cursor-pointer items-start overflow-hidden rounded-ds border border-dashed border-black/30 px-3 py-2 text-[13px] leading-[normal] font-semibold whitespace-nowrap text-black/70 transition-colors duration-150; }
+  .sc-skill-add:hover  { @apply border-black/50 bg-gray-soft2; }
+  .sc-skill-input      { @apply h-8 w-[180px] shrink-0 rounded-ds border border-black/14 bg-white px-3 font-sans text-[13px] leading-[normal] font-medium text-ink outline-none placeholder:text-black/40 focus:border-ink; }
+  /* both are flex/inline boxes, so the UA [hidden] rule needs out-ranking (§6.5) */
+  .sc-skill-add[hidden],
+  .sc-skill-input[hidden] { @apply hidden; }
+
+  /* Below 1100px app.css turns .cab-body into a column but leaves .cab-main on
+     `flex-[1_0_0]`. In a column flex box that means a 0 height basis with no free space
+     to grow into, so the whole card column collapses to 0px and disappears — the same
+     defect is visible on all six business-profile-* pages. The shared rule is not ours to
+     change (ARCHITECTURE.md rule 2), so it is pulled back here and reported. */
+  @media (max-width: 1100px) {
+    .sc-page .cab-main { @apply w-full flex-none; }
+  }
+
+  /* The three-up field row no longer fits once the sidebar is above the cards. */
+  @media (max-width: 900px) {
+    .sc-page .cab-field-row { @apply flex-wrap; }
+    .sc-page .cab-field     { @apply min-w-[220px]; }
+  }
+}

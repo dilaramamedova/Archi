@@ -260,5 +260,3 @@ export default function init() {
   initSort(grid, cards, empty);
   initFilters(grid, cards, empty);
 }
-
-init();

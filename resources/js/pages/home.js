@@ -142,5 +142,3 @@ export default function init() {
   initRoleSlider();
   initReveal();
 }
-
-init();

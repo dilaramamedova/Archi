@@ -1,0 +1,9 @@
+/* Page CSS for "business-onboarding-step2".
+   Nothing page-specific is needed: the shell, stepper and side column are plain
+   utilities (ARCHITECTURE.md §6.2, approach 1) and every control comes from the design
+   system (.ui-field / .ui-label-b2b / .ui-control-b2b / .ui-chip / .ui-btn in app.css).
+   This frame's deltas — square corners on the inputs and chips, the black/10 idle
+   stroke, the 12/14 input padding, the #808085 placeholder and the 1.5px selected chip
+   stroke — ride on the elements as utilities in the markup, which sit in a later layer
+   than @layer components and therefore win without a specificity hack.
+   The file must stay — app.css imports it. */

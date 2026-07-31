@@ -109,8 +109,9 @@
   .ps-stat b img    { @apply size-3.5; }
   .ps-stat span     { @apply mt-[3px] block text-[11px] text-black/50; }
   .ps-actions       { @apply flex gap-2.5 p-4; }
+  /* Only the white "follow" button is page-local; the yellow one next to it is
+     <x-ui.button variant="primary">, so the old `.ps-btn.primary` tone rule is gone. */
   .ps-btn           { @apply flex h-[46px] flex-1 items-center justify-center border border-black/20 bg-white text-sm font-semibold text-ink transition duration-200 hover:bg-gray-soft; }
-  .ps-btn.primary   { @apply border-yellow bg-yellow hover:brightness-[.93]; }
 
   /* tabbed description / specifications */
   .pd-tabs                { @apply mb-7 flex gap-1 border-b border-black/12; }

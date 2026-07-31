@@ -1,0 +1,76 @@
+/* Page CSS for "specialist-cabinet-services" — specialist cabinet, service & price list
+   (Figma 831:12139).
+
+   The page shell, header, settings sidebar, card, list row, switch, buttons and save bar
+   come from the shared design system (<x-cabinet.*> / <x-ui.*>, styled in app.css).
+   Only this page's own cells are here: the drag handle, the name/description block, the
+   price field, the unit <select>, the delete link and the footnote.
+
+   State lives in data-* attributes (ARCHITECTURE.md 7.1): data-dragging / data-over on a
+   row while it is being reordered.
+
+   Assets: the unit <select> reuses the existing /assets/ic-chevron-sm.svg. The ⠿ handle
+   is a glyph, not an image, so it stays in the CSS (out of the lang files). */
+@layer components {
+
+  /* The gray cabinet background is set once on <body> (layout bodyClass). */
+  .scs-page { @apply font-sans antialiased; }
+
+  /* Figma row padding here is 16/14; the shared .cab-row took the products/showrooms
+     value of 14/12. Higher specificity, per ARCHITECTURE.md 6.3. */
+  .scs-page .cab-row { @apply px-4 py-3.5; }
+
+  /* legacy delta: this card's head block never wraps (the shared one may). */
+  .scs-page .cab-card-head-txt { @apply whitespace-nowrap; }
+
+  /* The rows sit in their own column so the card's 14px gap also separates the head
+     and the footnote from the list. */
+  .scs-list { @apply flex w-full flex-col items-start gap-3.5; }
+
+  /* drag handle */
+  .scs-grip           { @apply shrink-0 cursor-grab border-none bg-transparent p-0 text-base leading-[normal] font-normal text-black/30 select-none; }
+  .scs-grip::before   { content: '⠿'; }
+  .scs-grip:hover     { @apply text-black/50; }
+  .scs-grip:active    { @apply cursor-grabbing; }
+  /* Reordering must not resize a row: opacity for the dragged one, an inset outline
+     (not a border) for the drop target. */
+  .cab-row[data-dragging="true"] { @apply opacity-50; }
+  .cab-row[data-over="true"]     { @apply outline-2 outline-offset-[-2px] outline-yellow-line; }
+
+  /* name + description */
+  .scs-info      { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-0.5 overflow-hidden whitespace-nowrap; }
+  .scs-info .n   { @apply w-full overflow-hidden text-[15px] leading-[normal] font-semibold text-ellipsis text-ink; }
+  .scs-info .d   { @apply w-full overflow-hidden text-xs leading-[normal] font-normal text-ellipsis text-black/50; }
+
+  /* price + unit. Real form controls, so app.css @layer base reverts the UA box first;
+     these rules sit in @layer components and win. */
+  .scs-price,
+  .scs-unit      { @apply h-10 shrink-0 rounded-ds border border-black/15 bg-white pl-3 leading-[normal] text-ink outline-none transition-[border-color] duration-200 focus:border-ink; }
+  .scs-price     { @apply w-[90px] pr-2.5 text-sm font-bold; }
+  /* 92 = 12 pad + 50 text + 6 gap + 14 icon + 10 pad. The caret is a background image,
+     so the box keeps its exact Figma width. */
+  .scs-unit {
+    @apply w-[92px] cursor-pointer appearance-none pr-[30px] text-[13px] font-semibold;
+    background-image: url(/assets/ic-chevron-sm.svg);
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 14px 14px;
+  }
+
+  /* delete — bare text in Figma, so no padding: the row's 16px right inset is exact.
+     The shared ghost hover tint would hug the glyphs, an underline reads better. */
+  .scs-page .scs-del                          { @apply shrink-0 rounded-none p-0 text-[13px] leading-[normal] font-medium whitespace-nowrap; }
+  .scs-page .scs-del[data-hover="true"]:hover { @apply bg-transparent underline; }
+
+  .scs-hint      { @apply text-xs leading-[normal] font-normal text-black/45; }
+
+  /* RESPONSIVE — the two columns stack below 1100px in app.css (.cab-body / .cab-snav);
+     only the service row needs extra help. Nothing changes at 1440px. */
+  @media (max-width: 1100px) {
+    .scs-page .cab-row { @apply flex-wrap; }
+    .scs-info          { @apply whitespace-normal; }
+  }
+  @media (max-width: 640px) {
+    .scs-hint { @apply whitespace-normal; }
+  }
+}

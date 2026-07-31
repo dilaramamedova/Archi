@@ -139,7 +139,8 @@
          holds a double space before the arrow, which whitespace-pre must preserve. --}}
     <div class="flex w-full shrink-0 flex-col items-start overflow-hidden rounded-ds border border-black/10 bg-white p-6">
       <div class="flex w-full items-center gap-3 overflow-hidden bg-white">
-        <x-ui.button variant="primary" :hover="false" :href="route('business.onboarding.step3')" class="px-7 py-[15px]">
+        {{-- Funnel: step 1 (company) -> step 2 (contact) -> step 3 (first product). --}}
+        <x-ui.button variant="primary" :hover="false" :href="route('business.onboarding.step2')" class="px-7 py-[15px]">
           <p class="shrink-0 whitespace-pre text-[15px] font-semibold leading-[normal] text-ink">{{ __('business-onboarding-step1.actions.save') }}</p>
         </x-ui.button>
         <a class="shrink-0 whitespace-nowrap text-sm font-medium leading-[normal] text-black/50" href="{{ route('business.profile') }}">{{ __('business-onboarding-step1.actions.later') }}</a>

@@ -7,5 +7,3 @@
 // piece of state on the page (the product-card carousel dots) is rendered server-side and
 // has no interaction, so there is nothing to wire up here.
 export default function init() {}
-
-init();

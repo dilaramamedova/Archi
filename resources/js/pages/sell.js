@@ -180,4 +180,3 @@ export default function init() {
   // clicking the overlay backdrop does not close it — the choice should be deliberate,
   // the close button and Escape are the deliberate ways out
 }
-init();

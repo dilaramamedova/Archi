@@ -1,14 +1,17 @@
 {{--
-  Cabinet settings sidebar: six nav links + the "profile completeness" progress block.
-  The six pages shipped the same 30 lines of markup with six different class prefixes;
-  this is the single copy. Routes are hardcoded here on purpose — the nav order is part
-  of the design, not page data.
+  Cabinet settings sidebar: the nav links + the "profile completeness" progress block.
+  The six business pages shipped the same 30 lines of markup with six different class
+  prefixes; this is the single copy. The business nav is the default, so those pages
+  pass nothing; a different cabinet (the specialist one) passes its own `items`.
 
   Props:
-    ns     — translation namespace; reads {ns}.nav.company … {ns}.nav.security,
-             {ns}.nav.showrooms_count, {ns}.nav.products_count and
-             {ns}.progress.label|value|note|hint
+    ns     — translation namespace; reads {ns}.nav.{key} for every item, the item's
+             optional {ns}.nav.{count} and {ns}.progress.label|value|note|hint
     active — the nav key that is ON
+    items  — nav rows, each ['key' => …, 'route' => …, 'count' => …?]. `key` is both the
+             active-state id and the lang key; `route` is a route NAME; `count` is an
+             optional lang key rendered as the right-hand counter. Defaults to the six
+             business rows — the nav order is part of the design, not page data.
     strong — nav keys that get data-strong="true" (legacy: business-profile-company
              marks "contact"); the styling for it stays in that page's CSS
     fill   — width utility of the progress fill (default w-[184px])
@@ -16,11 +19,12 @@
 @props([
     'ns' => null,
     'active' => null,
+    'items' => null,
     'strong' => [],
     'fill' => 'w-[184px]',
 ])
 @php
-    $items = [
+    $items = $items ?: [
         ['key' => 'company',       'route' => 'business.profile.company'],
         ['key' => 'contact',       'route' => 'business.profile.contact'],
         ['key' => 'showrooms',     'route' => 'business.profile.showrooms', 'count' => 'showrooms_count'],

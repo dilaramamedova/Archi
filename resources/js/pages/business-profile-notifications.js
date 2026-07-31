@@ -40,4 +40,3 @@ export default function init() {
     if (cancelBtn) cancelBtn.addEventListener('click', () => window.location.reload());
   }
 }
-init();

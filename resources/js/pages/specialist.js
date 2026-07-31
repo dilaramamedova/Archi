@@ -35,5 +35,3 @@ export default function init() {
   initFavourite();
   initNavButtons();
 }
-
-init();

@@ -2,7 +2,7 @@
 
 {{-- Head — Figma 1105:22591 (1440x128). Gray background comes from <body>. --}}
 <div class="mx-auto flex max-w-[1440px] flex-col items-start gap-5 px-7 pt-8 pb-5">
-  <p class="text-sm font-medium leading-[normal] whitespace-pre text-black/50">{{ __('business-onboarding-step3.head.back') }}</p>
+  <a class="text-sm font-medium leading-[normal] whitespace-pre text-black/50" href="{{ route('business.profile') }}">{{ __('business-onboarding-step3.head.back') }}</a>
   <h1 class="text-[32px] font-bold tracking-[-0.5px] leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step3.head.title') }}</h1>
 </div>
 
@@ -119,7 +119,8 @@
       </div>
 
       <div class="flex shrink-0 items-center gap-3 overflow-hidden bg-white">
-        <x-ui.button variant="primary" :hover="false" class="items-start px-7 py-[15px]">
+        {{-- Last step of the funnel: completing the store lands on the shop panel. --}}
+        <x-ui.button variant="primary" :hover="false" :href="route('business.profile')" class="items-start px-7 py-[15px]">
           <p class="font-sans text-[15px] font-semibold leading-[normal] whitespace-pre text-ink">{{ __('business-onboarding-step3.form.submit') }}</p>
         </x-ui.button>
         <p class="cursor-pointer text-sm font-medium leading-[normal] whitespace-nowrap text-black/50">{{ __('business-onboarding-step3.form.later') }}</p>

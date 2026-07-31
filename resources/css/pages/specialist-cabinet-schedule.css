@@ -1,0 +1,63 @@
+/* Page CSS for "specialist-cabinet-schedule" — specialist cabinet, work schedule
+   (Figma 831:12428).
+
+   The shell, header, settings sidebar, cards, switches and save bar come from the
+   shared design system (<x-cabinet.*> / <x-ui.*>, styled in app.css). Only this page's
+   own pieces live here: the day rows, the time fields, the free-slot stepper and the
+   vacation row.
+
+   The open/closed state of a day is a data-* attribute (ARCHITECTURE.md 7.1): the row
+   carries data-on and swaps the two time fields for the "day off" note.
+
+   Prefix is `sch-`, NOT `scs-`: specialist-cabinet-services already owns `scs-`, and both
+   pages defining `.scs-page` made every `.scs-page ...` descendant rule cross-apply. */
+@layer components {
+  .sch-page   { @apply font-sans antialiased; }
+  .sch-page p { @apply [word-break:break-word]; }
+
+  /* Day row — the shared .cab-row is px-3.5 py-3; Figma uses 10px vertical padding, so
+     the row lands on 56px with the 36px time fields inside. Higher specificity is
+     required because app.css is imported after the page CSS (ARCHITECTURE.md 6.3). */
+  .sch-page .sch-day { @apply py-2.5; }
+
+  /* A closed day loses the gray fill and gains a hairline; the 1px border is taken out
+     of the padding so the row keeps its 42px height. */
+  .sch-page .sch-day[data-on="false"] { @apply border border-black/8 bg-white py-[9px]; }
+
+  .sch-day .lbl { @apply min-w-px flex-[1_0_0] text-sm leading-[normal] font-semibold text-black; }
+  .sch-day[data-on="false"] .lbl { @apply font-medium text-black/45; }
+
+  .sch-day .times { @apply flex shrink-0 items-center gap-3.5; }
+  .sch-day[data-on="false"] .times { @apply hidden; }
+
+  .sch-day .off { @apply shrink-0 text-[13px] leading-[normal] font-medium whitespace-nowrap text-black/40; }
+  .sch-day[data-on="true"] .off { @apply hidden; }
+
+  /* Time field — preflight reverts the UA input chrome, so every part is explicit. */
+  .sch-time {
+    @apply h-9 w-[84px] shrink-0 rounded-ds border border-black/15 bg-white
+           text-center text-[13px] leading-[normal] font-semibold text-ink
+           transition-colors duration-150;
+  }
+  .sch-time:focus { @apply border-ink outline-none; }
+  .sch-time:disabled { @apply cursor-not-allowed text-black/40; }
+
+  /* Free-slot stepper */
+  .sch-slots      { @apply flex items-center gap-4 overflow-hidden; }
+  .sch-step       { @apply flex size-11 shrink-0 items-center justify-center rounded-ds border border-black/20 bg-white text-xl leading-[normal] font-normal text-black/70 transition-colors duration-150; }
+  .sch-step:hover { @apply border-black/35 bg-gray-soft2; }
+  .sch-slots-val  { @apply shrink-0 text-[32px] leading-[normal] font-bold text-ink; }
+  .sch-slots-unit { @apply shrink-0 text-[15px] leading-[normal] font-medium whitespace-nowrap text-black/55; }
+
+  /* Vacation mode */
+  .sch-vacation      { @apply flex w-full items-center justify-between gap-4 overflow-hidden; }
+  .sch-vacation .txt { @apply min-w-px flex-[1_0_0] text-sm leading-[1.5] font-normal text-black/65; }
+
+  /* RESPONSIVE — the Figma frame is a fixed 1440 layout; the two columns stack through
+     the shared .cab-body rule. Below that the day row runs out of room for the label
+     and both time fields, so it wraps and the fields keep their own line. */
+  @media (max-width: 1100px) {
+    .sch-day       { @apply flex-wrap; }
+    .sch-day .lbl  { @apply flex-[1_0_120px]; }
+  }
+}

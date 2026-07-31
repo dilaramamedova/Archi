@@ -1,0 +1,84 @@
+/* Page CSS for "specialist-cabinet-reviews" — specialist cabinet, reviews
+   (Figma 831:12727 / edit-main 831:12805, `scr-` prefix).
+
+   The page shell, header, settings sidebar, card head and buttons come from the shared
+   design system (<x-cabinet.*> / <x-ui.*>, styled in app.css), so only this frame's own
+   pieces live here: the rating summary, the filter tabs, the review card, the answer
+   block and the load-more row.
+
+   Colors come from @theme tokens (#f5f7f9 -> gray-soft2, #111 -> ink, #ffe600 ->
+   yellow-line, #fdfe00 -> yellow). The one literal is the review-star gold #e1a13c,
+   which no token covers — --color-star (#ffe600) is the product-card star and is a
+   visibly different tone. business-profile.css already carries the same literal.
+
+   State lives in data-* attributes (ARCHITECTURE.md §7.1): data-on on the active filter
+   tab, data-rating / data-replied on a review card (both read by the filter). */
+@layer components {
+  .scr-page { @apply font-sans antialiased; }
+
+  /* rating summary in the card head (831:12810) */
+  .scr-summary     { @apply flex shrink-0 items-center gap-2 leading-[normal] whitespace-nowrap; }
+  .scr-summary .st { @apply text-lg font-normal text-[#e1a13c]; }
+  .scr-summary .v  { @apply text-[22px] font-bold text-ink; }
+  .scr-summary .n  { @apply text-[13px] font-medium text-black/50; }
+
+  /* filter tabs (831:12814) — the active one is the dark pill */
+  .scr-tabs { @apply flex w-full flex-wrap items-start gap-2; }
+  .scr-tab  { @apply flex shrink-0 cursor-pointer items-start overflow-hidden rounded-ds border px-3.5 py-2; }
+  .scr-tab[data-on="false"]        { @apply border-black/14 bg-white transition-colors duration-150 hover:border-black/25; }
+  .scr-tab[data-on="true"]         { @apply border-black bg-ink; }
+  .scr-tab .lbl                    { @apply text-[13px] leading-[normal] whitespace-nowrap; }
+  .scr-tab[data-on="false"] .lbl   { @apply font-medium text-black/70; }
+  .scr-tab[data-on="true"] .lbl    { @apply font-semibold text-white; }
+  /* the active label is one weight heavier, so its width is reserved up front with a
+     zero-height semibold copy — otherwise switching tabs reflows the row (.ui-chip
+     solves the same problem the same way) */
+  .scr-tab .lbl::after   { content: attr(data-label); @apply invisible block h-0 overflow-hidden font-semibold; }
+  .scr-tab:focus-visible { @apply outline-2 outline-offset-2 outline-ink; }
+
+  /* review card (831:12823) */
+  .scr-rev         { @apply flex w-full flex-col items-start gap-2.5 overflow-hidden rounded-ds bg-gray-soft2 p-4; }
+  .scr-rev[hidden] { @apply hidden; }
+  .scr-rev .hd     { @apply flex w-full items-center gap-2.5; }
+  /* 38px ink circle with the reviewer's initial */
+  .scr-rev .av     { @apply flex size-[38px] shrink-0 items-center justify-center rounded-full bg-ink text-[13px] leading-[normal] font-semibold text-white; }
+  .scr-rev .who    { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-px overflow-hidden leading-[normal]; }
+  .scr-rev .who .n { @apply max-w-full truncate text-sm font-semibold text-ink; }
+  .scr-rev .who .d { @apply max-w-full truncate text-[11px] font-normal text-black/45; }
+  .scr-rev .st     { @apply shrink-0 text-[13px] leading-[normal] font-normal whitespace-nowrap text-[#e1a13c]; }
+  .scr-rev .tx     { @apply w-full text-[13px] leading-[1.5] font-normal text-black/75; }
+
+  /* the specialist's answer (831:12832) — white box with the yellow left rule */
+  .scr-reply         { @apply flex w-full flex-col items-start gap-1 overflow-hidden rounded-ds border-l-[3px] border-yellow-line bg-white px-3.5 py-3; }
+  .scr-reply[hidden] { @apply hidden; }
+  .scr-reply .lb     { @apply text-[11px] leading-[normal] font-semibold whitespace-nowrap text-black/50; }
+  .scr-reply .tx     { @apply w-full text-[13px] leading-[1.45] font-normal text-black/75; }
+
+  /* "↩ Cavab yaz" and the two composer buttons share one geometry (831:12844) */
+  .scr-btn         { @apply h-[38px] px-4 text-[13px] leading-[normal] font-bold whitespace-nowrap; }
+  .scr-btn[hidden] { @apply hidden; }
+
+  /* inline composer — the state between the button and the answer block */
+  .scr-compose         { @apply flex w-full flex-col items-start gap-2.5; }
+  .scr-compose[hidden] { @apply hidden; }
+  .scr-compose .ac     { @apply flex flex-wrap items-center gap-2; }
+  /* scoped: app.css is imported after the page CSS, so a bare .scr-ta would lose to
+     .ui-control-b2b at equal specificity (ARCHITECTURE.md §6.3) */
+  .scr-page .scr-ta    { @apply h-[76px] w-full resize-none text-[13px] leading-[1.45]; }
+
+  /* empty state of a filter that matches nothing */
+  .scr-empty         { @apply w-full py-2 text-center text-[13px] leading-[normal] font-normal text-black/50; }
+  .scr-empty[hidden] { @apply hidden; }
+
+  /* load more (831:12857) */
+  .scr-more         { @apply h-11 w-full text-[13px] leading-[normal] font-semibold; }
+  .scr-more[hidden] { @apply hidden; }
+
+  /* the cabinet body stacks at 1100px (app.css); below 640px the head wraps so the
+     star row does not squeeze the name */
+  @media (max-width: 640px) {
+    .scr-rev .hd  { @apply flex-wrap; }
+    .scr-rev .who { @apply flex-[1_0_120px]; }
+    .scr-summary  { @apply flex-wrap justify-end; }
+  }
+}

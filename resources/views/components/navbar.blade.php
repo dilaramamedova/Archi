@@ -112,7 +112,7 @@
            aria-haspopup="true" aria-controls="megaSpec" aria-expanded="false">{{ __('nav.specialists') }} <img class="mcaret" src="/assets/ic-caret.svg" alt=""></a>
         <a class="nav-item @if ($isBlog) active @endif" data-mega="blog" href="{{ route('blog') }}"
            aria-haspopup="true" aria-controls="megaBlog" aria-expanded="false">{{ __('nav.blog') }} <img class="mcaret" src="/assets/ic-caret.svg" alt=""></a>
-        <a class="nav-item" href="#">{{ __('nav.about') }}</a>
+        <a class="nav-item @if (request()->routeIs('about')) active @endif" href="{{ route('about') }}">{{ __('nav.about') }}</a>
         <a class="nav-item @if ($isB2B) active @endif" href="{{ route('business.register') }}">{{ __('nav.b2b') }}</a>
       </div>
       <a class="nav-calc" href="{{ route('calculator') }}"><img src="/assets/ic-calculator.svg" alt="">{{ __('nav.calculator') }}</a>
@@ -161,7 +161,9 @@
     <div class="mega-inner">
       <div class="mega-blog">
         @foreach (__('nav.mega_blog') as $i => $item)
-          <a class="mblog" href="{{ route('blog') }}">
+          {{-- Each mega card is a single article teaser, so it opens the article page.
+               The "Bloq" nav item itself still goes to the blog index. --}}
+          <a class="mblog" href="{{ route('blog.article') }}">
             <img class="ph" src="/assets/{{ $blogImages[$i] ?? '' }}" alt="">
             <div class="info">
               <h4>{{ $item['title'] }}</h4>

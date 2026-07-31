@@ -1,0 +1,138 @@
+/* Page CSS for "specialist-owner" (Figma 831:11493). The frame is the public specialist
+   profile plus an owner banner, a stats strip and a dashed "edit" chip per section, so the
+   geometry deliberately repeats resources/css/pages/specialist.css under the `spo-` prefix
+   rather than sharing it: the two pages differ in avatar, radii, badges and section chrome,
+   and a shared prefix would couple two independently evolving screens.
+
+   Colors come from @theme tokens (#f3f5f7 -> gray-soft, #f5f7f9 -> gray-soft2,
+   #fdfe00 -> yellow, #111 -> ink, #229653 -> ok, #00a613 -> green). The single literal is
+   the booking card tint #f5f7ff, which has no token (the public profile carries the same
+   one-off). */
+@layer components {
+
+  /* owner banner (831:11530) — full-bleed yellow, inner content on the shared 28px gutter */
+  .spo-banner      { @apply w-full bg-yellow; }
+  .spo-banner .in  { @apply mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-4 px-7
+                            max-[900px]:h-auto max-[900px]:flex-col max-[900px]:items-start max-[900px]:gap-3 max-[900px]:py-3; }
+  .spo-note        { @apply flex items-center gap-2.5 leading-[normal] text-ink; }
+  .spo-note .ic    { @apply text-base; }
+  .spo-note p      { @apply text-sm font-bold; }
+  .spo-banner-r    { @apply flex flex-wrap items-center gap-3.5; }
+  .spo-avail       { @apply flex items-center gap-2; }
+  .spo-avail .l    { @apply text-[13px] leading-[normal] font-semibold text-ink; }
+
+  /* stats strip (831:11542) — 4 equal tiles, 90px tall */
+  .spo-statsbar     { @apply w-full bg-white; }
+  .spo-statsbar .in { @apply mx-auto flex max-w-[1440px] gap-3 px-7 pt-3.5 pb-1.5 max-[900px]:flex-wrap; }
+  .spo-stat         { @apply flex h-[90px] min-w-0 flex-1 items-center rounded-ds bg-gray-soft2 px-5 py-4
+                             max-[900px]:min-w-[calc(50%-6px)]; }
+  .spo-stat .b      { @apply flex min-w-0 flex-col gap-0.5 leading-[normal] whitespace-nowrap; }
+  .spo-stat .v      { @apply flex items-end gap-2; }
+  .spo-stat .n      { @apply text-2xl font-bold text-ink; }
+  .spo-stat .d      { @apply text-xs font-semibold text-ok; }
+  .spo-stat .k      { @apply text-xs font-medium text-black/50; }
+
+  /* page shell — content 831:11566 is 1440 wide and inner 831:11567 sits at x=40 with
+     width 1360, so the 40px gutter differs from the shared .wrap (28px) that the navbar,
+     the banner and the stats strip use in the very same frame. 48 between sections. */
+  .spo { @apply mx-auto flex max-w-[1440px] flex-col gap-12 px-10 pt-10 pb-20
+                max-[900px]:gap-9 max-[900px]:px-5 max-[900px]:pt-7 max-[900px]:pb-14; }
+
+  /* breadcrumb — <x-ui.breadcrumbs class="spo-crumbs">. legacy delta over .ui-crumbs:
+     14px, black/30 separator, ink current item. Two classes beat the shared rule. */
+  .spo .spo-crumbs      { @apply text-sm leading-[normal]; }
+  .spo .spo-crumbs .sep { @apply text-black/30; }
+  .spo .spo-crumbs .cur { @apply text-ink; }
+
+  /* section shell + heading — <x-ui.eyebrow variant="flat" class="spo-eyebrow gap-3">.
+     delta over the flat variant: 14px label, .84px tracking, black/55. */
+  .spo-sec     { @apply relative flex flex-col items-start gap-6; }
+  .spo-sechead { @apply flex flex-col gap-4; }
+  .spo .spo-sechead .spo-eyebrow p { @apply text-sm tracking-[.84px] text-black/55; }
+  .spo-sechead h2 { @apply text-[32px] leading-[normal] font-semibold text-ink max-[900px]:text-2xl; }
+
+  /* dashed "edit" chip pinned to the section's top-right (831:11632) */
+  .spo-edit { @apply absolute top-5 right-[18px] flex items-center gap-1.5 rounded-ds border border-dashed
+                     border-black/25 bg-white px-3 py-[7px] text-xs leading-[normal] font-semibold whitespace-nowrap
+                     text-ink/80 transition-colors duration-150 hover:border-ink/60 hover:bg-gray-soft
+                     max-[900px]:top-0 max-[900px]:right-0; }
+
+  /* header (831:11574) */
+  .spo-head   { @apply flex w-full items-start gap-8 max-[1200px]:flex-col; }
+  .spo-head-l { @apply flex min-w-0 flex-1 flex-col gap-6; }
+  .spo-id     { @apply flex flex-col items-start justify-center gap-5; }
+  .spo-ava    { @apply flex size-24 shrink-0 items-center justify-center rounded-full bg-gray-soft
+                       text-[28px] leading-[normal] font-semibold text-ink; }
+  .spo-idt    { @apply flex flex-col items-start gap-2; }
+  .spo-badges { @apply flex flex-wrap gap-2; }
+  .spo-badge  { @apply rounded-ds border border-black/10 bg-white px-2 py-1 text-sm leading-[normal] whitespace-nowrap text-ink; }
+  .spo-badge.ok { @apply font-medium text-green; }
+  .spo-name   { @apply text-[40px] leading-[1.05] font-semibold text-ink max-[900px]:text-3xl; }
+  .spo-role   { @apply text-xl leading-[normal] text-black/50; }
+  .spo-rate   { @apply flex items-center gap-1.5 text-base leading-[normal]; }
+  .spo-rate .v     { @apply flex items-center gap-1 font-medium text-ink; }
+  .spo-rate .v img { @apply size-4; }
+  .spo-rate .r     { @apply text-black/30; }
+  .spo-meta      { @apply text-base leading-[normal] font-medium text-black/50; }
+  .spo-meta .dot { @apply px-3.5 max-[640px]:px-2; }
+
+  /* booking card (831:11592) — #f5f7ff has no token, see the file header */
+  .spo-book         { @apply flex w-[360px] shrink-0 flex-col gap-4 rounded-ds bg-[#f5f7ff] p-6 max-[1200px]:w-full; }
+  .spo-book .ph     { @apply flex w-full flex-col gap-0.5 leading-[normal]; }
+  .spo-book .lbl    { @apply text-sm text-black/50; }
+  .spo-book .prow   { @apply flex items-baseline gap-2; }
+  .spo-book .now    { @apply text-[32px] font-semibold text-ink; }
+  .spo-book .sub    { @apply text-sm text-black/40; }
+  /* the yellow CTA is <x-ui.button variant="primary">; only the white outline is page-local */
+  .spo-btn          { @apply flex w-full cursor-pointer items-center justify-center px-6 py-4 text-base
+                             leading-[normal] font-medium text-ink transition-[border-color] duration-200; }
+  .spo-btn.w        { @apply border border-black/20 bg-white hover:border-ink; }
+  .spo-book .div    { @apply h-px w-full bg-black/10; }
+  .spo-stat-row     { @apply flex w-full items-center justify-between text-sm leading-[normal]; }
+  .spo-stat-row .k  { @apply text-black/50; }
+  .spo-stat-row .v  { @apply font-medium text-ink; }
+
+  /* about (831:11612) */
+  .spo-about-txt { @apply w-full text-base leading-[1.5] text-black/70; }
+  .spo-tags      { @apply flex w-full flex-wrap gap-2; }
+  .spo-tag       { @apply rounded-ds bg-gray-soft px-3 py-1.5 text-sm leading-[normal] text-ink; }
+
+  /* portfolio (831:11640) — 2 rows x 3, 230px tall, square corners */
+  .spo-grid  { @apply flex w-full flex-col gap-4; }
+  .spo-grow  { @apply flex gap-4 max-[900px]:flex-wrap; }
+  .spo-tile  { @apply relative flex h-[230px] min-w-0 flex-1 items-center justify-center overflow-hidden
+                      bg-gray-soft max-[900px]:flex-[1_1_calc(50%-8px)] max-[640px]:flex-[1_1_100%]; }
+  .spo-tile img       { @apply size-full object-cover transition-transform duration-500; }
+  .spo-tile:hover img { @apply scale-[1.04]; }
+
+  /* services (831:11663) */
+  .spo-svc-list       { @apply flex w-full flex-col; }
+  .spo-svc            { @apply flex items-center justify-between gap-4 py-4 leading-[normal]; }
+  .spo-svc + .spo-svc { @apply border-t border-black/10; }
+  .spo-svc .l         { @apply flex min-w-0 flex-1 flex-col gap-1; }
+  .spo-svc .t         { @apply text-base font-medium text-ink; }
+  .spo-svc .s         { @apply text-sm text-black/50; }
+  .spo-svc .rr        { @apply flex items-center gap-4 text-base whitespace-nowrap; }
+  .spo-svc .pr        { @apply font-medium text-ink; }
+  .spo-svc .ar        { @apply text-black/50 transition-transform duration-[250ms]; }
+  .spo-svc:hover .ar  { @apply translate-x-1; }
+
+  /* reviews (831:11697) */
+  .spo-summ        { @apply flex items-center gap-5 leading-[normal]; }
+  .spo-summ .n     { @apply text-[40px] font-semibold text-ink; }
+  .spo-summ .c     { @apply flex flex-col gap-0.5; }
+  .spo-summ .ss    { @apply flex gap-0.5; }
+  .spo-summ .ss img{ @apply size-4; }
+  .spo-summ .cnt   { @apply text-sm text-black/50; }
+  .spo-revs        { @apply flex w-full items-stretch gap-4 max-[900px]:flex-col; }
+  .spo-rev         { @apply flex min-w-0 flex-1 flex-col gap-3 rounded-ds border border-black/10 bg-white p-5; }
+  .spo-rev .hd     { @apply flex items-center gap-3; }
+  .spo-rev .av     { @apply flex size-10 shrink-0 items-center justify-center rounded-full bg-gray-soft
+                            text-base leading-[normal] font-semibold text-ink; }
+  .spo-rev .nm     { @apply flex flex-col gap-0.5 leading-[normal]; }
+  .spo-rev .nm .n  { @apply text-sm font-medium text-ink; }
+  .spo-rev .nm .d  { @apply text-xs text-black/40; }
+  .spo-rev .st     { @apply flex gap-0.5; }
+  .spo-rev .st img { @apply size-4; }
+  .spo-rev .tx     { @apply text-sm leading-[1.5] text-black/70; }
+}

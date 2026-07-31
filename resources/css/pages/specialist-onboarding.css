@@ -1,0 +1,9 @@
+/* Page CSS for "specialist-onboarding" (Figma 1054:9643).
+   The layout is built from utilities in the markup; only the two page-specifics that
+   utilities cannot express live here. */
+@layer components {
+  /* The banner CTA scrolls the checklist into view — keep it clear of the navbar. */
+  .onb-checklist { @apply scroll-mt-[172px]; }
+  /* The cue tint the page JS puts on the first unfinished row must fade, not blink. */
+  .onb-checklist [data-step] { @apply transition-colors duration-300; }
+}

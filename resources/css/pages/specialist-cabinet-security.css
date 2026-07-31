@@ -1,0 +1,53 @@
+/* Page CSS for "specialist-cabinet-security" — specialist cabinet, security (Figma 831:13282).
+
+   The shell, header, settings sidebar, cards, fields, list rows, badges, switch, buttons
+   and save bar are the shared cabinet/design-system components (<x-cabinet.*> / <x-ui.*>,
+   styled in app.css). Only this page's true specifics are here:
+   - the masked password box (.spsec-input) is a fake input with a dot string and an eye
+     button, not a form control;
+   - the 2FA / danger rows (.spsec-row) are borderless split rows, not the gray .cab-row;
+   - the session row's inner text block;
+   - two sidebar leading deltas the Figma frame needs (39px rows, 15px progress row). */
+@layer components {
+  /* Figma: the sidebar label and the progress row are line-height:normal, which is what
+     keeps the nav rows at 39px and the progress row at 15px. */
+  .spsec-page .cab-snav-item .lbl { @apply leading-[normal]; }
+  .spsec-page .cab-snav-prog .row { @apply leading-[normal]; }
+
+  /* Three equal columns side by side: the label stays one line so all three inputs share
+     a baseline, truncating with an ellipsis instead of being cut. */
+  .spsec-page .cab-field > .ui-label-b2b { @apply w-full overflow-hidden text-ellipsis; }
+
+  /* password box — a fake input: a dot string plus a reveal button */
+  .spsec-input        { @apply flex h-11 w-full items-center overflow-hidden rounded-ds border border-black/14 bg-white pr-3 pl-3.5; }
+  .spsec-input .dots  { @apply min-w-0 flex-[1_0_0] text-sm leading-[normal] font-bold text-ink/60; }
+  /* Color-only hover/active — the eye sits inside a fixed-height input, so nothing here
+     may change its box. */
+  .spsec-input .eye   { @apply cursor-pointer bg-transparent text-[13px] leading-[normal] font-normal whitespace-nowrap text-black/40 transition-colors duration-150 hover:text-black/70; }
+  .spsec-input .eye[data-on="true"] { @apply text-ink; }
+
+  /* 2FA / danger row */
+  .spsec-row       { @apply flex w-full items-center justify-between overflow-hidden; }
+  .spsec-row .desc { @apply min-w-0 flex-[1_0_0] text-sm leading-[1.5] font-normal text-black/65; }
+
+  /* active sessions — the text block inside the shared .cab-row */
+  .spsec-session-info        { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-0.5 overflow-hidden; }
+  .spsec-session-title       { @apply flex items-center gap-2 overflow-hidden; }
+  .spsec-session-title.nogap { @apply gap-0; }
+  .spsec-session-title p     { @apply text-sm leading-[normal] font-semibold whitespace-nowrap text-ink; }
+  .spsec-session-sub         { @apply text-xs leading-[normal] font-normal whitespace-nowrap text-black/50; }
+  /* Underline on hover instead of a weight/box change — the row height must not move. */
+  .spsec-logout              { @apply shrink-0 cursor-pointer bg-transparent text-[13px] leading-[normal] font-semibold whitespace-nowrap text-danger hover:underline hover:underline-offset-2; }
+
+  /* danger zone — the card border is a utility in the markup (border-danger/50) */
+  .spsec-card.danger .cab-card-title  { @apply text-danger; }
+  .spsec-card.danger .spsec-row .desc { @apply text-[13px] text-black/60; }
+
+  /* RESPONSIVE — the Figma frame is a fixed 1440 layout with a fixed 264px sidebar, so
+     below ~780px the three password columns and the split rows run out of room.
+     (The 1100px column stacking is shared, in app.css.) Nothing here changes 1440px. */
+  @media (max-width: 780px) {
+    .spsec-page .cab-field-row { @apply flex-col; }
+    .spsec-row                 { @apply flex-col items-start gap-3; }
+  }
+}

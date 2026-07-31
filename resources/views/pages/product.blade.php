@@ -141,7 +141,8 @@
             <div class="ps-stat"><b>{{ __('product.seller.response') }}</b><span>{{ __('product.seller.response_label') }}</span></div>
           </div>
           <div class="ps-actions">
-            <a class="ps-btn primary" href="#">{{ __('product.seller.visit') }}</a>
+            <x-ui.button variant="primary" href="#"
+                class="h-[46px] flex-1 rounded-none text-sm font-semibold duration-200 hover:brightness-[.93]">{{ __('product.seller.visit') }}</x-ui.button>
             <button class="ps-btn" type="button">{{ __('product.seller.follow') }}</button>
           </div>
         </div>

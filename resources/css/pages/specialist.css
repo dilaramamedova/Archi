@@ -68,8 +68,9 @@
   .pp-book .prow        { @apply flex items-baseline gap-2; }
   .pp-book .prow .now   { @apply text-[32px] font-semibold text-ink; }
   .pp-book .prow .sub   { @apply text-sm text-black/40; }
+  /* `.pp-btn.y` is gone — the yellow CTA is <x-ui.button variant="primary"> now.
+     Only the white outline button is still page-local. */
   .pp-btn               { @apply flex cursor-pointer items-center justify-center px-6 py-4 text-base font-medium text-ink transition-[filter,border-color] duration-200; }
-  .pp-btn.y             { @apply bg-yellow hover:brightness-95; }
   .pp-btn.w             { @apply border border-black/20 bg-white hover:border-ink; }
   .pp-book .div         { @apply h-px bg-black/10; }
   .pp-stat              { @apply flex items-center justify-between text-sm; }

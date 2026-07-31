@@ -69,7 +69,8 @@
         <span class="lbl">{{ __('specialist.book.label') }}</span>
         <div class="prow"><span class="now">{{ __('specialist.book.price') }}</span><span class="sub">{{ __('specialist.book.price_sub') }}</span></div>
       </div>
-      <button class="pp-btn y" id="ppCalc" data-url="{{ route('calculator') }}">{{ __('specialist.book.consult') }}</button>
+      <x-ui.button variant="primary" id="ppCalc" data-url="{{ route('calculator') }}"
+          class="rounded-none px-6 py-4 text-base font-medium duration-200">{{ __('specialist.book.consult') }}</x-ui.button>
       <button class="pp-btn w" id="ppMsg" data-url="{{ route('login') }}">{{ __('specialist.book.message') }}</button>
       <div class="div"></div>
       <div class="pp-stat"><span class="k">{{ __('specialist.book.response_k') }}</span><span class="v">{{ __('specialist.book.response_v') }}</span></div>

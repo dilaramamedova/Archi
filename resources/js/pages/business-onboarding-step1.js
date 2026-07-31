@@ -69,5 +69,3 @@ function logoPicker() {
     text.textContent = file ? file.name : input.dataset.emptyLabel;
   });
 }
-
-init();

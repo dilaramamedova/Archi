@@ -18,4 +18,3 @@ export default function init() {
     sections.forEach((s) => (s.hidden = !(key === 'all' || s.dataset.sec === key)));
   });
 }
-init();

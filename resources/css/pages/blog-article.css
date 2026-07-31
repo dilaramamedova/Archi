@@ -1,0 +1,46 @@
+/* Page CSS for "blog-article" (Figma 831:7823). Only the page-specific pieces —
+   breadcrumbs, buttons, section head, blog cards and the grid come from the
+   design system / shared components. */
+@layer components {
+
+  /* Article eyebrow: 3px rule + 12px semibold label. Higher specificity than
+     `.ui-eyebrow .rule` / `.ui-eyebrow p`, which app.css defines later. */
+  .ui-eyebrow.ba-eyebrow       { @apply gap-2.5; }
+  .ui-eyebrow.ba-eyebrow .rule { @apply h-[3px]; }
+  .ui-eyebrow.ba-eyebrow p     { @apply text-xs font-semibold tracking-[1px] text-black/50; }
+
+  /* Author avatar — 40px in the head, 64px in the author card (size from the caller). */
+  .ba-avatar { @apply flex shrink-0 items-center justify-center rounded-pill border-2 border-yellow bg-ink font-bold text-white; }
+
+  /* Share buttons (FB · IG · WA · copy link). */
+  .ba-share  { @apply flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-pill
+                      border border-black/15 bg-white text-[11px] font-semibold text-black/70
+                      transition-colors duration-150 hover:border-black/35 hover:bg-gray-soft; }
+
+  /* Editorial type. */
+  .ba-lead { @apply text-[19px] leading-[1.65] font-medium text-ink/85; }
+  .ba-h2   { @apply text-[26px] leading-[1.3] font-bold text-ink; }
+  .ba-p    { @apply text-base leading-[1.7] text-black/72; }
+
+  /* Yellow "tip" callout. */
+  .ba-tip      { @apply flex items-start gap-3 rounded-ds border border-yellow-line bg-sel-bg p-[18px]; }
+  .ba-tip-mark { @apply flex size-[22px] shrink-0 items-center justify-center rounded-pill bg-ink text-[13px] font-bold text-white; }
+  .ba-tip-text { @apply flex-1 text-sm leading-[1.6] text-ink/85; }
+
+  /* Tag chips. */
+  .ba-tag { @apply rounded-ds bg-gray-soft px-3.5 py-2 text-[13px] leading-[normal] font-medium text-black/70
+                   transition-colors duration-150 hover:bg-neutral-soft; }
+
+  /* Related section: the shared section head is one step smaller here. */
+  .ba-related .sec-tag      { @apply mb-2.5; }
+  .ba-related .sec-tag p    { @apply text-xs tracking-[1px]; }
+  .ba-related .sec-title    { @apply text-[32px]; }
+  .ba-related .sec-more p   { @apply text-[13px]; }
+  /* Figma draws the arrow inside the label, so the 24px icon is not rendered. */
+  .ba-related .sec-more img { @apply hidden; }
+  .ba-related .blog-grid    { @apply gap-3; }
+
+  @media (max-width: 640px) {
+    .ba-related .sec-title { @apply text-[28px]; }
+  }
+}

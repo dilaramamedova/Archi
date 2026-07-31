@@ -255,5 +255,3 @@ export default function init() {
   save();
   render();
 }
-
-init();

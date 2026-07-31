@@ -199,7 +199,7 @@
   <x-section-head :tag="__('home.blog.tag')" :title="__('home.blog.title')" />
   <div class="blog-grid" id="blogGrid">
     @for ($i = 1; $i <= 4; $i++)
-      <x-post :time="__('home.blog.time_' . $i)" :title="__('home.blog.title_' . $i)" :excerpt="__('home.blog.excerpt_' . $i)" />
+      <x-post :href="route('blog.article')" :time="__('home.blog.time_' . $i)" :title="__('home.blog.title_' . $i)" :excerpt="__('home.blog.excerpt_' . $i)" />
     @endfor
   </div>
 </div></div>

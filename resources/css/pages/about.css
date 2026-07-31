@@ -1,0 +1,14 @@
+/* Page CSS for "about".
+
+   The page is built from the design system + utilities; the only thing that repeats
+   enough to earn a class is the eyebrow. About's kicker is the shared `kicker` variant
+   (2px square yellow rule, 1px tracking, black/55) at 13px instead of 12px, and it
+   appears three times — hero, story and values.
+
+   app.css is loaded after this file, so the override has to WIN on specificity, not on
+   order: `.ui-eyebrow[data-variant="kicker"] p` is (0,2,1) and `.about-eyebrow.ui-eyebrow p`
+   would only tie it. Repeating the attribute selector makes it (0,3,1). */
+
+@layer components {
+  .about-eyebrow.ui-eyebrow[data-variant="kicker"] p { @apply text-[13px]; }
+}

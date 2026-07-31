@@ -38,7 +38,7 @@
       </div>
       <div class="foot-col">
         <h5>{{ __('footer.col_company') }}</h5>
-        <a href="#">{{ __('footer.c_about') }}</a>
+        <a href="{{ route('about') }}">{{ __('footer.c_about') }}</a>
         <a href="{{ route('specialists') }}">{{ __('footer.c_consult') }}</a>
         <a href="{{ route('blog') }}">{{ __('footer.c_articles') }}</a>
         <a href="#">{{ __('footer.c_help') }}</a>

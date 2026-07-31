@@ -1,0 +1,43 @@
+/* Page CSS for "specialist-cabinet-portfolio" (Figma 831:11904, `scp-` prefix).
+
+   Everything the page shares with the business cabinet — page shell, header, settings
+   sidebar, card, save bar — comes from app.css (.cab-*), so only the portfolio tile
+   grid lives here. Colors come from @theme tokens (#fdfe00 -> yellow, #111 -> ink,
+   #f3f5f7 -> gray-soft); the single literal is the dashed uploader tint #f8f9fa,
+   which no token covers. */
+
+@layer components {
+
+  /* tile grid (831:11952 + 831:11975). Figma draws two rows of four 253px tiles with a
+     12px column gap and a 16px row gap inside a 1048px card body; one grid renders both
+     rows, and the empty trailing slot of row 2 needs no placeholder element. */
+  .scp-grid { @apply grid w-full grid-cols-4 gap-x-3 gap-y-4; }
+
+  /* tile (831:11953). The Figma image is a rounded fill of the whole 160px box. */
+  .scp-tile      { @apply relative h-40 cursor-grab overflow-hidden rounded-ds select-none; }
+  /* pointer-events-none keeps the tile (not the <img>) the drag source */
+  .scp-tile img  { @apply pointer-events-none absolute inset-0 size-full rounded-ds object-cover; }
+  .scp-tile[data-drag="true"] { @apply cursor-grabbing opacity-40; }
+  .scp-tile[data-over="true"] { @apply outline-2 outline-offset-[-2px] outline-yellow-line; }
+
+  /* caption (831:11954) — 126px from the top of the tile, per Figma */
+  .scp-cap   { @apply absolute top-[126px] left-2.5 rounded-ds bg-white/95 px-2 py-1 text-[11px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
+  /* "cover photo" badge (831:11958) — only the first tile carries it */
+  .scp-cover { @apply absolute top-2.5 left-2.5 rounded-ds bg-yellow px-2 py-[3px] text-[10px] leading-[normal] font-bold whitespace-nowrap text-ink; }
+  /* remove button (831:11956) — Figma places it 33px in from the right edge */
+  .scp-del   { @apply absolute top-2.5 right-[33px] flex size-7 items-center justify-center rounded-full bg-black/65 text-xs leading-[normal] font-semibold text-white transition-colors duration-150 hover:bg-black/80; }
+
+  /* dashed uploader slot (831:11986) */
+  .scp-add     { @apply flex h-40 flex-col items-center justify-center gap-1.5 rounded-ds border-[1.2px] border-dashed border-black/25 bg-[#f8f9fa] transition-colors duration-150 hover:border-black/40 hover:bg-gray-soft; }
+  .scp-add .ic { @apply text-[26px] leading-[normal] font-normal text-black/40; }
+  .scp-add .l  { @apply text-xs leading-[normal] font-semibold text-black/55; }
+
+  /* drag/format hint under the grid (831:11990) */
+  .scp-hint    { @apply flex items-center gap-2 whitespace-nowrap text-black/45; }
+  .scp-hint .ic { @apply text-[13px] leading-[normal]; }
+  .scp-hint .t  { @apply text-xs leading-[normal]; }
+
+  /* The cabinet body stacks at 1100px (app.css), so the grid drops columns with it. */
+  @media (max-width: 1100px) { .scp-grid { @apply grid-cols-3; } }
+  @media (max-width: 760px)  { .scp-grid { @apply grid-cols-2; } .scp-hint { @apply whitespace-normal; } }
+}

@@ -1,5 +1,5 @@
 /* Single Tailwind entry point (Vite). File order matters — CSS requires every
-   @import to come first, so the 23 page files are imported before @theme/@layer.
+   @import to come first, so the 36 page files are imported before @theme/@layer.
    Page agents never edit this file, only resources/css/pages/{slug}.css.
 
    Cascade note: page CSS is imported BEFORE the shared rules below, so inside the
@@ -31,6 +31,20 @@
 @import "./pages/business-profile-showrooms.css";
 @import "./pages/business-profile-notifications.css";
 @import "./pages/business-profile-security.css";
+
+@import "./pages/about.css";
+@import "./pages/blog-article.css";
+@import "./pages/specialist-owner.css";
+@import "./pages/specialist-onboarding.css";
+@import "./pages/specialist-cabinet.css";
+@import "./pages/specialist-cabinet-portfolio.css";
+@import "./pages/specialist-cabinet-services.css";
+@import "./pages/specialist-cabinet-schedule.css";
+@import "./pages/specialist-cabinet-reviews.css";
+@import "./pages/specialist-cabinet-notifications.css";
+@import "./pages/specialist-cabinet-security.css";
+@import "./pages/business-onboarding-step2.css";
+@import "./pages/business-onboarding-step4.css";
 
 @source "../views";
 @source "../js";
@@ -188,7 +202,10 @@
   .search-dropdown   { @apply invisible absolute top-[calc(100%+9px)] left-0 z-[80] w-full min-w-[640px]
                               -translate-y-1.5 overflow-hidden rounded-md bg-white opacity-0
                               shadow-[0_12px_40px_rgba(0,0,0,.18)];
-                       transition: opacity .2s ease, transform .2s ease, visibility .2s; }
+                       /* `translate` must be named: Tailwind v4 compiles -translate-y-1.5 to the
+                          `translate` property, which `transform` does not cover — without it the
+                          panel snaps 6px instead of sliding (visible as a jump while closing). */
+                       transition: opacity .2s ease, translate .2s ease, transform .2s ease, visibility .2s; }
   .search-dropdown.on{ @apply visible translate-y-0 opacity-100; }
   .sd-head           { @apply px-[18px] pt-3.5 pb-2 text-[11px] font-semibold tracking-[.5px] text-black/45 uppercase; }
   .sd-sug            { @apply flex cursor-pointer items-center gap-2.5 px-[18px] py-[9px] text-sm text-ink/60 hover:bg-gray-soft2; }
@@ -263,7 +280,10 @@
      ========================================================================== */
   .mega-panel      { @apply invisible absolute inset-x-0 top-full z-[55] -translate-y-1.5 border-t
                             border-black/10 bg-white opacity-0 shadow-[0_2px_4px_rgba(0,0,0,.25)];
-                     transition: opacity .22s ease, transform .22s ease, visibility .22s; }
+                     /* `translate` must be named — see .search-dropdown above. Naming only
+                        `transform` left the -6px offset untransitioned, so closing the panel
+                        jumped it up a step before the opacity fade ran. */
+                     transition: opacity .22s ease, translate .22s ease, transform .22s ease, visibility .22s; }
   .mega-panel.open { @apply visible translate-y-0 opacity-100; }
   .mega-inner      { @apply mx-auto max-w-[1440px] p-10; }
   .nav-item .mcaret             { @apply transition-transform duration-[250ms]; }
@@ -839,7 +859,12 @@
   .nav-item:hover, .nav-calc:hover { @apply bg-gray-soft text-black; }
   .nav-calc:hover img              { @apply scale-110 rotate-[-8deg]; }
   .btn-post:hover                  { @apply bg-black; }
-  .lang:hover, .signin .txt:hover  { @apply cursor-pointer opacity-60; }
+  /* `.lang-menu` lives INSIDE `.lang`, so fading the whole trigger also faded the open
+     dropdown (translucent surface, page content showing through) and the opacity created
+     a stacking context that trapped its z-index. Only the label and the caret may fade. */
+  .lang:hover                           { @apply cursor-pointer; }
+  .lang:hover > span, .lang:hover > img { @apply opacity-60; }
+  .signin .txt:hover                    { @apply cursor-pointer opacity-60; }
   .nav-icons > img:hover           { @apply scale-[1.15] cursor-pointer; }
   .nav-icons > img:focus-visible, .lang:focus-visible { @apply outline-offset-4; }
   .foot-col a:hover                { @apply translate-x-1 text-white; }
@@ -856,7 +881,9 @@
   /* ==========================================================================
      SCROLL REVEAL — JS adds the `.in` class (home · product · blog)
      ========================================================================== */
-  .reveal    { @apply translate-y-7 opacity-0; transition: opacity .6s ease, transform .6s ease; }
+  /* `translate` must be named — translate-y-7 compiles to the `translate` property, so a
+     `transform`-only list made the reveal fade without ever sliding. */
+  .reveal    { @apply translate-y-7 opacity-0; transition: opacity .6s ease, translate .6s ease, transform .6s ease; }
   .reveal.in { @apply translate-y-0 opacity-100; }
   .reveal.d1 { transition-delay: .08s; }
   .reveal.d2 { transition-delay: .16s; }

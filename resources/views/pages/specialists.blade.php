@@ -171,7 +171,10 @@
           <div class="meta"><span class="m">{{ __('specialists.card.exp', ['years' => $p['years']]) }}</span><span class="d">·</span><span class="m">{{ __('specialists.card.projects', ['count' => $p['projects']]) }}</span></div>
           <div class="foot">
             <span class="price">{{ __('specialists.card.price', ['price' => $p['price']]) }}</span>
-            <span class="btn">{{ __('specialists.card.view_profile') }}</span>
+            {{-- design-system tone on a <span>: the card itself is the <a>, so this may not
+                 become a real <x-ui.button> (interactive elements cannot nest). --}}
+            <span class="ui-btn ui-btn-primary h-[38px] px-4 text-[13px] font-semibold whitespace-nowrap duration-200"
+                  data-hover="true">{{ __('specialists.card.view_profile') }}</span>
           </div>
         </a>
       @endforeach

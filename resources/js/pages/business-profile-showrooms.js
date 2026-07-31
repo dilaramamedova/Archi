@@ -22,4 +22,3 @@ export default function init() {
   if (saveBtn) saveBtn.addEventListener('click', () => setSaved(true));
   if (cancelBtn) cancelBtn.addEventListener('click', () => window.location.reload());
 }
-init();

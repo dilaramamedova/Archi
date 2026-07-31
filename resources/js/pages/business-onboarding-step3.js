@@ -37,5 +37,3 @@ export default function init() {
     if (!trigger.contains(e.target) && !menu.contains(e.target)) setOpen(false);
   });
 }
-
-init();
