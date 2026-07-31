@@ -18,6 +18,7 @@
         'width' => __('home.calc.width'),
         'height' => __('home.calc.height'),
         'meter' => __('home.calc.meter'),
+        'm2' => __('home.calc.unit_m2'),
         'unitLiter' => __('home.calc.unit_liter'),
         'unitSheet' => __('home.calc.unit_sheet'),
         'unitBox' => __('home.calc.unit_box'),
@@ -68,9 +69,9 @@
         <div class="dots" id="hpDots"><i class="on"></i><i></i><i></i></div>
       </div>
       {{-- Role banner: 3 slides sliding horizontally (Figma 630:8871 / 630:8835 / 630:8898) --}}
-      <div class="hero-usta" id="heroUsta">
-        <div class="hu-track" id="huTrack">
-          <div class="hu-slide">
+      <div class="hero-role" id="heroRole">
+        <div class="hr-track" id="roleTrack">
+          <div class="hr-slide">
             <img src="/assets/hero-usta.jpg" alt="">
             <div class="box">
               <div class="tag"><span class="line"></span><p>{{ __('home.roles.master_tag') }}</p></div>
@@ -79,11 +80,11 @@
                   <h3>{{ __('home.roles.master_title') }}</h3>
                   <div class="d">{{ __('home.roles.master_line1') }}<br>{{ __('home.roles.master_line2') }}</div>
                 </div>
-                <a class="reg" href="{{ route('register', ['role' => 'usta']) }}">{{ __('common.sign_up') }}</a>
+                <a class="reg" href="{{ route('register', ['role' => 'master']) }}">{{ __('common.sign_up') }}</a>
               </div>
             </div>
           </div>
-          <div class="hu-slide">
+          <div class="hr-slide">
             <img src="/assets/hero-satici.png" alt="">
             <div class="box">
               <div class="tag"><span class="line"></span><p>{{ __('home.roles.seller_tag') }}</p></div>
@@ -92,11 +93,11 @@
                   <h3>{{ __('home.roles.seller_title') }}</h3>
                   <div class="d">{{ __('home.roles.seller_line1') }}<br>{{ __('home.roles.seller_line2') }}</div>
                 </div>
-                <a class="reg" href="{{ route('register', ['role' => 'biznes']) }}">{{ __('common.sign_up') }}</a>
+                <a class="reg" href="{{ route('register', ['role' => 'seller']) }}">{{ __('common.sign_up') }}</a>
               </div>
             </div>
           </div>
-          <div class="hu-slide">
+          <div class="hr-slide">
             <img src="/assets/hero-musteri.jpg" alt="">
             <div class="box">
               <div class="tag"><span class="line"></span><p>{{ __('home.roles.customer_tag') }}</p></div>
@@ -105,12 +106,12 @@
                   <h3>{{ __('home.roles.customer_title') }}</h3>
                   <div class="d">{{ __('home.roles.customer_line1') }}<br>{{ __('home.roles.customer_line2') }}</div>
                 </div>
-                <a class="reg" href="{{ route('register', ['role' => 'musteri']) }}">{{ __('common.sign_up') }}</a>
+                <a class="reg" href="{{ route('register', ['role' => 'buyer']) }}">{{ __('common.sign_up') }}</a>
               </div>
             </div>
           </div>
         </div>
-        <div class="dots" id="huDots"><i class="on"></i><i></i><i></i></div>
+        <div class="dots" id="roleDots"><i class="on"></i><i></i><i></i></div>
       </div>
     </div>
 
@@ -124,22 +125,22 @@
         <h3>{{ __('home.calc.title') }}</h3>
       </div>
       <div class="sc-tabs" id="scTabs">
-        <button class="on" data-mat="boya">{{ __('home.calc.tab_paint') }}</button>
-        <button data-mat="dam">{{ __('home.calc.tab_roof') }}</button>
-        <button data-mat="kafel">{{ __('home.calc.tab_tile') }}</button>
-        <button data-mat="laminant">{{ __('home.calc.tab_laminate') }}</button>
+        <button class="on" data-mat="paint">{{ __('home.calc.tab_paint') }}</button>
+        <button data-mat="roof">{{ __('home.calc.tab_roof') }}</button>
+        <button data-mat="tile">{{ __('home.calc.tab_tile') }}</button>
+        <button data-mat="laminate">{{ __('home.calc.tab_laminate') }}</button>
       </div>
       <div class="sc-body" id="scBody"></div>
       <div class="sc-result">
         <div>
           <div class="litr"><b id="scQty">8</b><span id="scUnit">{{ __('home.calc.unit_liter') }}</span></div>
           <div class="desc">
-            <div class="r"><span id="scHint">{{ __('home.calc.hint_paint') }}</span><b id="scArea">36 m²</b></div>
+            <div class="r"><span id="scHint">{{ __('home.calc.hint_paint') }}</span><b id="scArea">{{ __('home.calc.area_initial') }}</b></div>
           </div>
         </div>
         <div class="price"><span class="p1">~</span><span class="p2" id="scPrice">96</span><span class="p3">₼</span></div>
       </div>
-      <a class="sc-full" id="scFull" href="{{ route('calculator', ['mat' => 'boya']) }}">{{ __('home.calc.full') }}</a>
+      <a class="sc-full" id="scFull" href="{{ route('calculator', ['mat' => 'paint']) }}">{{ __('home.calc.full') }}</a>
     </aside>
   </div>
 </div>
@@ -167,7 +168,7 @@
 {{-- ===================== SALE MARQUEE ===================== --}}
 <div class="sale-marquee" aria-hidden="true">
   <div class="sale-track">
-    @for ($i = 0; $i < 10; $i++)<span>SALE • OUTLET •</span>@endfor
+    @for ($i = 0; $i < 10; $i++)<span>{{ __('home.sale.marquee') }}</span>@endfor
   </div>
 </div>
 

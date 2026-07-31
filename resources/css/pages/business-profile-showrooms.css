@@ -1,4 +1,95 @@
-/* Page CSS for "business-profile-showrooms" — only this page's agent edits this file.
-   Write rules inside @layer components { }, use @apply, keep the class names from the
-   old HTML, and give higher specificity when overriding a shared component
-   (e.g. `.sr .grid4`). Never edit app.css. */
+/* Page CSS for "business-profile-showrooms" (Figma 1105:23687), ported from the old
+   biznes-profil-shourumlar.html <style type="text/tailwindcss"> block.
+
+   The old block used generic names (.page, .card, .crumbs, .save-bar, .edit-*). They were
+   page-local there, but all 23 page CSS files compile into ONE bundle, so every top-level
+   name is prefixed with `bpsh-` to keep it out of the six sibling business-profile pages.
+   Child names (.c1, .lbl, .cnt, .dot, .fill, .note) stay as they are — they only match
+   inside a prefixed parent.
+
+   State classes became data-* attributes (ARCHITECTURE.md 7.1):
+   .sn-item.active -> [data-on="true"], .sh-badge.aktiv/.gizli -> [data-state="active"/"hidden"].
+   The two 8px status dots and the showroom pin were <img> tags pointing at expired Figma
+   asset URLs; the dots are plain colored circles now and the pin is an inline SVG.
+
+   `leading-[normal]` is added to every rule that sets an ARBITRARY font size
+   (text-[34px]/[15px]/[13px]/[11px]): the old build ran without Tailwind preflight, so those
+   nodes inherited line-height:normal, while this build ships preflight's `html{line-height:1.5}`
+   (ARCHITECTURE.md 6.5). Rules on the named scale (text-lg/text-sm/text-xs) are intentionally
+   left alone — those utilities already carry their own line-height in both builds. */
+@layer components {
+  /* The gray cabinet background is declared once, on <body> (layout bodyClass). */
+  .bpsh-page              { @apply mx-auto flex w-full max-w-[1440px] flex-col items-start font-sans text-ink antialiased; }
+  .bpsh-edit              { @apply flex w-full flex-col items-start gap-5 px-7 pt-8 pb-14; }
+
+  /* header */
+  .bpsh-head              { @apply flex w-full items-end justify-between overflow-hidden; }
+  .bpsh-head-left         { @apply flex shrink-0 flex-col items-start gap-2.5 overflow-hidden whitespace-nowrap; }
+  .bpsh-crumbs            { @apply flex shrink-0 items-center gap-2 overflow-hidden text-[13px] leading-[normal]; }
+  .bpsh-crumbs .c1        { @apply font-normal text-black/50; }
+  .bpsh-crumbs .c2        { @apply font-medium text-black/90; }
+  .bpsh-title             { @apply shrink-0 text-[34px] leading-[normal] font-bold text-ink; }
+  .bpsh-head-right        { @apply flex shrink-0 items-center gap-3 overflow-hidden; }
+  .bpsh-badge-pub         { @apply flex shrink-0 items-center gap-2 overflow-hidden rounded-ds bg-[#e9f6ed] px-3.5 py-2; }
+  .bpsh-badge-pub .dot    { @apply size-2 shrink-0 rounded-full bg-[#229653]; }
+  .bpsh-badge-pub p       { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-[#229653]; }
+  .bpsh-btn-view          { @apply flex h-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white px-5; }
+  .bpsh-btn-view p        { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
+
+  /* body: settings nav + main column */
+  .bpsh-body              { @apply flex w-full items-start gap-6; }
+  .bpsh-snav              { @apply sticky top-[158px] flex w-[264px] shrink-0 flex-col items-start gap-1 self-start overflow-hidden rounded-ds border border-black/10 bg-white px-3 py-3.5; }
+  .bpsh-snav-item         { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds px-3 py-[11px] whitespace-nowrap text-inherit no-underline; }
+  .bpsh-snav-item .lbl    { @apply text-sm font-medium text-black/70; }
+  .bpsh-snav-item .cnt    { @apply text-xs font-semibold text-black/40; }
+  .bpsh-snav-item[data-on="true"]      { @apply border border-yellow-line bg-sel-bg; }
+  .bpsh-snav-item[data-on="true"] .lbl { @apply text-sm font-bold text-black; }
+
+  .bpsh-snav-progress         { @apply flex w-full flex-col items-start gap-2 overflow-hidden rounded-ds bg-gray-soft2 px-3 py-3.5; }
+  .bpsh-snav-progress .top    { @apply flex w-full items-start justify-between overflow-hidden text-xs whitespace-nowrap text-ink; }
+  .bpsh-snav-progress .top .l { @apply font-semibold; }
+  .bpsh-snav-progress .top .r { @apply font-bold; }
+  .bpsh-snav-bar              { @apply relative h-1.5 w-full overflow-hidden rounded-[3px] bg-black/10; }
+  .bpsh-snav-bar .fill        { @apply absolute top-0 left-0 h-1.5 rounded-[3px] bg-yellow; }
+  .bpsh-snav-progress .note   { @apply text-[11px] leading-[normal] font-normal whitespace-nowrap text-black/50; }
+
+  .bpsh-main              { @apply flex min-w-px flex-[1_0_0] flex-col items-start gap-5 overflow-hidden; }
+
+  /* showrooms card */
+  .bpsh-card              { @apply flex w-full flex-col items-start gap-4 overflow-hidden rounded-ds border border-black/10 bg-white p-6; }
+  .bpsh-card-head         { @apply flex w-full items-center justify-between overflow-hidden; }
+  .bpsh-card-head-txt     { @apply flex min-w-px flex-[1_0_0] flex-col items-start gap-1 overflow-hidden whitespace-nowrap; }
+  .bpsh-card-head-txt h2  { @apply text-lg font-bold text-ink; }
+  .bpsh-card-head-txt p   { @apply text-[13px] leading-[normal] font-normal text-black/50; }
+  .bpsh-btn-add           { @apply flex h-[42px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[18px]; }
+  .bpsh-btn-add p         { @apply text-[13px] leading-[normal] font-bold whitespace-nowrap text-ink; }
+
+  /* showroom row */
+  .bpsh-showroom          { @apply flex w-full items-center gap-4 overflow-hidden rounded-ds bg-gray-soft2 p-4; }
+  .bpsh-sh-icon           { @apply relative flex size-11 shrink-0 items-center justify-center overflow-hidden rounded-[22px] border border-black/12 bg-white text-ink; }
+  .bpsh-sh-icon svg       { @apply size-5; }
+  .bpsh-sh-info           { @apply flex min-w-px flex-[1_0_0] flex-col items-start gap-[3px] overflow-hidden; }
+  .bpsh-sh-info b         { @apply text-[15px] leading-[normal] font-bold whitespace-nowrap text-ink; }
+  .bpsh-sh-info p         { @apply text-[13px] leading-[normal] font-normal whitespace-pre text-black/55; }
+  .bpsh-sh-badge          { @apply flex shrink-0 items-center overflow-hidden rounded-ds px-[9px] py-1; }
+  .bpsh-sh-badge[data-state="active"]   { @apply bg-[#e9f6ed]; }
+  .bpsh-sh-badge[data-state="active"] p { @apply text-[11px] leading-[normal] font-semibold whitespace-nowrap text-[#229653]; }
+  .bpsh-sh-badge[data-state="hidden"]   { @apply bg-[#f0f1f3]; }
+  .bpsh-sh-badge[data-state="hidden"] p { @apply text-[11px] leading-[normal] font-semibold whitespace-nowrap text-black/50; }
+  .bpsh-sh-actions        { @apply flex shrink-0 items-start gap-2 overflow-hidden; }
+  .bpsh-btn-edit          { @apply flex shrink-0 cursor-pointer items-start overflow-hidden rounded-ds border border-black/20 bg-white px-3.5 py-2; }
+  .bpsh-btn-edit p        { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
+  .bpsh-btn-del           { @apply flex shrink-0 cursor-pointer items-start overflow-hidden rounded-ds px-3 py-2; }
+  .bpsh-btn-del p         { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-[#d33c32]; }
+
+  /* save bar */
+  .bpsh-save-bar          { @apply flex w-full items-center justify-between overflow-hidden rounded-ds bg-ink px-6 py-4; }
+  .bpsh-save-left         { @apply flex shrink-0 items-center gap-2 overflow-hidden; }
+  .bpsh-save-left .dot    { @apply size-2 shrink-0 rounded-full bg-yellow; }
+  .bpsh-save-left p       { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-white/85; }
+  .bpsh-save-right        { @apply flex shrink-0 items-start gap-2.5 overflow-hidden; }
+  .bpsh-btn-cancel        { @apply flex h-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-white/35 bg-transparent px-[18px]; }
+  .bpsh-btn-cancel p      { @apply text-sm font-medium whitespace-nowrap text-white/85; }
+  .bpsh-btn-save          { @apply flex h-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border-none bg-yellow px-[26px]; }
+  .bpsh-btn-save p        { @apply text-sm font-bold whitespace-nowrap text-ink; }
+}

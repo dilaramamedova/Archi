@@ -4,13 +4,13 @@
 
   Example:
     <x-pcard
-        :cat="__('home.cards.tiles')"
-        :name="__('home.cards.tile_60')"
+        :cat="__('home.sale.cat_tiles')"
+        :name="__('home.sale.name_tile_matte')"
         now="23.90 ₼"
         old="45.99 ₼"
         off="-48%"
         rate="4.6"
-        :reviews="__('home.cards.reviews_1876')"
+        :reviews="__('home.sale.reviews_1876')"
         img="/assets/prod-kafel.png" />
 
     // user's own listing (yellow badge)
@@ -28,6 +28,8 @@
     reviews  — review count text
     badges   — array of badges; each item is a string or
                ['label' => '...', 'mine' => true] (yellow background).
+               An item may also carry 'icon' => '/assets/....svg' (rendered before the
+               label, like <x-scard>) and 'class' => '...' for an extra span class.
                null → defaults to common.badge_new + common.badge_in_stock
     dots     — number of carousel dots (0 → hidden, default 3)
     dot      — index of the active dot (default 0)
@@ -61,8 +63,14 @@
     @if (! empty($badgeList))
       <div class="badges">
         @foreach ($badgeList as $b)
-          @php $label = is_array($b) ? ($b['label'] ?? '') : $b; @endphp
-          <span @class(['b', 'mine' => is_array($b) && ! empty($b['mine'])])>{{ $label }}</span>
+          @php
+              $label = is_array($b) ? ($b['label'] ?? '') : $b;
+              $icon = is_array($b) ? ($b['icon'] ?? null) : null;
+              $cls = 'b'
+                  . (is_array($b) && ! empty($b['mine']) ? ' mine' : '')
+                  . (is_array($b) && ! empty($b['class']) ? ' ' . $b['class'] : '');
+          @endphp
+          <span class="{{ $cls }}">@if ($icon)<img src="{{ $icon }}" alt="">@endif{{ $label }}</span>
         @endforeach
       </div>
     @endif

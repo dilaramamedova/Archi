@@ -1,7 +1,12 @@
-// Page module for "business-profile-products" — app.js imports it dynamically only when
-// <body data-page="business-profile-products"> is rendered. Shared behaviour (navbar, cursor) lives in
-// resources/js/shared/ — do not duplicate it here.
+// Page module for "business-profile-products" — the visibility switch of each product
+// row. The old page shipped an empty handler; the switches were static images there.
 export default function init() {
-  // TODO: filled in by the page agent
+  document.querySelectorAll('.bpp-toggle').forEach((toggle) => {
+    toggle.addEventListener('click', () => {
+      const on = toggle.dataset.on !== 'true';
+      toggle.dataset.on = on ? 'true' : 'false';
+      toggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+  });
 }
 init();

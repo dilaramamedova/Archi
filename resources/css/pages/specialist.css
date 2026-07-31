@@ -1,4 +1,121 @@
-/* Page CSS for "specialist" — only this page's agent edits this file.
-   Write rules inside @layer components { }, use @apply, keep the class names from the
-   old HTML, and give higher specificity when overriding a shared component
-   (e.g. `.sr .grid4`). Never edit app.css. */
+/* Page CSS for "specialist" (Figma 777:2779), ported from the old specialist.html
+   <style type="text/tailwindcss"> block. Class names are kept; the old `body { bg-white }`
+   rule is dropped because app.css already sets it, and the heart's `.on` state became
+   data-on per ARCHITECTURE.md §7.1 (it only swaps the icon, so it needs no rule). */
+@layer components {
+  /* Figma 777:2779 -> content 777:2816 is 1440 wide and inner 777:2817 sits at x=40 with
+     width 1360, so the 40px gutter is deliberate and differs from the shared .wrap (28px,
+     1384) that navbar/footer use in the very same frame. Do not "align" it with .wrap.
+     48 between sections. */
+  .pp { @apply mx-auto flex max-w-[1440px] flex-col gap-12 px-10 pt-10 pb-20
+               max-[900px]:gap-9 max-[900px]:px-5 max-[900px]:pt-7 max-[900px]:pb-14; }
+
+  /* breadcrumb */
+  .pp-crumbs       { @apply flex items-center gap-2 text-sm; }
+  .pp-crumbs a     { @apply text-black/50 hover:text-black/70; }
+  .pp-crumbs .sep  { @apply text-black/30; }
+  .pp-crumbs .cur  { @apply font-medium text-ink; }
+
+  /* section heading */
+  .pp-sechead      { @apply flex flex-col gap-4; }
+  .pp-eyebrow      { @apply flex items-center gap-3; }
+  .pp-eyebrow .line{ @apply h-0.5 w-8 bg-yellow; }
+  .pp-eyebrow p    { @apply text-sm font-medium tracking-[.84px] text-black/55 uppercase; }
+  .pp-sechead h2   { @apply text-[32px] font-semibold text-ink max-[900px]:text-[24px]; }
+
+  /* header: left column + booking card */
+  .pp-head    { @apply flex items-start gap-12 max-[1200px]:flex-col max-[1200px]:gap-8; }
+  .pp-head-l  { @apply flex min-w-0 flex-1 flex-col gap-12; }
+  .pp-id      { @apply flex items-start gap-6 max-[640px]:flex-col; }
+
+  .pp-ava           { @apply relative h-[226px] w-[238px] shrink-0 overflow-hidden rounded-2xl bg-[#f5fbff]; }
+  .pp-ava .ring     { @apply absolute top-[41px] left-[47px] flex size-36 items-center justify-center rounded-full border-[4.5px] border-yellow bg-white; }
+  .pp-ava .ring img { @apply size-[60px] object-cover; }
+  .pp-badge         { @apply absolute top-1.5 left-1.5 flex items-center gap-1 rounded-ds border border-black/10 bg-white px-2 py-1 text-sm whitespace-nowrap text-black; }
+  .pp-badge img     { @apply size-5; }
+  .pp-fav           { @apply absolute top-1 right-1 flex size-9 cursor-pointer items-center justify-center rounded-full bg-white transition-transform duration-200 hover:scale-[1.08]; }
+  .pp-fav img       { @apply size-5; }
+
+  .pp-id-r        { @apply flex flex-col gap-4; }
+  .pp-verified    { @apply flex items-center gap-1 self-start rounded-ds border border-black/10 bg-white px-2 py-1 text-sm whitespace-nowrap text-green; }
+  .pp-verified img{ @apply size-5; }
+  .pp-name        { @apply flex flex-col gap-3; }
+  .pp-name h1     { @apply text-4xl leading-[1.05] font-semibold text-ink max-[900px]:text-[28px]; }
+  .pp-name .role  { @apply mt-2 text-xl font-medium text-black/50; }
+  .pp-rate        { @apply flex items-center gap-1; }
+  .pp-stars       { @apply flex gap-1; }
+  .pp-stars img   { @apply size-4; }
+  .pp-rate .v     { @apply text-sm font-semibold text-black; }
+  .pp-rate .r     { @apply text-sm font-medium text-black/40; }
+  .pp-meta        { @apply text-base font-medium text-black/50; }
+  .pp-meta .dot   { @apply px-3.5 text-black/30 max-[640px]:px-2; }
+
+  /* about */
+  .pp-about      { @apply flex flex-col gap-6; }
+  .pp-about .txt { @apply text-base leading-[1.5] text-black/70; }
+  .pp-tags       { @apply flex flex-wrap gap-2; }
+  .pp-tag        { @apply rounded-ds bg-gray-soft px-3 py-1.5 text-sm text-ink; }
+
+  /* booking card */
+  .pp-book              { @apply flex w-[360px] shrink-0 flex-col gap-4 bg-[#f5f7ff] p-6 max-[1200px]:w-full; }
+  .pp-book .ph          { @apply flex flex-col gap-0.5; }
+  .pp-book .ph .lbl     { @apply text-sm text-black/50; }
+  .pp-book .prow        { @apply flex items-baseline gap-2; }
+  .pp-book .prow .now   { @apply text-[32px] font-semibold text-ink; }
+  .pp-book .prow .sub   { @apply text-sm text-black/40; }
+  .pp-btn               { @apply flex cursor-pointer items-center justify-center px-6 py-4 text-base font-medium text-ink transition-[filter,border-color] duration-200; }
+  .pp-btn.y             { @apply bg-yellow hover:brightness-95; }
+  .pp-btn.w             { @apply border border-black/20 bg-white hover:border-ink; }
+  .pp-book .div         { @apply h-px bg-black/10; }
+  .pp-stat              { @apply flex items-center justify-between text-sm; }
+  .pp-stat .k           { @apply text-black/50; }
+  .pp-stat .v           { @apply font-medium text-ink; }
+  .pp-free              { @apply flex items-center gap-2 text-xs font-semibold text-[#229653]; }
+  .pp-free .d           { @apply size-2 shrink-0 rounded-full bg-[#229653]; }
+
+  /* portfolio */
+  .pp-sec              { @apply flex flex-col gap-6; }
+  .pp-grid             { @apply flex flex-col gap-4; }
+  .pp-grow             { @apply flex gap-4 max-[900px]:flex-wrap; }
+  .pp-tile             { @apply relative h-[230px] min-w-0 flex-1 overflow-hidden rounded-ds max-[900px]:flex-[1_1_calc(50%-8px)] max-[640px]:flex-[1_1_100%]; }
+  .pp-tile > img       { @apply size-full object-cover transition-transform duration-500; }
+  .pp-tile:hover > img { @apply scale-[1.04]; }
+  .pp-tile .lb         { @apply absolute top-[189px] left-3 rounded-ds bg-white/95 px-2.5 py-1.5 text-xs font-semibold whitespace-nowrap text-ink; }
+  .pp-tile.more        { @apply flex items-center justify-center; }
+  .pp-tile.more .ov    { @apply absolute inset-0 flex flex-col items-center justify-center gap-2.5 bg-black/55; }
+  .pp-tile.more .ov b  { @apply text-[22px] font-bold text-white; }
+  .pp-tile.more .ov span { @apply text-[13px] font-medium text-white/85; }
+
+  /* services */
+  .pp-svc-list        { @apply flex flex-col; }
+  .pp-svc             { @apply flex cursor-pointer items-center justify-between gap-4 py-4; }
+  .pp-svc + .pp-svc   { @apply border-t border-black/10; }
+  .pp-svc .l          { @apply flex min-w-0 flex-1 flex-col gap-1; }
+  .pp-svc .t          { @apply text-base font-medium text-ink; }
+  .pp-svc .s          { @apply text-sm text-black/50; }
+  .pp-svc .rr         { @apply flex items-center gap-4 text-base whitespace-nowrap; }
+  .pp-svc .pr         { @apply font-medium text-ink; }
+  .pp-svc .ar         { @apply text-black/50 transition-transform duration-[250ms]; }
+  .pp-svc:hover .ar   { @apply translate-x-1; }
+
+  /* reviews */
+  .pp-score        { @apply flex items-center gap-1.5; }
+  .pp-score .n     { @apply text-[40px] font-semibold text-ink; }
+  .pp-score .c     { @apply flex flex-col gap-1.5; }
+  .pp-score .ss    { @apply flex gap-0.5; }
+  .pp-score .ss img{ @apply size-4; }
+  .pp-score .cnt   { @apply text-[13px] text-[#1a1a1a]; }
+  .pp-revs         { @apply flex items-stretch gap-4 max-[900px]:flex-col; }
+  .pp-rev          { @apply flex min-w-0 flex-1 flex-col gap-3 rounded-ds border border-black/10 bg-white p-5; }
+  .pp-rev .hd      { @apply flex items-center gap-3; }
+  .pp-rev .av      { @apply flex size-10 shrink-0 items-center justify-center rounded-full bg-gray-soft text-base font-semibold text-ink; }
+  .pp-rev .nm      { @apply flex flex-col gap-0.5; }
+  .pp-rev .nm .n   { @apply text-sm font-medium text-ink; }
+  .pp-rev .nm .d   { @apply text-xs text-black/40; }
+  .pp-rev .st      { @apply flex gap-0.5; }
+  .pp-rev .st img  { @apply size-4; }
+  .pp-rev .tx      { @apply text-sm leading-[1.5] text-black/70; }
+
+  /* .sec-more stretches inside a flex column — in Figma it is only as wide as its text */
+  .pp-sec .sec-more { @apply self-start; }
+}

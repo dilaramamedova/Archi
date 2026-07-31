@@ -1,4 +1,5 @@
-/* Page CSS for "cart" — only this page's agent edits this file.
-   Write rules inside @layer components { }, use @apply, keep the class names from the
-   old HTML, and give higher specificity when overriding a shared component
-   (e.g. `.sr .grid4`). Never edit app.css. */
+/* Page CSS for "cart".
+
+   The cart page is built entirely from Tailwind utilities in the markup (and in the
+   row templates of resources/js/pages/cart.js, which `@source "../js"` scans), so
+   there is no page-specific rule to declare here. Shared classes come from app.css. */

@@ -1,16 +1,150 @@
-{{--
-  Stub for the "business-onboarding-step3" page — the page agent replaces this file entirely.
-  Source HTML : C:/Users/mamed/OneDrive/Desktop/ARCHI/biznes-tamamlama-addim3.html
-  Route       : route('business.onboarding.step3')   ·   URL: /business/onboarding/step-3
-  Page CSS    : resources/css/pages/business-onboarding-step3.css
-  Page JS     : resources/js/pages/business-onboarding-step3.js
-  Page strings: lang/{az,ru,en}/business-onboarding-step3.php  (created by the agent, keys like business-onboarding-step3.section.key)
-  Conventions : ARCHITECTURE.md
---}}
-<x-layout page="business-onboarding-step3" :title="__('common.site_name')">
+<x-layout page="business-onboarding-step3" :title="__('business-onboarding-step3.title')" bodyClass="bg-gray-soft2 text-ink [word-break:break-word]">
 
-    <div class="wrap"><div class="inner section">
-        <div class="sec-title">business-onboarding-step3 — in progress</div>
-    </div></div>
+{{-- Head — Figma 1105:22591 (1440x128). Gray background comes from <body>. --}}
+<div class="mx-auto flex max-w-[1440px] flex-col items-start gap-5 px-7 pt-8 pb-5">
+  <p class="text-sm font-medium leading-[normal] whitespace-pre text-black/50">{{ __('business-onboarding-step3.head.back') }}</p>
+  <h1 class="text-[32px] font-bold tracking-[-0.5px] leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step3.head.title') }}</h1>
+</div>
+
+{{-- Content — Figma 1105:22594 --}}
+<div class="mx-auto flex max-w-[1440px] items-start gap-8 px-7 pb-5">
+  <div class="flex w-[880px] shrink-0 flex-col items-start gap-2.5">
+
+    {{-- Stepper — Figma 1105:22596 (880x72: padding 20 + active circle 32) --}}
+    <div class="flex w-[880px] shrink-0 items-center justify-between border border-black/10 bg-white p-5">
+      <div class="flex shrink-0 items-center gap-2">
+        <div class="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-yellow-line">
+          <p class="text-xs font-bold leading-[normal] whitespace-nowrap text-ink">✓</p>
+        </div>
+        <p class="text-sm font-medium leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step3.stepper.step1') }}</p>
+      </div>
+      <div class="h-0.5 w-5 shrink-0 bg-[#e0e3e8]"></div>
+      <div class="flex shrink-0 items-center gap-2">
+        <div class="flex size-7 shrink-0 items-center justify-center overflow-hidden rounded-full bg-yellow-line">
+          <p class="text-xs font-bold leading-[normal] whitespace-nowrap text-ink">✓</p>
+        </div>
+        <p class="text-sm font-medium leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step3.stepper.step2') }}</p>
+      </div>
+      <div class="h-0.5 w-5 shrink-0 bg-[#e0e3e8]"></div>
+      <div class="flex shrink-0 items-center gap-2.5">
+        <div class="flex size-8 shrink-0 items-center justify-center overflow-hidden rounded-pill bg-ink">
+          <p class="text-sm font-semibold leading-[normal] whitespace-nowrap text-white">3</p>
+        </div>
+        <p class="text-[13px] font-medium leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step3.stepper.step3') }}</p>
+      </div>
+    </div>
+
+    {{-- Form card — Figma 1105:22608 --}}
+    <div class="relative flex w-full shrink-0 flex-col items-start gap-5 overflow-hidden rounded-ds border border-black/10 bg-white px-8 py-7">
+
+      <div class="flex w-full shrink-0 flex-col items-start gap-2 overflow-hidden bg-white">
+        <p class="text-[13px] font-semibold leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step3.form.images_label') }}</p>
+        <div class="flex shrink-0 items-start gap-2.5 overflow-hidden bg-white">
+          <div class="flex size-[110px] shrink-0 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-ds border border-dashed border-black/14 bg-gray-soft2 text-center text-xs font-medium text-black/50">
+            <p class="leading-[normal] whitespace-nowrap">📷</p>
+            <p class="leading-[normal] whitespace-nowrap">{{ __('business-onboarding-step3.form.images_main') }}</p>
+          </div>
+          <div class="flex size-[110px] shrink-0 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-ds border border-dashed border-black/14 bg-gray-soft2">
+            <p class="text-center text-xl font-medium leading-[normal] whitespace-nowrap text-black/50">+</p>
+          </div>
+          <div class="flex size-[110px] shrink-0 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-ds border border-dashed border-black/14 bg-gray-soft2">
+            <p class="text-center text-xl font-medium leading-[normal] whitespace-nowrap text-black/50">+</p>
+          </div>
+          <div class="flex size-[110px] shrink-0 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-ds border border-dashed border-black/14 bg-gray-soft2">
+            <p class="text-center text-xl font-medium leading-[normal] whitespace-nowrap text-black/50">+</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex w-full shrink-0 items-start gap-4 overflow-hidden bg-white">
+        <div class="flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden bg-white">
+          <label class="text-[13px] font-semibold leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step3.form.name_label') }}</label>
+          <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px]">
+            <input class="w-full border-none bg-transparent font-sans text-sm font-normal leading-[normal] text-ink outline-none placeholder:text-black/40" type="text" placeholder="{{ __('business-onboarding-step3.form.name_placeholder') }}">
+          </div>
+        </div>
+        <div class="flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden bg-white">
+          <label class="text-[13px] font-semibold leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step3.form.category_label') }}</label>
+          {{-- Open state (Figma default): 1.5px ink outline --}}
+          <div class="flex w-full shrink-0 cursor-pointer items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px] data-[on=true]:border-[1.5px] data-[on=true]:border-ink" data-cat-trigger data-on="true">
+            <p class="text-sm font-normal leading-[normal] whitespace-nowrap text-black/40 data-[filled=true]:text-ink" data-cat-value>{{ __('business-onboarding-step3.form.category_placeholder') }}</p>
+            <p class="text-xs leading-[normal] text-black/50" data-cat-caret>▴</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex w-full shrink-0 items-start gap-0 overflow-hidden bg-white">
+        <div class="flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden bg-white">
+          <label class="text-[13px] font-semibold leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step3.form.brand_label') }}</label>
+          <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px]">
+            <input class="w-full border-none bg-transparent font-sans text-sm font-normal leading-[normal] text-ink outline-none placeholder:text-black/40" type="text" placeholder="{{ __('business-onboarding-step3.form.brand_placeholder') }}">
+          </div>
+        </div>
+      </div>
+
+      <div class="flex w-full shrink-0 items-start gap-4 overflow-hidden bg-white">
+        <div class="flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden bg-white">
+          <label class="text-[13px] font-semibold leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step3.form.price_label') }}</label>
+          <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px]">
+            <input class="w-full border-none bg-transparent font-sans text-sm font-normal leading-[normal] text-ink outline-none placeholder:text-black/40" type="text" placeholder="{{ __('business-onboarding-step3.form.price_placeholder') }}">
+          </div>
+        </div>
+        <div class="flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden bg-white">
+          <label class="text-[13px] font-semibold leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step3.form.unit_label') }}</label>
+          <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px]">
+            <p class="text-sm font-normal leading-[normal] whitespace-nowrap text-black/40">{{ __('business-onboarding-step3.form.unit_placeholder') }}</p>
+            <p class="text-xs leading-[normal] text-black/50">▾</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex w-full shrink-0 flex-col items-start gap-2 overflow-hidden bg-white">
+        <label class="text-[13px] font-semibold leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step3.form.desc_label') }}</label>
+        <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px]">
+          <input class="w-full border-none bg-transparent font-sans text-sm font-normal leading-[normal] text-ink outline-none placeholder:text-black/40" type="text" placeholder="{{ __('business-onboarding-step3.form.desc_placeholder') }}">
+        </div>
+      </div>
+
+      <div class="flex w-full shrink-0 items-center gap-2.5 overflow-hidden rounded-ds border border-yellow-line bg-sel-bg px-3.5 py-3">
+        <p class="text-sm font-normal leading-[normal] whitespace-nowrap text-black">🎉</p>
+        <p class="min-w-px flex-[1_0_0] text-[13px] font-normal leading-[normal] text-black/70">{{ __('business-onboarding-step3.form.note') }}</p>
+      </div>
+
+      <div class="flex shrink-0 items-center gap-3 overflow-hidden bg-white">
+        <button class="flex shrink-0 items-start overflow-hidden rounded-ds border-none bg-yellow px-7 py-[15px]" type="button">
+          <p class="font-sans text-[15px] font-semibold leading-[normal] whitespace-pre text-ink">{{ __('business-onboarding-step3.form.submit') }}</p>
+        </button>
+        <p class="cursor-pointer text-sm font-medium leading-[normal] whitespace-nowrap text-black/50">{{ __('business-onboarding-step3.form.later') }}</p>
+      </div>
+
+      {{-- Category menu — absolute inside the form card (Figma shows the open state) --}}
+      <div class="absolute top-[252px] left-[447px] flex flex-col items-start overflow-hidden rounded-ds border border-black/10 bg-white shadow-[0px_4px_16px_0px_rgba(0,0,0,0.08)] data-[on=false]:hidden" data-cat-menu data-on="true">
+        @foreach (__('business-onboarding-step3.categories') as $i => $category)
+          <div class="group flex h-[38px] w-full shrink-0 cursor-pointer items-center justify-between overflow-hidden bg-white px-4 py-2.5 data-[sel=true]:bg-sel-bg"
+               data-cat-option="{{ $category }}" data-sel="{{ $i === 1 ? 'true' : 'false' }}">
+            <p class="text-sm font-normal leading-[normal] whitespace-nowrap text-black/70 group-data-[sel=true]:font-medium group-data-[sel=true]:text-ink">{{ $category }}</p>
+            <p class="hidden text-[13px] font-bold leading-[normal] whitespace-nowrap text-ink group-data-[sel=true]:block">✓</p>
+          </div>
+        @endforeach
+      </div>
+    </div>
+  </div>
+
+  {{-- Side — Figma 1105:22682 (472x215) --}}
+  <div class="flex min-w-px flex-[1_0_0] flex-col items-start gap-4 overflow-hidden bg-white">
+    <div class="flex w-full shrink-0 flex-col items-start gap-3 overflow-hidden rounded-ds border border-black/10 bg-white p-5">
+      <p class="text-sm font-semibold leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step3.side.progress_title') }}</p>
+      <div class="relative h-1.5 w-[280px] shrink-0 overflow-hidden rounded-ds bg-black/8">
+        <div class="absolute top-0 left-0 h-1.5 w-[210px] rounded-ds bg-yellow"></div>
+        <div class="absolute top-0 left-[210px] h-1.5 w-[70px] rounded-ds bg-yellow-line opacity-50"></div>
+      </div>
+      <p class="w-full text-[13px] font-normal leading-[normal] text-black/50">{{ __('business-onboarding-step3.side.progress_note') }}</p>
+    </div>
+    <div class="flex w-full shrink-0 flex-col items-start gap-2 overflow-hidden rounded-ds border border-yellow-line bg-sel-bg p-4 text-[13px]">
+      <p class="font-semibold leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step3.side.tip_title') }}</p>
+      <p class="w-full leading-[1.5] font-normal text-black/70">{{ __('business-onboarding-step3.side.tip_text') }}</p>
+    </div>
+  </div>
+</div>
 
 </x-layout>

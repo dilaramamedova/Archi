@@ -1,4 +1,4 @@
-/* Page CSS for "business-onboarding-step1" — only this page's agent edits this file.
-   Write rules inside @layer components { }, use @apply, keep the class names from the
-   old HTML, and give higher specificity when overriding a shared component
-   (e.g. `.sr .grid4`). Never edit app.css. */
+/* Page CSS for "business-onboarding-step1".
+   The old page was already fully converted to Tailwind (its <style type="text/tailwindcss">
+   block was empty), so the markup carries every utility (ARCHITECTURE.md §6.2, approach 1)
+   and no page-specific rule is needed. The file must stay — app.css imports it. */

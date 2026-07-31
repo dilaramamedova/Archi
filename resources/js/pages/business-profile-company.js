@@ -1,7 +1,26 @@
-// Page module for "business-profile-company" — app.js imports it dynamically only when
-// <body data-page="business-profile-company"> is rendered. Shared behaviour (navbar, cursor) lives in
-// resources/js/shared/ — do not duplicate it here.
+// Page module for "business-profile-company" — save bar actions and the settings-nav
+// active state. Shared behaviour (navbar, cursor) lives in resources/js/shared/.
 export default function init() {
-  // TODO: filled in by the page agent
+  const bar = document.querySelector('.bpc-save-bar');
+  const saveBtn = document.querySelector('.bpc-btn-save');
+  const cancelBtn = document.querySelector('.bpc-btn-cancel');
+
+  if (saveBtn && bar) {
+    saveBtn.addEventListener('click', () => window.alert(bar.dataset.savedMessage || ''));
+  }
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => window.location.reload());
+  }
+
+  const items = document.querySelectorAll('.bpc-snav .bpc-snav-item');
+  items.forEach((item) =>
+    item.addEventListener('click', () => {
+      items.forEach((other) => {
+        other.dataset.on = 'false';
+        delete other.dataset.strong;
+      });
+      item.dataset.on = 'true';
+    })
+  );
 }
 init();

@@ -1,4 +1,19 @@
-/* Page CSS for "sell" — only this page's agent edits this file.
-   Write rules inside @layer components { }, use @apply, keep the class names from the
-   old HTML, and give higher specificity when overriding a shared component
-   (e.g. `.sr .grid4`). Never edit app.css. */
+/* Page CSS for "sell". Only the repeated pieces live here: the form field appears 6
+   times and the condition chip twice. Copied from the old sell.html
+   <style type="text/tailwindcss"> block.
+   The success modal uses the lmIn/fadeIn keyframes that used to sit in archi.css. */
+@layer components {
+  .sl-in {
+    @apply border border-black/20 bg-white px-[15px] py-[13px] text-[15px] text-black outline-none transition-[border-color] duration-200 [font-family:inherit];
+    @apply placeholder:text-black/40 focus:border-black;
+  }
+  .sl-lbl { @apply text-sm font-medium text-black/70; }
+  .sl-chip {
+    @apply cursor-pointer border border-black/20 px-4 py-[9px] text-sm text-black/70 transition duration-200;
+    @apply hover:border-black;
+    @apply data-[on=true]:border-yellow data-[on=true]:bg-[#fffdf0] data-[on=true]:font-medium data-[on=true]:text-ink data-[on=true]:shadow-[inset_0_0_0_1px_var(--color-yellow)];
+  }
+
+  @keyframes lmIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+}

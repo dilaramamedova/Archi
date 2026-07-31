@@ -5,7 +5,7 @@
 return [
     'go_to_product' => 'View product',
     'view_details' => 'View details',
-    'view_more' => 'View all',
+    'view_more' => 'View details',
     'view_all' => 'See all',
     'read' => 'Read',
     'read_arrow' => 'Read →',
@@ -15,7 +15,7 @@ return [
 
     'badge_new' => 'New',
     'badge_in_stock' => 'In stock',
-    'badge_top_master' => 'Top master',
+    'badge_top_master' => 'Top pro',
     'badge_verified' => 'Verified',
     'your_listing' => 'Your listing',
 

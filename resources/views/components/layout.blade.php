@@ -2,7 +2,7 @@
   Main layout (anonymous Blade component).
 
   Usage:
-    <x-layout page="catalog" :title="__('catalog.meta_title')">
+    <x-layout page="catalog" :title="__('catalog.title')">
         ... page markup ...
     </x-layout>
 
@@ -11,6 +11,9 @@
                 module, so it must equal the page slug
     title     — <title> text (defaults to __('common.site_name'))
     bodyClass — extra class on <body> (rarely needed)
+    footer    — render <x-footer/>? Default true. Only business-register passes false:
+                its Figma frame (Navbar 140 + auth-page 1160) has no footer, and the
+                reference page is the single one of the 23 without a footer mount.
 
   Optional named slot:
     <x-slot:head> ... </x-slot:head>   → appended to the end of <head>
@@ -19,6 +22,7 @@
     'page' => 'home',
     'title' => null,
     'bodyClass' => '',
+    'footer' => true,
 ])
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}">
@@ -46,7 +50,12 @@
 
 {{ $slot }}
 
+@if ($footer)
 <x-footer />
+@endif
+
+{{-- Shared login modal — opened by the navbar "sign in" link; /login is the no-JS fallback --}}
+<x-login-modal />
 
 </body>
 </html>

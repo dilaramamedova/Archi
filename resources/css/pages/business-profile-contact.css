@@ -1,4 +1,90 @@
-/* Page CSS for "business-profile-contact" — only this page's agent edits this file.
-   Write rules inside @layer components { }, use @apply, keep the class names from the
-   old HTML, and give higher specificity when overriding a shared component
-   (e.g. `.sr .grid4`). Never edit app.css. */
+/* Page CSS for "business-profile-contact" — business cabinet, contact details
+   (Figma 1105:23103). The old page kept its class names and moved the CSS to @apply
+   (ARCHITECTURE.md §6.2, approach 2), so the block is reproduced here almost verbatim.
+
+   Naming: the old block used generic top-level names (.card, .edit-page, .edit-head,
+   .edit-body, .edit-main, .crumbs, .snav-*, .save-bar, .field, .form-row). They were
+   page-local there, but every page CSS file now compiles into ONE bundle, so each
+   top-level name is prefixed with `bpco-` to keep it from leaking into the six sibling
+   business-profile pages and into the shared components — the bare `.card` used to hit
+   the promo card of the navbar Specialists mega menu on every page of the site. Child
+   names (.titles, .label, .count, .dot, .fill, .row, .hint, .val, .cbox, .lname, .sb-*)
+   stay as they are — they only match inside a prefixed parent.
+
+   Other changes: the old `.frame` shell is gone (the layout renders navbar/footer), the
+   gray page background comes from bodyClass, and state is expressed with data-on instead
+   of state classes (ARCHITECTURE.md §7.1): the language chips replace the .on/.off pair
+   and the settings nav replaces .snav-item.active, matching the sibling cabinet pages. */
+@layer components {
+  /* The gray cabinet background is declared once, on <body> (layout bodyClass). */
+  .bpco-page          { @apply mx-auto flex w-full max-w-[1440px] flex-col items-start gap-5 px-7 pt-8 pb-14; }
+  .bpco-head          { @apply flex w-full items-end justify-between overflow-hidden; }
+  .bpco-head .titles  { @apply flex shrink-0 flex-col items-start gap-2.5 overflow-hidden whitespace-nowrap; }
+  .bpco-crumbs        { @apply flex items-center gap-2 overflow-hidden text-[13px]; }
+  .bpco-crumbs .c-muted { @apply font-normal text-black/50; }
+  .bpco-crumbs .c-cur   { @apply font-medium text-black/90; }
+  .bpco-title         { @apply text-[34px] leading-[normal] font-bold text-ink; }
+  .bpco-head-actions  { @apply flex shrink-0 items-center gap-3 overflow-hidden; }
+  .bpco-status-chip     { @apply flex shrink-0 items-center gap-2 overflow-hidden rounded-ds bg-[#e9f6ed] px-3.5 py-2; }
+  .bpco-status-chip .dot{ @apply size-2 shrink-0 rounded-full bg-[#229653]; }
+  .bpco-status-chip p   { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-[#229653]; }
+  .bpco-view-btn      { @apply flex h-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white px-5; }
+  .bpco-view-btn p    { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
+
+  .bpco-body                    { @apply flex w-full items-start gap-6; }
+  .bpco-snav                    { @apply sticky top-[158px] flex w-[264px] shrink-0 flex-col items-start gap-1 self-start overflow-hidden rounded-ds border border-black/10 bg-white px-3 py-3.5; }
+  .bpco-snav-item               { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds px-3 py-[11px] whitespace-nowrap text-inherit no-underline; }
+  .bpco-snav-item .label        { @apply text-sm leading-[normal] font-medium text-black/70; }
+  .bpco-snav-item .count        { @apply text-xs leading-[normal] font-semibold text-black/40; }
+  .bpco-snav-item[data-on="true"]        { @apply border border-yellow-line bg-sel-bg; }
+  .bpco-snav-item[data-on="true"] .label { @apply font-bold text-black; }
+  .bpco-snav-progress           { @apply flex w-full flex-col items-start gap-2 overflow-hidden rounded-ds bg-gray-soft2 px-3 py-3.5; }
+  .bpco-snav-progress .row      { @apply flex w-full items-start justify-between overflow-hidden text-xs whitespace-nowrap text-ink; }
+  .bpco-snav-progress .row .l   { @apply font-semibold; }
+  .bpco-snav-progress .row .v   { @apply font-bold; }
+  .bpco-snav-bar                { @apply relative h-1.5 w-full overflow-hidden rounded-[3px] bg-black/10; }
+  .bpco-snav-bar .fill          { @apply absolute top-0 left-0 h-1.5 w-[184px] rounded-[3px] bg-yellow; }
+  .bpco-snav-progress .hint     { @apply text-[11px] leading-[normal] font-normal whitespace-nowrap text-black/50; }
+
+  .bpco-main          { @apply flex min-w-px flex-[1_0_0] flex-col items-start gap-5 overflow-hidden; }
+  .bpco-card          { @apply flex w-full flex-col items-start gap-[18px] overflow-hidden rounded-ds border border-black/10 bg-white p-6; }
+  .bpco-card-head     { @apply flex w-full flex-col items-start gap-1 overflow-hidden; }
+  .bpco-card-head h2  { @apply text-lg leading-[normal] font-bold whitespace-nowrap text-ink; }
+  .bpco-card-head p   { @apply w-full text-[13px] leading-[1.45] font-normal text-black/50; }
+  .bpco-card-head.solo{ @apply flex-col; }
+
+  .bpco-form-row           { @apply flex w-full items-start gap-4 overflow-hidden; }
+  .bpco-field              { @apply flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden; }
+  .bpco-field label        { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
+  .bpco-field .input       { @apply flex h-11 w-full items-center overflow-hidden rounded-ds border border-black/14 bg-white pl-3.5; }
+  .bpco-field .input .val  { @apply text-sm leading-[normal] font-semibold whitespace-nowrap text-ink; }
+
+  /* Communication languages */
+  .bpco-lang-wrap                     { @apply flex w-full flex-wrap items-start content-start gap-2 overflow-hidden; }
+  .bpco-lchip                         { @apply flex shrink-0 cursor-pointer items-center gap-2 overflow-hidden rounded-ds py-[9px] pr-3.5 pl-3; }
+  .bpco-lchip[data-on="true"]         { @apply border border-yellow-line bg-sel-bg; }
+  .bpco-lchip[data-on="false"]        { @apply border border-black/14 bg-white; }
+  .bpco-lchip .cbox                   { @apply relative size-[18px] shrink-0 rounded-ds border border-black/25 bg-white; }
+  /* The checked box has no border in the design; border-0 also keeps the absolute
+     containing block on the 18px border box, so the tick offsets stay exact. */
+  .bpco-lchip[data-on="true"] .cbox   { @apply border-0 bg-ink; }
+  /* 11x11 tick at 3.5/3.5 — the ic:baseline-check glyph of the original 11x11 asset,
+     inlined so it needs no network request and no extra file in public/assets. */
+  .bpco-lchip[data-on="true"] .cbox::after {
+    content: "";
+    @apply absolute top-[3.5px] left-[3.5px] size-[11px] bg-contain bg-center bg-no-repeat;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%23fff' d='M7.5 13.475L4.025 10L2.84167 11.175L7.5 15.8333L17.5 5.83333L16.325 4.65833Z'/%3E%3C/svg%3E");
+  }
+  .bpco-lchip .lname                  { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-black/70; }
+  .bpco-lchip[data-on="true"] .lname  { @apply font-semibold text-black; }
+
+  .bpco-save-bar                 { @apply flex w-full items-center justify-between overflow-hidden rounded-ds bg-ink px-6 py-4; }
+  .bpco-save-bar .sb-left        { @apply flex shrink-0 items-center gap-2 overflow-hidden; }
+  .bpco-save-bar .sb-left .dot   { @apply size-2 shrink-0 rounded-full bg-yellow; }
+  .bpco-save-bar .sb-left p      { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-white/85; }
+  .bpco-save-bar .sb-right       { @apply flex shrink-0 items-start gap-2.5 overflow-hidden; }
+  .bpco-btn-cancel               { @apply flex h-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-white/35 px-[18px]; }
+  .bpco-btn-cancel p             { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-white/85; }
+  .bpco-btn-save                 { @apply flex h-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[26px]; }
+  .bpco-btn-save p               { @apply text-sm leading-[normal] font-bold whitespace-nowrap text-ink; }
+}

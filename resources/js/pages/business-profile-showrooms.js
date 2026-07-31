@@ -1,7 +1,23 @@
-// Page module for "business-profile-showrooms" — app.js imports it dynamically only when
-// <body data-page="business-profile-showrooms"> is rendered. Shared behaviour (navbar, cursor) lives in
-// resources/js/shared/ — do not duplicate it here.
+// Page module for "business-profile-showrooms" — save bar actions and the settings-nav
+// active state. Shared behaviour (navbar, cursor) lives in resources/js/shared/.
 export default function init() {
-  // TODO: filled in by the page agent
+  const bar = document.querySelector('.bpsh-save-bar');
+  const saveBtn = document.querySelector('.bpsh-btn-save');
+  const cancelBtn = document.querySelector('.bpsh-btn-cancel');
+
+  if (saveBtn && bar) {
+    saveBtn.addEventListener('click', () => window.alert(bar.dataset.savedMessage || ''));
+  }
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', () => window.location.reload());
+  }
+
+  const items = document.querySelectorAll('.bpsh-snav .bpsh-snav-item');
+  items.forEach((item) =>
+    item.addEventListener('click', () => {
+      items.forEach((other) => (other.dataset.on = 'false'));
+      item.dataset.on = 'true';
+    })
+  );
 }
 init();

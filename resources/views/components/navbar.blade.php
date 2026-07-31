@@ -18,6 +18,40 @@
     $isB2B = request()->routeIs('business.*');
     $locale = app()->getLocale();
     $langLabels = ['az' => 'AZ', 'ru' => 'RUS', 'en' => 'ENG'];
+
+    // Locale-independent structure. The lang files hold only translatable text
+    // (title/desc/name/cat/price); assets and layout flags are zipped in by index,
+    // so renaming an asset is a one-line change instead of three.
+    $catalogIcons = [
+        'cat-ic-tikinti.svg',
+        'cat-ic-santexnika.svg',
+        'cat-ic-elektrik.svg',
+        'cat-ic-dosheme.svg',
+        'cat-ic-isiq.svg',
+        'cat-ic-dekor.svg',
+    ];
+    $specIcons = [
+        'spec-ic-memar.svg',
+        'spec-ic-interyer.svg',
+        'spec-ic-usta.svg',
+        'spec-ic-sirket.svg',
+    ];
+    $blogImages = ['mega-blog1.jpg', 'mega-blog2.jpg', 'mega-blog2.jpg'];
+    $blogCtas = ['read', 'read', 'pill'];
+
+    // Search autocomplete demo dataset: images live here, text in lang/*/nav.php
+    $searchProductImages = [
+        '/assets/fig/1ed736a990f0.jpg',
+        '/assets/fig/bca0ec1e.jpg',
+        '/assets/fig/78886edf.jpg',
+        '/assets/fig/50873ec31b52.jpg',
+        '/assets/fig/6146d21348a6.jpg',
+        '/assets/fig/2701238de96a.jpg',
+    ];
+    $searchProducts = [];
+    foreach (__('nav.sd_demo_products') as $i => $product) {
+        $searchProducts[] = $product + ['img' => $searchProductImages[$i] ?? ''];
+    }
 @endphp
 
 <header class="topbar">
@@ -33,7 +67,7 @@
          data-l-masters="{{ __('nav.sd_masters') }}"
          data-l-all="{{ __('nav.sd_all_results') }}"
          data-demo-suggests="{{ json_encode(__('nav.sd_demo_suggests'), JSON_UNESCAPED_UNICODE) }}"
-         data-demo-products="{{ json_encode(__('nav.sd_demo_products'), JSON_UNESCAPED_UNICODE) }}"
+         data-demo-products="{{ json_encode($searchProducts, JSON_UNESCAPED_UNICODE) }}"
          data-demo-masters="{{ json_encode(__('nav.sd_demo_masters'), JSON_UNESCAPED_UNICODE) }}">
       <img src="/assets/ic-search.svg" alt="">
       <input type="text" id="navSearch" aria-label="{{ __('nav.search_aria') }}" placeholder="{{ __('nav.search_placeholder') }}" autocomplete="off">
@@ -83,9 +117,9 @@
   <div class="mega-panel" data-panel="catalog">
     <div class="mega-inner">
       <div class="mega-cats">
-        @foreach (__('nav.mega_catalog') as $item)
+        @foreach (__('nav.mega_catalog') as $i => $item)
           <a class="mcat" href="{{ route('catalog') }}">
-            <div class="top"><img src="/assets/{{ $item['icon'] }}" alt=""><p>{{ $item['title'] }}</p></div>
+            <div class="top"><img src="/assets/{{ $catalogIcons[$i] ?? '' }}" alt=""><p>{{ $item['title'] }}</p></div>
             <div class="desc">{{ $item['desc'] }}</div>
           </a>
         @endforeach
@@ -98,9 +132,9 @@
     <div class="mega-inner">
       <div class="mega-spec">
         <div class="grid">
-          @foreach (__('nav.mega_spec') as $item)
+          @foreach (__('nav.mega_spec') as $i => $item)
             <a class="mcat" href="{{ route('specialists') }}">
-              <div class="top"><img src="/assets/{{ $item['icon'] }}" alt=""><p>{{ $item['title'] }}</p></div>
+              <div class="top"><img src="/assets/{{ $specIcons[$i] ?? '' }}" alt=""><p>{{ $item['title'] }}</p></div>
               <div class="desc">{{ $item['desc'] }}</div>
             </a>
           @endforeach
@@ -120,13 +154,13 @@
   <div class="mega-panel" data-panel="blog">
     <div class="mega-inner">
       <div class="mega-blog">
-        @foreach (__('nav.mega_blog') as $item)
+        @foreach (__('nav.mega_blog') as $i => $item)
           <a class="mblog" href="{{ route('blog') }}">
-            <img class="ph" src="/assets/{{ $item['img'] }}" alt="">
+            <img class="ph" src="/assets/{{ $blogImages[$i] ?? '' }}" alt="">
             <div class="info">
               <h4>{{ $item['title'] }}</h4>
               <div class="d">{{ $item['desc'] }}</div>
-              @if (($item['cta'] ?? 'read') === 'pill')
+              @if (($blogCtas[$i] ?? 'read') === 'pill')
                 <span class="pill">{{ __('common.more') }}</span>
               @else
                 <span class="read">{{ __('common.read_more') }} <img src="/assets/ic-arrow.svg" alt=""></span>

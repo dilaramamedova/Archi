@@ -1,4 +1,94 @@
-/* Page CSS for "catalog" — only this page's agent edits this file.
-   Write rules inside @layer components { }, use @apply, keep the class names from the
-   old HTML, and give higher specificity when overriding a shared component
-   (e.g. `.sr .grid4`). Never edit app.css. */
+/* Page CSS for "catalog" (Figma 959:10198). Taken from the old catalog.html
+   <style type="text/tailwindcss"> block; class names kept, the `.on` / `.active` /
+   `.open` state classes moved to data-* attributes (ARCHITECTURE §7.1).
+   The product card (`.pcard`) and the filter-sidebar / sort-dropdown skeleton
+   (`.fside`, `.fside-scroll`, `.fside-box`, `.fside-apply`, `.fsort`) live in
+   app.css — only the catalog-specific tweaks are here. */
+
+@layer components {
+  /* Must stay `main.catalog`: a bare `.catalog` would also match the navbar's
+     <a class="nav-item catalog"> and drag its border lines down. */
+  main.catalog { @apply pt-8 pb-16; }
+
+  /* breadcrumbs */
+  .cat-crumbs      { @apply flex h-4 items-center gap-2 text-[13px]; }
+  .cat-crumbs a    { @apply text-black/50 hover:text-black/70; }
+  .cat-crumbs .sep { @apply text-black/40; }
+  .cat-crumbs .cur { @apply font-medium text-black/70; }
+
+  /* header row */
+  .cat-head                 { @apply mt-9 flex items-end justify-between; }
+  .cat-head-l               { @apply flex flex-col; }
+  .cat-head-l .eyebrow      { @apply mb-3.5 flex items-center gap-2.5; }
+  .cat-head-l .eyebrow .line{ @apply h-0.5 w-8 bg-yellow; }
+  .cat-head-l .eyebrow p    { @apply text-sm font-medium text-black/55 uppercase; }
+  .cat-head-l .title-row    { @apply flex items-baseline gap-3.5; }
+  .cat-head-l h1            { @apply text-[40px] leading-none font-semibold text-black; }
+  .cat-head-l .count        { @apply text-lg font-normal text-black/50; }
+
+  /* sort dropdown — skeleton is `.fsort` / `.fsort-menu` in app.css, deltas only here */
+  .cat-sort      { @apply h-[41px] gap-2 border border-black/14 px-4; }
+  .cat-sort .car { @apply ml-1 text-xs text-black/50; }
+  .sort-menu     { @apply min-w-[200px]; }
+
+  /* active filter chips */
+  .cat-chips   { @apply mt-5 flex flex-wrap items-center gap-2; }
+  .cat-chip    { @apply inline-flex h-8 cursor-pointer items-center rounded-ds border border-black/10 bg-gray-soft px-3 text-sm text-ink hover:border-black/35; }
+  .cat-chip .x { @apply ml-2 text-black/50; }
+  .cat-clear   { @apply cursor-pointer border-none px-1 text-sm text-black/50 [background:none] [font-family:inherit] hover:text-ink; }
+
+  /* Body: sidebar + grid. `items-start` is REQUIRED: with stretch the sticky sidebar
+     takes full height and sticky stops working. The sidebar itself is `.fside` /
+     `.fside-scroll` from app.css — this page needs no deltas on top of it. */
+  .cat-body { @apply mt-5 flex items-start gap-6; }
+
+  .fs-block { @apply p-0; }
+  .fs-title { @apply mb-3.5 text-[15px] font-semibold text-ink; }
+  .fs-div   { @apply my-[23px] h-px bg-black/10; }
+
+  /* categories */
+  .fs-cat           { @apply flex cursor-pointer items-center justify-between rounded-ds px-2 py-1.5 text-sm text-black/70 hover:text-ink; }
+  .fs-cat + .fs-cat { @apply mt-2.5; }
+  .fs-cat .n        { @apply text-[13px] text-black/40; }
+  .fs-cat[data-on="true"]    { @apply bg-sel-bg font-semibold text-ink; }
+  .fs-cat[data-on="true"] .n { @apply text-black/70; }
+
+  /* price */
+  .fs-price-inputs       { @apply flex items-center gap-2; }
+  .fs-price-inputs .in   { @apply h-[38px] min-w-0 flex-1 rounded-ds border border-black/14 px-3 text-sm text-ink outline-none focus:border-ink; }
+  .fs-price-inputs .dash { @apply text-black/40; }
+  .fs-slider             { @apply relative mt-[26px] mr-[7px] ml-[7px] h-1 rounded-[2px] bg-black/10; }
+  .fs-slider .fill       { @apply absolute top-0 right-[50%] left-[20%] h-1 rounded-[2px] bg-yellow; }
+  .fs-slider .knob       { @apply absolute top-1/2 left-0 z-[2] size-4 -translate-x-1/2 -translate-y-1/2 cursor-grab rounded-full border-2 border-ink bg-white [touch-action:none] active:cursor-grabbing; }
+
+  /* checkbox rows — the box and its tick are `.fside-box` in app.css */
+  .fs-check             { @apply flex cursor-pointer items-center gap-2.5; }
+  .fs-check + .fs-check { @apply mt-2.5; }
+  .fs-check .fs-box     { @apply border-black/35; }
+  .fs-check .lbl { @apply flex-1 text-sm text-ink; }
+  .fs-check .n   { @apply text-[13px] text-black/40; }
+
+  /* size chips */
+  .fs-sizes { @apply flex flex-wrap gap-1.5; }
+  .fs-size  { @apply inline-flex h-[29px] cursor-pointer items-center justify-center rounded-ds border border-black/14 px-[11px] text-[13px] text-black/70 hover:border-black/35; }
+  .fs-size[data-on="true"] { @apply border-yellow-line bg-sel-bg font-semibold text-ink; }
+
+  /* stock switch — the old page called this `.switch`, renamed because every page CSS
+     file now lands in one global bundle and a single-word selector would be a collision
+     waiting to happen. The yellow track + drop shadow are catalog-specific by design;
+     /specialists has its own green `.sp-switch` (see Figma). */
+  .fs-stock      { @apply flex items-center justify-between; }
+  .fs-stock .lbl { @apply text-sm text-ink; }
+  .cat-switch        { @apply relative h-[22px] w-10 cursor-pointer rounded-[11px] bg-black/18 transition-[background] duration-200; }
+  .cat-switch .knob  { @apply absolute top-0.5 left-0.5 size-[18px] rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,0.25)] transition-[left] duration-200; }
+  .cat-switch[data-on="true"]       { @apply bg-yellow; }
+  .cat-switch[data-on="true"] .knob { @apply left-5; }
+
+  /* product grid — 4 cards per row */
+  .cat-grid { @apply grid min-w-0 flex-1 grid-cols-4 content-start gap-3
+                     max-[1280px]:grid-cols-3 max-[980px]:grid-cols-2; }
+  /* the card is narrower here, so the image area stays square instead of a fixed 316px */
+  .cat-grid .pcard .ph     { @apply h-auto aspect-square; }
+  /* two badges do not fit on one line in a narrow card — let them wrap */
+  .cat-grid .pcard .badges { @apply max-w-[calc(100%-44px)] flex-wrap; }
+}

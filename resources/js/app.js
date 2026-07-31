@@ -4,6 +4,7 @@
 
 import './shared/navbar.js';
 import './shared/cursor.js';
+import './shared/login-modal.js';
 
 const pages = {
     'home': () => import('./pages/home.js'),

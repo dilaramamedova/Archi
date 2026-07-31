@@ -1,7 +1,12 @@
-// Page module for "login" — app.js imports it dynamically only when
-// <body data-page="login"> is rendered. Shared behaviour (navbar, cursor) lives in
-// resources/js/shared/ — do not duplicate it here.
+// Page module for "login". Demo form: no backend, it only reveals the success notice.
 export default function init() {
-  // TODO: filled in by the page agent
+  const form = document.getElementById('loginForm');
+  const ok = document.getElementById('loginOk');
+  if (!form) return;
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (ok) ok.dataset.on = 'true';
+  });
 }
 init();

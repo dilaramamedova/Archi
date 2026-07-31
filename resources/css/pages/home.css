@@ -8,7 +8,7 @@
   .sale-marquee     { @apply mx-auto max-w-[1384px] overflow-hidden rounded-ds bg-black py-4
                               max-[1440px]:mx-7 max-[1440px]:max-w-none; }
   .sale-track       { @apply flex w-max whitespace-nowrap; animation: saleScroll 20s linear infinite; }
-  .sale-track span  { @apply pr-7 text-[26px] font-bold tracking-[3px] text-white uppercase; }
+  .sale-track span  { @apply pr-7 text-[26px] leading-[normal] font-bold tracking-[3px] text-white uppercase; }
   @keyframes saleScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
   @media (prefers-reduced-motion: reduce) { .sale-track { animation: none; } }
 
@@ -16,7 +16,7 @@
   .promo-banner        { @apply mb-7 flex items-center justify-between gap-5 rounded-ds bg-ink px-7 py-[22px] max-[640px]:flex-col max-[640px]:items-start; }
   .promo-banner .pb-l  { @apply flex items-center gap-[18px]; }
   .pb-badge            { @apply rounded-ds bg-yellow px-3 py-1.5 text-xs font-bold tracking-[1px] whitespace-nowrap text-ink; }
-  .promo-banner h3     { @apply text-[22px] font-bold tracking-[-.2px] text-white; }
+  .promo-banner h3     { @apply text-[22px] leading-[normal] font-bold tracking-[-.2px] text-white; }
   .promo-banner p      { @apply mt-1 text-sm text-white/70; }
   .promo-banner p b    { @apply text-yellow; }
   .pb-copy             { @apply cursor-pointer rounded-ds border-none bg-yellow px-[22px] py-[13px] text-sm font-bold whitespace-nowrap text-ink transition-[filter] duration-200 [font-family:inherit] hover:brightness-[.93]; }
@@ -58,26 +58,26 @@
 
   /* Role banner — 3 slides (master / seller / customer) sliding horizontally.
      No will-change: a permanent composite layer changes subpixel text smoothing. */
-  .hero-usta        { @apply relative h-[303px] overflow-hidden; }
-  .hu-track         { @apply flex size-full transition-transform duration-[550ms] ease-[cubic-bezier(.4,0,.2,1)]; }
-  .hu-slide         { @apply relative flex size-full flex-[0_0_100%] items-center overflow-hidden px-3 py-5; }
-  .hu-slide > img   { @apply absolute inset-0 size-full object-cover; }
-  .hu-slide::before {
+  .hero-role        { @apply relative h-[303px] overflow-hidden; }
+  .hr-track         { @apply flex size-full transition-transform duration-[550ms] ease-[cubic-bezier(.4,0,.2,1)]; }
+  .hr-slide         { @apply relative flex size-full flex-[0_0_100%] items-center overflow-hidden px-3 py-5; }
+  .hr-slide > img   { @apply absolute inset-0 size-full object-cover; }
+  .hr-slide::before {
     content: ""; position: absolute; inset: 0; z-index: 1;
     background: linear-gradient(90deg, rgba(255,255,255,.93), rgba(255,255,255,.6) 45%, rgba(255,255,255,0) 80%);
   }
   /* h-full is required — without it the text centers vertically instead of starting at the top */
-  .hero-usta .box      { @apply relative z-[2] flex h-full w-[200px] flex-col gap-6; }
-  .hero-usta .dots     { @apply absolute bottom-5 left-3 z-[3] flex items-center gap-1; }
-  .hero-usta .dots i   { @apply size-1.5 cursor-pointer rounded-[17px] bg-black/30 transition-[width] duration-300; }
-  .hero-usta .dots i.on{ @apply w-[18px] bg-black/60; }
-  .hero-usta .tag      { @apply flex items-center gap-2.5; }
-  .hero-usta .tag .line{ @apply h-0.5 w-8 bg-yellow; }
-  .hero-usta .tag p    { @apply text-sm font-medium text-black/55 uppercase; }
-  .hero-usta .mid      { @apply flex flex-col gap-4; }
-  .hero-usta h3        { @apply text-2xl font-bold tracking-[-.4px] text-black/90; }
-  .hero-usta .d        { @apply mt-2 text-sm leading-[1.25] text-black/60; }
-  .hero-usta .reg      { @apply self-start bg-ink px-6 py-3 text-sm text-off-white; }
+  .hero-role .box      { @apply relative z-[2] flex h-full w-[200px] flex-col gap-6; }
+  .hero-role .dots     { @apply absolute bottom-5 left-3 z-[3] flex items-center gap-1; }
+  .hero-role .dots i   { @apply size-1.5 cursor-pointer rounded-[17px] bg-black/30 transition-[width] duration-300; }
+  .hero-role .dots i.on{ @apply w-[18px] bg-black/60; }
+  .hero-role .tag      { @apply flex items-center gap-2.5; }
+  .hero-role .tag .line{ @apply h-0.5 w-8 bg-yellow; }
+  .hero-role .tag p    { @apply text-sm font-medium text-black/55 uppercase; }
+  .hero-role .mid      { @apply flex flex-col gap-4; }
+  .hero-role h3        { @apply text-2xl font-bold tracking-[-.4px] text-black/90; }
+  .hero-role .d        { @apply mt-2 text-sm leading-[1.25] text-black/60; }
+  .hero-role .reg      { @apply self-start bg-ink px-6 py-3 text-sm text-off-white; }
 
   /* ---- SIDE CALCULATOR ---- */
   .side-calc      { @apply invisible absolute top-0 right-0 z-30 flex w-[464px] translate-x-4 flex-col gap-6 border border-black/50 bg-white p-6 opacity-0 shadow-[-4px_4px_4px_rgba(0,0,0,0.25)] transition-all duration-[250ms]; }
@@ -100,7 +100,7 @@
   .sc-field .ip .u     { @apply text-base text-black/50; }
   .sc-result           { @apply flex items-start justify-between; }
   .sc-result .litr     { @apply flex items-end gap-2; }
-  .sc-result .litr b   { @apply text-[40px] font-semibold text-black; }
+  .sc-result .litr b   { @apply text-[40px] leading-[normal] font-semibold text-black; }
   .sc-result .litr span{ @apply text-xl font-medium text-black/80; }
   .sc-result .desc     { @apply mt-6 flex flex-col gap-2 text-base text-black/80; }
   .sc-result .desc .r  { @apply flex gap-2; }
@@ -131,7 +131,7 @@
   .cat-thumb:hover .info,
   .cat-thumb.open .info { @apply translate-y-0 opacity-100; }
   .cat-thumb .info h4   { @apply text-lg leading-[1.2] font-semibold whitespace-nowrap text-white; }
-  .cat-thumb .info p    { @apply mt-1.5 text-[13px] font-medium whitespace-nowrap text-white/85; }
+  .cat-thumb .info p    { @apply mt-1.5 text-[13px] leading-[normal] font-medium whitespace-nowrap text-white/85; }
   .cat-thumb .info img  { @apply size-[22px] shrink-0 brightness-0 invert; }
   /* hovering another card collapses the default-open one */
   .cat-row:hover .cat-thumb.open:not(:hover)       { @apply grow; }

@@ -71,7 +71,7 @@ ARCHI-laravel/
 Every page **must** be wrapped in `<x-layout>`:
 
 ```blade
-<x-layout page="catalog" :title="__('catalog.meta_title')">
+<x-layout page="catalog" :title="__('catalog.title')">
 
     <div class="wrap"><div class="inner">
         ... page markup ...
@@ -87,6 +87,7 @@ Every page **must** be wrapped in `<x-layout>`:
 | `page` | string | The `data-page` value. **Must equal the slug** — `app.js` picks the JS module from it. |
 | `title` | string | `<title>` text. Defaults to `__('common.site_name')`. |
 | `bodyClass` | string | Extra class on `<body>` (rare). |
+| `footer` | bool | Render `<x-footer/>`? Default `true`. **Only `business-register` passes `:footer="false"`** — its Figma frame is `Navbar 140 + auth-page 1160`, and `biznes-qeydiyyat.html` is the single reference page without a `data-archi="footer"` mount. Do not use it anywhere else. |
 
 For extra `<head>` content use the named slot:
 
@@ -162,8 +163,8 @@ const url = el.dataset.urlProduct;
 
 ```blade
 <x-section-head
-    :tag="__('home.sec_bestsellers')"
-    :title="__('home.sec_featured_products')"
+    :tag="__('home.products.tag')"
+    :title="__('home.products.title')"
     :more="route('search', ['tab' => 'prod'])" />
 ```
 
@@ -182,10 +183,10 @@ The output markup is **identical** to the old HTML:
 
 ```blade
 <x-pcard
-    :cat="__('home.cat_tiles')"
-    :name="__('home.prod_tile_matte')"
+    :cat="__('home.sale.cat_tiles')"
+    :name="__('home.sale.name_tile_matte')"
     now="23.90 ₼" old="45.99 ₼" off="-48%"
-    rate="4.6" :reviews="__('home.reviews_1876')"
+    rate="4.6" :reviews="__('home.sale.reviews_1876')"
     img="/assets/prod-kafel.png"
     :href="route('product')" />
 ```
@@ -216,11 +217,11 @@ Extra utility classes are merged through `$attributes->merge`:
 ```blade
 <x-scard
     bg="#f5fbff"
-    :role="__('home.role_tiler')"
-    rate="4.9" :reviews="__('home.reviews_416')"
-    :name="__('home.spec_name_1')"
-    :exp="__('home.exp_12y')"
-    :proj="__('home.proj_320')" />
+    :role="__('home.specialists.role_tiler')"
+    rate="4.9" :reviews="__('home.specialists.reviews_416')"
+    :name="__('home.specialists.name_1')"
+    :exp="__('home.specialists.exp_12')"
+    :proj="__('home.specialists.proj_320')" />
 ```
 
 | Prop | Default | Description |
@@ -238,9 +239,9 @@ Extra utility classes are merged through `$attributes->merge`:
 
 ```blade
 <x-post
-    :time="__('blog.read_6min')"
-    :title="__('blog.post1_title')"
-    :excerpt="__('blog.post1_excerpt')"
+    :time="__('blog.posts.time_1')"
+    :title="__('blog.posts.title_1')"
+    :excerpt="__('blog.posts.excerpt_1')"
     :href="route('blog')"
     class="rounded-ds max-[1200px]:min-w-[260px]" />
 ```
@@ -282,7 +283,7 @@ Example `lang/az/catalog.php`:
 <?php
 
 return [
-    'meta_title' => 'ARCHİ — Kataloq',
+    'title' => 'ARCHİ — Kataloq',
 
     'hero' => [
         'tag'   => 'Bütün məhsullar',
@@ -461,7 +462,7 @@ For state driven from a parent use `group` + `group-data-[sel=true]:`.
 
 | Group | Classes |
 |---|---|
-| shell | `.wrap` (max 1440, px-28) · `.inner` (max 1384) |
+| shell | `.wrap` (max 1440, px-28) · `.inner` (max 1384) · `.wrap-narrow` (max 1240, px-20 — cart / calculator-detailed) |
 | navbar row 1 | `.topbar` `.nav-row1` `.logo` `.search` + autocomplete (`.search-dropdown`, `.sd-*`) `.nav-menu` `.nav-icons` `.lang` `.lang-menu` `.nav-cart` `.cart-badge` `.signin` `.divider` `.btn-post` |
 | navbar row 2 | `.nav-row2` `.nav-left` `.nav-item` (+`.catalog`, `.active`, `.mega-active`) `.nav-calc` |
 | mega menu | `.mega-panel` `.mega-inner` `.mega-cats` `.mcat` `.mega-spec` `.mega-blog` `.mblog` |
@@ -472,12 +473,17 @@ For state driven from a parent use `group` + `group-data-[sel=true]:`.
 | cursor | `.prod-cursor` `.hascur` `.cursing` |
 | specialist card | `.scard` + children |
 | blog card | `.post` + children |
+| filter sidebar + sort dropdown (catalog · specialists) | `.fside` `.fside-scroll` `.fside-apply-sep` `.fside-apply` `.fside-box` (checked state comes from the row: `[data-on="true"] > .fside-box`) `.fsort` `.fsort-menu` — the skeleton only; per-page sizes/tints stay in the page CSS |
 | animation | `.reveal` `.reveal.in` `.reveal.d1–d3` |
 | responsive | 1200 / 900 / 640 px + `hover:none` + `prefers-reduced-motion` (navbar/footer/cards only) |
 
 All of this is **ready** — use the same class names in your page and write no CSS for them.
 Page-specific responsive rules (hero, calculator, catalog gallery, …) go into your
 `{slug}.css`.
+
+> The home hero is deliberately **not** wrapped in `.wrap`: `<div class="hero"><div class="inner hero-grid">`
+> matches the old `index.html` 1:1, so below 1384px the hero is full-bleed while the sections
+> below it keep their 28px gutter. Intended — do not "fix" it into `.wrap`.
 
 ### 9.1 About preflight (important difference)
 

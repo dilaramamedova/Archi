@@ -105,10 +105,10 @@ function initPromoCarousel() {
 // Role slider: the slides are in the HTML, only the track moves — so switching the
 // site language never breaks the copy.
 function initRoleSlider() {
-  const track = document.getElementById('huTrack');
+  const track = document.getElementById('roleTrack');
   if (!track) return;
-  const count = track.querySelectorAll('.hu-slide').length;
-  carousel(document.getElementById('huDots'), count, (n) => {
+  const count = track.querySelectorAll('.hr-slide').length;
+  carousel(document.getElementById('roleDots'), count, (n) => {
     track.style.transform = 'translateX(-' + n * 100 + '%)';
   }, 4500);
 }
@@ -132,7 +132,7 @@ function initSideCalc() {
   const urlCalculator = root.dataset.urlCalculator || '/calculator';
 
   const MATERIALS = {
-    boya: {
+    paint: {
       unit: l.unitLiter, hint: l.hintPaint,
       fields: [['L', l.length, l.meter, 4], ['W', l.width, l.meter, 3], ['H', l.height, l.meter, 2.7]],
       calc: (v) => {
@@ -141,7 +141,7 @@ function initSideCalc() {
         return { qty: liters, area: Math.round(wall), price: liters * 12 };
       },
     },
-    dam: {
+    roof: {
       unit: l.unitSheet, hint: l.hintRoof,
       fields: [['L', l.length, l.meter, 4], ['W', l.width, l.meter, 3]],
       calc: (v) => {
@@ -149,7 +149,7 @@ function initSideCalc() {
         return { qty: Math.ceil(area / 2.1), area: Math.round(area), price: Math.round(area * 15) };
       },
     },
-    kafel: {
+    tile: {
       unit: l.unitBox, hint: l.hintFloor,
       fields: [['L', l.length, l.meter, 4], ['W', l.width, l.meter, 3]],
       calc: (v) => {
@@ -157,7 +157,7 @@ function initSideCalc() {
         return { qty: Math.ceil(need / 1.44), area: Math.round(v.L * v.W), price: Math.round(need * 23) };
       },
     },
-    laminant: {
+    laminate: {
       unit: l.unitPack, hint: l.hintFloor,
       fields: [['L', l.length, l.meter, 4], ['W', l.width, l.meter, 3]],
       calc: (v) => {
@@ -173,7 +173,7 @@ function initSideCalc() {
   const hintEl = document.getElementById('scHint');
   const priceEl = document.getElementById('scPrice');
   const fullEl = document.getElementById('scFull');
-  let current = 'boya';
+  let current = 'paint';
 
   function renderFields() {
     const m = MATERIALS[current];
@@ -198,7 +198,7 @@ function initSideCalc() {
     const r = m.calc(v);
     qtyEl.textContent = r.qty;
     unitEl.textContent = m.unit;
-    areaEl.textContent = r.area + ' m²';
+    areaEl.textContent = r.area + ' ' + l.m2;
     hintEl.textContent = m.hint;
     priceEl.textContent = Math.round(r.price);
     if (fullEl) fullEl.href = withParam(urlCalculator, 'mat', current);

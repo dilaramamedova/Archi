@@ -8,14 +8,14 @@ return [
     'hero' => [
         'tag' => 'Construction & repair market',
         'title' => 'Construction & repair in one place',
-        'subtitle' => 'Everything from materials to trusted specialists — on one platform.',
+        'subtitle' => 'Everything from materials to trusted pros — on one platform.',
         'info' => 'Not sure where to start?',
         'info_link' => 'Get a free consultation',
     ],
 
     'roles' => [
-        'master_tag' => 'Master & specialist',
-        'master_title' => 'Become a master on ARCHİ',
+        'master_tag' => 'Pro & specialist',
+        'master_title' => 'Become a pro on ARCHİ',
         'master_line1' => 'Create a profile, show your work',
         'master_line2' => 'and win new clients.',
         'seller_tag' => 'Business & seller',
@@ -24,7 +24,7 @@ return [
         'seller_line2' => 'and reach thousands of customers.',
         'customer_tag' => 'Customer',
         'customer_title' => 'Join ARCHİ',
-        'customer_line1' => 'Materials, masters and consultation —',
+        'customer_line1' => 'Materials, pros and consultation —',
         'customer_line2' => 'all on one platform.',
     ],
 
@@ -41,10 +41,12 @@ return [
         'width' => 'Width',
         'height' => 'Height',
         'meter' => 'm',
+        'unit_m2' => 'm²',
         'unit_liter' => 'liters',
         'unit_sheet' => 'sheets',
         'unit_box' => 'boxes',
         'unit_pack' => 'packs',
+        'area_initial' => '36 m²',
         'hint_paint' => 'area to paint',
         'hint_roof' => 'roof area',
         'hint_floor' => 'floor area',
@@ -52,7 +54,7 @@ return [
     ],
 
     'services' => [
-        'masters_t1' => 'Certified specialists',
+        'masters_t1' => 'Certified pros',
         'masters_t2' => 'with ratings & reviews',
         'delivery_t1' => 'Fast delivery',
         'delivery_t2' => 'To every region',
@@ -65,7 +67,7 @@ return [
     'categories' => [
         'tag' => 'Most viewed',
         'title' => 'Categories',
-        'tiles' => 'Tiles & metlakh',
+        'tiles' => 'Wall & floor tiles',
         'roofing' => 'Roofing',
         'laminate' => 'Laminate & parquet',
         'electrical' => 'Electrical & lighting',
@@ -89,7 +91,8 @@ return [
     'sale' => [
         'tag' => 'On sale',
         'title' => 'Big discount SALE',
-        'cat_tiles' => 'Tiles & metlakh',
+        'marquee' => 'SALE • OUTLET •',
+        'cat_tiles' => 'Wall & floor tiles',
         'name_tile_matte' => 'Ceramic tile 60×60, matte',
         'reviews_1876' => '(1,876 reviews)',
         'cat_laminate' => 'Laminate & parquet',
@@ -106,16 +109,16 @@ return [
     'products' => [
         'tag' => 'Best sellers',
         'title' => 'Featured products',
-        'cat_tiles' => 'Tiles & metlakh',
+        'cat_tiles' => 'Wall & floor tiles',
         'name_tile_matte' => 'Ceramic tile 60×60, matte',
         'reviews_1876' => '(1,876 reviews)',
         'condition_new' => 'New',
     ],
 
     'specialists' => [
-        'tag' => 'Most requested masters',
+        'tag' => 'Most requested pros',
         'title' => 'Featured specialists',
-        'role_tiler' => 'Tile & metlakh master',
+        'role_tiler' => 'Wall & floor tiler',
         'role_interior' => 'Interior designer',
         'name_1' => 'Rashad Mammadov',
         'name_2' => 'Rena Mammadova',

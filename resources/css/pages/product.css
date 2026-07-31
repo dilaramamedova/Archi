@@ -1,4 +1,186 @@
-/* Page CSS for "product" — only this page's agent edits this file.
-   Write rules inside @layer components { }, use @apply, keep the class names from the
-   old HTML, and give higher specificity when overriding a shared component
-   (e.g. `.sr .grid4`). Never edit app.css. */
+/* Page CSS for "product" (Figma 572:10504, `pd-` prefix). Ported from the old
+   product.html <style type="text/tailwindcss"> block: the class names are kept, only
+   the state classes moved to data-* attributes (.on -> [data-on="true"] etc.) as
+   required by ARCHITECTURE.md §7.1. `fadeIn` lived in the old shared archi.css and is
+   redefined here because this page is its only user.
+   Deliberate deviation: the old page added `.pd .inner { max-width:1384px; padding:0 28px }`,
+   which put the padding inside the 1384px box and made the detail block 1328px wide while
+   the sections below it were 1384px. Figma 572:10542 (`pd-inner`) is x=28 / width=1384
+   (gallery 884 + gap 48 + info 452), so the block now uses the shared .wrap > .inner shell
+   like the rest of the page. */
+@layer components {
+  .pd        { @apply pt-7 pb-14; }
+
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  /* breadcrumb */
+  .pd-crumb       { @apply mb-6 flex flex-wrap items-center gap-2 text-[13px] text-black/50; }
+  .pd-crumb a:hover { @apply text-black; }
+  .pd-crumb .sep  { @apply text-black/25; }
+  .pd-crumb .cur  { @apply text-black; }
+
+  /* top block: gallery | info */
+  .pd-top { @apply grid grid-cols-[minmax(0,1fr)_452px] items-start gap-12 max-[980px]:grid-cols-1 max-[980px]:gap-8; }
+
+  .pd-gallery       { @apply flex gap-3.5 max-[640px]:flex-col-reverse; }
+  .pd-thumbs        { @apply flex w-[84px] shrink-0 flex-col gap-2.5 max-[640px]:w-full max-[640px]:flex-row max-[640px]:overflow-x-auto; }
+  .pd-thumb         { @apply relative h-[84px] cursor-pointer overflow-hidden border border-black/10 bg-gray-soft transition-[border-color] duration-200 hover:border-black/40 max-[640px]:size-[72px] max-[640px]:shrink-0; }
+  .pd-thumb img     { @apply absolute top-1/2 left-1/2 h-[80%] w-auto -translate-x-1/2 -translate-y-1/2; }
+  .pd-thumb[data-on="true"] { @apply border-black; }
+  .pd-main          { @apply relative h-[556px] flex-1 overflow-hidden border border-black/10 bg-gray-soft max-[640px]:h-[380px]; }
+  .pd-main img      { @apply absolute top-1/2 left-1/2 h-[84%] w-auto -translate-x-1/2 -translate-y-1/2 transition-opacity duration-200; }
+  .pd-main .badges  { @apply absolute top-3.5 left-3.5 flex gap-1.5; }
+  .pd-main .badges .b     { @apply rounded-ds border border-black/10 bg-white px-2.5 py-[5px] text-[13px] text-black; }
+  .pd-main .badges .b.new { @apply border-yellow bg-yellow; }
+  .pd-main .heart   { @apply absolute top-3.5 right-3.5 flex cursor-pointer rounded-[40px] border border-black/10 bg-white p-[9px] transition-[background] duration-200 hover:bg-gray-soft; }
+  .pd-main .heart img { @apply size-[22px]; }
+  /* favourite toggle — the old page wrote an inline background/border-color here */
+  .pd-main .heart[data-liked="true"] { @apply border-yellow bg-yellow; }
+
+  /* info panel */
+  .pd-info        { @apply flex flex-col gap-[18px]; }
+  .pd-info .cat   { @apply text-xs font-medium tracking-[.6px] text-black/50 uppercase; }
+  .pd-info h1     { @apply text-[30px] leading-[1.25] font-semibold tracking-[-.3px] text-ink max-[640px]:text-2xl; }
+  .pd-meta        { @apply flex flex-wrap items-center gap-4; }
+  .pd-stars       { @apply flex items-center gap-1.5; }
+  .pd-stars .s    { @apply flex gap-0.5; }
+  .pd-stars .s img{ @apply size-[18px]; }
+  .pd-stars b     { @apply text-[15px] font-semibold text-black; }
+  .pd-meta .rev   { @apply cursor-pointer border-b border-yellow-line text-sm text-black/50; }
+  .pd-meta .sold  { @apply text-sm text-black/50; }
+  .pd-meta .dot   { @apply size-1 rounded-full bg-black/20; }
+
+  .pd-price       { @apply flex items-end gap-3.5; }
+  .pd-price .now  { @apply text-[34px] font-semibold tracking-[-.5px] text-ink; }
+  .pd-price .old  { @apply mb-[5px] text-lg font-medium text-black/35 line-through; }
+  .pd-price .off  { @apply mb-1.5 rounded-ds bg-red/14 px-2 py-1 text-[13px] font-bold text-red; }
+  .pd-unit        { @apply -mt-2.5 text-[13px] text-black/45; }
+  .pd-line        { @apply h-px bg-black/10; }
+
+  .pd-feats             { @apply flex flex-col gap-2.5; }
+  .pd-feats .f          { @apply flex items-center gap-2.5 text-[15px] text-black/75; }
+  .pd-feats .f .tick    { @apply flex size-[22px] shrink-0 items-center justify-center rounded-full bg-green/12; }
+  .pd-feats .f .tick img{ @apply size-[13px]; }
+
+  /* quantity + add to cart */
+  .pd-buy          { @apply flex items-stretch gap-2.5; }
+  .pd-qty          { @apply flex h-[54px] items-center border border-black/20; }
+  .pd-qty button   { @apply flex h-full w-[46px] items-center justify-center text-[22px] text-ink transition-[background] duration-150 hover:bg-gray-soft; }
+  .pd-qty input    { @apply h-full w-12 border-none text-center text-[17px] font-semibold text-ink outline-none [-moz-appearance:textfield]; }
+  .pd-qty input::-webkit-outer-spin-button,
+  .pd-qty input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  .pd-add          { @apply flex h-[54px] flex-1 items-center justify-center gap-2.5 bg-yellow text-lg font-semibold text-ink transition-[filter] duration-200 hover:brightness-[.93]; }
+  .pd-add img      { @apply size-[22px]; }
+  .pd-add[data-added="true"]     { @apply bg-green text-white; }
+  .pd-add[data-added="true"] img { @apply brightness-0 invert; }
+  .pd-wish         { @apply flex size-[54px] items-center justify-center border border-black/20 transition-[background] duration-200 hover:bg-gray-soft; }
+  .pd-wish img     { @apply size-[22px]; }
+  .pd-wish[data-liked="true"] { @apply border-yellow bg-yellow; }
+
+  .pd-assure           { @apply grid grid-cols-2 gap-2.5 max-[640px]:grid-cols-1; }
+  .pd-assure .a        { @apply flex items-center gap-2.5 border border-black/10 bg-gray-soft2 p-3; }
+  .pd-assure .a .ic    { @apply flex size-[34px] shrink-0 items-center justify-center rounded-full border border-black/8 bg-white; }
+  .pd-assure .a .ic img{ @apply size-[18px]; }
+  .pd-assure .a .t1    { @apply text-[13px] font-semibold text-ink; }
+  .pd-assure .a .t2    { @apply text-xs text-black/50; }
+  .pd-stock            { @apply inline-flex items-center gap-2 text-sm font-medium text-green; }
+  .pd-stock i          { @apply size-2 rounded-full bg-green; }
+
+  /* seller / store card */
+  .pd-seller        { @apply mt-1 border border-black/12 bg-white; }
+  .ps-top           { @apply flex items-center gap-3.5 p-[18px]; }
+  .ps-logo          { @apply flex size-[52px] shrink-0 items-center justify-center rounded-full bg-gray-soft; }
+  .ps-logo img      { @apply size-7; }
+  .ps-id            { @apply min-w-0 flex-1; }
+  .ps-name          { @apply overflow-hidden text-[17px] font-semibold text-ellipsis whitespace-nowrap text-ink; }
+  .ps-sub           { @apply mt-0.5 text-[13px] text-black/50; }
+  .ps-vf            { @apply inline-flex shrink-0 items-center gap-[5px] rounded-[20px] bg-green/10 px-[11px] py-1.5 text-xs font-semibold whitespace-nowrap text-green; }
+  .ps-vf img        { @apply size-[13px]; }
+  .ps-stats         { @apply flex border-y border-black/8 bg-gray-soft2; }
+  .ps-stat          { @apply flex-1 border-r border-black/7 px-2 py-[13px] text-center; }
+  .ps-stat:last-child { @apply border-r-0; }
+  .ps-stat b        { @apply flex items-center justify-center gap-1 text-[15px] font-semibold whitespace-nowrap text-ink; }
+  .ps-stat b img    { @apply size-3.5; }
+  .ps-stat span     { @apply mt-[3px] block text-[11px] text-black/50; }
+  .ps-actions       { @apply flex gap-2.5 p-4; }
+  .ps-btn           { @apply flex h-[46px] flex-1 items-center justify-center border border-black/20 bg-white text-sm font-semibold text-ink transition duration-200 hover:bg-gray-soft; }
+  .ps-btn.primary   { @apply border-yellow bg-yellow hover:brightness-[.93]; }
+
+  /* tabbed description / specifications */
+  .pd-tabs                { @apply mb-7 flex gap-1 border-b border-black/12; }
+  .pd-tabs button         { @apply relative mr-7 px-1 py-3.5 text-base font-semibold text-black/45 transition-colors duration-200 hover:text-ink; }
+  .pd-tabs button[data-on="true"] { @apply text-ink after:absolute after:inset-x-0 after:-bottom-px after:h-[3px] after:bg-yellow-line after:content-['']; }
+  .pd-pane                 { @apply hidden; }
+  .pd-pane[data-on="true"] { @apply block animate-[fadeIn_0.3s_ease]; }
+  .pd-desc                { @apply max-w-[820px] text-base leading-[1.7] text-black/70; }
+  .pd-desc p              { @apply mb-3.5; }
+  .pd-desc h4             { @apply mt-6 mb-2.5 text-lg font-semibold text-ink; }
+  .pd-specs               { @apply max-w-[760px] border border-black/10; }
+  .pd-specs .row          { @apply grid grid-cols-[240px_1fr] text-[15px] odd:bg-gray-soft2; }
+  .pd-specs .row > div    { @apply px-[18px] py-3.5; }
+  .pd-specs .row .k       { @apply text-black/50; }
+  .pd-specs .row .v       { @apply font-medium text-ink; }
+
+  .pd-section       { @apply pt-12 pb-2; }
+
+  /* "frequently bought together" — cards + summary panel */
+  .pdb-lead         { @apply mb-[26px] max-w-[680px] text-base leading-[1.6] text-[#808080]; }
+  .fbt-cards        { @apply flex items-start gap-0; }
+  .fbt-cards .badges{ @apply items-center; }
+  .fbt-ok           { @apply inline-flex size-[25px] items-center justify-center rounded-full border-green! bg-green! p-0!; }
+  .fbt-ok img       { @apply size-3 brightness-0 invert; }
+  .fbt-cards .pcard { @apply w-[340px] flex-none; }
+  .fbt-plus         { @apply mt-3 flex h-[316px] w-[38px] shrink-0 items-center justify-center text-[28px] font-semibold text-[#808080]; }
+  .fbt-panel        { @apply ml-2 flex w-[264px] shrink-0 flex-col bg-[#f5f6f8] px-3 py-4; }
+  .fbt-panel .lbl   { @apply text-sm text-[#808080]; }
+  .fbt-panel .tot   { @apply mt-3 flex items-baseline gap-2.5; }
+  .fbt-panel .tot b { @apply text-[34px] leading-[41px] font-semibold tracking-[-.5px] text-ink; }
+  .fbt-panel .tot .old { @apply text-[13px] font-medium text-[#808080] line-through; }
+  .fbt-save         { @apply mt-4 flex items-center gap-3 rounded-md bg-[#e5f7e8] px-3 py-[13px]; }
+  .fbt-save .ic     { @apply flex size-7 shrink-0 items-center justify-center rounded-[37px] bg-green; }
+  .fbt-save .ic img { @apply size-[13px] brightness-0 invert; }
+  .fbt-save p       { @apply text-sm leading-[17px] text-[#218038]; }
+  .fbt-addall       { @apply mt-4 flex h-[52px] w-full items-center justify-center gap-2.5 bg-yellow text-lg font-semibold text-ink transition-[filter] duration-200 hover:brightness-[.93]; }
+  .fbt-addall img   { @apply size-[22px]; }
+  .fbt-hint         { @apply mt-4 text-[13px] text-[#808080]; }
+
+  /* rating / reviews — Figma 1:1 */
+  .rev-summary        { @apply flex items-stretch gap-8 border border-black/10 bg-white p-7; }
+  .rs-score .num      { @apply text-[50px] leading-[61px] font-semibold text-ink; }
+  .rs-score .s        { @apply my-1.5 flex gap-0.5; }
+  .rs-score .s img    { @apply size-4; }
+  .rs-score .c1       { @apply mt-2 text-[13px] text-[#1a1a1a]; }
+  .rs-score .c2       { @apply mt-1.5 text-[13px] text-[#737373]; }
+  .rs-div             { @apply w-px bg-black/9; }
+  .rs-dist            { @apply flex min-w-0 flex-1 flex-col justify-center gap-2.5; }
+  .rs-dist .row       { @apply flex items-center gap-2.5; }
+  .rs-dist .row .st   { @apply flex w-4 items-center gap-[3px] text-[13px] text-ink; }
+  .rs-dist .row .st img { @apply size-3; }
+  .rs-dist .row .track  { @apply h-2 max-w-[240px] flex-1 overflow-hidden rounded-ds bg-[#e8ecf0]; }
+  .rs-dist .row .track span { @apply block h-full rounded-ds bg-yellow-line; }
+  .rs-dist .row .cnt  { @apply w-11 text-[13px] text-[#737373]; }
+  .rs-rec             { @apply flex w-[220px] shrink-0 flex-col justify-center; }
+  .rs-rec .num        { @apply text-4xl leading-[44px] font-semibold text-ink; }
+  .rs-rec .t          { @apply mt-2 mb-4 text-[13px] text-[#595959]; }
+  .rs-rec .track      { @apply h-2 w-[200px] overflow-hidden rounded-ds bg-[#e8ecf0]; }
+  .rs-rec .track span { @apply block h-full rounded-ds bg-yellow-line; }
+
+  .rev-filter          { @apply mt-5 mb-2.5 flex gap-2; }
+  .rev-filter button   { @apply h-[34px] rounded-pill border border-black/10 bg-white px-4 text-[13px] text-ink transition duration-200 hover:border-black/35; }
+  .rev-filter button[data-on="true"] { @apply border-black bg-ink text-white; }
+  .rev-cards           { @apply flex gap-2 overflow-x-auto pb-1.5; }
+  .rev-card            { @apply flex w-[300px] shrink-0 flex-col gap-3 border border-black/10 bg-white p-[18px]; }
+  .rev-card .h         { @apply flex items-center gap-2.5; }
+  .rev-card .av        { @apply flex size-10 shrink-0 items-center justify-center rounded-full text-[15px] font-semibold; }
+  .rev-card .nm        { @apply text-[15px] font-semibold text-ink; }
+  .rev-card .vf        { @apply mt-[3px] flex items-center gap-[5px] text-[13px] text-green; }
+  .rev-card .vf img    { @apply size-3; }
+  .rev-card .sd        { @apply flex items-center justify-between; }
+  .rev-card .sd .s     { @apply flex gap-0.5; }
+  .rev-card .sd .s img { @apply size-3.5; }
+  .rev-card .sd .date  { @apply text-[13px] text-[#808080]; }
+  .rev-card .txt       { @apply text-[15px] leading-[1.45] text-black/75; }
+  .rev-card .help      { @apply mt-auto cursor-pointer self-start rounded-pill border border-black/10 px-3.5 py-[7px] text-[13px] text-black/50 transition duration-200 hover:border-black/35 hover:text-ink; }
+  .rev-all             { @apply mt-6 flex justify-center; }
+  .sec-more2           { @apply inline-flex cursor-pointer items-center border-b border-yellow-line pb-1 text-base font-medium text-[#141414]; }
+}

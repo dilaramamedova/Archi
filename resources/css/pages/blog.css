@@ -1,4 +1,12 @@
-/* Page CSS for "blog" — only this page's agent edits this file.
-   Write rules inside @layer components { }, use @apply, keep the class names from the
-   old HTML, and give higher specificity when overriding a shared component
-   (e.g. `.sr .grid4`). Never edit app.css. */
+/* Page CSS for "blog" — the filter chip is the only page-specific component
+   (it repeats 8 times). Everything else uses utilities or shared classes. */
+
+@layer components {
+  .fchip {
+    @apply flex h-[60px] cursor-pointer items-center justify-center px-10 text-base font-normal whitespace-nowrap text-black/50 transition-[color,border-color] duration-200;
+    @apply hover:text-black;
+  }
+  .fchip[data-on="true"] {
+    @apply w-[180px] border-b border-black/80 px-3 text-black;
+  }
+}

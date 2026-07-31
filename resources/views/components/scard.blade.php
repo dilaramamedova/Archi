@@ -5,12 +5,12 @@
   Example:
     <x-scard
         bg="#f5fbff"
-        :role="__('home.spec.tiler')"
+        :role="__('home.specialists.role_tiler')"
         rate="4.9"
-        :reviews="__('home.spec.reviews_416')"
-        :name="__('home.spec.name_1')"
-        :exp="__('home.spec.exp_12')"
-        :proj="__('home.spec.proj_320')" />
+        :reviews="__('home.specialists.reviews_416')"
+        :name="__('home.specialists.name_1')"
+        :exp="__('home.specialists.exp_12')"
+        :proj="__('home.specialists.proj_320')" />
 
   Props:
     href    — when given the card renders as <a>, otherwise <div> (old behaviour)

@@ -1,7 +1,14 @@
-// Page module for "business-register" — app.js imports it dynamically only when
-// <body data-page="business-register"> is rendered. Shared behaviour (navbar, cursor) lives in
-// resources/js/shared/ — do not duplicate it here.
+// Page module for "business-register": role selection (data-sel), design default = business.
 export default function init() {
-  // TODO: filled in by the page agent
+  const roles = document.querySelectorAll('[data-role]');
+  if (!roles.length) return;
+
+  roles.forEach((r) =>
+    r.addEventListener('click', () => {
+      roles.forEach((x) => (x.dataset.sel = 'false'));
+      r.dataset.sel = 'true';
+    })
+  );
 }
+
 init();

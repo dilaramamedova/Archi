@@ -1,4 +1,107 @@
-/* Page CSS for "business-profile-security" — only this page's agent edits this file.
-   Write rules inside @layer components { }, use @apply, keep the class names from the
-   old HTML, and give higher specificity when overriding a shared component
-   (e.g. `.sr .grid4`). Never edit app.css. */
+/* Page CSS for "business-profile-security" — business cabinet, security (Figma 1105:23405).
+   Approach 2 from ARCHITECTURE.md §6.2: the old page's <style type="text/tailwindcss">
+   block is reproduced here almost verbatim.
+   Differences from the old block:
+   - class names are prefixed with `bpsec-`; the old page used generic names
+     (.page, .card, .field, .input, .save-bar) that would leak into the other
+     business-cabinet pages, which now share one compiled stylesheet;
+   - the old `.page` shell is merged into `.bpsec-page` (the layout renders
+     navbar/footer) and the gray page background comes from bodyClass;
+   - the three Figma-hosted <img> assets (status dot, save dot, 2FA switch) are drawn
+     in CSS — the old URLs pointed at a short-lived Figma asset host;
+   - `leading-[normal]` is added where the old page had no line-height: preflight is
+     active now and sets 1.5 on <html>, the old build had no preflight;
+   - the settings nav uses [data-on="true"] instead of .snav-item.active
+     (ARCHITECTURE.md §7.1), matching the sibling cabinet pages. */
+@layer components {
+  /* The gray cabinet background is declared once, on <body> (layout bodyClass). */
+  .bpsec-page        { @apply mx-auto flex w-full max-w-[1440px] flex-col items-start gap-5 px-7 pt-8 pb-14; }
+
+  /* header */
+  .bpsec-head        { @apply flex w-full items-end justify-between overflow-hidden; }
+  .bpsec-head-l      { @apply flex flex-col items-start gap-2.5 overflow-hidden whitespace-nowrap; }
+  .bpsec-crumb       { @apply flex items-center gap-2 overflow-hidden text-[13px] leading-[normal]; }
+  .bpsec-crumb .c1   { @apply font-normal text-black/50; }
+  .bpsec-crumb .c2   { @apply font-medium text-black/90; }
+  .bpsec-title       { @apply text-[34px] leading-[normal] font-bold text-ink; }
+  .bpsec-head-r      { @apply flex items-center gap-3 overflow-hidden; }
+  .bpsec-badge-pub   { @apply flex items-center gap-2 overflow-hidden rounded-ds bg-[#e9f6ed] px-3.5 py-2; }
+  .bpsec-badge-pub p { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-[#229653]; }
+  .bpsec-dot         { @apply size-2 shrink-0 rounded-full; }
+  .bpsec-badge-pub .bpsec-dot { @apply bg-[#229653]; }
+  .bpsec-btn-view    { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white px-5; }
+  .bpsec-btn-view p  { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
+
+  /* body + settings nav */
+  .bpsec-body                  { @apply flex w-full items-start gap-6; }
+  .bpsec-snav                  { @apply sticky top-[158px] flex w-[264px] shrink-0 flex-col items-start gap-1 self-start overflow-hidden rounded-ds border border-black/10 bg-white px-3 py-3.5; }
+  .bpsec-snav-item             { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds px-3 py-[11px] text-inherit no-underline; }
+  .bpsec-snav-item p           { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-black/70; }
+  .bpsec-snav-item .count      { @apply text-xs leading-[normal] font-semibold text-black/40; }
+  .bpsec-snav-item[data-on="true"]   { @apply border border-yellow-line bg-sel-bg; }
+  .bpsec-snav-item[data-on="true"] p { @apply text-sm font-bold text-black; }
+  .bpsec-snav-prog             { @apply flex w-full flex-col items-start gap-2 overflow-hidden rounded-ds bg-gray-soft2 px-3 py-3.5; }
+  .bpsec-snav-prog .row        { @apply flex w-full items-start justify-between overflow-hidden text-xs leading-[normal] whitespace-nowrap text-ink; }
+  .bpsec-snav-prog .row .l     { @apply font-semibold; }
+  .bpsec-snav-prog .row .r     { @apply font-bold; }
+  .bpsec-snav-bar              { @apply relative h-1.5 w-full overflow-hidden rounded-[3px] bg-black/10; }
+  .bpsec-snav-bar .fill        { @apply absolute top-0 left-0 h-1.5 w-[184px] rounded-[3px] bg-yellow; }
+  .bpsec-snav-prog .hint       { @apply text-[11px] leading-[normal] font-normal whitespace-nowrap text-black/50; }
+
+  /* cards */
+  .bpsec-main             { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-5 overflow-hidden; }
+  .bpsec-card             { @apply flex w-full flex-col items-start gap-4 overflow-hidden rounded-ds border border-black/10 bg-white p-6; }
+  .bpsec-card-head        { @apply flex w-full flex-col items-start gap-1 overflow-hidden; }
+  .bpsec-card-head h2     { @apply text-lg leading-[normal] font-bold whitespace-nowrap text-ink; }
+  .bpsec-card-head .sub   { @apply w-full text-[13px] leading-[1.45] font-normal text-black/50; }
+  .bpsec-card-head.single { @apply gap-0; }
+
+  /* password fields */
+  .bpsec-fields        { @apply flex w-full items-start gap-4 overflow-hidden; }
+  .bpsec-field         { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-2 overflow-hidden; }
+  .bpsec-field > label { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
+  .bpsec-input         { @apply flex h-11 w-full items-center overflow-hidden rounded-ds border border-black/14 bg-white pr-3 pl-3.5; }
+  .bpsec-input .dots   { @apply min-w-0 flex-[1_0_0] text-sm leading-[normal] font-bold text-ink/60; }
+  .bpsec-input .eye    { @apply cursor-pointer text-[13px] leading-[normal] font-normal whitespace-nowrap text-black/40; }
+  .bpsec-input .eye[data-on="true"] { @apply text-ink; }
+
+  .bpsec-btn-yellow    { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[22px]; }
+  .bpsec-btn-yellow p  { @apply text-[13px] leading-[normal] font-bold whitespace-nowrap text-ink; }
+
+  /* 2FA row */
+  .bpsec-row          { @apply flex w-full items-center justify-between overflow-hidden; }
+  .bpsec-row .desc    { @apply min-w-0 flex-[1_0_0] text-sm leading-[1.5] font-normal text-black/65; }
+  .bpsec-toggle       { @apply relative h-6 w-11 shrink-0 cursor-pointer rounded-pill bg-black/15; }
+  .bpsec-toggle .knob { @apply absolute top-0.5 left-0.5 block size-5 rounded-full bg-white; }
+  .bpsec-toggle[data-on="true"]       { @apply bg-[#229653]; }
+  .bpsec-toggle[data-on="true"] .knob { @apply translate-x-5; }
+
+  /* active sessions */
+  .bpsec-session             { @apply flex w-full items-center justify-between overflow-hidden rounded-ds bg-gray-soft2 px-3.5 py-3; }
+  .bpsec-session-info        { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-0.5 overflow-hidden; }
+  .bpsec-session-title       { @apply flex items-center gap-2 overflow-hidden; }
+  .bpsec-session-title.nogap { @apply gap-0; }
+  .bpsec-session-title p     { @apply text-sm leading-[normal] font-semibold whitespace-nowrap text-ink; }
+  .bpsec-badge-this          { @apply flex items-start overflow-hidden rounded-ds bg-[#e9f6ed] px-2 py-0.5; }
+  .bpsec-badge-this p        { @apply text-[10px] leading-[normal] font-semibold whitespace-nowrap text-[#229653]; }
+  .bpsec-session-sub         { @apply text-xs leading-[normal] font-normal whitespace-nowrap text-black/50; }
+  .bpsec-logout              { @apply cursor-pointer text-[13px] leading-[normal] font-semibold whitespace-nowrap text-[#d33c32]; }
+
+  /* danger zone */
+  .bpsec-card.danger                     { @apply border border-[#d33c32]/50; }
+  .bpsec-card.danger .bpsec-card-head h2 { @apply text-[#d33c32]; }
+  .bpsec-btn-danger                      { @apply flex h-[42px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-[#d33c32]/80 bg-white px-[18px]; }
+  .bpsec-btn-danger p                    { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-[#d33c32]; }
+  .bpsec-card.danger .bpsec-row .desc    { @apply text-[13px] text-black/60; }
+
+  /* save bar */
+  .bpsec-save-bar          { @apply flex w-full items-center justify-between overflow-hidden rounded-ds bg-ink px-6 py-4; }
+  .bpsec-save-l            { @apply flex shrink-0 items-center gap-2 overflow-hidden; }
+  .bpsec-save-l p          { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-white/85; }
+  .bpsec-save-l .bpsec-dot { @apply bg-yellow; }
+  .bpsec-save-r            { @apply flex shrink-0 items-start gap-2.5 overflow-hidden; }
+  .bpsec-btn-cancel        { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-white/35 px-[18px]; }
+  .bpsec-btn-cancel p      { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-white/85; }
+  .bpsec-btn-save          { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[26px]; }
+  .bpsec-btn-save p        { @apply text-sm leading-[normal] font-bold whitespace-nowrap text-ink; }
+}

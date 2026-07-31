@@ -1,4 +1,127 @@
-/* Page CSS for "specialists" — only this page's agent edits this file.
-   Write rules inside @layer components { }, use @apply, keep the class names from the
-   old HTML, and give higher specificity when overriding a shared component
-   (e.g. `.sr .grid4`). Never edit app.css. */
+/* Page CSS for "specialists" (Figma 1105:26941), ported from the old specialists.html
+   <style type="text/tailwindcss"> block. Class names are kept; the old state classes
+   (.active / .on / .open) became data-* attributes per ARCHITECTURE.md §7.1.
+   The filter-sidebar / sort-dropdown skeleton (`.fside`, `.fside-scroll`, `.fside-box`,
+   `.fside-apply`, `.fsort`) is shared with /catalog and lives in app.css; only this
+   page's deltas are here. The radio dot stays raw CSS — it is drawn with a pseudo
+   element, which Tailwind cannot express cleanly. */
+@layer components {
+  .spec-cat { @apply flex flex-col gap-5 pt-8 pb-14; }
+
+  /* breadcrumbs */
+  .sp-crumbs      { @apply flex items-center gap-2 text-[13px]; }
+  .sp-crumbs a    { @apply text-black/50 hover:text-black/70; }
+  .sp-crumbs .sep { @apply text-black/50; }
+  .sp-crumbs .cur { @apply font-medium text-black/90; }
+
+  /* heading row */
+  .sp-head          { @apply flex items-end justify-between max-[640px]:flex-col max-[640px]:items-start max-[640px]:gap-4; }
+  .sp-head-l        { @apply flex flex-col gap-3; }
+  .sp-eyebrow       { @apply flex items-center gap-2.5; }
+  .sp-eyebrow .line { @apply h-0.5 w-8 bg-yellow; }
+  .sp-eyebrow p     { @apply text-[13px] font-medium tracking-[1px] text-black/55 uppercase; }
+  .sp-title         { @apply flex items-end gap-3.5; }
+  .sp-title h1      { @apply text-[40px] leading-none font-semibold text-black max-[640px]:text-[30px]; }
+  .sp-title .count  { @apply text-[15px] font-normal text-black/45; }
+
+  /* sort — skeleton is `.fsort` / `.fsort-menu` in app.css, deltas only here */
+  .sp-sort      { @apply gap-2.5 border border-black/18 bg-white py-3 pr-3.5 pl-4; }
+  .sp-sort .car { @apply size-4 shrink-0; }
+  .sp-sort-menu { @apply min-w-[220px]; }
+
+  /* active filter chips */
+  .sp-chips     { @apply flex flex-wrap items-center gap-2; }
+  .sp-chip      { @apply inline-flex cursor-pointer items-center rounded-ds border border-yellow-line bg-sel-bg px-3 py-2 text-[13px] font-medium text-ink hover:brightness-[.97]; }
+  .sp-chip .x   { @apply ml-2; }
+  .sp-clear     { @apply cursor-pointer border-none px-1 text-[13px] font-medium text-black/50 [background:none] [font-family:inherit] hover:text-ink; }
+
+  /* body: sidebar + grid */
+  .sp-body { @apply flex items-start gap-6 max-[980px]:flex-col; }
+
+  /* Filter sidebar — the skeleton is `.fside` / `.fside-scroll` in app.css. Only the two
+     deltas of this page stay here; both need a descendant selector so they outrank the
+     shared rule (ARCHITECTURE §6.3). The blocks are laid out with a flex gap here, which
+     is why the ≤980px fallback restores the plain block flow with a margin. */
+  .sp-body .sp-side      { @apply max-[980px]:w-full; }
+  .sp-side .sp-fs-scroll { @apply flex flex-col gap-[22px] max-[980px]:block; }
+  @media (max-width: 980px) { .sp-fs-scroll > * + * { margin-top: 22px; } }
+
+  .sp-fs       { @apply flex flex-col gap-2.5; }
+  .sp-fs-title { @apply text-sm font-bold text-ink; }
+  .sp-fs-div   { @apply h-px shrink-0 bg-black/8; }
+
+  /* Specialization — the selected row lines up with the panel content, text is inset 10px */
+  .sp-cat                      { @apply flex cursor-pointer items-center justify-between; }
+  .sp-cat .t                   { @apply text-[13px] text-black/70; }
+  .sp-cat .n                   { @apply text-xs text-black/35; }
+  .sp-cat:hover .t             { @apply text-ink; }
+  .sp-cat[data-on="true"]      { @apply rounded-ds bg-sel-bg px-2.5 py-1.5; }
+  .sp-cat[data-on="true"] .t   { @apply font-bold text-black; }
+  .sp-cat[data-on="true"] .n   { @apply font-semibold text-black/70; }
+
+  /* checkbox rows (city) — the box and its tick are `.fside-box` in app.css */
+  .sp-check                        { @apply flex cursor-pointer items-center gap-2.5; }
+  .sp-check .sp-box                { @apply border-black/30; }
+  .sp-check .lbl                   { @apply min-w-0 flex-1 text-[13px] text-black/70; }
+  .sp-check[data-on="true"] .lbl   { @apply font-semibold text-black; }
+  .sp-check .n                     { @apply text-xs text-black/35; }
+
+  /* radio rows (rating) */
+  .sp-radio                          { @apply flex cursor-pointer items-center gap-2.5; }
+  .sp-dot                            { @apply relative size-[18px] shrink-0 rounded-full border border-black/30 bg-white; }
+  .sp-radio[data-on="true"] .sp-dot  { @apply border-ink bg-ink; }
+  .sp-radio[data-on="true"] .sp-dot::after {
+    content: ""; position: absolute; left: 50%; top: 50%; width: 6px; height: 6px;
+    border-radius: 50%; background: #fff; transform: translate(-50%,-50%);
+  }
+  .sp-radio .lbl                     { @apply flex items-center gap-[5px] text-[13px] text-black/70; }
+  .sp-radio .lbl img                 { @apply size-3.5 shrink-0; }
+  .sp-radio[data-on="true"] .lbl     { @apply font-semibold text-ink; }
+
+  /* experience chips */
+  .sp-years              { @apply flex flex-wrap gap-1.5; }
+  .sp-year               { @apply cursor-pointer rounded-ds border border-black/15 bg-white px-[11px] py-[7px] text-xs font-medium text-black/70 hover:border-black/35; }
+  .sp-year[data-on="true"] { @apply border-black bg-ink font-semibold text-white; }
+
+  /* switch rows */
+  .sp-toggle .lbl                 { @apply text-[13px] font-medium text-black/80; }
+  .sp-toggle                      { @apply flex items-center justify-between; }
+  .sp-switch                      { @apply relative h-[22px] w-10 shrink-0 cursor-pointer rounded-[11px] bg-black/15 transition-[background] duration-200; }
+  .sp-switch .knob                { @apply absolute top-[3px] left-[3px] size-4 rounded-full bg-white transition-[left] duration-200; }
+  .sp-switch[data-on="true"]      { @apply bg-[#229653]; }
+  .sp-switch[data-on="true"] .knob { @apply left-[21px]; }
+
+  /* specialist grid: 4 cards per row */
+  .sp-grid  { @apply grid min-w-0 flex-1 grid-cols-4 content-start gap-3
+                     max-[1280px]:grid-cols-3 max-[1040px]:grid-cols-2 max-[980px]:w-full max-[640px]:grid-cols-1; }
+  .sp-empty { @apply col-span-full py-16 text-center text-[15px] text-black/50; }
+
+  /* Cards filtered out by specialists.js are hidden with the `hidden` attribute; the
+     attribute selector outranks the display rule of the base class. */
+  .sp-card[hidden],
+  .sp-empty[hidden] { @apply hidden; }
+
+  /* position:relative + overflow:hidden — so the round "view details" cursor stays inside
+     the card. On hover the card does not move, only the border darkens. */
+  .sp-card                       { @apply relative flex flex-col gap-3.5 overflow-hidden rounded-ds border border-black/10 bg-white px-3 pt-3 pb-4 transition-[border-color] duration-[250ms] hover:border-black/18; }
+  .sp-card .top                  { @apply relative flex h-[170px] flex-col items-center justify-center gap-2 overflow-hidden rounded-ds; }
+  .sp-card .avatar               { @apply flex size-14 items-center justify-center rounded-full border-[2.5px] border-yellow bg-white text-[17px] font-bold text-ink; }
+  /* at 4 columns a card is ~261px — a long role name wraps instead of being clipped */
+  .sp-card .role                 { @apply px-2.5 text-center text-base leading-[1.2] font-semibold text-black; }
+  .sp-card .rate                 { @apply flex items-center gap-[5px]; }
+  .sp-card .rate .st             { @apply size-4 shrink-0; }
+  .sp-card .rate .v              { @apply text-[13px] font-semibold text-black; }
+  .sp-card .rate .r              { @apply text-xs text-black/40; }
+  .sp-card .badges               { @apply absolute top-2 left-2 flex gap-1; }
+  .sp-card .badges .b            { @apply rounded-ds px-2 py-[3px] text-[11px] font-semibold whitespace-nowrap text-ink; }
+  /* NOTE: the badge class cannot be called "top" — the .sp-card .top rule (170px) would catch it */
+  .sp-card .badges .b.top-master { @apply bg-yellow; }
+  .sp-card .badges .b.ok         { @apply bg-white text-green; }
+  .sp-card .name                 { @apply text-base font-bold text-ink; }
+  .sp-card .meta                 { @apply flex gap-2.5 text-[13px]; }
+  .sp-card .meta .m              { @apply font-medium text-black/50; }
+  .sp-card .meta .d              { @apply text-black/30; }
+  .sp-card .foot                 { @apply flex items-center justify-between gap-2; }
+  .sp-card .price                { @apply text-sm font-bold whitespace-nowrap text-ink; }
+  .sp-card .btn                  { @apply flex h-[38px] shrink-0 items-center justify-center rounded-ds bg-yellow px-4 text-[13px] font-semibold text-ink transition-[filter] duration-200 hover:brightness-95; }
+}

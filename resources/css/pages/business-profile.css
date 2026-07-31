@@ -1,4 +1,166 @@
-/* Page CSS for "business-profile" — only this page's agent edits this file.
-   Write rules inside @layer components { }, use @apply, keep the class names from the
-   old HTML, and give higher specificity when overriding a shared component
-   (e.g. `.sr .grid4`). Never edit app.css. */
+/* Page CSS for "business-profile" — the public company storefront (Figma 1105:24979).
+   Ported from the old biznes-profil.html <style type="text/tailwindcss"> block; the
+   legacy class names are kept and the declarations moved to @apply.
+
+   Notes:
+   - The dead navbar/footer rules of the old block are gone (both come from the layout).
+   - Every rule is scoped under the page root `.bp-page`. All 23 page CSS files end up in
+     one bundle, and this page keeps generic names (`.card`, `.btn-yellow`, `.sec-head`,
+     `.sec-title`) that also exist as shared components in app.css, which is imported
+     after the page files. Scoping gives every rule 0,2,0 specificity, so this page stays
+     isolated in both directions. (The sibling business-profile-* pages carry their own
+     `bp*-` prefixes instead — same goal, different mechanism.)
+   - `.card*` is this page's own product card — deliberately NOT merged with the shared
+     `.pcard`; the markup and the measurements differ. */
+@layer components {
+
+  /* ==========================================================================
+     SHELL
+     ========================================================================== */
+  /* Intentional deviation from the old page: there `.page` was full-bleed and only
+     `.cover-wrap` was capped at 1440 (uncentered), so above 1440px the identity/body rows
+     stretched away from the navbar. The cap + centering now live on the page root, which
+     keeps every row aligned with the 1440-capped navbar. Identical at <=1440px — do not
+     revert to the old full-bleed behaviour. */
+  .page.bp-page { @apply mx-auto flex w-full max-w-[1440px] flex-col items-start bg-white; }
+
+  /* ==========================================================================
+     COVER
+     ========================================================================== */
+  /* The old page positioned the cover absolutely (top-5 left-7, fixed w-[1384px]).
+     It is in normal flow here: the 28px/20px insets are the wrapper's padding and the
+     cover fills the remaining width, which renders identically at 1440px and reflows
+     below it without a media query. */
+  .bp-page .cover-wrap    { @apply h-[280px] w-full shrink-0 bg-white px-7 py-5; }
+  .bp-page .cover         { @apply relative h-60 w-full rounded-ds; }
+  .bp-page .cover .bg     { @apply pointer-events-none absolute inset-0 rounded-ds; }
+  .bp-page .cover .bg img { @apply absolute inset-0 size-full max-w-none rounded-ds object-cover; }
+  .bp-page .cover .ov     { @apply absolute inset-0 rounded-ds bg-black/25; }
+
+  /* ==========================================================================
+     IDENTITY
+     ========================================================================== */
+  .bp-page .identity        { @apply flex w-full shrink-0 items-start justify-between overflow-hidden px-7 py-2; }
+  .bp-page .id-left         { @apply flex shrink-0 items-center gap-10; }
+  .bp-page .biz-logo        { @apply relative size-[120px] shrink-0 overflow-hidden rounded-ds-md border-4 border-white bg-ink; }
+  .bp-page .biz-logo p      { @apply absolute top-9 left-8 text-[40px] leading-[normal] font-bold whitespace-nowrap text-yellow; }
+  .bp-page .id-info         { @apply flex shrink-0 flex-col items-start gap-2 overflow-hidden; }
+  .bp-page .id-name-row     { @apply flex shrink-0 items-center gap-3 overflow-hidden; }
+  .bp-page .id-name         { @apply shrink-0 text-[32px] leading-[normal] font-bold whitespace-nowrap text-ink; }
+  .bp-page .id-badge        { @apply flex shrink-0 items-center overflow-hidden rounded-ds bg-[#e9f6ed] px-2.5 py-1; }
+  .bp-page .id-badge p      { @apply text-xs leading-[normal] font-semibold whitespace-nowrap text-[#229653]; }
+  .bp-page .id-meta         { @apply flex shrink-0 items-center gap-2.5 overflow-hidden text-sm leading-[normal] whitespace-nowrap; }
+  .bp-page .id-meta .m      { @apply font-medium text-black/55; }
+  .bp-page .id-meta .d      { @apply font-normal text-black/30; }
+  .bp-page .id-rating       { @apply flex shrink-0 items-center gap-1.5 overflow-hidden leading-[normal] whitespace-nowrap; }
+  .bp-page .id-rating .star { @apply text-base font-normal text-[#e1a13c]; }
+  .bp-page .id-rating .val  { @apply text-base font-bold text-ink; }
+  .bp-page .id-rating .lbl  { @apply text-[13px] font-normal text-black/45; }
+  .bp-page .id-rating .dot  { @apply text-[13px] font-normal text-black/30; }
+  .bp-page .id-rating .cnt  { @apply text-[13px] font-semibold text-black/70; }
+  .bp-page .id-actions      { @apply flex shrink-0 items-start gap-3 overflow-hidden; }
+  .bp-page .btn-yellow      { @apply flex h-[46px] shrink-0 items-center justify-center overflow-hidden rounded-ds bg-yellow px-6; }
+  .bp-page .btn-yellow p    { @apply text-sm leading-[normal] font-bold whitespace-nowrap text-ink; }
+  .bp-page .btn-outline     { @apply flex h-[46px] shrink-0 items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white px-6; }
+  .bp-page .btn-outline p   { @apply text-sm leading-[normal] font-semibold whitespace-nowrap text-ink; }
+
+  /* ==========================================================================
+     BODY
+     ========================================================================== */
+  .bp-page .bp-body   { @apply flex w-full shrink-0 items-start gap-8 overflow-hidden px-7 py-6; }
+  .bp-page .bp-left   { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-9 overflow-hidden; }
+  .bp-page .sec-head  { @apply mb-0 flex w-full shrink-0 flex-col items-start justify-start gap-2.5 overflow-hidden; }
+  .bp-page .kicker    { @apply flex shrink-0 items-center gap-2.5 overflow-hidden; }
+  .bp-page .kicker .bar { @apply h-0.5 w-8 shrink-0 bg-yellow; }
+  .bp-page .kicker p  { @apply text-xs leading-[normal] font-medium tracking-[1px] whitespace-nowrap text-black/55; }
+  .bp-page .sec-title { @apply shrink-0 text-[28px] leading-[normal] font-semibold whitespace-nowrap text-black; }
+  .bp-page .about-p   { @apply w-full shrink-0 text-[15px] leading-[1.65] font-normal [word-break:break-word] text-black/68; }
+
+  .bp-page .showrooms   { @apply flex w-full shrink-0 items-start gap-3 overflow-hidden leading-[normal] whitespace-nowrap; }
+  .bp-page .sr-card     { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-1.5 overflow-hidden rounded-ds bg-gray-soft2 p-[18px]; }
+  .bp-page .sr-card .nm { @apply text-[15px] font-bold text-ink; }
+  .bp-page .sr-card .ad { @apply text-[13px] font-normal text-black/60; }
+  .bp-page .sr-card .hr { @apply text-xs font-medium text-black/45; }
+
+  .bp-page .catalog-head          { @apply flex w-full shrink-0 items-end justify-between overflow-hidden; }
+  .bp-page .catalog-head .sec-head{ @apply w-auto; }
+  .bp-page .see-all               { @apply flex shrink-0 items-start overflow-hidden border-b-2 border-yellow-line pb-0.5; }
+  .bp-page .see-all p             { @apply text-xs leading-[normal] font-medium whitespace-nowrap text-[#141414]; }
+
+  /* ==========================================================================
+     PRODUCT CARD — specific to this page (separate from the shared .pcard).
+     Square-cornered and unclipped; no sibling page defines a bare `.card` any more,
+     so no neutralising utilities are needed here.
+     ========================================================================== */
+  .bp-page .cards                { @apply flex w-full shrink-0 items-start gap-3 overflow-hidden; }
+  .bp-page .card                 { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-3 border border-black/10 bg-white p-3; }
+  .bp-page .card-img             { @apply relative h-[316px] w-full shrink-0 overflow-hidden bg-gray-soft; }
+  .bp-page .card-heart           { @apply absolute top-0 left-[280px] flex items-center justify-center rounded-[37px] bg-white p-2; }
+  .bp-page .card-heart .ic20     { @apply relative size-5 shrink-0; }
+  .bp-page .card-heart .ic20 img { @apply absolute inset-0 size-full; }
+  .bp-page .card-badges          { @apply absolute top-0 left-0 flex items-center gap-1; }
+  .bp-page .card-badge           { @apply flex shrink-0 items-center gap-1 rounded-ds border border-black/10 bg-white px-2 py-1; }
+  .bp-page .card-badge p         { @apply text-sm leading-[normal] font-normal whitespace-nowrap text-black; }
+  .bp-page .card-dots            { @apply absolute top-[298px] left-[132px] flex items-center gap-0.5; }
+  .bp-page .card-dots .active    { @apply h-1.5 w-[18px] shrink-0 rounded-[17px] bg-black/14; }
+  .bp-page .card-dots .dot       { @apply relative size-1.5 shrink-0 overflow-hidden rounded-[17px] bg-black/30; }
+  .bp-page .prod-img             { @apply absolute; }
+  .bp-page .prod-img.a           { @apply top-[63px] left-[58px] size-[200px]; }
+  .bp-page .prod-img.b           { @apply top-[78px] left-[17px] h-[159px] w-[282px]; }
+  .bp-page .prod-img img         { @apply pointer-events-none absolute inset-0 size-full max-w-none object-cover; }
+  .bp-page .card-title           { @apply flex w-full shrink-0 flex-col items-start gap-3; }
+  .bp-page .card-title-in        { @apply flex w-full shrink-0 flex-col items-start gap-2; }
+  .bp-page .card-stars           { @apply flex shrink-0 items-center justify-center gap-1; }
+  .bp-page .card-stars .st       { @apply relative size-5 shrink-0 bg-white; }
+  .bp-page .card-stars .st img   { @apply absolute inset-0 size-full; }
+  .bp-page .card-stars p         { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-black; }
+  .bp-page .card-stars p .muted  { @apply text-black/30; }
+  .bp-page .card-cat             { @apply shrink-0 text-xs leading-[1.25] font-medium whitespace-nowrap text-black/50 uppercase; }
+  .bp-page .card-name            { @apply shrink-0 text-base leading-none font-medium whitespace-nowrap text-black; }
+  .bp-page .card-price           { @apply flex shrink-0 items-end justify-center gap-3; }
+  .bp-page .card-price .grp      { @apply flex shrink-0 items-end justify-center gap-2 leading-none font-medium whitespace-nowrap; }
+  .bp-page .card-price .now      { @apply text-xl text-black; }
+  .bp-page .card-price .old      { @apply text-sm text-black/30 line-through; }
+  .bp-page .card-off             { @apply flex shrink-0 items-center rounded-ds bg-red/20 px-1 py-0.5; }
+  .bp-page .card-off p           { @apply text-[10px] leading-[normal] font-bold whitespace-nowrap text-red; }
+
+  /* ==========================================================================
+     SIDEBAR
+     ========================================================================== */
+  .bp-page .bp-sidebar       { @apply flex w-[380px] shrink-0 flex-col items-start gap-3.5 overflow-hidden rounded-ds border border-black/8 bg-[#f0f2ff]/60 px-[22px] py-6; }
+  .bp-page .sb-kicker        { @apply shrink-0 text-[11px] leading-[normal] font-semibold tracking-[1px] whitespace-nowrap text-black/50; }
+  .bp-page .sb-row           { @apply flex w-full shrink-0 items-start justify-between overflow-hidden text-[13px] leading-[normal] whitespace-nowrap; }
+  .bp-page .sb-row .k        { @apply font-normal text-black/55; }
+  .bp-page .sb-row .v        { @apply font-semibold text-ink; }
+  .bp-page .sb-line          { @apply h-px w-full shrink-0 bg-black/10; }
+  .bp-page .sb-langs         { @apply flex shrink-0 items-center gap-1.5 overflow-hidden; }
+  .bp-page .sb-langs .lbl    { @apply text-[13px] leading-[normal] font-normal whitespace-nowrap text-black/55; }
+  .bp-page .sb-chip          { @apply flex shrink-0 items-start overflow-hidden rounded-ds border border-black/15 bg-white px-2 py-[3px]; }
+  .bp-page .sb-chip p        { @apply text-[11px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
+  .bp-page .sb-btn-yellow    { @apply flex h-[50px] w-full shrink-0 items-center justify-center overflow-hidden rounded-ds bg-yellow; }
+  .bp-page .sb-btn-yellow p  { @apply text-[15px] leading-[normal] font-bold whitespace-nowrap text-ink; }
+  .bp-page .sb-btn-outline   { @apply flex h-12 w-full shrink-0 items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white; }
+  .bp-page .sb-btn-outline p { @apply text-sm leading-[normal] font-semibold whitespace-nowrap text-ink; }
+
+  /* ==========================================================================
+     RESPONSIVE — the Figma frame is a fixed 1440 layout, so below that the two-column
+     body has to collapse. Nothing here changes the rendering at 1440px. The old page
+     shipped no responsive rules at all.
+     ========================================================================== */
+  @media (max-width: 1200px) {
+    .bp-page .bp-body    { @apply flex-col; }
+    .bp-page .bp-sidebar { @apply w-full; }
+    .bp-page .cards      { @apply flex-wrap; }
+    .bp-page .card       { @apply min-w-[260px]; }
+  }
+  @media (max-width: 900px) {
+    .bp-page .identity  { @apply flex-col gap-5; }
+    .bp-page .showrooms { @apply flex-wrap; }
+    .bp-page .sr-card   { @apply min-w-[200px]; }
+  }
+  @media (max-width: 640px) {
+    .bp-page .id-left { @apply flex-col items-start gap-5; }
+    .bp-page .id-meta { @apply flex-wrap whitespace-normal; }
+    .bp-page .cards, .bp-page .showrooms { @apply flex-col; }
+  }
+}

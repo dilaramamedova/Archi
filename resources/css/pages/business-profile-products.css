@@ -1,4 +1,115 @@
-/* Page CSS for "business-profile-products" — only this page's agent edits this file.
-   Write rules inside @layer components { }, use @apply, keep the class names from the
-   old HTML, and give higher specificity when overriding a shared component
-   (e.g. `.sr .grid4`). Never edit app.css. */
+/* Page CSS for "business-profile-products" — business cabinet, product list
+   (Figma 1105:24229), ported from the old biznes-profil-mehsullar.html
+   <style type="text/tailwindcss"> block (ARCHITECTURE.md 6.2, approach 2).
+
+   Naming: the old block used generic names (.page, .card, .crumbs, .filters, .p-row,
+   .pg, .save-bar) that are page-local no more — all 23 page files compile into ONE
+   bundle and the sibling business-profile-* pages define the same names with different
+   values. Every top-level name is therefore prefixed with `bpp-`; child names
+   (.c, .cur, .lbl, .num, .h, .s, .n, .dot, .fill, .knob) only match inside a prefixed
+   parent and stay as they were.
+
+   State classes became data-* attributes (ARCHITECTURE.md 7.1):
+   .sn-item.active -> [data-on="true"], .pg.active -> [data-on="true"],
+   .pg.dots -> [data-dots="true"], .p-badge.g/.w -> [data-tone="ok"/"warn"].
+
+   Images: the 8px status dots and the two on/off switches were <img> tags pointing at
+   Figma asset URLs that now return 404; they are plain CSS shapes with the same
+   geometry and colors (pill 40x22, knob r8 at x=11/29, dot 8px). */
+@layer components {
+
+  /* The gray cabinet background is declared once, on <body> (layout bodyClass). */
+  .bpp-page          { @apply mx-auto flex w-full max-w-[1440px] flex-col items-start font-sans antialiased; }
+  .bpp-edit          { @apply flex w-full flex-col items-start gap-5 px-7 pt-8 pb-14; }
+
+  /* header */
+  .bpp-head          { @apply flex w-full items-end justify-between overflow-hidden; }
+  .bpp-head-l        { @apply flex flex-col items-start gap-2.5 overflow-hidden whitespace-nowrap; }
+  .bpp-crumbs        { @apply flex items-center gap-2 overflow-hidden text-[13px] leading-[normal]; }
+  .bpp-crumbs .c     { @apply font-normal text-black/50; }
+  .bpp-crumbs .cur   { @apply font-medium text-black/90; }
+  .bpp-title         { @apply text-[34px] leading-[normal] font-bold text-ink; }
+  .bpp-head-r        { @apply flex items-center gap-3 overflow-hidden; }
+  .bpp-status        { @apply flex shrink-0 items-center gap-2 overflow-hidden rounded-ds bg-[#e9f6ed] px-3.5 py-2; }
+  .bpp-status .dot   { @apply size-2 shrink-0 rounded-full bg-[#229653]; }
+  .bpp-status p      { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-[#229653]; }
+  .bpp-view-btn      { @apply flex h-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white px-5; }
+  .bpp-view-btn p    { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
+
+  /* body + sidebar */
+  .bpp-body                    { @apply flex w-full items-start gap-6; }
+  .bpp-snav                    { @apply sticky top-[158px] flex w-[264px] shrink-0 flex-col items-start gap-1 self-start overflow-hidden rounded-ds border border-black/10 bg-white px-3 py-3.5; }
+  .bpp-snav-item               { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds px-3 py-[11px] text-inherit no-underline; }
+  .bpp-snav-item p.lbl         { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-black/70; }
+  .bpp-snav-item p.num         { @apply text-xs leading-[normal] font-semibold whitespace-nowrap text-black/40; }
+  .bpp-snav-item[data-on="true"]       { @apply border border-yellow-line bg-sel-bg; }
+  .bpp-snav-item[data-on="true"] p.lbl { @apply font-bold text-black; }
+  .bpp-snav-prog               { @apply flex w-full flex-col items-start gap-2 overflow-hidden rounded-ds bg-gray-soft2 px-3 py-3.5; }
+  .bpp-snav-prog .top          { @apply flex w-full items-start justify-between overflow-hidden text-xs leading-[normal] whitespace-nowrap text-ink; }
+  .bpp-snav-prog .top .t       { @apply font-semibold; }
+  .bpp-snav-prog .top .p       { @apply font-bold; }
+  .bpp-snav-bar                { @apply relative h-1.5 w-full overflow-hidden rounded-[3px] bg-black/10; }
+  .bpp-snav-bar .fill          { @apply absolute top-0 left-0 h-1.5 w-[184px] rounded-[3px] bg-yellow; }
+  .bpp-snav-prog .hint         { @apply text-[11px] leading-[normal] font-normal whitespace-nowrap text-black/50; }
+
+  /* main card */
+  .bpp-main           { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-5 overflow-hidden; }
+  .bpp-card           { @apply flex w-full flex-col items-start gap-3.5 overflow-hidden rounded-ds border border-black/10 bg-white p-6; }
+  .bpp-card-head      { @apply flex w-full items-center justify-between overflow-hidden; }
+  .bpp-card-head-l    { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-1 overflow-hidden whitespace-nowrap; }
+  .bpp-card-head-l .h { @apply text-lg leading-[normal] font-bold text-ink; }
+  .bpp-card-head-l .s { @apply text-[13px] leading-[normal] font-normal text-black/50; }
+  .bpp-add-btn        { @apply flex h-[42px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[18px]; }
+  .bpp-add-btn p      { @apply text-[13px] leading-[normal] font-bold whitespace-nowrap text-ink; }
+
+  /* filters */
+  .bpp-filters        { @apply flex w-full items-start gap-2.5 overflow-hidden; }
+  .bpp-search         { @apply flex h-[42px] min-w-0 flex-[1_0_0] items-center gap-2 overflow-hidden rounded-ds bg-gray-soft2 pl-3.5; }
+  .bpp-search .ic     { @apply relative size-4 shrink-0; }
+  .bpp-search .ic img { @apply absolute inset-0 size-full max-w-none; }
+  .bpp-search p       { @apply text-[13px] leading-[normal] font-normal whitespace-nowrap text-black/45; }
+  .bpp-drop           { @apply flex h-[42px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/15 bg-white px-4; }
+  .bpp-drop p         { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-black/70; }
+  /* Presentational caret — kept out of the lang files so localizers cannot drop it. */
+  .bpp-drop p::after  { content: ' ⌄'; }
+
+  /* product row */
+  .bpp-row            { @apply flex w-full items-center gap-3.5 overflow-hidden rounded-ds bg-gray-soft2 px-3.5 py-3; }
+  .bpp-thumb          { @apply relative size-[52px] shrink-0 rounded-ds; }
+  .bpp-thumb img      { @apply pointer-events-none absolute inset-0 size-full max-w-none rounded-ds object-cover; }
+  .bpp-info           { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-0.5 overflow-hidden whitespace-nowrap; }
+  .bpp-info .n        { @apply text-sm leading-[normal] font-semibold text-ink; }
+  .bpp-info .c        { @apply text-xs leading-[normal] font-normal text-black/50; }
+  .bpp-price          { @apply shrink-0 text-sm leading-[normal] font-bold whitespace-nowrap text-ink; }
+  .bpp-badge          { @apply flex shrink-0 items-start overflow-hidden rounded-ds px-2.5 py-1; }
+  .bpp-badge p        { @apply text-[11px] leading-[normal] font-semibold whitespace-nowrap; }
+  .bpp-badge[data-tone="ok"]     { @apply bg-[#e9f6ed]; }
+  .bpp-badge[data-tone="ok"] p   { @apply text-[#229653]; }
+  .bpp-badge[data-tone="warn"]   { @apply bg-[#fff4db]; }
+  .bpp-badge[data-tone="warn"] p { @apply text-[#c88200]; }
+  .bpp-toggle         { @apply relative h-[22px] w-10 shrink-0 cursor-pointer rounded-pill bg-black/15; }
+  .bpp-toggle .knob   { @apply absolute top-[3px] left-[3px] block size-4 rounded-full bg-white; }
+  .bpp-toggle[data-on="true"]       { @apply bg-[#229653]; }
+  .bpp-toggle[data-on="true"] .knob { @apply translate-x-[18px]; }
+  .bpp-edit-btn       { @apply flex shrink-0 cursor-pointer items-start overflow-hidden rounded-ds border border-black/20 bg-white px-3.5 py-2; }
+  .bpp-edit-btn p     { @apply text-xs leading-[normal] font-semibold whitespace-nowrap text-ink; }
+
+  /* pagination */
+  .bpp-pager          { @apply flex w-full items-start justify-center gap-1.5 overflow-hidden pt-1.5; }
+  .bpp-pg             { @apply flex size-9 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/15 bg-white; }
+  .bpp-pg p           { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-black/70; }
+  .bpp-pg[data-on="true"]   { @apply border-none bg-ink; }
+  .bpp-pg[data-on="true"] p { @apply font-bold text-white; }
+  .bpp-pg[data-dots="true"] { @apply cursor-default border-none; }
+
+  /* save bar */
+  .bpp-save-bar       { @apply flex w-full items-center justify-between overflow-hidden rounded-ds bg-ink px-6 py-4; }
+  .bpp-save-l         { @apply flex items-center gap-2 overflow-hidden; }
+  .bpp-save-l .dot    { @apply size-2 shrink-0 rounded-full bg-yellow; }
+  .bpp-save-l p       { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-white/85; }
+  .bpp-save-r         { @apply flex items-start gap-2.5 overflow-hidden; }
+  .bpp-cancel-btn     { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-white/35 px-[18px]; }
+  .bpp-cancel-btn p   { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-white/85; }
+  .bpp-save-btn       { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[26px]; }
+  .bpp-save-btn p     { @apply text-sm leading-[normal] font-bold whitespace-nowrap text-ink; }
+}

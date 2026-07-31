@@ -1,7 +1,21 @@
-// Page module for "search" — app.js imports it dynamically only when
-// <body data-page="search"> is rendered. Shared behaviour (navbar, cursor) lives in
-// resources/js/shared/ — do not duplicate it here.
+// Page module for "search" — tab filtering. The button carries data-t, the result
+// block data-sec; the initial selection (?tab=) is already rendered by Blade.
 export default function init() {
-  // TODO: filled in by the page agent
+  const tabs = document.getElementById('srTabs');
+  if (!tabs) return;
+
+  const buttons = [...tabs.querySelectorAll('[data-t]')];
+  const sections = [...document.querySelectorAll('[data-sec]')];
+
+  tabs.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-t]');
+    if (!btn) return;
+
+    buttons.forEach((b) => (b.dataset.on = 'false'));
+    btn.dataset.on = 'true';
+
+    const key = btn.dataset.t;
+    sections.forEach((s) => (s.hidden = !(key === 'all' || s.dataset.sec === key)));
+  });
 }
 init();

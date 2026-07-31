@@ -4,7 +4,7 @@
 
   Example:
     <x-post
-        :time="__('blog.posts.read_6min')"
+        :time="__('blog.posts.time_1')"
         :title="__('blog.posts.title_1')"
         :excerpt="__('blog.posts.excerpt_1')"
         :href="route('blog')" />

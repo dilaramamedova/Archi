@@ -7,13 +7,13 @@
         <div class="sec-tag"><span class="line"></span><p>...</p></div>
         <div class="sec-title">...</div>
       </div>
-      <a class="sec-more" href="..."><p>...</p><img src="assets/ic-arrow.svg" alt=""></a>
+      <a class="sec-more" href="..."><p>...</p><img src="/assets/ic-arrow.svg" alt=""></a>
     </div>
 
   Example:
     <x-section-head
-        :tag="__('home.sec_bestsellers')"
-        :title="__('home.sec_featured_products')"
+        :tag="__('home.products.tag')"
+        :title="__('home.products.title')"
         :more="route('search')" />
 
     // "view more" link without an href (the old index.html has such cases)

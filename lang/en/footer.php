@@ -6,20 +6,20 @@ return [
     'go_products' => 'Go to products',
 
     'col_products' => 'Products',
-    'p_tiles' => 'Tiles & metlakh',
+    'p_tiles' => 'Wall & floor tiles',
     'p_paint' => 'Paint & enamel',
     'p_plumbing' => 'Plumbing',
     'p_insulation' => 'Insulation & heating',
     'p_all' => 'All categories',
 
     'col_specialists' => 'Specialists',
-    's_find' => 'Find a master',
-    's_top' => 'Top-rated masters',
+    's_find' => 'Find a pro',
+    's_top' => 'Top-rated pros',
     's_all' => 'See all specialists',
 
     'col_join' => 'Join ARCHİ',
     'j_seller' => 'Become a seller',
-    'j_master' => 'Become a master',
+    'j_master' => 'Become a pro',
     'j_partner' => 'Partnership program',
     'j_business' => 'Business cooperation',
 

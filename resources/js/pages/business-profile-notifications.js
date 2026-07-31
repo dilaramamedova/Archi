@@ -1,7 +1,19 @@
-// Page module for "business-profile-notifications" — app.js imports it dynamically only when
-// <body data-page="business-profile-notifications"> is rendered. Shared behaviour (navbar, cursor) lives in
-// resources/js/shared/ — do not duplicate it here.
+// Page module for "business-profile-notifications" — the notification switches and the
+// channel chips flip their data-on state (the CSS draws both states). Shared behaviour
+// (navbar, cursor) lives in resources/js/shared/.
 export default function init() {
-  // TODO: filled in by the page agent
+  document.querySelectorAll('.bpn-toggle').forEach((toggle) =>
+    toggle.addEventListener('click', () => {
+      const on = toggle.dataset.on !== 'true';
+      toggle.dataset.on = on ? 'true' : 'false';
+      toggle.setAttribute('aria-checked', on ? 'true' : 'false');
+    })
+  );
+
+  document.querySelectorAll('.bpn-chip').forEach((chip) =>
+    chip.addEventListener('click', () => {
+      chip.dataset.on = chip.dataset.on === 'true' ? 'false' : 'true';
+    })
+  );
 }
 init();

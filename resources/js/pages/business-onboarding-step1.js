@@ -1,7 +1,7 @@
-// Page module for "business-onboarding-step1" — app.js imports it dynamically only when
-// <body data-page="business-onboarding-step1"> is rendered. Shared behaviour (navbar, cursor) lives in
-// resources/js/shared/ — do not duplicate it here.
-export default function init() {
-  // TODO: filled in by the page agent
-}
+// Page module for "business-onboarding-step1".
+// The source page had no page-level script (only the shared navbar/footer behaviour, which
+// lives in resources/js/shared/), and every field is a static design mock — so there is no
+// page behaviour to register. The file must stay: app.js imports it for this data-page.
+export default function init() {}
+
 init();

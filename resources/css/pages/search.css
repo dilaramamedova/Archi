@@ -1,4 +1,30 @@
-/* Page CSS for "search" — only this page's agent edits this file.
-   Write rules inside @layer components { }, use @apply, keep the class names from the
-   old HTML, and give higher specificity when overriding a shared component
-   (e.g. `.sr .grid4`). Never edit app.css. */
+/* Page CSS for "search" — the old page kept these styles as inline utilities; the
+   ones repeated across the three result sections are named here instead. */
+
+@layer components {
+  .sr       { @apply pt-8 pb-14; }
+  /* .sr carries the shared .wrap shell, so this only adds the column layout —
+     the content width now matches catalog/specialists (1384px) */
+  .sr-inner { @apply mx-auto flex max-w-[1384px] flex-col gap-6; }
+
+  /* result grids sit tighter than the shared .grid4 (gap-2) — higher specificity
+     is required because app.css is imported after this file */
+  .sr .grid4 { @apply gap-3; }
+
+  .sr-h1 { @apply text-[38px] leading-[1.2] font-semibold tracking-[-.4px] text-black; }
+  .sr-h2 { @apply text-[26px] font-semibold tracking-[-.2px] text-ink; }
+
+  .sr-tab                 { @apply cursor-pointer rounded-ds border border-black/14 bg-white px-4 py-2.5 text-sm font-medium text-black transition-[border-color,background] duration-200; }
+  .sr-tab:hover           { @apply border-black/35; }
+  .sr-tab[data-on="true"] { @apply border-black bg-ink font-semibold text-white; }
+
+  .sr-more              { @apply relative pb-1 text-xs font-medium tracking-[.6px] text-[#141414] uppercase; }
+  .sr-more::before      { @apply absolute inset-x-0 bottom-0 h-0.5 bg-yellow-line content-['']; }
+  .sr-more::after       { @apply absolute inset-x-0 bottom-0 h-0.5 origin-left scale-x-0 bg-ink/70 transition-transform duration-[350ms] content-['']; }
+  .sr-more:hover::after { @apply scale-x-100; }
+
+  @media (max-width: 900px) {
+    .sr-h1 { @apply text-[28px]; }
+    .sr-h2 { @apply text-[22px]; }
+  }
+}
