@@ -6,19 +6,19 @@
 @php
     // Hero promo carousel: image + target of each slide, read by resources/js/pages/home.js
     $promoSlides = [
-        ['img' => '/assets/hero-promo.png', 'href' => route('product')],
-        ['img' => '/assets/blog-hero.jpg', 'href' => route('blog')],
-        ['img' => '/assets/cat-laminant.png', 'href' => route('calculator')],
+        ['img' => '/assets/hero-promo-power-tools.png', 'href' => route('product')],
+        ['img' => '/assets/blog-cover-modern-villa.jpg', 'href' => route('blog')],
+        ['img' => '/assets/category-laminate-flooring.png', 'href' => route('calculator')],
     ];
 
     $categories = [
-        ['img' => '/assets/cat-bathroom.png', 'name' => __('home.categories.tiles'), 'count' => __('home.categories.count_860'), 'open' => true],
-        ['img' => '/assets/cat-roof.png', 'name' => __('home.categories.roofing'), 'count' => __('home.categories.count_340')],
-        ['img' => '/assets/cat-laminant.png', 'name' => __('home.categories.laminate'), 'count' => __('home.categories.count_340')],
-        ['img' => '/assets/cat-electric.png', 'name' => __('home.categories.electrical'), 'count' => __('home.categories.count_340')],
-        ['img' => '/assets/cat-sink.png', 'name' => __('home.categories.plumbing'), 'count' => __('home.categories.count_340')],
-        ['img' => '/assets/cat-brick.png', 'name' => __('home.categories.brick'), 'count' => __('home.categories.count_340')],
-        ['img' => '/assets/cat-cement.png', 'name' => __('home.categories.cement'), 'count' => __('home.categories.count_340')],
+        ['img' => '/assets/category-tile-showroom.png', 'name' => __('home.categories.tiles'), 'count' => __('home.categories.count_860'), 'open' => true],
+        ['img' => '/assets/category-roofing.png', 'name' => __('home.categories.roofing'), 'count' => __('home.categories.count_340')],
+        ['img' => '/assets/category-laminate-flooring.png', 'name' => __('home.categories.laminate'), 'count' => __('home.categories.count_340')],
+        ['img' => '/assets/category-electrical.png', 'name' => __('home.categories.electrical'), 'count' => __('home.categories.count_340')],
+        ['img' => '/assets/category-plumbing.png', 'name' => __('home.categories.plumbing'), 'count' => __('home.categories.count_340')],
+        ['img' => '/assets/category-brick-and-block.png', 'name' => __('home.categories.brick'), 'count' => __('home.categories.count_340')],
+        ['img' => '/assets/category-cement-bags.png', 'name' => __('home.categories.cement'), 'count' => __('home.categories.count_340')],
     ];
 
     $specialists = [
@@ -34,7 +34,7 @@
 <div class="hero">
   <div class="inner hero-grid">
     <div class="hero-main">
-      <img src="/assets/hero-main-usta.jpg" alt="">
+      <img src="/assets/hero-bricklayer.jpg" alt="">
       <div class="ov"></div>
       <div class="copy">
         <div class="hero-tag"><span class="line"></span><p>{{ __('home.hero.tag') }}</p></div>
@@ -47,15 +47,15 @@
     </div>
     <div class="hero-side">
       <div class="hero-promo" id="heroPromo" data-slides="{{ json_encode($promoSlides, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}">
-        <img src="/assets/hero-promo.png" alt="" id="hpImg">
-        <a class="cta-white" id="hpCta" href="{{ route('product') }}"><p>{{ __('common.view_details') }}</p><img src="/assets/ic-arrow.svg" alt=""></a>
+        <img src="/assets/hero-promo-power-tools.png" alt="" id="hpImg">
+        <a class="cta-white" id="hpCta" href="{{ route('product') }}"><p>{{ __('common.view_details') }}</p><img src="/assets/icon-arrow-right.svg" alt=""></a>
         <div class="dots" id="hpDots"><i class="on"></i><i></i><i></i></div>
       </div>
       {{-- Role banner: 3 slides sliding horizontally (Figma 630:8871 / 630:8835 / 630:8898) --}}
       <div class="hero-role" id="heroRole">
         <div class="hr-track" id="roleTrack">
           <div class="hr-slide">
-            <img src="/assets/hero-usta.jpg" alt="">
+            <img src="/assets/hero-tiler-at-work.jpg" alt="">
             <div class="box">
               <div class="tag"><span class="line"></span><p>{{ __('home.roles.master_tag') }}</p></div>
               <div class="mid">
@@ -68,7 +68,7 @@
             </div>
           </div>
           <div class="hr-slide">
-            <img src="/assets/hero-satici.png" alt="">
+            <img src="/assets/hero-seller-with-tile.png" alt="">
             <div class="box">
               <div class="tag"><span class="line"></span><p>{{ __('home.roles.seller_tag') }}</p></div>
               <div class="mid">
@@ -81,7 +81,7 @@
             </div>
           </div>
           <div class="hr-slide">
-            <img src="/assets/hero-musteri.jpg" alt="">
+            <img src="/assets/hero-customer-in-tile-store.jpg" alt="">
             <div class="box">
               <div class="tag"><span class="line"></span><p>{{ __('home.roles.customer_tag') }}</p></div>
               <div class="mid">
@@ -103,10 +103,10 @@
 {{-- ===================== SERVICE STRIP ===================== --}}
 <div class="service-strip">
   <div class="inner">
-    <div class="svc"><span class="ic"><img src="/assets/svc-person.svg" alt=""></span><div><div class="t1">{{ __('home.services.masters_t1') }}</div><div class="t2">{{ __('home.services.masters_t2') }}</div></div></div>
-    <div class="svc"><span class="ic"><img src="/assets/svc-delivery.svg" alt=""></span><div><div class="t1">{{ __('home.services.delivery_t1') }}</div><div class="t2">{{ __('home.services.delivery_t2') }}</div></div></div>
-    <div class="svc"><span class="ic"><img src="/assets/svc-security.svg" alt=""></span><div><div class="t1">{{ __('home.services.payment_t1') }}</div><div class="t2">{{ __('home.services.payment_t2') }}</div></div></div>
-    <div class="svc"><span class="ic"><img src="/assets/svc-message.svg" alt=""></span><div><div class="t1">{{ __('home.services.consult_t1') }}</div><div class="t2">{{ __('home.services.consult_t2') }}</div></div></div>
+    <div class="svc"><span class="ic"><img src="/assets/icon-user-grey.svg" alt=""></span><div><div class="t1">{{ __('home.services.masters_t1') }}</div><div class="t2">{{ __('home.services.masters_t2') }}</div></div></div>
+    <div class="svc"><span class="ic"><img src="/assets/icon-truck-grey.svg" alt=""></span><div><div class="t1">{{ __('home.services.delivery_t1') }}</div><div class="t2">{{ __('home.services.delivery_t2') }}</div></div></div>
+    <div class="svc"><span class="ic"><img src="/assets/icon-shield-grey.svg" alt=""></span><div><div class="t1">{{ __('home.services.payment_t1') }}</div><div class="t2">{{ __('home.services.payment_t2') }}</div></div></div>
+    <div class="svc"><span class="ic"><img src="/assets/icon-chat-grey.svg" alt=""></span><div><div class="t1">{{ __('home.services.consult_t1') }}</div><div class="t2">{{ __('home.services.consult_t2') }}</div></div></div>
   </div>
 </div>
 
@@ -115,7 +115,7 @@
   <x-section-head :tag="__('home.categories.tag')" :title="__('home.categories.title')" />
   <div class="cat-row">
     @foreach ($categories as $c)
-      <a @class(['cat-thumb', 'open' => ! empty($c['open'])]) href="{{ route('catalog') }}"><img src="{{ $c['img'] }}" alt=""><div class="ov"></div><div class="info"><div><h4>{{ $c['name'] }}</h4><p>{{ $c['count'] }}</p></div><img src="/assets/ic-arrow.svg" alt=""></div></a>
+      <a @class(['cat-thumb', 'open' => ! empty($c['open'])]) href="{{ route('catalog') }}"><img src="{{ $c['img'] }}" alt=""><div class="ov"></div><div class="info"><div><h4>{{ $c['name'] }}</h4><p>{{ $c['count'] }}</p></div><img src="/assets/icon-arrow-right.svg" alt=""></div></a>
     @endforeach
   </div>
 </div></div>
@@ -144,16 +144,16 @@
   <div class="grid4" id="campGrid">
     <x-pcard :cat="__('home.sale.cat_tiles')" :name="__('home.sale.name_tile_matte')"
              now="23.90 ₼" old="45.99 ₼" off="-48%" rate="4.6" :reviews="__('home.sale.reviews_1876')"
-             img="/assets/prod-kafel.png" />
+             img="/assets/product-marble-tile.png" />
     <x-pcard :cat="__('home.sale.cat_laminate')" :name="__('home.sale.name_laminate')"
              now="29.90 ₼" old="42.00 ₼" off="-29%" rate="4.8" :reviews="__('home.sale.reviews_640')"
-             img="/assets/cat-laminant.png" />
+             img="/assets/category-laminate-flooring.png" />
     <x-pcard :cat="__('home.sale.cat_paint')" :name="__('home.sale.name_paint')"
              now="49.00 ₼" old="72.00 ₼" off="-32%" rate="4.7" :reviews="__('home.sale.reviews_932')"
-             img="/assets/hero-main.jpg" />
+             img="/assets/hero-modern-house.jpg" />
     <x-pcard :cat="__('home.sale.cat_plumbing')" :name="__('home.sale.name_mixer')"
              now="64.00 ₼" old="95.00 ₼" off="-33%" rate="4.9" :reviews="__('home.sale.reviews_210')"
-             img="/assets/cat-sink.png" />
+             img="/assets/category-plumbing.png" />
   </div>
 </div></div>
 

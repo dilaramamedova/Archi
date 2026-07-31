@@ -77,3 +77,7 @@ the translation-key pattern, the CSS token table and the JS state conventions.
 Porting this front end into a real backend application? See
 [`INTEGRATION.md`](INTEGRATION.md) — what to copy, what to leave behind, and the migration
 path from closure routes and demo content to controllers and models.
+
+Dropping it into an existing Laravel app takes one command — `node install.mjs <target-app-path>`
+copies the views, styles, scripts, translations and assets straight from this repo
+(INTEGRATION.md §3).

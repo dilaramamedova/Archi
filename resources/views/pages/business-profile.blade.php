@@ -9,9 +9,9 @@
 --}}
 @php
     $cards = [
-        ['shape' => 'a', 'img' => '/assets/fig/d4fa5ba5165a.jpg', 'cat' => 'cat_paint', 'name' => 'paint'],
-        ['shape' => 'b', 'img' => '/assets/fig/8409fa281b3d.jpg', 'cat' => 'cat_insulation', 'name' => 'insulation'],
-        ['shape' => 'a', 'img' => '/assets/fig/d4fa5ba5165a.jpg', 'cat' => 'cat_paint', 'name' => 'paint'],
+        ['shape' => 'a', 'img' => '/assets/product-facade-paint-bucket-grey.jpg', 'cat' => 'cat_paint', 'name' => 'paint'],
+        ['shape' => 'b', 'img' => '/assets/product-mineral-wool-roll-grey.jpg', 'cat' => 'cat_insulation', 'name' => 'insulation'],
+        ['shape' => 'a', 'img' => '/assets/product-facade-paint-bucket-grey.jpg', 'cat' => 'cat_paint', 'name' => 'paint'],
     ];
 @endphp
 <x-layout page="business-profile" :title="__('business-profile.title')">
@@ -22,7 +22,7 @@
     <div class="cover-wrap">
         <div class="cover">
             <div class="bg">
-                <img src="/assets/fig/bd3b1542ad10.jpg" alt="">
+                <img src="/assets/renovation-before-after-wide.jpg" alt="">
                 <div class="ov"></div>
             </div>
         </div>
@@ -101,7 +101,7 @@
                 @foreach ($cards as $card)
                     <div class="card">
                         <div class="card-img">
-                            <button type="button" class="card-heart" aria-label="{{ __('business-profile.catalog.favourite') }}"><span class="ic20"><img src="/assets/ic-heart2.svg" alt=""></span></button>
+                            <button type="button" class="card-heart" aria-label="{{ __('business-profile.catalog.favourite') }}"><span class="ic20"><img src="/assets/icon-heart-pointed.svg" alt=""></span></button>
                             <div class="card-badges">
                                 <div class="card-badge"><p>{{ __('common.badge_new') }}</p></div>
                                 <div class="card-badge"><p>{{ __('common.badge_in_stock') }}</p></div>
@@ -112,7 +112,7 @@
                         <div class="card-title">
                             <div class="card-title-in">
                                 <div class="card-stars">
-                                    <div class="st"><img src="/assets/ic-star.svg" alt=""></div>
+                                    <div class="st"><img src="/assets/icon-star-yellow.svg" alt=""></div>
                                     <p>4.4 <span class="muted">{{ __('business-profile.catalog.reviews') }}</span></p>
                                 </div>
                                 <p class="card-cat">{{ __("business-profile.catalog.{$card['cat']}") }}</p>

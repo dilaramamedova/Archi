@@ -190,7 +190,7 @@
   .topbar   { @apply sticky top-0 z-[60] w-full bg-white; }
   /* Figma 1039:14264 — row 1 gutter is 40px (logo x=40), row 2 is 28px (nav x=28) */
   .nav-row1 { @apply relative z-[2] flex h-20 w-full items-center gap-12 bg-white px-10; }
-  /* logo.png is a 1201x1200 SQUARE canvas — the wordmark is a 989x364 band centered in it
+  /* logo-archi-black.png is a 1201x1200 SQUARE canvas — the wordmark is a 989x364 band centered in it
      with ~34% blank padding baked in above and below. `w-auto` therefore sized the box
      50x50 and the visible mark only 40x15. Figma's rect (1039:14264 -> 0:4) is 131.58x50
      holding the same square file as an image FILL, i.e. object-cover: the mark then lands

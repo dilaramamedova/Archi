@@ -6,7 +6,7 @@
 --}}
 @php
     // Portfolio tiles: label key -> image. The 6th tile is the "+24 projects" overlay.
-    $tiles = ['t1' => 'pf1.jpg', 't2' => 'pf2.jpg', 't3' => 'pf3.jpg', 't4' => 'pf4.jpg', 't5' => 'pf5.jpg'];
+    $tiles = ['t1' => 'portfolio-stone-tile-samples.jpg', 't2' => 'portfolio-marble-tile-dark.jpg', 't3' => 'portfolio-renovation-before-after.jpg', 't4' => 'portfolio-roof-tile-showroom.jpg', 't5' => 'portfolio-electrical-showroom.jpg'];
 @endphp
 <x-layout page="specialist" :title="__('specialist.title')">
 
@@ -26,19 +26,19 @@
       {{-- identity --}}
       <div class="pp-id">
         <div class="pp-ava">
-          <div class="ring"><img src="/assets/sp-avatar.png" alt="{{ __('specialist.id.name') }}"></div>
-          <span class="pp-badge"><img src="/assets/ic-crown.svg" alt="">{{ __('specialist.id.badge_top') }}</span>
-          <button type="button" class="pp-fav" id="ppFav" data-on="false" aria-pressed="false" aria-label="{{ __('specialist.id.fav_aria') }}"><img src="/assets/ic-heart2.svg" alt=""></button>
+          <div class="ring"><img src="/assets/avatar-placeholder.png" alt="{{ __('specialist.id.name') }}"></div>
+          <span class="pp-badge"><img src="/assets/icon-crown-gold.svg" alt="">{{ __('specialist.id.badge_top') }}</span>
+          <button type="button" class="pp-fav" id="ppFav" data-on="false" aria-pressed="false" aria-label="{{ __('specialist.id.fav_aria') }}"><img src="/assets/icon-heart-pointed.svg" alt=""></button>
         </div>
         <div class="pp-id-r">
-          <span class="pp-verified"><img src="/assets/ic-check.svg" alt="">{{ __('specialist.id.verified') }}</span>
+          <span class="pp-verified"><img src="/assets/icon-check-green.svg" alt="">{{ __('specialist.id.verified') }}</span>
           <div class="pp-name">
             <div>
               <h1>{{ __('specialist.id.name') }}</h1>
               <p class="role">{{ __('specialist.id.role') }}</p>
             </div>
             <div class="pp-rate">
-              <span class="pp-stars"><x-ui.stars icon="/assets/ic-star-amber.svg" /></span>
+              <span class="pp-stars"><x-ui.stars icon="/assets/icon-star-amber.svg" /></span>
               <span class="v">{{ __('specialist.id.rate') }}</span>
               <span class="r">{{ __('specialist.id.reviews') }}</span>
             </div>
@@ -97,7 +97,7 @@
           <a class="pp-tile"><img src="/assets/{{ $img }}" alt="{{ __('specialist.portfolio.tiles.' . $key) }}"><span class="lb">{{ __('specialist.portfolio.tiles.' . $key) }}</span></a>
         @endforeach
         <a class="pp-tile more">
-          <img src="/assets/pf6.jpg" alt="">
+          <img src="/assets/portfolio-laminate-flooring.jpg" alt="">
           <span class="ov"><b>{{ __('specialist.portfolio.more_count') }}</b><span>{{ __('specialist.portfolio.more_link') }}</span></span>
         </a>
       </div>
@@ -145,7 +145,7 @@
         </article>
       @endforeach
     </div>
-    <a class="sec-more"><p>{{ __('specialist.reviews.more') }}</p><img src="/assets/ic-arrow.svg" alt=""></a>
+    <a class="sec-more"><p>{{ __('specialist.reviews.more') }}</p><img src="/assets/icon-arrow-right.svg" alt=""></a>
   </section>
 
 </main>

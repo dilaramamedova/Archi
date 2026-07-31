@@ -82,7 +82,7 @@
           <div class="group flex w-full shrink-0 cursor-pointer items-center justify-between overflow-hidden rounded-ds border-[1.5px] border-black/14 bg-white px-[15.5px] py-[11.5px] data-[on=true]:border-ink"
                data-cat-trigger data-on="true" role="combobox" aria-expanded="true" aria-haspopup="listbox">
             <p class="text-sm font-normal leading-[normal] whitespace-nowrap text-black/40 data-[filled=true]:text-ink" data-cat-value>{{ __('business-onboarding-step4.form.category_placeholder') }}</p>
-            <img class="size-4 shrink-0 transition-transform duration-200 group-data-[on=true]:rotate-180" src="/assets/ic-caret.svg" alt="">
+            <img class="size-4 shrink-0 transition-transform duration-200 group-data-[on=true]:rotate-180" src="/assets/icon-chevron-down.svg" alt="">
           </div>
 
           {{-- Listbox — Figma 1105:21354. Width is content-driven (157px in az); the tick is
@@ -123,7 +123,7 @@
                     class="min-w-px flex-[1_0_0] items-start overflow-hidden bg-white">
           <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-3">
             <p class="text-sm font-normal leading-[normal] whitespace-nowrap text-black/40">{{ __('business-onboarding-step4.form.unit_placeholder') }}</p>
-            <img class="size-4 shrink-0" src="/assets/ic-caret.svg" alt="">
+            <img class="size-4 shrink-0" src="/assets/icon-chevron-down.svg" alt="">
           </div>
         </x-ui.field>
       </div>

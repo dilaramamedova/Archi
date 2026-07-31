@@ -101,7 +101,7 @@ function initSearch() {
       html +=
         '<div class="sd-head">' + esc(L_QUICK) + '</div>' +
         m.sug
-          .map((s) => '<a class="sd-sug" href="' + resultsHref(s) + '"><img src="/assets/ic-search.svg" alt=""><span>' + hl(s, qRaw) + '</span></a>')
+          .map((s) => '<a class="sd-sug" href="' + resultsHref(s) + '"><img src="/assets/icon-search.svg" alt=""><span>' + hl(s, qRaw) + '</span></a>')
           .join('');
     }
     if (m.prod.length) {

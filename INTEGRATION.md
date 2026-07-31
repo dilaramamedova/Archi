@@ -41,7 +41,7 @@ A **presentation-only** Laravel 13 application. Its entire purpose is the markup
 | Styles | Tailwind CSS 4 via `@tailwindcss/vite`. One entry `resources/css/app.css` (~950 lines: `@theme` tokens, `@layer base`, `@layer components`) which `@import`s 36 per-page files |
 | JS | One entry `resources/js/app.js` (~90 lines) that statically imports 3 shared modules + 36 page modules and dispatches on `<body data-page>`. Single bundle, no code splitting. |
 | i18n | `lang/{az,ru,en}/` — 39 files each: 36 page namespaces + `common.php`, `nav.php`, `footer.php`. Default locale `az`. |
-| Assets | `public/assets/` — 82 files (66 at top level + `public/assets/fig/`), referenced as root-relative `/assets/...` |
+| Assets | `public/assets/` — 82 files, flat, content-based names, referenced as root-relative `/assets/...` |
 | Build output | `public/build/` — one CSS (~350 KB unminified-ish) + one JS (~74 KB). Gitignored. |
 
 Every page renders hardcoded demo content pulled from the translation files. Forms are
@@ -67,6 +67,43 @@ screens are markup only.
 
 ## 3. What to copy
 
+### One-file installer
+
+`install.mjs` does the copying for you: it clones this repo into a temp directory and
+copies `resources/`, `public/assets/`, `lang/` and `vite.config.js` into the target app.
+Plain Node ≥ 18, no npm packages, nothing to unpack — grab the single file and run it. It
+**never** touches `routes/`, `app/`, `config/` or `.env`.
+
+```
+node install.mjs <target-laravel-path> [--force] [--repo <url-or-path>] [--branch <name>]
+```
+
+Windows (PowerShell):
+
+```powershell
+curl.exe -O https://raw.githubusercontent.com/dilaramamedova/Archi/laravel/install.mjs
+node install.mjs C:/path/to/your-laravel-app
+```
+
+macOS / Linux:
+
+```bash
+curl -O https://raw.githubusercontent.com/dilaramamedova/Archi/laravel/install.mjs
+node install.mjs ~/code/your-laravel-app
+```
+
+The target must contain an `artisan` file or the installer refuses to run. Before copying
+anything it compares every incoming file with the target: files that already exist **with
+different content** are listed as conflicts and skipped, so a second run never silently
+overwrites your work. Pass `--force` to overwrite them instead. Files the target owns and
+this repo does not ship are left alone in either mode. `--repo` also accepts a local path,
+which is useful for testing.
+
+Afterwards it prints the `devDependencies` to merge (read from the cloned `package.json`),
+a pointer to §5 for the routes, and `npm install && npm run build`.
+
+### Manual copy
+
 Copy these into the target app. Paths are identical on both sides unless noted.
 
 ```
@@ -79,7 +116,7 @@ resources/js/app.js               entry + page registry
 resources/js/shared/              navbar.js, cursor.js, login-modal.js
 resources/js/pages/               36 per-page modules
 lang/az/  lang/ru/  lang/en/      39 files each
-public/assets/                    82 image/icon files (incl. assets/fig/)
+public/assets/                    82 image/icon files, flat
 routes/web.php                    the 36 view routes + /lang/{locale}  — MERGE, see §5.1
 vite.config.js                    the two plugins + input array          — MERGE, see §6
 package.json                      devDependencies only                   — MERGE, see §6
@@ -402,7 +439,7 @@ collection. E.g. `pages/catalog.blade.php` today:
 ```blade
 <x-pcard :cat="__('catalog.grid.cat_tiles')" :name="__('catalog.grid.name_1')"
          now="23.90 ₼" old="45.99 ₼" off="-48%" rate="4.6"
-         :reviews="__('catalog.grid.reviews_1')" img="/assets/prod-kafel.png" />
+         :reviews="__('catalog.grid.reviews_1')" img="/assets/product-marble-tile.png" />
 ```
 
 becomes
@@ -442,7 +479,7 @@ The demo content lives in **two** places, and they need opposite treatment:
   becomes a database row (product names, specialist names, blog titles/excerpts, prices,
   review counts, showroom addresses) gets deleted from all three locales once the model
   feeds it. Deleting from only one locale is worse than leaving it — see §8.
-- **Blade literals** — image paths (`/assets/prod-kafel.png`), star ratings, prices, counts
+- **Blade literals** — image paths (`/assets/product-marble-tile.png`), star ratings, prices, counts
   and the demo arrays declared in `@php` blocks at the top of several pages. Grep for
   `@php` in `resources/views/pages/` to find them; they are the seams where a controller
   variable slots in with the least edit.

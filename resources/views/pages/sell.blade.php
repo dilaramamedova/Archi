@@ -45,7 +45,7 @@
         <label class="group relative flex min-h-[360px] cursor-pointer items-center justify-center overflow-hidden border-2 border-dashed border-black/20 bg-gray-soft transition-[border-color,background] duration-200 hover:border-black hover:bg-[#eef1f4] max-[860px]:min-h-[240px]" id="upBox">
           <input type="file" id="upInput" accept="image/*" hidden>
           <div class="pointer-events-none flex flex-col items-center gap-2.5 p-6 text-center group-data-[has=true]:hidden" id="upPh">
-            <span class="flex size-14 items-center justify-center rounded-full bg-yellow"><img class="size-[26px]" src="/assets/ic-plus.svg" alt=""></span>
+            <span class="flex size-14 items-center justify-center rounded-full bg-yellow"><img class="size-[26px]" src="/assets/icon-plus.svg" alt=""></span>
             <h4 class="text-base font-semibold text-ink">{{ __('sell.upload.title') }}</h4>
             <span class="text-[13px] text-black/50">{{ __('sell.upload.hint') }}</span>
           </div>
@@ -93,7 +93,7 @@
       </div>
 
       <div class="mt-7 flex items-center justify-between gap-5 border-t border-black/10 pt-6 max-[860px]:flex-col max-[860px]:items-stretch">
-        <p class="flex max-w-[420px] items-center gap-2 text-[13px] leading-[1.4] text-black/55"><span class="inline-flex size-[18px] shrink-0 items-center justify-center rounded-full bg-green/12"><img class="size-[11px]" src="/assets/ic-check.svg" alt=""></span> {{ __('sell.form.note') }}</p>
+        <p class="flex max-w-[420px] items-center gap-2 text-[13px] leading-[1.4] text-black/55"><span class="inline-flex size-[18px] shrink-0 items-center justify-center rounded-full bg-green/12"><img class="size-[11px]" src="/assets/icon-check-green.svg" alt=""></span> {{ __('sell.form.note') }}</p>
         <x-ui.button variant="primary" type="submit" id="pSubmit" class="h-[54px] rounded-none px-8 text-[17px] font-semibold whitespace-nowrap hover:brightness-[.93] max-[860px]:w-full">{{ __('sell.form.submit') }}</x-ui.button>
       </div>
     </form>
@@ -103,12 +103,12 @@
 {{-- success + sign-up nudge · the fadeIn/lmIn keyframes live in pages/sell.css --}}
 <x-ui.modal id="okOv" aria-labelledby="okTitle" :close-label="__('sell.success.close')"
             dialog="w-full max-w-[480px] animate-[lmIn_0.26s_ease] bg-white px-9 py-10 text-center shadow-[-6px_6px_28px_rgba(0,0,0,0.22)]">
-  <div class="mx-auto mb-5 flex size-[72px] items-center justify-center rounded-full bg-green/12"><img class="size-[34px]" src="/assets/ic-check.svg" alt=""></div>
+  <div class="mx-auto mb-5 flex size-[72px] items-center justify-center rounded-full bg-green/12"><img class="size-[34px]" src="/assets/icon-check-green.svg" alt=""></div>
   <h2 class="mb-2.5 text-[26px] font-semibold text-ink" id="okTitle">{{ __('sell.success.title') }}</h2>
   <p class="mb-6 text-[15px] leading-[1.6] text-black/60">{{ __('sell.success.congrats') }} <b id="okName">{{ __('sell.success.default_name') }}</b> {{ __('sell.success.text_after') }}</p>
 
   <div class="mb-6 hidden border border-black/10 bg-gray-soft2 p-[18px] text-left" id="regNudge">
-    <div class="mb-1.5 flex items-center gap-2 text-[15px] font-semibold text-ink"><img class="size-[18px]" src="/assets/ic-crown.svg" alt="">{{ __('sell.success.nudge_title') }}</div>
+    <div class="mb-1.5 flex items-center gap-2 text-[15px] font-semibold text-ink"><img class="size-[18px]" src="/assets/icon-crown-gold.svg" alt="">{{ __('sell.success.nudge_title') }}</div>
     <p class="text-sm leading-[1.5] text-black/60">{{ __('sell.success.nudge_text') }}</p>
   </div>
 

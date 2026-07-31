@@ -564,7 +564,7 @@ belongs to `business-profile-company`, which was ported without hover states and
 | `title` | `null` | large heading |
 | `more` | `null` | URL of the right-hand link. `null` → `<a>` without href (the old HTML has such cases). `false` → no link at all. |
 | `moreLabel` | `__('common.view_more')` | link text |
-| `icon` | `/assets/ic-arrow.svg` | arrow icon |
+| `icon` | `/assets/icon-arrow-right.svg` | arrow icon |
 
 The output markup is **identical** to the old HTML:
 `<div class="sec-head"><div><div class="sec-tag">…</div><div class="sec-title">…</div></div><a class="sec-more">…</a></div>`
@@ -577,14 +577,14 @@ The output markup is **identical** to the old HTML:
     :name="__('home.sale.name_tile_matte')"
     now="23.90 ₼" old="45.99 ₼" off="-48%"
     rate="4.6" :reviews="__('home.sale.reviews_1876')"
-    img="/assets/prod-kafel.png"
+    img="/assets/product-marble-tile.png"
     :href="route('product')" />
 ```
 
 | Prop | Default | Description |
 |---|---|---|
 | `href` | `route('product')` | card link |
-| `img` | `/assets/prod-kafel.png` | image |
+| `img` | `/assets/product-marble-tile.png` | image |
 | `cat` `name` | `null` | category · name |
 | `now` `old` `off` | `null` | current price · old price · discount badge |
 | `rate` `reviews` | `null` | rating · review count |
@@ -618,7 +618,7 @@ Extra utility classes are merged through `$attributes->merge`:
 |---|---|---|
 | `href` | `null` | when given the card renders as `<a>`, otherwise `<div>` (old behaviour) |
 | `bg` | `#f5fbff` | tint background of the `.top` block |
-| `avatar` | `/assets/ic-person.svg` | avatar icon |
+| `avatar` | `/assets/icon-user.svg` | avatar icon |
 | `role` `rate` `reviews` `name` `exp` `proj` | `null` | text values |
 | `badges` | `common.badge_top_master` (crown) + `common.badge_verified` (green) | item: `['label'=>'…','icon'=>'/assets/…','ok'=>bool]` |
 
@@ -639,7 +639,7 @@ Extra utility classes are merged through `$attributes->merge`:
 | Prop | Default | Description |
 |---|---|---|
 | `href` | `null` | link (null → `<a>` without href) |
-| `img` | `/assets/blog.png` | image |
+| `img` | `/assets/blog-cover-default.png` | image |
 | `time` `title` `excerpt` | `null` | text values |
 | `read` | `__('common.read_arrow')` | bottom link text |
 
@@ -842,10 +842,10 @@ For state driven from a parent use `group` + `group-data-[sel=true]:`.
 
 ## 8. Images / assets
 
-- Everything lives under `public/assets/` (66 files + `public/assets/fig/`, 16 more — 82 total).
+- Everything lives under `public/assets/`, flat — 82 files, content-based names.
 - Markup **always** uses `/assets/...`:
-  - `src="assets/logo.png"` → `src="/assets/logo.png"`
-  - `url(assets/hero.jpg)` → `url(/assets/hero.jpg)`
+  - `src="assets/logo-archi-black.png"` → `src="/assets/logo-archi-black.png"`
+  - `url(assets/hero-modern-house.jpg)` → `url(/assets/hero-modern-house.jpg)`
 - Do not add new images — everything is already copied. If a file is missing, copy it from
   the old project into `public/assets/` and mention it in your report.
 

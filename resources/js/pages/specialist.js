@@ -3,8 +3,8 @@
 // ([data-fcalc] -> calculator.html, "send message" -> the login modal); both targets
 // now arrive from Blade as data-url, and the heart's `.on` class became data-on.
 
-const HEART_ON = '/assets/ic-heart.svg';
-const HEART_OFF = '/assets/ic-heart2.svg';
+const HEART_ON = '/assets/icon-heart-rounded.svg';
+const HEART_OFF = '/assets/icon-heart-pointed.svg';
 
 function initFavourite() {
   const fav = document.getElementById('ppFav');

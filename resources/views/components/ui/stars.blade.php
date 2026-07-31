@@ -9,10 +9,10 @@
 
   Props:
     count — number of stars (default 5)
-    icon  — icon path (default /assets/ic-star.svg)
+    icon  — icon path (default /assets/icon-star-yellow.svg)
 --}}
 @props([
     'count' => 5,
-    'icon' => '/assets/ic-star.svg',
+    'icon' => '/assets/icon-star-yellow.svg',
 ])
 @for ($i = 0; $i < (int) $count; $i++)<img src="{{ $icon }}" alt="">@endfor

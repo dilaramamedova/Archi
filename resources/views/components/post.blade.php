@@ -14,7 +14,7 @@
 
   Props:
     href    — link (null → <a> without href, as in the old index.html)
-    img     — image (default /assets/blog.png)
+    img     — image (default /assets/blog-cover-default.png)
     time    — reading-time text
     title   — <h3> heading
     excerpt — <p class="ex"> short text
@@ -25,7 +25,7 @@
 --}}
 @props([
     'href' => null,
-    'img' => '/assets/blog.png',
+    'img' => '/assets/blog-cover-default.png',
     'time' => null,
     'title' => null,
     'excerpt' => null,

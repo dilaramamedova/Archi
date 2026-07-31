@@ -24,20 +24,20 @@
         <div class="mb-3 text-base font-semibold text-black">{{ __('register.roles.label') }}</div>
         <div class="grid grid-cols-3 gap-3 max-[640px]:grid-cols-1" id="roles">
           <button type="button" class="group relative flex cursor-pointer flex-col gap-2.5 border border-black/20 p-5 text-left transition-[border-color,background] duration-200 hover:border-black data-[sel=true]:border-yellow data-[sel=true]:bg-[#fffdf0] data-[sel=true]:shadow-[inset_0_0_0_1px_var(--color-yellow)]" data-role="buyer" data-sel="{{ $role === 'buyer' ? 'true' : 'false' }}">
-            <span class="absolute top-3.5 right-3.5 flex size-5 items-center justify-center rounded-full border border-black/30 opacity-0 transition duration-200 group-data-[sel=true]:border-yellow group-data-[sel=true]:bg-yellow group-data-[sel=true]:opacity-100"><img class="size-3 brightness-0" src="/assets/ic-check.svg" alt=""></span>
-            <span class="flex size-[46px] items-center justify-center rounded-pill bg-gray-soft group-data-[sel=true]:bg-yellow"><img class="size-6" src="/assets/ic-cart.svg" alt=""></span>
+            <span class="absolute top-3.5 right-3.5 flex size-5 items-center justify-center rounded-full border border-black/30 opacity-0 transition duration-200 group-data-[sel=true]:border-yellow group-data-[sel=true]:bg-yellow group-data-[sel=true]:opacity-100"><img class="size-3 brightness-0" src="/assets/icon-check-green.svg" alt=""></span>
+            <span class="flex size-[46px] items-center justify-center rounded-pill bg-gray-soft group-data-[sel=true]:bg-yellow"><img class="size-6" src="/assets/icon-cart.svg" alt=""></span>
             <h4 class="text-base font-semibold text-ink">{{ __('register.roles.buyer.title') }}</h4>
             <p class="text-[13px] leading-[1.35] text-black/55">{{ __('register.roles.buyer.desc') }}</p>
           </button>
           <button type="button" class="group relative flex cursor-pointer flex-col gap-2.5 border border-black/20 p-5 text-left transition-[border-color,background] duration-200 hover:border-black data-[sel=true]:border-yellow data-[sel=true]:bg-[#fffdf0] data-[sel=true]:shadow-[inset_0_0_0_1px_var(--color-yellow)]" data-role="seller" data-sel="{{ $role === 'seller' ? 'true' : 'false' }}">
-            <span class="absolute top-3.5 right-3.5 flex size-5 items-center justify-center rounded-full border border-black/30 opacity-0 transition duration-200 group-data-[sel=true]:border-yellow group-data-[sel=true]:bg-yellow group-data-[sel=true]:opacity-100"><img class="size-3 brightness-0" src="/assets/ic-check.svg" alt=""></span>
-            <span class="flex size-[46px] items-center justify-center rounded-pill bg-gray-soft group-data-[sel=true]:bg-yellow"><img class="size-6" src="/assets/spec-ic-sirket.svg" alt=""></span>
+            <span class="absolute top-3.5 right-3.5 flex size-5 items-center justify-center rounded-full border border-black/30 opacity-0 transition duration-200 group-data-[sel=true]:border-yellow group-data-[sel=true]:bg-yellow group-data-[sel=true]:opacity-100"><img class="size-3 brightness-0" src="/assets/icon-check-green.svg" alt=""></span>
+            <span class="flex size-[46px] items-center justify-center rounded-pill bg-gray-soft group-data-[sel=true]:bg-yellow"><img class="size-6" src="/assets/icon-tower-crane.svg" alt=""></span>
             <h4 class="text-base font-semibold text-ink">{{ __('register.roles.seller.title') }}</h4>
             <p class="text-[13px] leading-[1.35] text-black/55">{{ __('register.roles.seller.desc') }}</p>
           </button>
           <button type="button" class="group relative flex cursor-pointer flex-col gap-2.5 border border-black/20 p-5 text-left transition-[border-color,background] duration-200 hover:border-black data-[sel=true]:border-yellow data-[sel=true]:bg-[#fffdf0] data-[sel=true]:shadow-[inset_0_0_0_1px_var(--color-yellow)]" data-role="master" data-sel="{{ $role === 'master' ? 'true' : 'false' }}">
-            <span class="absolute top-3.5 right-3.5 flex size-5 items-center justify-center rounded-full border border-black/30 opacity-0 transition duration-200 group-data-[sel=true]:border-yellow group-data-[sel=true]:bg-yellow group-data-[sel=true]:opacity-100"><img class="size-3 brightness-0" src="/assets/ic-check.svg" alt=""></span>
-            <span class="flex size-[46px] items-center justify-center rounded-pill bg-gray-soft group-data-[sel=true]:bg-yellow"><img class="size-6" src="/assets/spec-ic-usta.svg" alt=""></span>
+            <span class="absolute top-3.5 right-3.5 flex size-5 items-center justify-center rounded-full border border-black/30 opacity-0 transition duration-200 group-data-[sel=true]:border-yellow group-data-[sel=true]:bg-yellow group-data-[sel=true]:opacity-100"><img class="size-3 brightness-0" src="/assets/icon-check-green.svg" alt=""></span>
+            <span class="flex size-[46px] items-center justify-center rounded-pill bg-gray-soft group-data-[sel=true]:bg-yellow"><img class="size-6" src="/assets/icon-hammer-wrench.svg" alt=""></span>
             <h4 class="text-base font-semibold text-ink">{{ __('register.roles.master.title') }}</h4>
             <p class="text-[13px] leading-[1.35] text-black/55">{{ __('register.roles.master.desc') }}</p>
           </button>

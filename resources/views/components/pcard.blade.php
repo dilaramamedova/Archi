@@ -11,14 +11,14 @@
         off="-48%"
         rate="4.6"
         :reviews="__('home.sale.reviews_1876')"
-        img="/assets/prod-kafel.png" />
+        img="/assets/product-marble-tile.png" />
 
     // user's own listing (yellow badge)
     <x-pcard :badges="[['label' => __('common.your_listing'), 'mine' => true], ['label' => '4.6']]" />
 
   Props:
     href     — card link (default: route('product'))
-    img      — image path, /assets/... (default: /assets/prod-kafel.png)
+    img      — image path, /assets/... (default: /assets/product-marble-tile.png)
     cat      — category line (rendered uppercase)
     name     — product name
     now      — current price
@@ -37,7 +37,7 @@
 --}}
 @props([
     'href' => null,
-    'img' => '/assets/prod-kafel.png',
+    'img' => '/assets/product-marble-tile.png',
     'cat' => null,
     'name' => null,
     'now' => null,
@@ -74,7 +74,7 @@
         @endforeach
       </div>
     @endif
-    <div class="heart"><img src="/assets/ic-heart2.svg" alt=""></div>
+    <div class="heart"><img src="/assets/icon-heart-pointed.svg" alt=""></div>
     @if ($dots > 0)
       <div class="dots">
         @for ($i = 0; $i < $dots; $i++)
@@ -84,7 +84,7 @@
     @endif
   </div>
   @if ($rate !== null)
-    <div class="rating"><img src="/assets/ic-star.svg" alt=""><p>{{ $rate }} <span>{{ $reviews }}</span></p></div>
+    <div class="rating"><img src="/assets/icon-star-yellow.svg" alt=""><p>{{ $rate }} <span>{{ $reviews }}</span></p></div>
   @endif
   @if ($cat !== null)<div class="cat">{{ $cat }}</div>@endif
   @if ($name !== null)<div class="name">{{ $name }}</div>@endif

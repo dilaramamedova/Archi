@@ -4,10 +4,10 @@
 @php
     // Non-text row data: thumbnail, category, stock tone and switch state.
     $rows = [
-        ['key' => 'tile_matte',   'img' => '/assets/fig/771faed66b85.jpg', 'cat' => 'tile', 'tone' => 'ok',   'on' => true],
-        ['key' => 'tile_marble',  'img' => '/assets/fig/78886edf.jpg',     'cat' => 'tile', 'tone' => 'ok',   'on' => true],
-        ['key' => 'tile_metlakh', 'img' => '/assets/fig/81fc93e90549.jpg', 'cat' => 'tile', 'tone' => 'warn', 'on' => true],
-        ['key' => 'tile_mosaic',  'img' => '/assets/fig/de976aecd9e3.jpg', 'cat' => 'tile', 'tone' => 'warn', 'on' => false],
+        ['key' => 'tile_matte',   'img' => '/assets/product-stone-tile-samples.jpg', 'cat' => 'tile', 'tone' => 'ok',   'on' => true],
+        ['key' => 'tile_marble',  'img' => '/assets/product-marble-tile-thumb.jpg',     'cat' => 'tile', 'tone' => 'ok',   'on' => true],
+        ['key' => 'tile_metlakh', 'img' => '/assets/product-marble-tile-angled.jpg', 'cat' => 'tile', 'tone' => 'warn', 'on' => true],
+        ['key' => 'tile_mosaic',  'img' => '/assets/product-roof-tiles.jpg', 'cat' => 'tile', 'tone' => 'warn', 'on' => false],
     ];
 
     // Filter menus. The status of a row is derived in JS from its tone + live switch
@@ -35,7 +35,7 @@
 
     <div class="bpp-filters">
       <div class="bpp-search">
-        <div class="ic"><img src="/assets/ic-search.svg" alt=""></div>
+        <div class="ic"><img src="/assets/icon-search.svg" alt=""></div>
         <input type="search" class="q" placeholder="{{ __('business-profile-products.filters.search') }}" aria-label="{{ __('business-profile-products.filters.search') }}">
       </div>
       {{-- The trigger label never changes on selection: the box must not resize.

@@ -9,10 +9,10 @@
     $stats = ['catalog', 'masters', 'orders', 'since'];
 
     $values = [
-        'trust'        => '/assets/ic-shield-check.svg',
-        'quality'      => '/assets/ic-star-outline.svg',
-        'transparency' => '/assets/ic-eye.svg',
-        'support'      => '/assets/ic-chat.svg',
+        'trust'        => '/assets/icon-shield-check.svg',
+        'quality'      => '/assets/icon-star-outline.svg',
+        'transparency' => '/assets/icon-eye.svg',
+        'support'      => '/assets/icon-speech-bubble.svg',
     ];
 @endphp
 <x-layout page="about" :title="__('about.title')">
@@ -47,7 +47,7 @@
     {{-- ===================== STORY ===================== --}}
     <section class="about-story flex items-center gap-14 max-[1100px]:flex-col max-[1100px]:items-start max-[1100px]:gap-8">
       <img class="h-[420px] w-[620px] shrink-0 rounded-ds object-cover max-[1100px]:h-[360px] max-[1100px]:w-full"
-           src="/assets/about-story.png" alt="{{ __('about.story.image_alt') }}">
+           src="/assets/renovation-before-after.png" alt="{{ __('about.story.image_alt') }}">
 
       <div class="flex min-w-0 flex-1 flex-col gap-4">
         <x-ui.eyebrow variant="kicker" class="about-eyebrow" :label="__('about.story.tag')" />

@@ -13,10 +13,10 @@
 
     // Figma order: card-1, card-3, card-1, card-2
     $products = [
-        ['cat' => __('search.products.cat_tiles'), 'name' => __('search.products.name_tile_matte'), 'img' => '/assets/fig/1ed736a990f0.jpg'],
-        ['cat' => __('search.products.cat_insulation'), 'name' => __('search.products.name_mineral_wool'), 'img' => '/assets/fig/6146d21348a6.jpg'],
-        ['cat' => __('search.products.cat_tiles'), 'name' => __('search.products.name_tile_matte'), 'img' => '/assets/fig/1ed736a990f0.jpg'],
-        ['cat' => __('search.products.cat_paint'), 'name' => __('search.products.name_facade_paint'), 'img' => '/assets/fig/50873ec31b52.jpg'],
+        ['cat' => __('search.products.cat_tiles'), 'name' => __('search.products.name_tile_matte'), 'img' => '/assets/product-marble-tile-wide.jpg'],
+        ['cat' => __('search.products.cat_insulation'), 'name' => __('search.products.name_mineral_wool'), 'img' => '/assets/product-mineral-wool-roll.jpg'],
+        ['cat' => __('search.products.cat_tiles'), 'name' => __('search.products.name_tile_matte'), 'img' => '/assets/product-marble-tile-wide.jpg'],
+        ['cat' => __('search.products.cat_paint'), 'name' => __('search.products.name_facade_paint'), 'img' => '/assets/product-facade-paint-bucket.jpg'],
     ];
 
     $masters = [
@@ -94,7 +94,7 @@
         @for ($i = 1; $i <= 4; $i++)
           <x-post :time="__('search.posts.time_' . $i)" :title="__('search.posts.title_' . $i)"
                   :excerpt="__('search.posts.excerpt_' . $i)"
-                  img="/assets/fig/759c1d0b83ee.jpg" :href="route('blog')" />
+                  img="/assets/blog-cover-renovation.jpg" :href="route('blog')" />
         @endfor
       </div>
     </div>

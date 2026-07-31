@@ -9,7 +9,7 @@
    State lives in data-* attributes (ARCHITECTURE.md 7.1): data-dragging / data-over on a
    row while it is being reordered.
 
-   Assets: the unit <select> reuses the existing /assets/ic-chevron-sm.svg. The ⠿ handle
+   Assets: the unit <select> reuses the existing /assets/icon-chevron-down-small.svg. The ⠿ handle
    is a glyph, not an image, so it stays in the CSS (out of the lang files). */
 @layer components {
 
@@ -51,7 +51,7 @@
      so the box keeps its exact Figma width. */
   .scs-unit {
     @apply w-[92px] cursor-pointer appearance-none pr-[30px] text-[13px] font-semibold;
-    background-image: url(/assets/ic-chevron-sm.svg);
+    background-image: url(/assets/icon-chevron-down-small.svg);
     background-repeat: no-repeat;
     background-position: right 10px center;
     background-size: 14px 14px;

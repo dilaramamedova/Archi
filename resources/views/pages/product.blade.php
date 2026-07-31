@@ -7,10 +7,10 @@
 --}}
 @php
     $thumbs = [
-        '/assets/fig/707f7ce9d30a.jpg',
-        '/assets/fig/346edb216bad.jpg',
-        '/assets/fig/346edb216bad.jpg',
-        '/assets/fig/346edb216bad.jpg',
+        '/assets/product-marble-tile-square.jpg',
+        '/assets/interior-marble-corridor.jpg',
+        '/assets/interior-marble-corridor.jpg',
+        '/assets/interior-marble-corridor.jpg',
     ];
 
     $specs = ['size', 'thickness', 'surface', 'material', 'color', 'box', 'slip', 'usage', 'warranty', 'country'];
@@ -29,10 +29,10 @@
     ];
 
     $similar = [
-        ['img' => '/assets/fig/50873ec31b52.jpg', 'cat' => __('product.similar.cat_paint'), 'name' => __('product.similar.name_paint')],
-        ['img' => '/assets/fig/6146d21348a6.jpg', 'cat' => __('product.similar.cat_insulation'), 'name' => __('product.similar.name_insulation')],
-        ['img' => '/assets/fig/50873ec31b52.jpg', 'cat' => __('product.similar.cat_paint'), 'name' => __('product.similar.name_paint')],
-        ['img' => '/assets/fig/1ed736a990f0.jpg', 'cat' => __('product.similar.cat_tiles'), 'name' => __('product.similar.name_tiles')],
+        ['img' => '/assets/product-facade-paint-bucket.jpg', 'cat' => __('product.similar.cat_paint'), 'name' => __('product.similar.name_paint')],
+        ['img' => '/assets/product-mineral-wool-roll.jpg', 'cat' => __('product.similar.cat_insulation'), 'name' => __('product.similar.name_insulation')],
+        ['img' => '/assets/product-facade-paint-bucket.jpg', 'cat' => __('product.similar.cat_paint'), 'name' => __('product.similar.name_paint')],
+        ['img' => '/assets/product-marble-tile-wide.jpg', 'cat' => __('product.similar.cat_tiles'), 'name' => __('product.similar.name_tiles')],
     ];
 
     $specialists = [
@@ -66,8 +66,8 @@
         </div>
         <div class="pd-main">
           <div class="badges"><span class="b new">{{ __('common.badge_new') }}</span><span class="b">{{ __('common.badge_in_stock') }}</span></div>
-          <div class="heart" id="pdHeartTop" data-liked="false"><img src="/assets/ic-heart2.svg" alt="{{ __('product.gallery.favorite') }}"></div>
-          <img id="pdMainImg" src="/assets/fig/707f7ce9d30a.jpg" alt="{{ __('product.crumb.current') }}">
+          <div class="heart" id="pdHeartTop" data-liked="false"><img src="/assets/icon-heart-pointed.svg" alt="{{ __('product.gallery.favorite') }}"></div>
+          <img id="pdMainImg" src="/assets/product-marble-tile-square.jpg" alt="{{ __('product.crumb.current') }}">
         </div>
       </div>
 
@@ -96,9 +96,9 @@
         <div class="pd-line"></div>
 
         <div class="pd-feats">
-          <div class="f"><span class="tick"><img src="/assets/ic-check.svg" alt=""></span> {{ __('product.info.feat_1') }}</div>
-          <div class="f"><span class="tick"><img src="/assets/ic-check.svg" alt=""></span> {{ __('product.info.feat_2') }}</div>
-          <div class="f"><span class="tick"><img src="/assets/ic-check.svg" alt=""></span> {{ __('product.info.feat_3') }}</div>
+          <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ __('product.info.feat_1') }}</div>
+          <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ __('product.info.feat_2') }}</div>
+          <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ __('product.info.feat_3') }}</div>
         </div>
 
         <div class="pd-stock"><i></i> {{ __('product.info.stock') }}</div>
@@ -116,27 +116,27 @@
                   data-label-in-cart="{{ __('product.info.in_cart') }}"
                   data-cart-unit="{{ __('product.info.cart_unit') }}"
                   data-cart-brand="{{ __('common.site_name') }}"
-                  data-cart-stock="{{ __('common.badge_in_stock') }}"><img src="/assets/ic-cart.svg" alt="">{{ __('product.info.add_cart') }}</button>
-          <button class="pd-wish" id="pdWish" data-liked="false" aria-label="{{ __('product.info.wish') }}"><img src="/assets/ic-heart2.svg" alt=""></button>
+                  data-cart-stock="{{ __('common.badge_in_stock') }}"><img src="/assets/icon-cart.svg" alt="">{{ __('product.info.add_cart') }}</button>
+          <button class="pd-wish" id="pdWish" data-liked="false" aria-label="{{ __('product.info.wish') }}"><img src="/assets/icon-heart-pointed.svg" alt=""></button>
         </div>
 
         <div class="pd-assure">
-          <div class="a"><span class="ic"><img src="/assets/ic-check.svg" alt=""></span><div><div class="t1">{{ __('product.info.delivery_t1') }}</div><div class="t2">{{ __('product.info.delivery_t2') }}</div></div></div>
-          <div class="a"><span class="ic"><img src="/assets/ic-check.svg" alt=""></span><div><div class="t1">{{ __('product.info.return_t1') }}</div><div class="t2">{{ __('product.info.return_t2') }}</div></div></div>
+          <div class="a"><span class="ic"><img src="/assets/icon-check-green.svg" alt=""></span><div><div class="t1">{{ __('product.info.delivery_t1') }}</div><div class="t2">{{ __('product.info.delivery_t2') }}</div></div></div>
+          <div class="a"><span class="ic"><img src="/assets/icon-check-green.svg" alt=""></span><div><div class="t1">{{ __('product.info.return_t1') }}</div><div class="t2">{{ __('product.info.return_t2') }}</div></div></div>
         </div>
 
         {{-- seller / store --}}
         <div class="pd-seller">
           <div class="ps-top">
-            <div class="ps-logo"><img src="/assets/spec-ic-sirket.svg" alt=""></div>
+            <div class="ps-logo"><img src="/assets/icon-tower-crane.svg" alt=""></div>
             <div class="ps-id">
               <div class="ps-name">{{ __('product.seller.name') }}</div>
               <div class="ps-sub">{{ __('product.seller.sub') }}</div>
             </div>
-            <span class="ps-vf"><img src="/assets/ic-check.svg" alt="">{{ __('common.badge_verified') }}</span>
+            <span class="ps-vf"><img src="/assets/icon-check-green.svg" alt="">{{ __('common.badge_verified') }}</span>
           </div>
           <div class="ps-stats">
-            <div class="ps-stat"><b><img src="/assets/ic-star.svg" alt="">4.8</b><span>{{ __('product.seller.rating_label') }}</span></div>
+            <div class="ps-stat"><b><img src="/assets/icon-star-yellow.svg" alt="">4.8</b><span>{{ __('product.seller.rating_label') }}</span></div>
             <div class="ps-stat"><b>1,240</b><span>{{ __('product.seller.products_label') }}</span></div>
             <div class="ps-stat"><b>{{ __('product.seller.response') }}</b><span>{{ __('product.seller.response_label') }}</span></div>
           </div>
@@ -189,12 +189,12 @@
           @php
               $fbtBadges = [];
               if ($isMain) {
-                  $fbtBadges[] = ['icon' => '/assets/ic-check.svg', 'class' => 'fbt-ok'];
+                  $fbtBadges[] = ['icon' => '/assets/icon-check-green.svg', 'class' => 'fbt-ok'];
                   $fbtBadges[] = ['label' => __('product.fbt.badge_this'), 'mine' => true];
               }
               $fbtBadges[] = ['label' => __('common.badge_in_stock')];
           @endphp
-          <x-pcard img="/assets/fig/1ed736a990f0.jpg" :badges="$fbtBadges"
+          <x-pcard img="/assets/product-marble-tile-wide.jpg" :badges="$fbtBadges"
                    rate="4.4" :reviews="__('product.fbt.card_reviews')"
                    :cat="__('product.fbt.card_cat')" :name="__('product.fbt.card_name')"
                    now="23.90 ₼" old="15,99 ₼" off="-48%" />
@@ -203,8 +203,8 @@
         <div class="fbt-panel">
           <span class="lbl">{{ __('product.fbt.selected') }}</span>
           <div class="tot"><b>47.30 ₼</b><span class="old">75.99 ₼</span></div>
-          <div class="fbt-save"><span class="ic"><img src="/assets/ic-check.svg" alt=""></span><p>{{ __('product.fbt.save_1') }}<br>{{ __('product.fbt.save_2') }}</p></div>
-          <button class="fbt-addall" type="button"><img src="/assets/ic-cart.svg" alt="">{{ __('product.fbt.add_all') }}</button>
+          <div class="fbt-save"><span class="ic"><img src="/assets/icon-check-green.svg" alt=""></span><p>{{ __('product.fbt.save_1') }}<br>{{ __('product.fbt.save_2') }}</p></div>
+          <button class="fbt-addall" type="button"><img src="/assets/icon-cart.svg" alt="">{{ __('product.fbt.add_all') }}</button>
           <div class="fbt-hint">{{ __('product.fbt.hint') }}</div>
         </div>
       </div>
@@ -226,7 +226,7 @@
         <div class="rs-dist" id="rsDist">
           @foreach ($dist as $stars => $count)
             <div class="row">
-              <span class="st">{{ $stars }} <img src="/assets/ic-star.svg" alt=""></span>
+              <span class="st">{{ $stars }} <img src="/assets/icon-star-yellow.svg" alt=""></span>
               <span class="track"><span style="width:{{ round($count / $distMax * 100) }}%"></span></span>
               <span class="cnt">{{ $count }}</span>
             </div>
@@ -254,7 +254,7 @@
               <div class="av" style="background:{{ $r['bg'] }};color:{{ $r['fg'] }}">{{ __('product.reviews.ini_' . $r['i']) }}</div>
               <div>
                 <div class="nm">{{ __('product.reviews.name_' . $r['i']) }}</div>
-                <div class="vf"><img src="/assets/ic-check.svg" alt="">{{ __('product.reviews.verified') }}</div>
+                <div class="vf"><img src="/assets/icon-check-green.svg" alt="">{{ __('product.reviews.verified') }}</div>
               </div>
             </div>
             <div class="sd"><span class="s"><x-ui.stars /></span><span class="date">{{ __('product.reviews.date_' . $r['i']) }}</span></div>

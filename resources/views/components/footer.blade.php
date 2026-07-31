@@ -8,8 +8,8 @@
 <footer>
   <div class="inner">
     <div class="foot-top">
-      <a href="{{ route('home') }}" aria-label="{{ __('common.site_name') }}"><img class="foot-logo" src="/assets/logo-white.png" alt="ARCHI"></a>
-      <a class="foot-products" href="{{ route('catalog') }}"><p>{{ __('footer.go_products') }}</p><img src="/assets/ic-arrow-wt.svg" alt=""></a>
+      <a href="{{ route('home') }}" aria-label="{{ __('common.site_name') }}"><img class="foot-logo" src="/assets/logo-archi-white.png" alt="ARCHI"></a>
+      <a class="foot-products" href="{{ route('catalog') }}"><p>{{ __('footer.go_products') }}</p><img src="/assets/icon-arrow-right-white.svg" alt=""></a>
     </div>
 
     <div class="foot-line"></div>
@@ -50,7 +50,7 @@
 
     <div class="foot-news">
       <div class="l">
-        <img src="/assets/ic-mail.svg" alt="">
+        <img src="/assets/icon-mail-white.svg" alt="">
         <div>
           <h4>{{ __('footer.news_title') }}</h4>
           <p>{{ __('footer.news_sub') }}</p>
@@ -76,7 +76,7 @@
         <div class="copy">{{ __('footer.copy') }}</div>
       </div>
       <div class="foot-social">
-        <a href="#" aria-label="Instagram"><img src="/assets/ic-instagram.svg" alt="Instagram"></a>
+        <a href="#" aria-label="Instagram"><img src="/assets/icon-instagram-white.svg" alt="Instagram"></a>
       </div>
     </div>
   </div>

@@ -18,7 +18,7 @@
 
     // Portfolio tiles (831:11952 + 831:11975): six photos, then the dashed uploader.
     // The photos are the ones the public profile and specialist-owner already ship.
-    $tiles = ['t1' => 'pf1.jpg', 't2' => 'pf2.jpg', 't3' => 'pf3.jpg', 't4' => 'pf4.jpg', 't5' => 'pf5.jpg', 't6' => 'pf6.jpg'];
+    $tiles = ['t1' => 'portfolio-stone-tile-samples.jpg', 't2' => 'portfolio-marble-tile-dark.jpg', 't3' => 'portfolio-renovation-before-after.jpg', 't4' => 'portfolio-roof-tile-showroom.jpg', 't5' => 'portfolio-electrical-showroom.jpg', 't6' => 'portfolio-laminate-flooring.jpg'];
 
     // The counter is the profile's real total, not the number of visible tiles.
     $count = 24;

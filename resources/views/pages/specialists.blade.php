@@ -55,7 +55,7 @@
     <div class="fsort sp-sort" id="spSort" data-open="false">
       <span class="lbl">{{ __('specialists.sort.label') }}</span>
       <span class="val" id="spSortVal">{{ __('specialists.sort.rating') }}</span>
-      <img class="car" src="/assets/ic-chevron-sm.svg" alt="">
+      <img class="car" src="/assets/icon-chevron-down-small.svg" alt="">
       <ul class="fsort-menu sp-sort-menu" id="spSortMenu">
         <li data-sort="rating" data-on="true">{{ __('specialists.sort.rating') }}</li>
         <li data-sort="reviews" data-on="false">{{ __('specialists.sort.reviews') }}</li>
@@ -105,9 +105,9 @@
       {{-- rating --}}
       <div class="sp-fs" id="spRateBlock">
         <p class="sp-fs-title">{{ __('specialists.filters.rating_title') }}</p>
-        <div class="sp-radio" data-min="4.5" data-on="true" data-chip="{{ __('specialists.filters.rating_chip', ['min' => '4.5']) }}"><span class="sp-dot"></span><span class="lbl"><img src="/assets/ic-star.svg" alt="">{{ __('specialists.filters.rating_45') }}</span></div>
-        <div class="sp-radio" data-min="4" data-on="false" data-chip="{{ __('specialists.filters.rating_chip', ['min' => '4']) }}"><span class="sp-dot"></span><span class="lbl"><img src="/assets/ic-star.svg" alt="">{{ __('specialists.filters.rating_40') }}</span></div>
-        <div class="sp-radio" data-min="3.5" data-on="false" data-chip="{{ __('specialists.filters.rating_chip', ['min' => '3.5']) }}"><span class="sp-dot"></span><span class="lbl"><img src="/assets/ic-star.svg" alt="">{{ __('specialists.filters.rating_35') }}</span></div>
+        <div class="sp-radio" data-min="4.5" data-on="true" data-chip="{{ __('specialists.filters.rating_chip', ['min' => '4.5']) }}"><span class="sp-dot"></span><span class="lbl"><img src="/assets/icon-star-yellow.svg" alt="">{{ __('specialists.filters.rating_45') }}</span></div>
+        <div class="sp-radio" data-min="4" data-on="false" data-chip="{{ __('specialists.filters.rating_chip', ['min' => '4']) }}"><span class="sp-dot"></span><span class="lbl"><img src="/assets/icon-star-yellow.svg" alt="">{{ __('specialists.filters.rating_40') }}</span></div>
+        <div class="sp-radio" data-min="3.5" data-on="false" data-chip="{{ __('specialists.filters.rating_chip', ['min' => '3.5']) }}"><span class="sp-dot"></span><span class="lbl"><img src="/assets/icon-star-yellow.svg" alt="">{{ __('specialists.filters.rating_35') }}</span></div>
       </div>
 
       <div class="sp-fs-div"></div>
@@ -165,7 +165,7 @@
             <div class="badges">@foreach ($badges as $b)<span class="b {{ $b['class'] }}">{{ $b['label'] }}</span>@endforeach</div>
             <div class="avatar">{{ __('specialists.people.' . $p['id'] . '.initials') }}</div>
             <div class="role">{{ __('specialists.people.' . $p['id'] . '.role') }}</div>
-            <div class="rate"><img class="st" src="/assets/ic-star.svg" alt=""><span class="v">{{ number_format($p['rate'], 1) }}</span><span class="r">{{ __('specialists.card.reviews', ['count' => $p['reviews']]) }}</span></div>
+            <div class="rate"><img class="st" src="/assets/icon-star-yellow.svg" alt=""><span class="v">{{ number_format($p['rate'], 1) }}</span><span class="r">{{ __('specialists.card.reviews', ['count' => $p['reviews']]) }}</span></div>
           </div>
           <div class="name">{{ __('specialists.people.' . $p['id'] . '.name') }}</div>
           <div class="meta"><span class="m">{{ __('specialists.card.exp', ['years' => $p['years']]) }}</span><span class="d">·</span><span class="m">{{ __('specialists.card.projects', ['count' => $p['projects']]) }}</span></div>

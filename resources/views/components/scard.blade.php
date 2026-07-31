@@ -15,7 +15,7 @@
   Props:
     href    — when given the card renders as <a>, otherwise <div> (old behaviour)
     bg      — tint background of the `.top` block (hex string), default #f5fbff
-    avatar  — avatar icon (default /assets/ic-person.svg)
+    avatar  — avatar icon (default /assets/icon-user.svg)
     role    — specialization
     rate    — rating
     reviews — review count text
@@ -24,7 +24,7 @@
     proj    — project count text
     badges  — badge array; null → common.badge_top_master (crown) +
               common.badge_verified (green). Custom item format:
-              ['label' => '...', 'icon' => '/assets/ic-crown.svg', 'ok' => false]
+              ['label' => '...', 'icon' => '/assets/icon-crown-gold.svg', 'ok' => false]
 
   `.name` is unstyled — do not add CSS for it, pixel parity depends on it.
   `.meta` carries only a `flex + gap-3` row rule (see app.css): the spans are
@@ -33,7 +33,7 @@
 @props([
     'href' => null,
     'bg' => '#f5fbff',
-    'avatar' => '/assets/ic-person.svg',
+    'avatar' => '/assets/icon-user.svg',
     'role' => null,
     'rate' => null,
     'reviews' => null,
@@ -45,8 +45,8 @@
 @php
     $tag = $href ? 'a' : 'div';
     $badgeList = $badges ?? [
-        ['label' => __('common.badge_top_master'), 'icon' => '/assets/ic-crown.svg'],
-        ['label' => __('common.badge_verified'), 'icon' => '/assets/ic-check.svg', 'ok' => true],
+        ['label' => __('common.badge_top_master'), 'icon' => '/assets/icon-crown-gold.svg'],
+        ['label' => __('common.badge_verified'), 'icon' => '/assets/icon-check-green.svg', 'ok' => true],
     ];
 @endphp
 <{{ $tag }} {{ $attributes->merge(['class' => 'scard']) }} @if ($href) href="{{ $href }}" @endif>
@@ -58,11 +58,11 @@
         @endforeach
       </div>
     @endif
-    <div class="heart"><img src="/assets/ic-heart2.svg" alt=""></div>
+    <div class="heart"><img src="/assets/icon-heart-pointed.svg" alt=""></div>
     <div class="avatar"><img src="{{ $avatar }}" alt=""></div>
     @if ($role !== null)<div class="role">{{ $role }}</div>@endif
     @if ($rate !== null)
-      <div class="rating"><img src="/assets/ic-star.svg" alt=""><p>{{ $rate }} <span>{{ $reviews }}</span></p></div>
+      <div class="rating"><img src="/assets/icon-star-yellow.svg" alt=""><p>{{ $rate }} <span>{{ $reviews }}</span></p></div>
     @endif
   </div>
   <div>

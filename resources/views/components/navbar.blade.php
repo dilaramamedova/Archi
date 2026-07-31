@@ -23,30 +23,30 @@
     // (title/desc/name/cat/price); assets and layout flags are zipped in by index,
     // so renaming an asset is a one-line change instead of three.
     $catalogIcons = [
-        'cat-ic-tikinti.svg',
-        'cat-ic-santexnika.svg',
-        'cat-ic-elektrik.svg',
-        'cat-ic-dosheme.svg',
-        'cat-ic-isiq.svg',
-        'cat-ic-dekor.svg',
+        'icon-bricks.svg',
+        'icon-faucet.svg',
+        'icon-power-plug.svg',
+        'icon-floor-tiles.svg',
+        'icon-pendant-lamp.svg',
+        'icon-armchair.svg',
     ];
     $specIcons = [
-        'spec-ic-memar.svg',
-        'spec-ic-interyer.svg',
-        'spec-ic-usta.svg',
-        'spec-ic-sirket.svg',
+        'icon-blueprint.svg',
+        'icon-interior-design.svg',
+        'icon-hammer-wrench.svg',
+        'icon-tower-crane.svg',
     ];
-    $blogImages = ['mega-blog1.jpg', 'mega-blog2.jpg', 'mega-blog2.jpg'];
+    $blogImages = ['marble-onyx-texture.jpg', 'architecture-concrete-villa.jpg', 'architecture-concrete-villa.jpg'];
     $blogCtas = ['read', 'read', 'pill'];
 
     // Search autocomplete demo dataset: images live here, text in lang/*/nav.php
     $searchProductImages = [
-        '/assets/fig/1ed736a990f0.jpg',
-        '/assets/fig/bca0ec1e.jpg',
-        '/assets/fig/78886edf.jpg',
-        '/assets/fig/50873ec31b52.jpg',
-        '/assets/fig/6146d21348a6.jpg',
-        '/assets/fig/2701238de96a.jpg',
+        '/assets/product-marble-tile-wide.jpg',
+        '/assets/product-marble-tile-dark.jpg',
+        '/assets/product-marble-tile-thumb.jpg',
+        '/assets/product-facade-paint-bucket.jpg',
+        '/assets/product-mineral-wool-roll.jpg',
+        '/assets/bricklayer-at-work.jpg',
     ];
     $searchProducts = [];
     foreach (__('nav.sd_demo_products') as $i => $product) {
@@ -56,7 +56,7 @@
 
 <header class="topbar">
   <div class="nav-row1">
-    <a href="{{ route('home') }}" aria-label="{{ __('nav.logo_aria') }}"><img class="logo" src="/assets/logo.png" alt="ARCHI"></a>
+    <a href="{{ route('home') }}" aria-label="{{ __('nav.logo_aria') }}"><img class="logo" src="/assets/logo-archi-black.png" alt="ARCHI"></a>
 
     <div class="search"
          data-url-search="{{ route('search') }}"
@@ -69,7 +69,7 @@
          data-demo-suggests="{{ json_encode(__('nav.sd_demo_suggests'), JSON_UNESCAPED_UNICODE) }}"
          data-demo-products="{{ json_encode($searchProducts, JSON_UNESCAPED_UNICODE) }}"
          data-demo-masters="{{ json_encode(__('nav.sd_demo_masters'), JSON_UNESCAPED_UNICODE) }}">
-      <img src="/assets/ic-search.svg" alt="">
+      <img src="/assets/icon-search.svg" alt="">
       <input type="text" id="navSearch" aria-label="{{ __('nav.search_aria') }}" placeholder="{{ __('nav.search_placeholder') }}" autocomplete="off">
       <div class="search-dropdown" id="searchDrop"></div>
     </div>
@@ -79,7 +79,7 @@
         {{-- Language switcher — server-side: /lang/{locale} stores the session and redirects back --}}
         <div class="lang" id="langBtn" role="button" tabindex="0" aria-label="{{ __('nav.lang_aria') }}"
              aria-haspopup="true" aria-controls="langMenu" aria-expanded="false">
-          <span id="langLabel">{{ $langLabels[$locale] ?? 'AZ' }}</span> <img src="/assets/ic-caret.svg" alt="">
+          <span id="langLabel">{{ $langLabels[$locale] ?? 'AZ' }}</span> <img src="/assets/icon-chevron-down.svg" alt="">
           <ul class="lang-menu" id="langMenu">
             @foreach ($langLabels as $code => $label)
               <li @class(['active' => $locale === $code])>
@@ -89,14 +89,14 @@
           </ul>
         </div>
 
-        <img src="/assets/ic-heart.svg" alt="" role="button" tabindex="0" aria-label="{{ __('nav.favorites') }}">
-        <a href="{{ route('cart') }}" class="nav-cart" aria-label="{{ __('nav.cart') }}"><img src="/assets/ic-cart.svg" alt=""><span class="cart-badge" id="navCartCount"></span></a>
+        <img src="/assets/icon-heart-rounded.svg" alt="" role="button" tabindex="0" aria-label="{{ __('nav.favorites') }}">
+        <a href="{{ route('cart') }}" class="nav-cart" aria-label="{{ __('nav.cart') }}"><img src="/assets/icon-cart.svg" alt=""><span class="cart-badge" id="navCartCount"></span></a>
       </div>
 
       <div class="signin">
         <span class="divider"></span>
         <a class="txt" href="{{ route('login') }}">{{ __('nav.sign_in') }}</a>
-        <a class="btn-post" href="{{ route('sell') }}"><img src="/assets/ic-plus.svg" alt=""><span>{{ __('nav.post_product') }}</span></a>
+        <a class="btn-post" href="{{ route('sell') }}"><img src="/assets/icon-plus.svg" alt=""><span>{{ __('nav.post_product') }}</span></a>
       </div>
     </div>
   </div>
@@ -107,15 +107,15 @@
         {{-- The [data-mega] links open their panel on click (navbar.js preventDefaults);
              the href stays as the no-JS fallback and the panel repeats it as real links. --}}
         <a class="nav-item catalog @if ($isCatalog) active @endif" data-mega="catalog" href="{{ route('catalog') }}" aria-label="{{ __('nav.catalog') }}"
-           aria-haspopup="true" aria-controls="megaCatalog" aria-expanded="false"><img src="/assets/ic-grip.svg" alt="">{{ __('nav.catalog') }}</a>
+           aria-haspopup="true" aria-controls="megaCatalog" aria-expanded="false"><img src="/assets/icon-menu.svg" alt="">{{ __('nav.catalog') }}</a>
         <a class="nav-item @if ($isSpec) active @endif" data-mega="spec" href="{{ route('specialists') }}"
-           aria-haspopup="true" aria-controls="megaSpec" aria-expanded="false">{{ __('nav.specialists') }} <img class="mcaret" src="/assets/ic-caret.svg" alt=""></a>
+           aria-haspopup="true" aria-controls="megaSpec" aria-expanded="false">{{ __('nav.specialists') }} <img class="mcaret" src="/assets/icon-chevron-down.svg" alt=""></a>
         <a class="nav-item @if ($isBlog) active @endif" data-mega="blog" href="{{ route('blog') }}"
-           aria-haspopup="true" aria-controls="megaBlog" aria-expanded="false">{{ __('nav.blog') }} <img class="mcaret" src="/assets/ic-caret.svg" alt=""></a>
+           aria-haspopup="true" aria-controls="megaBlog" aria-expanded="false">{{ __('nav.blog') }} <img class="mcaret" src="/assets/icon-chevron-down.svg" alt=""></a>
         <a class="nav-item @if (request()->routeIs('about')) active @endif" href="{{ route('about') }}">{{ __('nav.about') }}</a>
         <a class="nav-item @if ($isB2B) active @endif" href="{{ route('business.register') }}">{{ __('nav.b2b') }}</a>
       </div>
-      <a class="nav-calc" href="{{ route('calculator') }}"><img src="/assets/ic-calculator.svg" alt="">{{ __('nav.calculator') }}</a>
+      <a class="nav-calc" href="{{ route('calculator') }}"><img src="/assets/icon-calculator.svg" alt="">{{ __('nav.calculator') }}</a>
     </div>
   </div>
 
@@ -146,7 +146,7 @@
           @endforeach
         </div>
         <div class="promo">
-          <img class="ph" src="/assets/mega-consult.jpg" alt="">
+          <img class="ph" src="/assets/architecture-house-sketch.jpg" alt="">
           <div class="card">
             <p>{{ __('nav.mega_promo_text') }}</p>
             <a class="pill" href="{{ route('specialists') }}">{{ __('nav.mega_promo_cta') }}</a>
@@ -171,7 +171,7 @@
               @if (($blogCtas[$i] ?? 'read') === 'pill')
                 <span class="pill">{{ __('common.more') }}</span>
               @else
-                <span class="read">{{ __('common.read_more') }} <img src="/assets/ic-arrow.svg" alt=""></span>
+                <span class="read">{{ __('common.read_more') }} <img src="/assets/icon-arrow-right.svg" alt=""></span>
               @endif
             </div>
           </a>

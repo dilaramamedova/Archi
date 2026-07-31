@@ -45,7 +45,7 @@
 
     {{-- ===================== HERO IMAGE ===================== --}}
     <div class="h-[480px] w-[1000px] max-w-full overflow-hidden rounded-ds max-[900px]:h-[320px]">
-      <img class="size-full object-cover" src="/assets/blog-hero.jpg" alt="{{ __('blog-article.head.title') }}">
+      <img class="size-full object-cover" src="/assets/blog-cover-modern-villa.jpg" alt="{{ __('blog-article.head.title') }}">
     </div>
 
     {{-- ===================== ARTICLE BODY ===================== --}}

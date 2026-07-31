@@ -7,7 +7,7 @@
         <div class="sec-tag"><span class="line"></span><p>...</p></div>
         <div class="sec-title">...</div>
       </div>
-      <a class="sec-more" href="..."><p>...</p><img src="/assets/ic-arrow.svg" alt=""></a>
+      <a class="sec-more" href="..."><p>...</p><img src="/assets/icon-arrow-right.svg" alt=""></a>
     </div>
 
   Example:
@@ -27,14 +27,14 @@
     title     — large heading
     more      — URL of the right-hand link · null → <a> without href · false → no link
     moreLabel — link text (default __('common.view_more'))
-    icon      — link icon (default /assets/ic-arrow.svg)
+    icon      — link icon (default /assets/icon-arrow-right.svg)
 --}}
 @props([
     'tag' => null,
     'title' => null,
     'more' => null,
     'moreLabel' => null,
-    'icon' => '/assets/ic-arrow.svg',
+    'icon' => '/assets/icon-arrow-right.svg',
 ])
 <div {{ $attributes->merge(['class' => 'sec-head']) }}>
   <div>

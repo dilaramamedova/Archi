@@ -60,7 +60,7 @@
         <div class="sc-select">
           <x-ui.select variant="b2b" id="sc-craft" class="sc-input sc-select-control"
                        :options="__('specialist-cabinet.main.craft_options')" />
-          <img class="car" src="/assets/ic-chevron-sm.svg" alt="">
+          <img class="car" src="/assets/icon-chevron-down-small.svg" alt="">
         </div>
       </x-cabinet.field>
       <x-cabinet.field :label="__('specialist-cabinet.main.experience')" for="sc-experience">
@@ -71,7 +71,7 @@
         <div class="sc-select">
           <x-ui.select variant="b2b" id="sc-city" class="sc-input sc-select-control"
                        :options="__('specialist-cabinet.main.city_options')" />
-          <img class="car" src="/assets/ic-chevron-sm.svg" alt="">
+          <img class="car" src="/assets/icon-chevron-down-small.svg" alt="">
         </div>
       </x-cabinet.field>
     </div>

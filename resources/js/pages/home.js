@@ -27,12 +27,12 @@ function initUserProducts() {
     <a class="pcard" href="${esc(d.urlProduct)}">
       <div class="prod-cursor"><span>${esc(d.lCursor)}</span></div>
       <div class="ph">
-        <img class="prod" src="${esc(p.img || '/assets/prod-kafel.png')}" alt="">
+        <img class="prod" src="${esc(p.img || '/assets/product-marble-tile.png')}" alt="">
         <div class="badges"><span class="b mine">${esc(d.lMine)}</span><span class="b">${esc(p.rate)}</span></div>
-        <div class="heart"><img src="/assets/ic-heart2.svg" alt=""></div>
+        <div class="heart"><img src="/assets/icon-heart-pointed.svg" alt=""></div>
         <div class="dots"><i class="on"></i><i></i><i></i></div>
       </div>
-      <div class="rating"><img src="/assets/ic-star.svg" alt=""><p>${esc(d.lNew)} <span>${esc(p.reviews)}</span></p></div>
+      <div class="rating"><img src="/assets/icon-star-yellow.svg" alt=""><p>${esc(d.lNew)} <span>${esc(p.reviews)}</span></p></div>
       <div class="cat">${esc(p.cat)}</div>
       <div class="name">${esc(p.name)}</div>
       <div class="price"><span class="now">${esc(p.now)}</span>${p.old ? `<span class="old">${esc(p.old)}</span>` : ''}${p.off ? `<span class="off">${esc(p.off)}</span>` : ''}</div>

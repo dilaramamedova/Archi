@@ -6,9 +6,9 @@
 --}}
 <x-layout page="catalog" :title="__('catalog.title')">
 @php
-    $tilePaint = '/assets/fig/50873ec31b52.jpg';
-    $tileWool = '/assets/fig/6146d21348a6.jpg';
-    $tileMarble = '/assets/fig/1ed736a990f0.jpg';
+    $tilePaint = '/assets/product-facade-paint-bucket.jpg';
+    $tileWool = '/assets/product-mineral-wool-roll.jpg';
+    $tileMarble = '/assets/product-marble-tile-wide.jpg';
 
     // Non-textual card data; the copy lives in lang/*/catalog.php ('products').
     // brand / surface / size / stock feed the sidebar filters (catalog.js).

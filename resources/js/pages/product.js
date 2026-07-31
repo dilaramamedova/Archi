@@ -99,13 +99,13 @@ function initAddToCart() {
     btn.dataset.added = added ? 'true' : 'already';
     setButton(
       btn,
-      added ? '/assets/ic-check.svg' : '/assets/ic-cart.svg',
+      added ? '/assets/icon-check-green.svg' : '/assets/icon-cart.svg',
       (added ? d.labelAdded : d.labelInCart) || ''
     );
     syncCartBadge();
     resetTimer = setTimeout(() => {
       btn.dataset.added = 'false';
-      setButton(btn, '/assets/ic-cart.svg', d.labelAdd || '');
+      setButton(btn, '/assets/icon-cart.svg', d.labelAdd || '');
     }, 1800);
   });
 }

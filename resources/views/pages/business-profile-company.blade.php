@@ -12,7 +12,7 @@
 
     <div class="bpc-cover">
       <div class="bg">
-        <img src="/assets/fig/576cb03803aa.jpg" alt="">
+        <img src="/assets/hero-renovation-before-after.jpg" alt="">
         <div class="overlay"></div>
       </div>
       <div class="bpc-cover-btn"><p>{{ __('business-profile-company.media.change_cover') }}</p></div>

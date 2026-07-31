@@ -14,11 +14,11 @@
     ];
     // Portfolio tiles (831:11640): 2 rows x 3. The Figma frame draws empty placeholders;
     // the photos are the ones the public profile already ships.
-    $tiles = ['t1' => 'pf1.jpg', 't2' => 'pf2.jpg', 't3' => 'pf3.jpg', 't4' => 'pf4.jpg', 't5' => 'pf5.jpg', 't6' => 'pf6.jpg'];
+    $tiles = ['t1' => 'portfolio-stone-tile-samples.jpg', 't2' => 'portfolio-marble-tile-dark.jpg', 't3' => 'portfolio-renovation-before-after.jpg', 't4' => 'portfolio-roof-tile-showroom.jpg', 't5' => 'portfolio-electrical-showroom.jpg', 't6' => 'portfolio-laminate-flooring.jpg'];
     // Every rating on this frame is a near-black "★" text glyph (831:11588, 831:11706,
     // 831:11716), not the yellow product star the rest of the site uses, so <x-ui.stars>
     // gets the ink variant of the icon here.
-    $starIcon = '/assets/ic-star-ink.svg';
+    $starIcon = '/assets/icon-star-black.svg';
     // Figma draws both edit affordances with the hairline "✎" glyph (831:11695, 831:11541).
     // Chrome substitutes a filled emoji pencil that is darker and taller than the text line
     // box, so the glyph is replaced by an inline outline pencil that inherits the text color.
