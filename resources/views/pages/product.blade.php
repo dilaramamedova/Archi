@@ -113,6 +113,7 @@
           <button class="pd-add" id="addCart" data-added="false"
                   data-label-add="{{ __('product.info.add_cart') }}"
                   data-label-added="{{ __('product.info.added') }}"
+                  data-label-in-cart="{{ __('product.info.in_cart') }}"
                   data-cart-unit="{{ __('product.info.cart_unit') }}"
                   data-cart-brand="{{ __('common.site_name') }}"
                   data-cart-stock="{{ __('common.badge_in_stock') }}"><img src="/assets/ic-cart.svg" alt="">{{ __('product.info.add_cart') }}</button>
@@ -257,12 +258,14 @@
             </div>
             <div class="sd"><span class="s">@for ($i = 0; $i < 5; $i++)<img src="/assets/ic-star.svg" alt="">@endfor</span><span class="date">{{ __('product.reviews.date_' . $r['i']) }}</span></div>
             <div class="txt">{{ __('product.reviews.text_' . $r['i']) }}</div>
-            <div class="help">{{ __('product.reviews.helpful') }}&nbsp;&nbsp;·&nbsp;&nbsp;{{ $r['help'] }}</div>
+            <button type="button" class="help" data-on="false" aria-pressed="false">{{ __('product.reviews.helpful') }}&nbsp;&nbsp;·&nbsp;&nbsp;<span class="n">{{ $r['help'] }}</span></button>
           </div>
         @endforeach
       </div>
 
-      <div class="rev-all"><a class="sec-more2">{{ __('product.reviews.all') }}&nbsp;&nbsp;→</a></div>
+      {{-- No reviews route exists, so this stays a plain label (not an <a>) — it must
+           not advertise a link it cannot follow. --}}
+      <div class="rev-all"><span class="sec-more2">{{ __('product.reviews.all') }}&nbsp;&nbsp;→</span></div>
     </div>
 
   </div></div>
@@ -283,7 +286,9 @@
 
 {{-- ===================== FEATURED SPECIALISTS ===================== --}}
 <div class="wrap"><div class="inner section">
-  <x-section-head :tag="__('product.specialists.tag')" :title="__('product.specialists.title')" />
+  {{-- the old page left this "view more" without an href; it now points at /specialists --}}
+  <x-section-head :tag="__('product.specialists.tag')" :title="__('product.specialists.title')"
+                  :more="route('specialists')" />
   <div class="grid4" id="specGrid">
     @foreach ($specialists as $s)
       <x-scard :bg="$s['bg']" :role="$s['role']" rate="4.9" :reviews="__('product.specialists.reviews_416')"

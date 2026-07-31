@@ -27,7 +27,10 @@ return [
         'size' => ':v cm',
         'surface' => ':v finish',
         'price' => ':min–:max ₼',
+        'remove' => 'Remove filter: :v',
     ],
+
+    'empty' => 'No products match the selected filters.',
 
     'filters' => [
         'categories' => 'Categories',

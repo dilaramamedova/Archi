@@ -67,10 +67,11 @@
               </select>
             </div>
             <div class="flex flex-1 flex-col gap-2">
-              <label class="sl-lbl">{{ __('sell.form.condition_label') }}</label>
-              <div class="flex gap-2" id="pCond">
-                <span class="sl-chip" data-v="{{ __('sell.form.condition_new') }}" data-on="true">{{ __('sell.form.condition_new') }}</span>
-                <span class="sl-chip" data-v="{{ __('sell.form.condition_used') }}" data-on="false">{{ __('sell.form.condition_used') }}</span>
+              <span class="sl-lbl" id="pCondLbl">{{ __('sell.form.condition_label') }}</span>
+              {{-- radiogroup · roving tabindex + arrow keys are wired in pages/sell.js --}}
+              <div class="flex gap-2" id="pCond" role="radiogroup" aria-labelledby="pCondLbl">
+                <button type="button" class="sl-chip" role="radio" aria-checked="true" tabindex="0" data-v="{{ __('sell.form.condition_new') }}" data-on="true">{{ __('sell.form.condition_new') }}</button>
+                <button type="button" class="sl-chip" role="radio" aria-checked="false" tabindex="-1" data-v="{{ __('sell.form.condition_used') }}" data-on="false">{{ __('sell.form.condition_used') }}</button>
               </div>
             </div>
           </div>
@@ -102,10 +103,11 @@
 </section>
 
 {{-- success + sign-up nudge · the fadeIn/lmIn keyframes live in pages/sell.css --}}
-<div class="fixed inset-0 z-[1000] hidden items-center justify-center bg-black/55 p-6 backdrop-blur-[2px]" id="okOv" role="dialog" aria-modal="true">
+<div class="fixed inset-0 z-[1000] hidden items-center justify-center bg-black/55 p-6 backdrop-blur-[2px]" id="okOv" role="dialog" aria-modal="true" aria-labelledby="okTitle">
   <div class="relative w-full max-w-[480px] animate-[lmIn_0.26s_ease] bg-white px-9 py-10 text-center shadow-[-6px_6px_28px_rgba(0,0,0,0.22)]">
+    <button type="button" class="absolute top-[14px] right-[14px] flex size-[34px] cursor-pointer items-center justify-center border border-black/15 bg-white text-[22px] leading-none text-[#333] transition-[background] duration-200 hover:bg-gray-soft" id="okClose" aria-label="{{ __('sell.success.close') }}">&times;</button>
     <div class="mx-auto mb-5 flex size-[72px] items-center justify-center rounded-full bg-green/12"><img class="size-[34px]" src="/assets/ic-check.svg" alt=""></div>
-    <h2 class="mb-2.5 text-[26px] font-semibold text-ink">{{ __('sell.success.title') }}</h2>
+    <h2 class="mb-2.5 text-[26px] font-semibold text-ink" id="okTitle">{{ __('sell.success.title') }}</h2>
     <p class="mb-6 text-[15px] leading-[1.6] text-black/60">{{ __('sell.success.congrats') }} <b id="okName">{{ __('sell.success.default_name') }}</b> {{ __('sell.success.text_after') }}</p>
 
     <div class="mb-6 hidden border border-black/10 bg-gray-soft2 p-[18px] text-left" id="regNudge">

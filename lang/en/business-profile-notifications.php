@@ -61,5 +61,6 @@ return [
         'unsaved' => 'You have unsaved changes',
         'cancel' => 'Cancel',
         'save' => 'Save',
+        'saved' => 'Changes saved.',
     ],
 ];

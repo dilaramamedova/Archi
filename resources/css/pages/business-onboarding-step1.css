@@ -1,4 +1,5 @@
 /* Page CSS for "business-onboarding-step1".
    The old page was already fully converted to Tailwind (its <style type="text/tailwindcss">
    block was empty), so the markup carries every utility (ARCHITECTURE.md §6.2, approach 1)
-   and no page-specific rule is needed. The file must stay — app.css imports it. */
+   — including the max-[1200px]/max-[640px] variants that collapse the two-column shell.
+   No page-specific rule is needed. The file must stay — app.css imports it. */

@@ -51,18 +51,32 @@ export default function init() {
     upBox.dataset.has = 'false';
   });
 
-  /* ---- condition chips ---- */
+  /* ---- condition chips (role=radiogroup) ---- */
   const chips = [...document.querySelectorAll('#pCond .sl-chip')];
   const preselected = chips.find((c) => c.dataset.on === 'true');
   let cond = preselected ? preselected.dataset.v : '';
 
-  chips.forEach((c) =>
-    c.addEventListener('click', () => {
-      chips.forEach((x) => (x.dataset.on = 'false'));
-      c.dataset.on = 'true';
-      cond = c.dataset.v;
-    })
-  );
+  // roving tabindex: only the checked chip is in the tab order, arrows move between them
+  const select = (chip, focus) => {
+    chips.forEach((x) => {
+      const on = x === chip;
+      x.dataset.on = String(on);
+      x.setAttribute('aria-checked', String(on));
+      x.tabIndex = on ? 0 : -1;
+    });
+    cond = chip.dataset.v;
+    if (focus) chip.focus();
+  };
+
+  chips.forEach((c, i) => {
+    c.addEventListener('click', () => select(c, false));
+    c.addEventListener('keydown', (e) => {
+      const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+      if (!step) return;
+      e.preventDefault();
+      select(chips[(i + step + chips.length) % chips.length], true);
+    });
+  });
 
   /* ---- submit ---- */
   form.addEventListener('submit', (e) => {
@@ -134,12 +148,36 @@ export default function init() {
       );
     }
 
-    // replaces the old `.sl-ov.open{display:flex}` rule
-    const ov = $('okOv');
-    ov.classList.remove('hidden');
-    ov.classList.add('flex', 'animate-[fadeIn_0.2s_ease]');
+    openModal();
   });
 
-  // clicking the overlay backdrop does not close it — the choice should be deliberate
+  /* ---- success modal open/close ---- */
+  // Same contract as the shared login modal: scroll lock, focus moved inside, Escape closes.
+  const ov = $('okOv');
+
+  function openModal() {
+    // replaces the old `.sl-ov.open{display:flex}` rule
+    ov.classList.remove('hidden');
+    ov.classList.add('flex', 'animate-[fadeIn_0.2s_ease]');
+    document.body.dataset.lmLock = 'true';
+    const first = $('okBtns').firstElementChild;
+    if (first) setTimeout(() => first.focus(), 60);
+  }
+
+  function closeModal() {
+    if (ov.classList.contains('hidden')) return;
+    ov.classList.add('hidden');
+    ov.classList.remove('flex', 'animate-[fadeIn_0.2s_ease]');
+    delete document.body.dataset.lmLock;
+    $('pSubmit').focus();
+  }
+
+  $('okClose').addEventListener('click', closeModal);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // clicking the overlay backdrop does not close it — the choice should be deliberate,
+  // the close button and Escape are the deliberate ways out
 }
 init();

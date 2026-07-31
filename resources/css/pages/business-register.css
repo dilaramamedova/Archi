@@ -1,3 +1,18 @@
 /* Page CSS for "business-register".
-   The page is built entirely from Tailwind utilities in the markup (ARCHITECTURE.md §6.2,
-   approach 1), so it needs no page-specific rules. The file must stay — app.css imports it. */
+   The page is built from Tailwind utilities in the markup (ARCHITECTURE.md §6.2,
+   approach 1); only the terms checkbox needs a rule, because its checked glyph is a
+   background image that cannot be expressed as a utility. */
+@layer components {
+  .br-terms-box          { @apply m-0 size-[18px] shrink-0 cursor-pointer appearance-none rounded-ds border border-black/14 bg-white; }
+  /* Checked state carries a tick, not only the yellow fill: an 11x11 ic:baseline-check
+     glyph inlined as a data URI (no network request, no extra file in public/assets).
+     Drawn as a background-image rather than ::after — pseudo-elements on input are not
+     reliable across browsers. */
+  .br-terms-box:checked  {
+    @apply border-yellow-line bg-yellow;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath fill='%23111111' d='M7.5 13.475L4.025 10L2.84167 11.175L7.5 15.8333L17.5 5.83333L16.325 4.65833Z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 11px 11px;
+  }
+}

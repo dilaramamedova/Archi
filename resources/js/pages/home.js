@@ -9,9 +9,6 @@ const esc = (s) =>
     (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]
   );
 
-const withParam = (url, key, value) =>
-  url + (url.indexOf('?') === -1 ? '?' : '&') + key + '=' + encodeURIComponent(value);
-
 // Prepends the visitor's own listings (stored by /sell) and keeps the grid at 4 cards.
 function initUserProducts() {
   const grid = document.getElementById('prodGrid');
@@ -45,19 +42,22 @@ function initUserProducts() {
   while (grid.children.length > 4) grid.removeChild(grid.lastElementChild);
 }
 
+// The two labels are both in the markup (see .pb-swap); only the state flips, so a
+// double click can never leave the button stuck on the confirmation.
 function initPromoCopy() {
-  document.querySelectorAll('.pb-copy').forEach((b) =>
+  document.querySelectorAll('.pb-copy').forEach((b) => {
+    let timer;
     b.addEventListener('click', () => {
       try {
         if (navigator.clipboard) navigator.clipboard.writeText(b.dataset.code || '');
       } catch (e) {
         // clipboard blocked — the code stays readable on screen
       }
-      const previous = b.textContent;
-      b.textContent = b.dataset.copied || previous;
-      setTimeout(() => { b.textContent = previous; }, 1500);
-    })
-  );
+      b.dataset.on = 'true';
+      clearTimeout(timer);
+      timer = setTimeout(() => { b.dataset.on = 'false'; }, 1500);
+    });
+  });
 }
 
 // Shared carousel driver: `apply(i)` renders slide i, the dots are also the controls.
@@ -113,111 +113,6 @@ function initRoleSlider() {
   }, 4500);
 }
 
-// Side calculator (paint / roof / tile / laminate) — live estimate.
-function initSideCalc() {
-  const root = document.getElementById('sideCalc');
-  const tabs = document.getElementById('scTabs');
-  const body = document.getElementById('scBody');
-  if (!root || !tabs || !body) return;
-
-  const closeBtn = document.getElementById('scClose');
-  if (closeBtn) closeBtn.addEventListener('click', () => root.classList.remove('open'));
-
-  let l = {};
-  try {
-    l = JSON.parse(root.dataset.labels || '{}');
-  } catch (e) {
-    l = {};
-  }
-  const urlCalculator = root.dataset.urlCalculator || '/calculator';
-
-  const MATERIALS = {
-    paint: {
-      unit: l.unitLiter, hint: l.hintPaint,
-      fields: [['L', l.length, l.meter, 4], ['W', l.width, l.meter, 3], ['H', l.height, l.meter, 2.7]],
-      calc: (v) => {
-        const wall = 2 * (v.L + v.W) * v.H;
-        const liters = Math.ceil((wall * 2) / 10);
-        return { qty: liters, area: Math.round(wall), price: liters * 12 };
-      },
-    },
-    roof: {
-      unit: l.unitSheet, hint: l.hintRoof,
-      fields: [['L', l.length, l.meter, 4], ['W', l.width, l.meter, 3]],
-      calc: (v) => {
-        const area = v.L * v.W * 1.3;
-        return { qty: Math.ceil(area / 2.1), area: Math.round(area), price: Math.round(area * 15) };
-      },
-    },
-    tile: {
-      unit: l.unitBox, hint: l.hintFloor,
-      fields: [['L', l.length, l.meter, 4], ['W', l.width, l.meter, 3]],
-      calc: (v) => {
-        const need = v.L * v.W * 1.1;
-        return { qty: Math.ceil(need / 1.44), area: Math.round(v.L * v.W), price: Math.round(need * 23) };
-      },
-    },
-    laminate: {
-      unit: l.unitPack, hint: l.hintFloor,
-      fields: [['L', l.length, l.meter, 4], ['W', l.width, l.meter, 3]],
-      calc: (v) => {
-        const need = v.L * v.W * 1.07;
-        return { qty: Math.ceil(need / 2.13), area: Math.round(v.L * v.W), price: Math.round(need * 18) };
-      },
-    },
-  };
-
-  const qtyEl = document.getElementById('scQty');
-  const unitEl = document.getElementById('scUnit');
-  const areaEl = document.getElementById('scArea');
-  const hintEl = document.getElementById('scHint');
-  const priceEl = document.getElementById('scPrice');
-  const fullEl = document.getElementById('scFull');
-  let current = 'paint';
-
-  function renderFields() {
-    const m = MATERIALS[current];
-    body.innerHTML =
-      '<div class="sc-group"><label>' + esc(l.roomSize) + '</label><div class="sc-inputs">' +
-      m.fields
-        .map((f) =>
-          '<div class="sc-field"><span>' + esc(f[1]) + '</span><div class="ip">' +
-          '<input type="number" class="sc-in" data-k="' + f[0] + '" value="' + f[3] + '" min="0" step="any">' +
-          '<span class="u">' + esc(f[2]) + '</span></div></div>')
-        .join('') +
-      '</div></div>';
-    body.querySelectorAll('input').forEach((i) => i.addEventListener('input', compute));
-  }
-
-  function compute() {
-    const m = MATERIALS[current];
-    const v = {};
-    body.querySelectorAll('.sc-in').forEach((el) => { v[el.dataset.k] = parseFloat(el.value) || 0; });
-    m.fields.forEach((f) => { if (v[f[0]] === undefined) v[f[0]] = 0; });
-
-    const r = m.calc(v);
-    qtyEl.textContent = r.qty;
-    unitEl.textContent = m.unit;
-    areaEl.textContent = r.area + ' ' + l.m2;
-    hintEl.textContent = m.hint;
-    priceEl.textContent = Math.round(r.price);
-    if (fullEl) fullEl.href = withParam(urlCalculator, 'mat', current);
-  }
-
-  tabs.querySelectorAll('button').forEach((b) =>
-    b.addEventListener('click', () => {
-      tabs.querySelectorAll('button').forEach((x) => x.classList.remove('on'));
-      b.classList.add('on');
-      current = b.dataset.mat;
-      renderFields();
-      compute();
-    })
-  );
-
-  renderFields();
-  compute();
-}
-
 function initReveal() {
   document
     .querySelectorAll('.sec-head, .sale-marquee, .foot-cols, .foot-news')
@@ -245,7 +140,6 @@ export default function init() {
   initPromoCopy();
   initPromoCarousel();
   initRoleSlider();
-  initSideCalc();
   initReveal();
 }
 

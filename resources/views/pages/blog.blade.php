@@ -28,20 +28,20 @@
     <div>
       <div class="border-y border-black/30">
         {{-- scrollbar hidden: scrollbar-width for Firefox, pseudo-element for WebKit --}}
-        <div class="flex h-[60px] items-center overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <a class="fchip" data-on="true">{{ __('blog.filters.all') }}</a>
-          <a class="fchip">{{ __('blog.filters.repair') }}</a>
-          <a class="fchip">{{ __('blog.filters.materials') }}</a>
-          <a class="fchip">{{ __('blog.filters.budget') }}</a>
-          <a class="fchip">{{ __('blog.filters.design') }}</a>
-          <a class="fchip">{{ __('blog.filters.masters') }}</a>
-          <a class="fchip">{{ __('blog.filters.plumbing') }}</a>
-          <a class="fchip">{{ __('blog.filters.insulation') }}</a>
+        <div class="flex h-[60px] items-center overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+             role="tablist" aria-label="{{ __('blog.filters.aria_label') }}" id="blogFilters">
+          @foreach (['all', 'repair', 'materials', 'budget', 'design', 'masters', 'plumbing', 'insulation'] as $cat)
+            <button class="fchip" type="button" role="tab" data-cat="{{ $cat }}"
+                    id="fchip-{{ $cat }}" aria-controls="blogGrid"
+                    aria-selected="{{ $cat === 'all' ? 'true' : 'false' }}"
+                    data-on="{{ $cat === 'all' ? 'true' : 'false' }}"
+                    tabindex="{{ $cat === 'all' ? '0' : '-1' }}">{{ __('blog.filters.' . $cat) }}</button>
+          @endforeach
         </div>
       </div>
 
       <div class="mt-20 flex items-start gap-10 max-[1200px]:flex-col" id="featured">
-        <a class="group h-[516px] w-[680px] shrink-0 overflow-hidden rounded-ds max-[1200px]:h-[420px] max-[1200px]:w-full">
+        <a class="group h-[516px] w-[680px] shrink-0 overflow-hidden rounded-ds max-[1200px]:h-[420px] max-[1200px]:w-full" href="#">
           <img class="size-full object-cover transition-transform duration-[600ms] group-hover:scale-105" src="/assets/blog-hero.jpg" alt="">
         </a>
         <div class="flex flex-1 flex-col gap-5 max-[1200px]:w-full">
@@ -58,21 +58,25 @@
             <p class="text-base leading-[1.5] text-black/40">{{ __('blog.featured.read_time') }}</p><span class="size-1 rounded-[14px] bg-[#5c5c5c]"></span>
             <p class="text-base leading-[1.5] text-black/40">{{ __('blog.featured.date') }}</p>
           </div>
-          <a class="group/read flex cursor-pointer items-center gap-1 self-start bg-ink px-6 py-3 text-base text-off-white transition-[background] duration-[250ms] hover:bg-black">{{ __('common.read_more') }} <img class="size-5 brightness-0 invert transition-transform duration-[250ms] group-hover/read:translate-x-1" src="/assets/ic-arrow.svg" alt=""></a>
+          <a class="group/read flex cursor-pointer items-center gap-1 self-start bg-ink px-6 py-3 text-base text-off-white transition-[background] duration-[250ms] hover:bg-black" href="#">{{ __('common.read_more') }} <img class="size-5 brightness-0 invert transition-transform duration-[250ms] group-hover/read:translate-x-1" src="/assets/ic-arrow.svg" alt=""></a>
         </div>
       </div>
     </div>
 
     <div>
       <x-section-head :tag="__('blog.section.tag')" :title="__('blog.section.title')" />
-      <div class="blog-grid max-[1200px]:flex-wrap max-[640px]:flex-col" id="blogGrid">
-        @for ($i = 1; $i <= 4; $i++)
-          <x-post class="rounded-ds max-[1200px]:min-w-[260px]"
+      {{-- data-cat is a space-separated list; blog.js matches it against the active chip. --}}
+      @php $postCats = [1 => 'repair budget', 2 => 'materials design', 3 => 'materials repair', 4 => 'repair budget']; @endphp
+      <div class="blog-grid max-[1200px]:flex-wrap max-[640px]:flex-col" id="blogGrid"
+           role="tabpanel" aria-labelledby="fchip-all" tabindex="0">
+        @foreach ($postCats as $i => $cat)
+          <x-post class="rounded-ds max-[1200px]:min-w-[260px]" data-cat="{{ $cat }}"
                   :time="__('blog.posts.time_' . $i)"
                   :title="__('blog.posts.title_' . $i)"
                   :excerpt="__('blog.posts.excerpt_' . $i)" />
-        @endfor
+        @endforeach
       </div>
+      <p class="pt-10 text-base text-black/50" id="blogEmpty" aria-live="polite" hidden>{{ __('blog.empty') }}</p>
     </div>
 
   </div>

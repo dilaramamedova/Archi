@@ -31,6 +31,7 @@ return [
         'qty_plus' => 'Artır',
         'add_cart' => 'Səbətə at',
         'added' => 'Səbətə əlavə olundu',
+        'in_cart' => 'Artıq səbətdədir',
         'wish' => 'Sevimlilər',
         'cart_unit' => '1 məhsul',
         'delivery_t1' => 'Pulsuz çatdırılma',

@@ -4,8 +4,11 @@
 
 @layer components {
   .qc-chip {
-    @apply cursor-pointer rounded-ds border border-black/10 bg-white px-3.5 py-[9px] text-[13px] font-medium whitespace-nowrap text-black/70 transition-all duration-150;
+    /* font-weight stays constant in both states: a heavier selected label would
+       re-measure the chip and reflow the whole wrapping group. Selection is carried
+       by the colour inversion only, and the transition lists non-layout properties. */
+    @apply cursor-pointer rounded-ds border border-black/10 bg-white px-3.5 py-[9px] text-[13px] font-semibold whitespace-nowrap text-black/60 transition-[color,background-color,border-color] duration-150;
     @apply hover:border-black/35;
-    @apply data-[on=true]:border-ink data-[on=true]:bg-ink data-[on=true]:font-semibold data-[on=true]:text-white;
+    @apply data-[on=true]:border-ink data-[on=true]:bg-ink data-[on=true]:text-white;
   }
 }

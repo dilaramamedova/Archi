@@ -12,7 +12,10 @@ return [
         'subtitle' => 'From choosing materials to budget planning, from finding a trusted master to common mistakes — practical articles for every stage of your renovation.',
     ],
 
+    'empty' => 'No articles in this section yet.',
+
     'filters' => [
+        'aria_label' => 'Article categories',
         'all' => 'All articles',
         'repair' => 'Renovation',
         'materials' => 'Materials',

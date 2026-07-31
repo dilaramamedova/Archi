@@ -8,7 +8,7 @@
    top-level name is prefixed with `bpco-` to keep it from leaking into the six sibling
    business-profile pages and into the shared components — the bare `.card` used to hit
    the promo card of the navbar Specialists mega menu on every page of the site. Child
-   names (.titles, .label, .count, .dot, .fill, .row, .hint, .val, .cbox, .lname, .sb-*)
+   names (.titles, .label, .count, .dot, .fill, .row, .hint, .cbox, .lname, .sb-*)
    stay as they are — they only match inside a prefixed parent.
 
    Other changes: the old `.frame` shell is gone (the layout renders navbar/footer), the
@@ -33,10 +33,12 @@
 
   .bpco-body                    { @apply flex w-full items-start gap-6; }
   .bpco-snav                    { @apply sticky top-[158px] flex w-[264px] shrink-0 flex-col items-start gap-1 self-start overflow-hidden rounded-ds border border-black/10 bg-white px-3 py-3.5; }
-  .bpco-snav-item               { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds px-3 py-[11px] whitespace-nowrap text-inherit no-underline; }
+  /* The border is reserved in the default state so the active row is exactly as tall as
+     its siblings (Figma strokes do not grow the box) and flipping data-on never resizes it. */
+  .bpco-snav-item               { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds border border-transparent px-3 py-[11px] whitespace-nowrap text-inherit no-underline; }
   .bpco-snav-item .label        { @apply text-sm leading-[normal] font-medium text-black/70; }
   .bpco-snav-item .count        { @apply text-xs leading-[normal] font-semibold text-black/40; }
-  .bpco-snav-item[data-on="true"]        { @apply border border-yellow-line bg-sel-bg; }
+  .bpco-snav-item[data-on="true"]        { @apply border-yellow-line bg-sel-bg; }
   .bpco-snav-item[data-on="true"] .label { @apply font-bold text-black; }
   .bpco-snav-progress           { @apply flex w-full flex-col items-start gap-2 overflow-hidden rounded-ds bg-gray-soft2 px-3 py-3.5; }
   .bpco-snav-progress .row      { @apply flex w-full items-start justify-between overflow-hidden text-xs whitespace-nowrap text-ink; }
@@ -56,12 +58,14 @@
   .bpco-form-row           { @apply flex w-full items-start gap-4 overflow-hidden; }
   .bpco-field              { @apply flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden; }
   .bpco-field label        { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
-  .bpco-field .input       { @apply flex h-11 w-full items-center overflow-hidden rounded-ds border border-black/14 bg-white pl-3.5; }
-  .bpco-field .input .val  { @apply text-sm leading-[normal] font-semibold whitespace-nowrap text-ink; }
+  /* Real editable field (mirrors .bpc-input on business-profile-company). Padding on both
+     sides so a long value never sits flush against the right border. */
+  .bpco-input              { @apply h-11 w-full rounded-ds border border-black/14 bg-white px-3.5 text-sm leading-[normal] font-semibold text-ink outline-none focus:border-ink; }
 
   /* Communication languages */
   .bpco-lang-wrap                     { @apply flex w-full flex-wrap items-start content-start gap-2 overflow-hidden; }
-  .bpco-lchip                         { @apply flex shrink-0 cursor-pointer items-center gap-2 overflow-hidden rounded-ds py-[9px] pr-3.5 pl-3; }
+  .bpco-lchip                         { @apply flex shrink-0 cursor-pointer items-center gap-2 overflow-hidden rounded-ds py-[9px] pr-3.5 pl-3 text-left; }
+  .bpco-lchip:focus-visible           { @apply outline-2 outline-offset-2 outline-ink; }
   .bpco-lchip[data-on="true"]         { @apply border border-yellow-line bg-sel-bg; }
   .bpco-lchip[data-on="false"]        { @apply border border-black/14 bg-white; }
   .bpco-lchip .cbox                   { @apply relative size-[18px] shrink-0 rounded-ds border border-black/25 bg-white; }
@@ -77,6 +81,10 @@
   }
   .bpco-lchip .lname                  { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-black/70; }
   .bpco-lchip[data-on="true"] .lname  { @apply font-semibold text-black; }
+  /* The selected label is one weight heavier, so its width is reserved up front with a
+     zero-height bold copy of the text. Without it every toggle would resize the chip and
+     shove the rest of the wrapped row sideways. */
+  .bpco-lchip .lname::after           { content: attr(data-label); @apply invisible block h-0 overflow-hidden font-semibold; }
 
   .bpco-save-bar                 { @apply flex w-full items-center justify-between overflow-hidden rounded-ds bg-ink px-6 py-4; }
   .bpco-save-bar .sb-left        { @apply flex shrink-0 items-center gap-2 overflow-hidden; }
@@ -84,7 +92,9 @@
   .bpco-save-bar .sb-left p      { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-white/85; }
   .bpco-save-bar .sb-right       { @apply flex shrink-0 items-start gap-2.5 overflow-hidden; }
   .bpco-btn-cancel               { @apply flex h-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-white/35 px-[18px]; }
-  .bpco-btn-cancel p             { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-white/85; }
+  .bpco-btn-cancel span          { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-white/85; }
   .bpco-btn-save                 { @apply flex h-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[26px]; }
-  .bpco-btn-save p               { @apply text-sm leading-[normal] font-bold whitespace-nowrap text-ink; }
+  .bpco-btn-save span            { @apply text-sm leading-[normal] font-bold whitespace-nowrap text-ink; }
+  .bpco-btn-cancel:focus-visible,
+  .bpco-btn-save:focus-visible   { @apply outline-2 outline-offset-2 outline-white; }
 }

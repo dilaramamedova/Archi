@@ -50,14 +50,18 @@
   .sp-fs-title { @apply text-sm font-bold text-ink; }
   .sp-fs-div   { @apply h-px shrink-0 bg-black/8; }
 
-  /* Specialization — the selected row lines up with the panel content, text is inset 10px */
-  .sp-cat                      { @apply flex cursor-pointer items-center justify-between; }
-  .sp-cat .t                   { @apply text-[13px] text-black/70; }
-  .sp-cat .n                   { @apply text-xs text-black/35; }
+  /* Specialization — the selected row lines up with the panel content, text is inset 10px.
+     The padding and the bold weight are reserved in the DEFAULT state so selecting a row
+     never resizes it (the whole sidebar used to jump on every click); the negative block
+     margin cancels the reserved 6px so the rhythm of the list is unchanged. The selected
+     state only repaints: background + text colour. */
+  .sp-cat                      { @apply -my-1.5 flex cursor-pointer items-center justify-between rounded-ds px-2.5 py-1.5; }
+  .sp-cat .t                   { @apply text-[13px] font-bold text-black/70; }
+  .sp-cat .n                   { @apply text-xs font-semibold text-black/35; }
   .sp-cat:hover .t             { @apply text-ink; }
-  .sp-cat[data-on="true"]      { @apply rounded-ds bg-sel-bg px-2.5 py-1.5; }
-  .sp-cat[data-on="true"] .t   { @apply font-bold text-black; }
-  .sp-cat[data-on="true"] .n   { @apply font-semibold text-black/70; }
+  .sp-cat[data-on="true"]      { @apply bg-sel-bg; }
+  .sp-cat[data-on="true"] .t   { @apply text-black; }
+  .sp-cat[data-on="true"] .n   { @apply text-black/70; }
 
   /* checkbox rows (city) — the box and its tick are `.fside-box` in app.css */
   .sp-check                        { @apply flex cursor-pointer items-center gap-2.5; }
@@ -80,8 +84,9 @@
 
   /* experience chips */
   .sp-years              { @apply flex flex-wrap gap-1.5; }
-  .sp-year               { @apply cursor-pointer rounded-ds border border-black/15 bg-white px-[11px] py-[7px] text-xs font-medium text-black/70 hover:border-black/35; }
-  .sp-year[data-on="true"] { @apply border-black bg-ink font-semibold text-white; }
+  /* the selected weight is reserved by default — a bold chip must not re-wrap the row */
+  .sp-year               { @apply cursor-pointer rounded-ds border border-black/15 bg-white px-[11px] py-[7px] text-xs font-semibold text-black/70 hover:border-black/35; }
+  .sp-year[data-on="true"] { @apply border-black bg-ink text-white; }
 
   /* switch rows */
   .sp-toggle .lbl                 { @apply text-[13px] font-medium text-black/80; }
@@ -121,7 +126,10 @@
   .sp-card .meta                 { @apply flex gap-2.5 text-[13px]; }
   .sp-card .meta .m              { @apply font-medium text-black/50; }
   .sp-card .meta .d              { @apply text-black/30; }
-  .sp-card .foot                 { @apply flex items-center justify-between gap-2; }
+  /* `flex-wrap`: the ru pair ("≈ от 25 ₼/м²" + "Смотреть профиль") is ~35% wider than the
+     az one and does not fit a 3/4-column card — the button then drops onto its own line
+     instead of being clipped by the card's overflow-hidden. */
+  .sp-card .foot                 { @apply flex flex-wrap items-center justify-between gap-2; }
   .sp-card .price                { @apply text-sm font-bold whitespace-nowrap text-ink; }
-  .sp-card .btn                  { @apply flex h-[38px] shrink-0 items-center justify-center rounded-ds bg-yellow px-4 text-[13px] font-semibold text-ink transition-[filter] duration-200 hover:brightness-95; }
+  .sp-card .btn                  { @apply flex h-[38px] shrink-0 items-center justify-center rounded-ds bg-yellow px-4 text-[13px] font-semibold whitespace-nowrap text-ink transition-[filter] duration-200 hover:brightness-95; }
 }

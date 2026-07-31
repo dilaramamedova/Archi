@@ -19,7 +19,7 @@
           <span class="dot"></span>
           <p>{{ __('business-profile-notifications.status.published') }}</p>
         </div>
-        <div class="bpn-btn-view"><p>{{ __('business-profile-notifications.status.view_profile') }}</p></div>
+        <a class="bpn-btn-view" href="{{ route('business.profile') }}"><p>{{ __('business-profile-notifications.status.view_profile') }}</p></a>
       </div>
     </div>
 
@@ -72,7 +72,7 @@
               <p class="t">{{ __('business-profile-notifications.types.order_title') }}</p>
               <p class="s">{{ __('business-profile-notifications.types.order_desc') }}</p>
             </div>
-            <div class="bpn-toggle" data-on="true" role="switch" aria-checked="true"><span class="knob"></span></div>
+            <button type="button" class="bpn-toggle" data-on="true" aria-pressed="true" aria-label="{{ __('business-profile-notifications.types.order_title') }}"><span class="knob"></span></button>
           </div>
 
           <div class="bpn-row">
@@ -80,7 +80,7 @@
               <p class="t">{{ __('business-profile-notifications.types.reviews_title') }}</p>
               <p class="s">{{ __('business-profile-notifications.types.reviews_desc') }}</p>
             </div>
-            <div class="bpn-toggle" data-on="true" role="switch" aria-checked="true"><span class="knob"></span></div>
+            <button type="button" class="bpn-toggle" data-on="true" aria-pressed="true" aria-label="{{ __('business-profile-notifications.types.reviews_title') }}"><span class="knob"></span></button>
           </div>
 
           <div class="bpn-row">
@@ -88,7 +88,7 @@
               <p class="t">{{ __('business-profile-notifications.types.stock_title') }}</p>
               <p class="s">{{ __('business-profile-notifications.types.stock_desc') }}</p>
             </div>
-            <div class="bpn-toggle" data-on="true" role="switch" aria-checked="true"><span class="knob"></span></div>
+            <button type="button" class="bpn-toggle" data-on="true" aria-pressed="true" aria-label="{{ __('business-profile-notifications.types.stock_title') }}"><span class="knob"></span></button>
           </div>
 
           <div class="bpn-row">
@@ -96,7 +96,7 @@
               <p class="t">{{ __('business-profile-notifications.types.report_title') }}</p>
               <p class="s">{{ __('business-profile-notifications.types.report_desc') }}</p>
             </div>
-            <div class="bpn-toggle" data-on="true" role="switch" aria-checked="true"><span class="knob"></span></div>
+            <button type="button" class="bpn-toggle" data-on="true" aria-pressed="true" aria-label="{{ __('business-profile-notifications.types.report_title') }}"><span class="knob"></span></button>
           </div>
         </div>
 
@@ -105,34 +105,24 @@
           <h3>{{ __('business-profile-notifications.channels.heading') }}</h3>
           <p class="desc">{{ __('business-profile-notifications.channels.desc') }}</p>
           <div class="bpn-chips">
-            <div class="bpn-chip" data-on="true">
-              <span class="cbox"></span>
-              <p>{{ __('business-profile-notifications.channels.email') }}</p>
-            </div>
-            <div class="bpn-chip" data-on="false">
-              <span class="cbox"></span>
-              <p>{{ __('business-profile-notifications.channels.sms') }}</p>
-            </div>
-            <div class="bpn-chip" data-on="true">
-              <span class="cbox"></span>
-              <p>{{ __('business-profile-notifications.channels.push') }}</p>
-            </div>
-            <div class="bpn-chip" data-on="false">
-              <span class="cbox"></span>
-              <p>{{ __('business-profile-notifications.channels.telegram') }}</p>
-            </div>
+            @foreach ([['email', true], ['sms', false], ['push', true], ['telegram', false]] as [$channel, $on])
+              <button type="button" class="bpn-chip" role="checkbox" data-on="{{ $on ? 'true' : 'false' }}" aria-checked="{{ $on ? 'true' : 'false' }}">
+                <span class="cbox"></span>
+                <span class="lbl" data-label="{{ __('business-profile-notifications.channels.' . $channel) }}">{{ __('business-profile-notifications.channels.' . $channel) }}</span>
+              </button>
+            @endforeach
           </div>
         </div>
 
         {{-- save bar --}}
-        <div class="bpn-save-bar">
+        <div class="bpn-save-bar" data-saved="false" data-saved-message="{{ __('business-profile-notifications.save.saved') }}">
           <div class="left">
             <span class="dot"></span>
-            <p>{{ __('business-profile-notifications.save.unsaved') }}</p>
+            <p class="bpn-save-msg" aria-live="polite">{{ __('business-profile-notifications.save.unsaved') }}</p>
           </div>
           <div class="right">
-            <div class="bpn-btn-cancel"><p>{{ __('business-profile-notifications.save.cancel') }}</p></div>
-            <div class="bpn-btn-save"><p>{{ __('business-profile-notifications.save.save') }}</p></div>
+            <button type="button" class="bpn-btn-cancel"><p>{{ __('business-profile-notifications.save.cancel') }}</p></button>
+            <button type="button" class="bpn-btn-save"><p>{{ __('business-profile-notifications.save.save') }}</p></button>
           </div>
         </div>
 

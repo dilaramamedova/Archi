@@ -50,7 +50,7 @@
     {{-- tabs — active state through the data-on attribute --}}
     <div class="flex flex-wrap gap-2" id="srTabs">
       @foreach ($tabs as $item)
-        <button class="sr-tab" data-t="{{ $item['key'] }}" data-on="{{ $tab === $item['key'] ? 'true' : 'false' }}">{{ $item['label'] }}</button>
+        <button class="sr-tab" data-t="{{ $item['key'] }}" data-label="{{ $item['label'] }}" data-on="{{ $tab === $item['key'] ? 'true' : 'false' }}">{{ $item['label'] }}</button>
       @endforeach
     </div>
 

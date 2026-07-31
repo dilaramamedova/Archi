@@ -1,12 +1,18 @@
 /* Page CSS for "blog" — the filter chip is the only page-specific component
-   (it repeats 8 times). Everything else uses utilities or shared classes. */
+   (it repeats 8 times). Everything else uses utilities or shared classes.
+
+   The active state must not resize the box: the bottom border is reserved in the
+   base rule (transparent) and the active rule only recolors it. */
 
 @layer components {
   .fchip {
-    @apply flex h-[60px] cursor-pointer items-center justify-center px-10 text-base font-normal whitespace-nowrap text-black/50 transition-[color,border-color] duration-200;
+    @apply flex h-[60px] cursor-pointer items-center justify-center border-b border-transparent px-10 text-base font-normal whitespace-nowrap text-black/50 transition-[color,border-color] duration-200;
     @apply hover:text-black;
+    /* The shared :focus-visible ring sits 2px outside the box, which the h-[60px]
+       overflow-x-auto strip would clip — pull it inside instead. */
+    @apply focus-visible:-outline-offset-2;
   }
   .fchip[data-on="true"] {
-    @apply w-[180px] border-b border-black/80 px-3 text-black;
+    @apply border-black/80 text-black;
   }
 }

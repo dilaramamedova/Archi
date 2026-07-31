@@ -35,6 +35,21 @@ return [
         'about_placeholder' => 'Müştərilərə özünü təqdim et — nə satırsan, neçə ildir bazardasan…',
     ],
 
+    'cities' => [
+        'Bakı',
+        'Gəncə',
+        'Sumqayıt',
+        'Mingəçevir',
+        'Şirvan',
+        'Naxçıvan',
+        'Şəki',
+        'Yevlax',
+        'Lənkəran',
+        'Quba',
+        'Qəbələ',
+        'Xankəndi',
+    ],
+
     'actions' => [
         'save' => 'Yadda saxla və davam et  →',
         'later' => 'Sonra davam edərəm',

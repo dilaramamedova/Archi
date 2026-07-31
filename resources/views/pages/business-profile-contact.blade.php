@@ -54,42 +54,42 @@
         </div>
         <div class="bpco-form-row">
           <div class="bpco-field">
-            <label>{{ __('business-profile-contact.contact.person_label') }}</label>
-            <div class="input"><p class="val">{{ __('business-profile-contact.contact.person_value') }}</p></div>
+            <label for="bpco-contact-person">{{ __('business-profile-contact.contact.person_label') }}</label>
+            <input id="bpco-contact-person" class="bpco-input" type="text" value="{{ __('business-profile-contact.contact.person_value') }}">
           </div>
           <div class="bpco-field">
-            <label>{{ __('business-profile-contact.contact.role_label') }}</label>
-            <div class="input"><p class="val">{{ __('business-profile-contact.contact.role_value') }}</p></div>
-          </div>
-        </div>
-        <div class="bpco-form-row">
-          <div class="bpco-field">
-            <label>{{ __('business-profile-contact.contact.phone_label') }}</label>
-            <div class="input"><p class="val">{{ __('business-profile-contact.contact.phone_value') }}</p></div>
-          </div>
-          <div class="bpco-field">
-            <label>{{ __('business-profile-contact.contact.whatsapp_label') }}</label>
-            <div class="input"><p class="val">{{ __('business-profile-contact.contact.whatsapp_value') }}</p></div>
+            <label for="bpco-contact-role">{{ __('business-profile-contact.contact.role_label') }}</label>
+            <input id="bpco-contact-role" class="bpco-input" type="text" value="{{ __('business-profile-contact.contact.role_value') }}">
           </div>
         </div>
         <div class="bpco-form-row">
           <div class="bpco-field">
-            <label>{{ __('business-profile-contact.contact.telegram_label') }}</label>
-            <div class="input"><p class="val">{{ __('business-profile-contact.contact.telegram_value') }}</p></div>
+            <label for="bpco-contact-phone">{{ __('business-profile-contact.contact.phone_label') }}</label>
+            <input id="bpco-contact-phone" class="bpco-input" type="text" value="{{ __('business-profile-contact.contact.phone_value') }}">
           </div>
           <div class="bpco-field">
-            <label>{{ __('business-profile-contact.contact.email_label') }}</label>
-            <div class="input"><p class="val">{{ __('business-profile-contact.contact.email_value') }}</p></div>
+            <label for="bpco-contact-whatsapp">{{ __('business-profile-contact.contact.whatsapp_label') }}</label>
+            <input id="bpco-contact-whatsapp" class="bpco-input" type="text" value="{{ __('business-profile-contact.contact.whatsapp_value') }}">
           </div>
         </div>
         <div class="bpco-form-row">
           <div class="bpco-field">
-            <label>{{ __('business-profile-contact.contact.website_label') }}</label>
-            <div class="input"><p class="val">{{ __('business-profile-contact.contact.website_value') }}</p></div>
+            <label for="bpco-contact-telegram">{{ __('business-profile-contact.contact.telegram_label') }}</label>
+            <input id="bpco-contact-telegram" class="bpco-input" type="text" value="{{ __('business-profile-contact.contact.telegram_value') }}">
           </div>
           <div class="bpco-field">
-            <label>{{ __('business-profile-contact.contact.hours_label') }}</label>
-            <div class="input"><p class="val">{{ __('business-profile-contact.contact.hours_value') }}</p></div>
+            <label for="bpco-contact-email">{{ __('business-profile-contact.contact.email_label') }}</label>
+            <input id="bpco-contact-email" class="bpco-input" type="text" value="{{ __('business-profile-contact.contact.email_value') }}">
+          </div>
+        </div>
+        <div class="bpco-form-row">
+          <div class="bpco-field">
+            <label for="bpco-contact-website">{{ __('business-profile-contact.contact.website_label') }}</label>
+            <input id="bpco-contact-website" class="bpco-input" type="text" value="{{ __('business-profile-contact.contact.website_value') }}">
+          </div>
+          <div class="bpco-field">
+            <label for="bpco-contact-hours">{{ __('business-profile-contact.contact.hours_label') }}</label>
+            <input id="bpco-contact-hours" class="bpco-input" type="text" value="{{ __('business-profile-contact.contact.hours_value') }}">
           </div>
         </div>
       </div>
@@ -101,16 +101,16 @@
         </div>
         <div class="bpco-form-row">
           <div class="bpco-field">
-            <label>{{ __('business-profile-contact.social.instagram_label') }}</label>
-            <div class="input"><p class="val">{{ __('business-profile-contact.social.instagram_value') }}</p></div>
+            <label for="bpco-social-instagram">{{ __('business-profile-contact.social.instagram_label') }}</label>
+            <input id="bpco-social-instagram" class="bpco-input" type="text" value="{{ __('business-profile-contact.social.instagram_value') }}">
           </div>
           <div class="bpco-field">
-            <label>{{ __('business-profile-contact.social.linkedin_label') }}</label>
-            <div class="input"><p class="val">{{ __('business-profile-contact.social.linkedin_value') }}</p></div>
+            <label for="bpco-social-linkedin">{{ __('business-profile-contact.social.linkedin_label') }}</label>
+            <input id="bpco-social-linkedin" class="bpco-input" type="text" value="{{ __('business-profile-contact.social.linkedin_value') }}">
           </div>
           <div class="bpco-field">
-            <label>{{ __('business-profile-contact.social.facebook_label') }}</label>
-            <div class="input"><p class="val">{{ __('business-profile-contact.social.facebook_value') }}</p></div>
+            <label for="bpco-social-facebook">{{ __('business-profile-contact.social.facebook_label') }}</label>
+            <input id="bpco-social-facebook" class="bpco-input" type="text" value="{{ __('business-profile-contact.social.facebook_value') }}">
           </div>
         </div>
       </div>
@@ -121,38 +121,38 @@
           <h2>{{ __('business-profile-contact.languages.title') }}</h2>
         </div>
         <div class="bpco-lang-wrap">
-          <div class="bpco-lchip" data-on="true">
+          <button type="button" class="bpco-lchip" data-on="true" role="checkbox" aria-checked="true">
             <span class="cbox"></span>
-            <p class="lname">{{ __('business-profile-contact.languages.az') }}</p>
-          </div>
-          <div class="bpco-lchip" data-on="true">
+            <span class="lname" data-label="{{ __('business-profile-contact.languages.az') }}">{{ __('business-profile-contact.languages.az') }}</span>
+          </button>
+          <button type="button" class="bpco-lchip" data-on="true" role="checkbox" aria-checked="true">
             <span class="cbox"></span>
-            <p class="lname">{{ __('business-profile-contact.languages.ru') }}</p>
-          </div>
-          <div class="bpco-lchip" data-on="true">
+            <span class="lname" data-label="{{ __('business-profile-contact.languages.ru') }}">{{ __('business-profile-contact.languages.ru') }}</span>
+          </button>
+          <button type="button" class="bpco-lchip" data-on="true" role="checkbox" aria-checked="true">
             <span class="cbox"></span>
-            <p class="lname">{{ __('business-profile-contact.languages.en') }}</p>
-          </div>
-          <div class="bpco-lchip" data-on="false">
+            <span class="lname" data-label="{{ __('business-profile-contact.languages.en') }}">{{ __('business-profile-contact.languages.en') }}</span>
+          </button>
+          <button type="button" class="bpco-lchip" data-on="false" role="checkbox" aria-checked="false">
             <span class="cbox"></span>
-            <p class="lname">{{ __('business-profile-contact.languages.tr') }}</p>
-          </div>
-          <div class="bpco-lchip" data-on="false">
+            <span class="lname" data-label="{{ __('business-profile-contact.languages.tr') }}">{{ __('business-profile-contact.languages.tr') }}</span>
+          </button>
+          <button type="button" class="bpco-lchip" data-on="false" role="checkbox" aria-checked="false">
             <span class="cbox"></span>
-            <p class="lname">{{ __('business-profile-contact.languages.other') }}</p>
-          </div>
+            <span class="lname" data-label="{{ __('business-profile-contact.languages.other') }}">{{ __('business-profile-contact.languages.other') }}</span>
+          </button>
         </div>
       </div>
 
       {{-- Save bar --}}
-      <div class="bpco-save-bar">
+      <div class="bpco-save-bar" data-saved-message="{{ __('business-profile-contact.save.saved_alert') }}">
         <div class="sb-left">
           <div class="dot"></div>
           <p>{{ __('business-profile-contact.save.unsaved') }}</p>
         </div>
         <div class="sb-right">
-          <div class="bpco-btn-cancel"><p>{{ __('business-profile-contact.save.cancel') }}</p></div>
-          <div class="bpco-btn-save"><p>{{ __('business-profile-contact.save.save') }}</p></div>
+          <button type="button" class="bpco-btn-cancel"><span>{{ __('business-profile-contact.save.cancel') }}</span></button>
+          <button type="button" class="bpco-btn-save"><span>{{ __('business-profile-contact.save.save') }}</span></button>
         </div>
       </div>
 

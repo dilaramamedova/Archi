@@ -156,7 +156,8 @@
      NAVBAR — row 1
      ========================================================================== */
   .topbar   { @apply sticky top-0 z-[60] w-full bg-white; }
-  .nav-row1 { @apply relative z-[2] flex h-20 w-full items-center gap-12 bg-white px-7; }
+  /* Figma 1039:14264 — row 1 gutter is 40px (logo x=40), row 2 is 28px (nav x=28) */
+  .nav-row1 { @apply relative z-[2] flex h-20 w-full items-center gap-12 bg-white px-10; }
   .logo     { @apply h-[50px] w-auto shrink-0; }
   .search   { @apply relative flex flex-1 items-center gap-2 bg-gray-soft px-4 py-3; }
   .search img   { @apply size-5; }
@@ -226,7 +227,7 @@
      NAVBAR — row 2
      ========================================================================== */
   .nav-row2        { @apply border-y border-black/50; }
-  .nav-row2 .inner { @apply flex h-15 max-w-none items-center justify-between; }
+  .nav-row2 .inner { @apply flex h-15 max-w-none items-center justify-between px-7; }
   .nav-left        { @apply flex h-15 items-stretch; }
   .nav-item        { @apply flex w-[150px] items-center justify-center gap-1 border-r border-black/50
                             px-3 font-sans text-base font-medium whitespace-nowrap text-black; }
@@ -451,7 +452,9 @@
   .fsort .val { @apply text-sm font-semibold text-ink; }
   .fsort .car { @apply transition-transform duration-200; }
   .fsort[data-open="true"] .car { @apply rotate-180; }
-  .fsort-menu    { @apply absolute top-[calc(100%+6px)] right-0 z-[60] hidden rounded-ds border border-black/14 bg-white p-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.12)]; }
+  /* z-50 keeps the open menu UNDER the sticky `.topbar` (z-60): `.fsort` opens no
+     stacking context, so at equal z-index DOM order would let the menu win. */
+  .fsort-menu    { @apply absolute top-[calc(100%+6px)] right-0 z-[50] hidden rounded-ds border border-black/14 bg-white p-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.12)]; }
   .fsort[data-open="true"] .fsort-menu { @apply block; }
   .fsort-menu li { @apply cursor-pointer list-none rounded-ds px-3 py-2.5 text-sm text-black/70 hover:bg-gray-soft hover:text-ink; }
   .fsort-menu li[data-on="true"] { @apply bg-sel-bg font-semibold text-ink; }
@@ -580,6 +583,8 @@
 
   /* ==========================================================================
      SHARED TRANSITIONS / HOVERS (from the old archi.css)
+     Hover only tints the trigger itself — no rule here may open a menu surface
+     (`.mega-panel`, `.lang-menu`); those are click-driven from shared/navbar.js.
      ========================================================================== */
   .nav-item, .nav-calc, .btn-post, .sec-more, .foot-col a, .foot-products, .foot-social a {
     @apply transition-all duration-[250ms];

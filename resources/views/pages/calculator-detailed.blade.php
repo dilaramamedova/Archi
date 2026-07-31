@@ -43,6 +43,12 @@
         'floorCovers' => array_values($floors),
         'wallCovers' => array_values($walls),
 
+        // Labour multipliers, positionally parallel to the three chip groups above.
+        // The object-type values match the quick calculator (calculator.blade.php).
+        'objectFactors' => [1, 1.1, 0.95, 1.05],
+        'propertyFactors' => [1, 1.06],
+        'conditionFactors' => [1, 0.95, 0.88],
+
         'rooms' => [
             ['name' => $tr['rooms']['defaults']['living'], 'area' => 24, 'h' => 2.9, 'per' => 20, 'doors' => 1, 'win' => 2, 'floor' => $floors['laminate'], 'wall' => $walls['paint'], 'heat' => true],
             ['name' => $tr['rooms']['defaults']['kitchen'], 'area' => 12, 'h' => 2.9, 'per' => 16, 'doors' => 1, 'win' => 1, 'floor' => $floors['tile'], 'wall' => $walls['paint'], 'heat' => false],
@@ -51,6 +57,7 @@
         'newRoom' => ['name' => $tr['rooms']['defaults']['new'], 'area' => 12, 'h' => 2.8, 'per' => 14, 'doors' => 1, 'win' => 1, 'floor' => $floors['laminate'], 'wall' => $walls['paint'], 'heat' => false],
 
         'works' => array_map(fn ($w) => [
+            'key' => $w['key'],
             'name' => $tr['works']['items'][$w['key']],
             'price' => $w['price'],
             'unit' => $w['unit'],
@@ -58,8 +65,9 @@
             'on' => $w['on'],
         ], $works),
 
-        // Never rendered in the old page either — no UI selects them, so extras stay 0.
-        'services' => [2400, 1500, 800, 300],
+        // Fees behind the step-1 switches. Both labels read "I already have it", so the
+        // fee lands in the estimate while the switch is OFF and disappears when it is on.
+        'services' => ['design' => 2400, 'drawings' => 1500],
 
         // Fallback cart, used when localStorage has no 'archi-cart' entry.
         'cart' => [
@@ -87,6 +95,7 @@
 <x-layout page="calculator-detailed" :title="__('calculator-detailed.title')">
 
 <section class="dc-page" id="dcPage"
+         data-url-catalog="{{ route('catalog') }}"
          data-i18n="{{ json_encode($tr) }}"
          data-defaults="{{ json_encode($defaults) }}">
   <div class="wrap-narrow dc-inner">

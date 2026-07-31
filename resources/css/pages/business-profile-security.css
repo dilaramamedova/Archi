@@ -29,16 +29,21 @@
   .bpsec-badge-pub p { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-[#229653]; }
   .bpsec-dot         { @apply size-2 shrink-0 rounded-full; }
   .bpsec-badge-pub .bpsec-dot { @apply bg-[#229653]; }
-  .bpsec-btn-view    { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white px-5; }
+  .bpsec-btn-view    { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white px-5 transition-colors duration-150 hover:border-black/35 hover:bg-gray-soft2; }
   .bpsec-btn-view p  { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
 
   /* body + settings nav */
   .bpsec-body                  { @apply flex w-full items-start gap-6; }
   .bpsec-snav                  { @apply sticky top-[158px] flex w-[264px] shrink-0 flex-col items-start gap-1 self-start overflow-hidden rounded-ds border border-black/10 bg-white px-3 py-3.5; }
-  .bpsec-snav-item             { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds px-3 py-[11px] text-inherit no-underline; }
+  /* The border is reserved in the default state so the active row is exactly as tall as
+     its siblings (Figma strokes do not grow the box) and flipping data-on never resizes it.
+     The label weight change is safe: justify-between pins .count to the right edge, so a
+     wider label cannot displace anything. */
+  .bpsec-snav-item             { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds border border-transparent px-3 py-[11px] text-inherit no-underline transition-colors duration-150; }
   .bpsec-snav-item p           { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-black/70; }
   .bpsec-snav-item .count      { @apply text-xs leading-[normal] font-semibold text-black/40; }
-  .bpsec-snav-item[data-on="true"]   { @apply border border-yellow-line bg-sel-bg; }
+  .bpsec-snav-item:not([data-on="true"]):hover { @apply bg-gray-soft2; }
+  .bpsec-snav-item[data-on="true"]   { @apply border-yellow-line bg-sel-bg; }
   .bpsec-snav-item[data-on="true"] p { @apply text-sm font-bold text-black; }
   .bpsec-snav-prog             { @apply flex w-full flex-col items-start gap-2 overflow-hidden rounded-ds bg-gray-soft2 px-3 py-3.5; }
   .bpsec-snav-prog .row        { @apply flex w-full items-start justify-between overflow-hidden text-xs leading-[normal] whitespace-nowrap text-ink; }
@@ -52,27 +57,34 @@
   .bpsec-main             { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-5 overflow-hidden; }
   .bpsec-card             { @apply flex w-full flex-col items-start gap-4 overflow-hidden rounded-ds border border-black/10 bg-white p-6; }
   .bpsec-card-head        { @apply flex w-full flex-col items-start gap-1 overflow-hidden; }
-  .bpsec-card-head h2     { @apply text-lg leading-[normal] font-bold whitespace-nowrap text-ink; }
+  /* No nowrap: "Двухэтапная аутентификация (2FA)" is a sentence and the card clips
+     overflow, so a nowrap heading was cut mid-word once the main column narrowed. */
+  .bpsec-card-head h2     { @apply w-full text-lg leading-[normal] font-bold text-ink; }
   .bpsec-card-head .sub   { @apply w-full text-[13px] leading-[1.45] font-normal text-black/50; }
   .bpsec-card-head.single { @apply gap-0; }
 
   /* password fields */
   .bpsec-fields        { @apply flex w-full items-start gap-4 overflow-hidden; }
   .bpsec-field         { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-2 overflow-hidden; }
-  .bpsec-field > label { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
+  /* Three equal columns side by side: the label must stay one line so all three inputs
+     keep the same baseline, but it truncates with an ellipsis instead of being cut. */
+  .bpsec-field > label { @apply w-full overflow-hidden text-[13px] leading-[normal] font-semibold text-ellipsis whitespace-nowrap text-ink; }
   .bpsec-input         { @apply flex h-11 w-full items-center overflow-hidden rounded-ds border border-black/14 bg-white pr-3 pl-3.5; }
   .bpsec-input .dots   { @apply min-w-0 flex-[1_0_0] text-sm leading-[normal] font-bold text-ink/60; }
-  .bpsec-input .eye    { @apply cursor-pointer text-[13px] leading-[normal] font-normal whitespace-nowrap text-black/40; }
+  /* Color-only hover/active — the eye sits inside a fixed-height input, so nothing here
+     may change its box. */
+  .bpsec-input .eye    { @apply cursor-pointer bg-transparent text-[13px] leading-[normal] font-normal whitespace-nowrap text-black/40 transition-colors duration-150 hover:text-black/70; }
   .bpsec-input .eye[data-on="true"] { @apply text-ink; }
 
-  .bpsec-btn-yellow    { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[22px]; }
+  .bpsec-btn-yellow    { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[22px] transition-[filter] duration-150 hover:brightness-95; }
   .bpsec-btn-yellow p  { @apply text-[13px] leading-[normal] font-bold whitespace-nowrap text-ink; }
 
   /* 2FA row */
   .bpsec-row          { @apply flex w-full items-center justify-between overflow-hidden; }
   .bpsec-row .desc    { @apply min-w-0 flex-[1_0_0] text-sm leading-[1.5] font-normal text-black/65; }
-  .bpsec-toggle       { @apply relative h-6 w-11 shrink-0 cursor-pointer rounded-pill bg-black/15; }
-  .bpsec-toggle .knob { @apply absolute top-0.5 left-0.5 block size-5 rounded-full bg-white; }
+  /* Same switch motion as .bpn-toggle / .bpp-toggle: colors + transform, 200ms. */
+  .bpsec-toggle       { @apply relative h-6 w-11 shrink-0 cursor-pointer rounded-pill bg-black/15 transition-colors duration-200 hover:brightness-95; }
+  .bpsec-toggle .knob { @apply absolute top-0.5 left-0.5 block size-5 rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,0.25)] transition-transform duration-200; }
   .bpsec-toggle[data-on="true"]       { @apply bg-[#229653]; }
   .bpsec-toggle[data-on="true"] .knob { @apply translate-x-5; }
 
@@ -85,12 +97,13 @@
   .bpsec-badge-this          { @apply flex items-start overflow-hidden rounded-ds bg-[#e9f6ed] px-2 py-0.5; }
   .bpsec-badge-this p        { @apply text-[10px] leading-[normal] font-semibold whitespace-nowrap text-[#229653]; }
   .bpsec-session-sub         { @apply text-xs leading-[normal] font-normal whitespace-nowrap text-black/50; }
-  .bpsec-logout              { @apply cursor-pointer text-[13px] leading-[normal] font-semibold whitespace-nowrap text-[#d33c32]; }
+  /* Underline on hover instead of a weight/box change — the row height must not move. */
+  .bpsec-logout              { @apply shrink-0 cursor-pointer bg-transparent text-[13px] leading-[normal] font-semibold whitespace-nowrap text-[#d33c32] hover:underline hover:underline-offset-2; }
 
   /* danger zone */
   .bpsec-card.danger                     { @apply border border-[#d33c32]/50; }
   .bpsec-card.danger .bpsec-card-head h2 { @apply text-[#d33c32]; }
-  .bpsec-btn-danger                      { @apply flex h-[42px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-[#d33c32]/80 bg-white px-[18px]; }
+  .bpsec-btn-danger                      { @apply flex h-[42px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-[#d33c32]/80 bg-white px-[18px] transition-colors duration-150 hover:border-[#d33c32] hover:bg-[#d33c32]/8; }
   .bpsec-btn-danger p                    { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-[#d33c32]; }
   .bpsec-card.danger .bpsec-row .desc    { @apply text-[13px] text-black/60; }
 
@@ -99,9 +112,26 @@
   .bpsec-save-l            { @apply flex shrink-0 items-center gap-2 overflow-hidden; }
   .bpsec-save-l p          { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-white/85; }
   .bpsec-save-l .bpsec-dot { @apply bg-yellow; }
+  /* Saved state: only the dot color and the message text change, the bar keeps its size. */
+  .bpsec-save-bar[data-saved="true"] .bpsec-dot { @apply bg-green; }
   .bpsec-save-r            { @apply flex shrink-0 items-start gap-2.5 overflow-hidden; }
-  .bpsec-btn-cancel        { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-white/35 px-[18px]; }
+  .bpsec-btn-cancel        { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-white/35 px-[18px] transition-colors duration-150 hover:border-white/60 hover:bg-white/10; }
   .bpsec-btn-cancel p      { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-white/85; }
-  .bpsec-btn-save          { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[26px]; }
+  .bpsec-btn-save          { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[26px] transition-[filter] duration-150 hover:brightness-95; }
   .bpsec-btn-save p        { @apply text-sm leading-[normal] font-bold whitespace-nowrap text-ink; }
+  /* The shared :focus-visible ring is ink-colored — invisible on the dark save bar. */
+  .bpsec-btn-cancel:focus-visible,
+  .bpsec-btn-save:focus-visible { @apply outline-2 outline-offset-2 outline-white; }
+
+  /* RESPONSIVE — the Figma frame is a fixed 1440 layout and the sidebar is a fixed 264px,
+     so below ~1100px the three password columns and the session rows run out of room.
+     Nothing here changes the rendering at 1440px. */
+  @media (max-width: 1100px) {
+    .bpsec-body   { @apply flex-col; }
+    .bpsec-snav   { @apply static w-full; }
+  }
+  @media (max-width: 780px) {
+    .bpsec-fields { @apply flex-col; }
+    .bpsec-row    { @apply flex-col items-start gap-3; }
+  }
 }

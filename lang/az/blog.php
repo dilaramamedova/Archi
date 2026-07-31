@@ -12,7 +12,10 @@ return [
         'subtitle' => 'Materialları seçməkdən büdcə planlamağa, etibarlı usta tapmaqdan ən çox edilən səhvlərə qədər — təmirinin hər mərhələsi üçün praktik məqalələr.',
     ],
 
+    'empty' => 'Bu bölmədə hələ məqalə yoxdur.',
+
     'filters' => [
+        'aria_label' => 'Məqalə bölmələri',
         'all' => 'Bütün məqalələr',
         'repair' => 'Təmir',
         'materials' => 'Materiallar',

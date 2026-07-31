@@ -30,6 +30,7 @@ return [
         'qty_plus' => 'Increase',
         'add_cart' => 'Add to cart',
         'added' => 'Added to cart',
+        'in_cart' => 'Already in cart',
         'wish' => 'Favorites',
         'cart_unit' => '1 product',
         'delivery_t1' => 'Free delivery',

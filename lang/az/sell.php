@@ -54,6 +54,7 @@ return [
         'add_another' => 'Daha bir məhsul əlavə et',
         'sign_up' => 'Qeydiyyatdan keç',
         'not_now' => 'İndi yox, saytda bax',
+        'close' => 'Bağla',
     ],
 
     'product' => [

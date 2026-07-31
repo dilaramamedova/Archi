@@ -45,16 +45,21 @@
   .bpn-badge            { @apply flex items-center gap-2 overflow-hidden rounded-ds bg-[#e9f6ed] px-3.5 py-2; }
   .bpn-badge .dot       { @apply size-2 shrink-0 rounded-full bg-[#229653]; }
   .bpn-badge p          { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-[#229653]; }
-  .bpn-btn-view         { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white px-5; }
+  .bpn-btn-view         { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white px-5 transition-colors duration-150 hover:border-black/35 hover:bg-gray-soft2; }
   .bpn-btn-view p       { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
 
   /* body: settings nav + main column */
   .bpn-body             { @apply flex w-full items-start gap-6; }
   .bpn-snav             { @apply sticky top-[158px] flex w-[264px] shrink-0 flex-col items-start gap-1 self-start overflow-hidden rounded-ds border border-black/10 bg-white px-3 py-3.5; }
-  .bpn-snav-item        { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds px-3 py-[11px] text-inherit no-underline; }
+  /* The border is reserved in the default state so the active row is exactly as tall as
+     its siblings (Figma strokes do not grow the box) and flipping data-on never resizes it.
+     The label weight change is safe: justify-between pins .cnt to the right edge, so a
+     wider label cannot displace anything. */
+  .bpn-snav-item        { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds border border-transparent px-3 py-[11px] text-inherit no-underline transition-colors duration-150; }
   .bpn-snav-item .lbl   { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-black/70; }
   .bpn-snav-item .cnt   { @apply text-xs leading-[normal] font-semibold whitespace-nowrap text-black/40; }
-  .bpn-snav-item[data-on="true"]      { @apply border border-yellow-line bg-sel-bg; }
+  .bpn-snav-item:not([data-on="true"]):hover { @apply bg-gray-soft2; }
+  .bpn-snav-item[data-on="true"]      { @apply border-yellow-line bg-sel-bg; }
   .bpn-snav-item[data-on="true"] .lbl { @apply font-bold text-black; }
 
   .bpn-snav-progress          { @apply flex w-full flex-col items-start gap-2 overflow-hidden rounded-ds bg-gray-soft2 px-3 py-3.5; }
@@ -70,31 +75,43 @@
   /* cards */
   .bpn-card   { @apply flex w-full flex-col items-start overflow-hidden rounded-ds border border-black/10 bg-white p-6; }
   .bpn-card2  { @apply flex w-full flex-col items-start gap-1 overflow-hidden rounded-ds border border-black/10 bg-white p-6; }
+  /* No nowrap: these headings are sentences in ru/en and the card clips overflow, so a
+     nowrap heading was cut mid-word once the main column narrowed. */
   .bpn-card h3,
-  .bpn-card2 h3    { @apply text-lg leading-[normal] font-bold whitespace-nowrap text-ink; }
+  .bpn-card2 h3    { @apply w-full text-lg leading-[normal] font-bold text-ink; }
   .bpn-card .desc,
   .bpn-card2 .desc { @apply w-full text-[13px] leading-[1.45] font-normal text-black/50; }
   .bpn-spacer { @apply h-3 w-2.5 shrink-0; }
 
   /* notification rows */
   .bpn-row          { @apply flex w-full items-center justify-between overflow-hidden border-b border-black/8 py-3.5; }
-  .bpn-row .txt     { @apply flex min-w-px flex-[1_0_0] flex-col items-start gap-[3px] overflow-hidden whitespace-nowrap; }
-  .bpn-row .txt .t  { @apply text-[15px] leading-[normal] font-semibold text-ink; }
-  .bpn-row .txt .s  { @apply text-[13px] leading-[normal] font-normal text-black/50; }
+  /* The .s line is a full sentence — it must wrap instead of being clipped in ru/en. The
+     row is `items-center`, so a two-line description only makes the row taller. */
+  .bpn-row .txt     { @apply flex min-w-px flex-[1_0_0] flex-col items-start gap-[3px] overflow-hidden pr-4; }
+  .bpn-row .txt .t  { @apply w-full overflow-hidden text-[15px] leading-[normal] font-semibold text-ellipsis whitespace-nowrap text-ink; }
+  .bpn-row .txt .s  { @apply w-full text-[13px] leading-[normal] font-normal text-black/50; }
 
-  .bpn-toggle       { @apply relative h-6 w-11 shrink-0 cursor-pointer rounded-pill bg-black/15 transition-colors duration-200; }
-  .bpn-toggle .knob { @apply absolute top-0.5 left-0.5 size-5 rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,0.25)] transition-[left] duration-200; }
+  /* Switch motion is shared with .bpp-toggle / .bpsec-toggle: colors + transform, 200ms.
+     The knob moves via translate-x (cheaper than animating `left`). */
+  .bpn-toggle       { @apply relative h-6 w-11 shrink-0 cursor-pointer rounded-pill bg-black/15 transition-colors duration-200 hover:brightness-95; }
+  .bpn-toggle .knob { @apply absolute top-0.5 left-0.5 block size-5 rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,0.25)] transition-transform duration-200; }
   .bpn-toggle[data-on="true"]       { @apply bg-[#229653]; }
-  .bpn-toggle[data-on="true"] .knob { @apply left-[22px]; }
+  .bpn-toggle[data-on="true"] .knob { @apply translate-x-5; }
 
   /* channel chips */
   .bpn-chips  { @apply flex items-start gap-2 overflow-hidden pt-3; }
-  .bpn-chip   { @apply flex cursor-pointer items-center gap-2 overflow-hidden rounded-ds py-2.5 pr-4 pl-3.5; }
-  .bpn-chip p { @apply text-sm leading-[normal] whitespace-nowrap; }
-  .bpn-chip[data-on="true"]     { @apply border border-yellow-line bg-sel-bg; }
-  .bpn-chip[data-on="true"] p   { @apply font-semibold text-black; }
-  .bpn-chip[data-on="false"]    { @apply border border-black/14 bg-white; }
-  .bpn-chip[data-on="false"] p  { @apply font-medium text-black/70; }
+  .bpn-chip     { @apply flex cursor-pointer items-center gap-2 overflow-hidden rounded-ds py-2.5 pr-4 pl-3.5 text-left; }
+  .bpn-chip .lbl { @apply text-sm leading-[normal] whitespace-nowrap; }
+  /* Reserve the semibold width in both states so toggling the chip cannot resize it
+     (a width change would shift every chip to its right inside the overflow-hidden row). */
+  .bpn-chip .lbl::after {
+    content: attr(data-label);
+    @apply invisible block h-0 overflow-hidden font-semibold;
+  }
+  .bpn-chip[data-on="true"]      { @apply border border-yellow-line bg-sel-bg; }
+  .bpn-chip[data-on="true"] .lbl { @apply font-semibold text-black; }
+  .bpn-chip[data-on="false"]     { @apply border border-black/14 bg-white; }
+  .bpn-chip[data-on="false"] .lbl { @apply font-medium text-black/70; }
   .bpn-chip .cbox               { @apply relative size-[18px] shrink-0 rounded-ds border border-black/25 bg-white; }
   .bpn-chip[data-on="true"] .cbox { @apply border-transparent bg-ink; }
   .bpn-chip[data-on="true"] .cbox::after {
@@ -106,10 +123,23 @@
   .bpn-save-bar           { @apply flex w-full items-center justify-between overflow-hidden rounded-ds bg-ink px-6 py-4; }
   .bpn-save-bar .left     { @apply flex shrink-0 items-center gap-2 overflow-hidden; }
   .bpn-save-bar .left .dot { @apply size-2 shrink-0 rounded-full bg-yellow; }
+  /* Saved state: only the dot color and the message text change, the bar keeps its size. */
+  .bpn-save-bar[data-saved="true"] .left .dot { @apply bg-green; }
   .bpn-save-bar .left p   { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-white/85; }
   .bpn-save-bar .right    { @apply flex shrink-0 items-start gap-2.5 overflow-hidden; }
-  .bpn-btn-cancel         { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-white/35 px-[18px]; }
+  .bpn-btn-cancel         { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-white/35 px-[18px] transition-colors duration-150 hover:border-white/60 hover:bg-white/10; }
   .bpn-btn-cancel p       { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-white/85; }
-  .bpn-btn-save           { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[26px]; }
+  .bpn-btn-save           { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[26px] transition-[filter] duration-150 hover:brightness-95; }
   .bpn-btn-save p         { @apply text-sm leading-[normal] font-bold whitespace-nowrap text-ink; }
+  /* The shared :focus-visible ring is ink-colored — invisible on the dark save bar. */
+  .bpn-btn-cancel:focus-visible,
+  .bpn-btn-save:focus-visible { @apply outline-2 outline-offset-2 outline-white; }
+
+  /* RESPONSIVE — the Figma frame is a fixed 1440 layout and the sidebar is a fixed 264px,
+     so below ~1100px the main column gets too narrow. Nothing here changes 1440px. */
+  @media (max-width: 1100px) {
+    .bpn-body  { @apply flex-col; }
+    .bpn-snav  { @apply static w-full; }
+    .bpn-chips { @apply flex-wrap; }
+  }
 }

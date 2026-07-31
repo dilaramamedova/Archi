@@ -2,6 +2,8 @@
 // three price tiers, which are rendered here because their count/order is data driven.
 // All texts come from Blade through #qcCalc[data-labels].
 
+const MIN_AREA = 1; // mirrors the min="1" of #qcArea
+
 const TIERS = [
   { key: 'economy', rate: 600 },
   { key: 'standard', rate: 900 },
@@ -62,9 +64,18 @@ export default function init() {
     });
   });
 
+  // The min="1" of the input is not enforced by itself (there is no form), so the
+  // value is clamped here: an empty or below-minimum field would otherwise price at 0
+  // and hand that 0 over to the detailed calculator.
   areaEl.addEventListener('input', () => {
-    state.area = parseFloat(areaEl.value) || 0;
+    const value = parseFloat(areaEl.value);
+    state.area = Number.isFinite(value) ? Math.max(MIN_AREA, value) : MIN_AREA;
     render();
+  });
+
+  // write the clamped value back once the field is left, so input and prices agree
+  areaEl.addEventListener('change', () => {
+    if (parseFloat(areaEl.value) !== state.area) areaEl.value = String(state.area);
   });
 
   // a tier card also selects the material level

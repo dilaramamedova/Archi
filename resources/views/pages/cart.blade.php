@@ -13,10 +13,15 @@
     ];
 
     // Raw templates (placeholders still in place) for the strings JS composes.
+    // `locale` drives Intl number grouping in the module — without it JS would format
+    // every locale the Russian way.
     $strings = [
+        'locale' => app()->getLocale(),
         'money' => __('cart.money'),
         'unitPrice' => __('cart.items.unit_price'),
         'remove' => __('cart.items.remove'),
+        'increase' => __('cart.items.increase'),
+        'decrease' => __('cart.items.decrease'),
         'subtotal' => __('cart.summary.subtotal'),
         'discount' => __('cart.summary.discount'),
         'deliveryFree' => __('cart.summary.delivery_free'),
@@ -46,8 +51,8 @@
         </div>
       </div>
 
-      {{-- order summary --}}
-      <aside class="sticky top-5 flex flex-col gap-4 rounded-ds border border-black/10 bg-white p-6 shadow-[0_4px_16px_rgba(0,0,0,0.05)] max-[900px]:static" id="ctSum">
+      {{-- order summary — `top` clears the 140px sticky `.topbar` (+16px gap), same as `.fside` --}}
+      <aside class="sticky top-[156px] flex max-h-[calc(100vh-172px)] flex-col gap-4 overflow-y-auto rounded-ds border border-black/10 bg-white p-6 shadow-[0_4px_16px_rgba(0,0,0,0.05)] max-[900px]:static max-[900px]:max-h-none max-[900px]:overflow-visible" id="ctSum">
         <h3 class="text-lg font-bold text-ink">{{ __('cart.summary.title') }}</h3>
 
         <div class="flex flex-col gap-2">

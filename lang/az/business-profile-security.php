@@ -15,7 +15,6 @@ return [
     'view_profile' => 'Profilə bax ↗',
 
     'nav' => [
-        'basic' => 'Əsas məlumat',
         'company' => 'Şirkət məlumatları',
         'contact' => 'Əlaqə məlumatları',
         'showrooms' => 'Şourumlar',
@@ -38,6 +37,7 @@ return [
         'new_label' => 'Yeni şifrə',
         'repeat_label' => 'Yeni şifrəni təkrarla',
         'mask' => '••••••••',
+        'value' => 'Archi2024',
         'eye' => '👁',
         'submit' => 'Şifrəni yenilə',
     ],
@@ -70,5 +70,6 @@ return [
         'unsaved' => 'Yadda saxlanmamış dəyişikliklər var',
         'cancel' => 'Ləğv et',
         'save' => 'Yadda saxla',
+        'saved' => 'Dəyişikliklər yadda saxlanıldı.',
     ],
 ];

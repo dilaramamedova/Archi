@@ -36,11 +36,18 @@ return [
         'add' => '＋ Məhsul əlavə et',
         'edit' => 'Redaktə et',
         'toggle' => 'Məhsulun görünüşü',
+        'empty' => 'Uyğun məhsul tapılmadı',
     ],
     'filters' => [
         'search' => 'Məhsul axtar...',
         'category' => 'Kateqoriya',
+        'cat_all' => 'Bütün kateqoriyalar',
+        'cat_tile' => 'Kafel & metlax',
         'status' => 'Status',
+        'status_all' => 'Bütün statuslar',
+        'status_active' => 'Aktiv',
+        'status_low' => 'Stokda azalıb',
+        'status_hidden' => 'Gizli',
     ],
 
     'products' => [
@@ -71,6 +78,9 @@ return [
     ],
 
     'pager' => [
+        'label' => 'Səhifələmə',
+        'prev_label' => 'Əvvəlki səhifə',
+        'next_label' => 'Növbəti səhifə',
         'prev' => '←',
         'page1' => '1',
         'page2' => '2',
@@ -84,5 +94,6 @@ return [
         'unsaved' => 'Yadda saxlanmamış dəyişikliklər var',
         'cancel' => 'Ləğv et',
         'save' => 'Yadda saxla',
+        'saved' => 'Dəyişikliklər yadda saxlanıldı.',
     ],
 ];

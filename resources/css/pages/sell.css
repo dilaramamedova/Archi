@@ -8,10 +8,12 @@
     @apply placeholder:text-black/40 focus:border-black;
   }
   .sl-lbl { @apply text-sm font-medium text-black/70; }
+  /* The selected state must not change the box: the inset ring draws the extra border
+     and the font weight stays fixed, so toggling a chip never re-measures the row. */
   .sl-chip {
-    @apply cursor-pointer border border-black/20 px-4 py-[9px] text-sm text-black/70 transition duration-200;
+    @apply cursor-pointer border border-black/20 bg-transparent px-4 py-[9px] text-sm text-black/70 transition duration-200;
     @apply hover:border-black;
-    @apply data-[on=true]:border-yellow data-[on=true]:bg-[#fffdf0] data-[on=true]:font-medium data-[on=true]:text-ink data-[on=true]:shadow-[inset_0_0_0_1px_var(--color-yellow)];
+    @apply data-[on=true]:border-yellow data-[on=true]:bg-[#fffdf0] data-[on=true]:text-ink data-[on=true]:shadow-[inset_0_0_0_1px_var(--color-yellow)];
   }
 
   @keyframes lmIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }

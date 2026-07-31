@@ -15,7 +15,6 @@ return [
     'view_profile' => 'View profile ↗',
 
     'nav' => [
-        'basic' => 'Basic information',
         'company' => 'Company details',
         'contact' => 'Contact details',
         'showrooms' => 'Showrooms',
@@ -38,6 +37,7 @@ return [
         'new_label' => 'New password',
         'repeat_label' => 'Repeat new password',
         'mask' => '••••••••',
+        'value' => 'Archi2024',
         'eye' => '👁',
         'submit' => 'Update password',
     ],
@@ -70,5 +70,6 @@ return [
         'unsaved' => 'You have unsaved changes',
         'cancel' => 'Cancel',
         'save' => 'Save',
+        'saved' => 'Changes saved.',
     ],
 ];

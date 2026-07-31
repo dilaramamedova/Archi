@@ -16,6 +16,8 @@ return [
     'items' => [
         'unit_price' => 'Unit price: :price ₼',
         'remove' => 'Remove',
+        'increase' => 'Increase quantity',
+        'decrease' => 'Decrease quantity',
     ],
 
     'promo' => [

@@ -33,16 +33,21 @@
   .bpp-status        { @apply flex shrink-0 items-center gap-2 overflow-hidden rounded-ds bg-[#e9f6ed] px-3.5 py-2; }
   .bpp-status .dot   { @apply size-2 shrink-0 rounded-full bg-[#229653]; }
   .bpp-status p      { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-[#229653]; }
-  .bpp-view-btn      { @apply flex h-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white px-5; }
+  .bpp-view-btn      { @apply flex h-11 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/20 bg-white px-5 transition-colors duration-150 hover:border-black/35 hover:bg-gray-soft2; }
   .bpp-view-btn p    { @apply text-[13px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
 
   /* body + sidebar */
   .bpp-body                    { @apply flex w-full items-start gap-6; }
   .bpp-snav                    { @apply sticky top-[158px] flex w-[264px] shrink-0 flex-col items-start gap-1 self-start overflow-hidden rounded-ds border border-black/10 bg-white px-3 py-3.5; }
-  .bpp-snav-item               { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds px-3 py-[11px] text-inherit no-underline; }
+  /* The border is reserved in the default state so the active row is exactly as tall as
+     its siblings (Figma strokes do not grow the box) and flipping data-on never resizes it.
+     The label weight change is safe: justify-between pins .num to the right edge, so a
+     wider label cannot displace anything. */
+  .bpp-snav-item               { @apply flex w-full cursor-pointer items-center justify-between overflow-hidden rounded-ds border border-transparent px-3 py-[11px] text-inherit no-underline transition-colors duration-150; }
   .bpp-snav-item p.lbl         { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-black/70; }
   .bpp-snav-item p.num         { @apply text-xs leading-[normal] font-semibold whitespace-nowrap text-black/40; }
-  .bpp-snav-item[data-on="true"]       { @apply border border-yellow-line bg-sel-bg; }
+  .bpp-snav-item:not([data-on="true"]):hover { @apply bg-gray-soft2; }
+  .bpp-snav-item[data-on="true"]       { @apply border-yellow-line bg-sel-bg; }
   .bpp-snav-item[data-on="true"] p.lbl { @apply font-bold text-black; }
   .bpp-snav-prog               { @apply flex w-full flex-col items-start gap-2 overflow-hidden rounded-ds bg-gray-soft2 px-3 py-3.5; }
   .bpp-snav-prog .top          { @apply flex w-full items-start justify-between overflow-hidden text-xs leading-[normal] whitespace-nowrap text-ink; }
@@ -59,27 +64,51 @@
   .bpp-card-head-l    { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-1 overflow-hidden whitespace-nowrap; }
   .bpp-card-head-l .h { @apply text-lg leading-[normal] font-bold text-ink; }
   .bpp-card-head-l .s { @apply text-[13px] leading-[normal] font-normal text-black/50; }
-  .bpp-add-btn        { @apply flex h-[42px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[18px]; }
+  .bpp-add-btn        { @apply flex h-[42px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[18px] transition-[filter] duration-150 hover:brightness-95; }
   .bpp-add-btn p      { @apply text-[13px] leading-[normal] font-bold whitespace-nowrap text-ink; }
 
-  /* filters */
-  .bpp-filters        { @apply flex w-full items-start gap-2.5 overflow-hidden; }
+  /* filters — no overflow-hidden on the row: the dropdown menus escape their trigger. */
+  .bpp-filters        { @apply flex w-full items-start gap-2.5; }
   .bpp-search         { @apply flex h-[42px] min-w-0 flex-[1_0_0] items-center gap-2 overflow-hidden rounded-ds bg-gray-soft2 pl-3.5; }
   .bpp-search .ic     { @apply relative size-4 shrink-0; }
   .bpp-search .ic img { @apply absolute inset-0 size-full max-w-none; }
-  .bpp-search p       { @apply text-[13px] leading-[normal] font-normal whitespace-nowrap text-black/45; }
-  .bpp-drop           { @apply flex h-[42px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/15 bg-white px-4; }
-  .bpp-drop p         { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-black/70; }
+  /* Real <input>. app.css @layer base reverts the UA border/background of form controls,
+     so the box has to be flattened again here (components beats base). */
+  .bpp-search input   { @apply h-full min-w-0 flex-[1_0_0] rounded-none border-none bg-transparent pr-3.5 text-[13px] leading-[normal] font-normal text-ink outline-none placeholder:text-black/45; }
+  .bpp-search:focus-within { @apply outline-2 outline-offset-2 outline-ink; }
+
+  .bpp-drop-wrap      { @apply relative shrink-0; }
+  .bpp-drop           { @apply flex h-[42px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/15 bg-white px-4 transition-colors duration-150 hover:border-black/35 hover:bg-gray-soft2; }
+  .bpp-drop span      { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-black/70; }
   /* Presentational caret — kept out of the lang files so localizers cannot drop it. */
-  .bpp-drop p::after  { content: ' ⌄'; }
+  .bpp-drop span::after { content: ' ⌄'; }
+  /* An active (non-"all") choice tints the trigger but never changes its label, so
+     picking an option cannot resize the filter row. */
+  .bpp-drop[data-active="true"]      { @apply border-yellow-line bg-sel-bg; }
+  .bpp-drop[data-active="true"] span { @apply text-ink; }
+
+  /* right-aligned: both triggers sit at the right end of the filter row and the option
+     labels are wider than them, so a left-anchored menu would grow past the card edge
+     and be cut off by .bpp-card's overflow-hidden. */
+  .bpp-drop-menu      { @apply absolute top-[calc(100%+6px)] right-0 z-20 hidden min-w-full rounded-ds border border-black/14 bg-white p-1.5 shadow-[0_6px_20px_rgba(0,0,0,0.12)]; }
+  .bpp-drop-wrap[data-open="true"] .bpp-drop-menu { @apply block; }
+  .bpp-drop-menu li   { @apply cursor-pointer list-none rounded-ds px-2.5 py-2.5 text-[13px] leading-[normal] font-medium whitespace-nowrap text-black/70 hover:bg-gray-soft hover:text-ink; }
+  /* The check mark is always in the box (transparent when unselected) and the weight
+     never changes, so moving the selection does not re-measure the menu. */
+  .bpp-drop-menu li::before                 { content: '✓'; @apply mr-1.5 inline-block w-3 text-transparent; }
+  .bpp-drop-menu li[data-on="true"]         { @apply bg-sel-bg text-ink; }
+  .bpp-drop-menu li[data-on="true"]::before { @apply text-ink; }
 
   /* product row */
   .bpp-row            { @apply flex w-full items-center gap-3.5 overflow-hidden rounded-ds bg-gray-soft2 px-3.5 py-3; }
+  /* flex beats the UA [hidden] rule — ARCHITECTURE.md 6.5 */
+  .bpp-row[hidden]    { @apply hidden; }
+  .bpp-empty          { @apply w-full rounded-ds bg-gray-soft2 px-3.5 py-7 text-center text-[13px] leading-[normal] font-medium text-black/50; }
   .bpp-thumb          { @apply relative size-[52px] shrink-0 rounded-ds; }
   .bpp-thumb img      { @apply pointer-events-none absolute inset-0 size-full max-w-none rounded-ds object-cover; }
   .bpp-info           { @apply flex min-w-0 flex-[1_0_0] flex-col items-start gap-0.5 overflow-hidden whitespace-nowrap; }
-  .bpp-info .n        { @apply text-sm leading-[normal] font-semibold text-ink; }
-  .bpp-info .c        { @apply text-xs leading-[normal] font-normal text-black/50; }
+  .bpp-info .n        { @apply w-full overflow-hidden text-sm leading-[normal] font-semibold text-ellipsis text-ink; }
+  .bpp-info .c        { @apply w-full overflow-hidden text-xs leading-[normal] font-normal text-ellipsis text-black/50; }
   .bpp-price          { @apply shrink-0 text-sm leading-[normal] font-bold whitespace-nowrap text-ink; }
   .bpp-badge          { @apply flex shrink-0 items-start overflow-hidden rounded-ds px-2.5 py-1; }
   .bpp-badge p        { @apply text-[11px] leading-[normal] font-semibold whitespace-nowrap; }
@@ -87,29 +116,54 @@
   .bpp-badge[data-tone="ok"] p   { @apply text-[#229653]; }
   .bpp-badge[data-tone="warn"]   { @apply bg-[#fff4db]; }
   .bpp-badge[data-tone="warn"] p { @apply text-[#c88200]; }
-  .bpp-toggle         { @apply relative h-[22px] w-10 shrink-0 cursor-pointer rounded-pill bg-black/15; }
-  .bpp-toggle .knob   { @apply absolute top-[3px] left-[3px] block size-4 rounded-full bg-white; }
+  /* Same switch motion as .bpn-toggle / .bpsec-toggle: colors + transform, 200ms.
+     The track is 40x22 here (Figma), 44x24 on the other two pages. */
+  .bpp-toggle         { @apply relative h-[22px] w-10 shrink-0 cursor-pointer rounded-pill bg-black/15 transition-colors duration-200 hover:brightness-95; }
+  .bpp-toggle .knob   { @apply absolute top-[3px] left-[3px] block size-4 rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,0.25)] transition-transform duration-200; }
   .bpp-toggle[data-on="true"]       { @apply bg-[#229653]; }
   .bpp-toggle[data-on="true"] .knob { @apply translate-x-[18px]; }
-  .bpp-edit-btn       { @apply flex shrink-0 cursor-pointer items-start overflow-hidden rounded-ds border border-black/20 bg-white px-3.5 py-2; }
+  .bpp-edit-btn       { @apply flex shrink-0 cursor-pointer items-start overflow-hidden rounded-ds border border-black/20 bg-white px-3.5 py-2 transition-colors duration-150 hover:border-black/35 hover:bg-gray-soft2; }
   .bpp-edit-btn p     { @apply text-xs leading-[normal] font-semibold whitespace-nowrap text-ink; }
 
   /* pagination */
   .bpp-pager          { @apply flex w-full items-start justify-center gap-1.5 overflow-hidden pt-1.5; }
-  .bpp-pg             { @apply flex size-9 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/15 bg-white; }
-  .bpp-pg p           { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-black/70; }
-  .bpp-pg[data-on="true"]   { @apply border-none bg-ink; }
-  .bpp-pg[data-on="true"] p { @apply font-bold text-white; }
-  .bpp-pg[data-dots="true"] { @apply cursor-default border-none; }
+  /* Hidden while a filter narrows the list — paging a filtered result would be a lie.
+     flex beats the UA [hidden] rule, so it has to be restated (ARCHITECTURE.md 6.5). */
+  .bpp-pager[hidden]  { @apply hidden; }
+  /* border-transparent instead of border-none in the two state rules: the box must keep
+     its 1px so switching page / gap never changes the 36px square. */
+  .bpp-pg             { @apply flex size-9 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/15 bg-white transition-colors duration-150; }
+  .bpp-pg span        { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-black/70; }
+  .bpp-pg:not([data-on="true"]):not([data-dots="true"]):not(:disabled):hover { @apply border-black/35 bg-gray-soft2; }
+  .bpp-pg[data-on="true"]      { @apply border-transparent bg-ink; }
+  .bpp-pg[data-on="true"] span { @apply font-bold text-white; }
+  .bpp-pg[data-dots="true"]    { @apply cursor-default border-transparent; }
+  /* Prev/next at the edge of the range: opacity only, the 36px square is untouched. */
+  .bpp-pg:disabled    { @apply cursor-default opacity-40; }
 
   /* save bar */
   .bpp-save-bar       { @apply flex w-full items-center justify-between overflow-hidden rounded-ds bg-ink px-6 py-4; }
   .bpp-save-l         { @apply flex items-center gap-2 overflow-hidden; }
   .bpp-save-l .dot    { @apply size-2 shrink-0 rounded-full bg-yellow; }
+  /* Saved state: only the dot color and the message text change, the bar keeps its size. */
+  .bpp-save-bar[data-saved="true"] .dot { @apply bg-green; }
   .bpp-save-l p       { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-white/85; }
   .bpp-save-r         { @apply flex items-start gap-2.5 overflow-hidden; }
-  .bpp-cancel-btn     { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-white/35 px-[18px]; }
+  .bpp-cancel-btn     { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-white/35 px-[18px] transition-colors duration-150 hover:border-white/60 hover:bg-white/10; }
   .bpp-cancel-btn p   { @apply text-sm leading-[normal] font-medium whitespace-nowrap text-white/85; }
-  .bpp-save-btn       { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[26px]; }
+  .bpp-save-btn       { @apply flex h-11 cursor-pointer items-center justify-center overflow-hidden rounded-ds bg-yellow px-[26px] transition-[filter] duration-150 hover:brightness-95; }
   .bpp-save-btn p     { @apply text-sm leading-[normal] font-bold whitespace-nowrap text-ink; }
+  /* The shared :focus-visible ring is ink-colored — invisible on the dark save bar. */
+  .bpp-cancel-btn:focus-visible,
+  .bpp-save-btn:focus-visible { @apply outline-2 outline-offset-2 outline-white; }
+
+  /* RESPONSIVE — the Figma frame is a fixed 1440 layout and the sidebar is a fixed 264px,
+     so below ~1100px the main column gets too narrow for the product rows. Nothing here
+     changes the rendering at 1440px. The old page shipped no responsive rules at all. */
+  @media (max-width: 1100px) {
+    .bpp-body { @apply flex-col; }
+    .bpp-snav { @apply static w-full; }
+    .bpp-row  { @apply flex-wrap; }
+    .bpp-info { @apply whitespace-normal; }
+  }
 }

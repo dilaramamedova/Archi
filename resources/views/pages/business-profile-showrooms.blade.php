@@ -19,7 +19,7 @@
           <span class="dot"></span>
           <p>{{ __('business-profile-showrooms.status.published') }}</p>
         </div>
-        <div class="bpsh-btn-view"><p>{{ __('business-profile-showrooms.status.view_profile') }}</p></div>
+        <a class="bpsh-btn-view" href="{{ route('business.profile') }}"><p>{{ __('business-profile-showrooms.status.view_profile') }}</p></a>
       </div>
     </div>
 
@@ -67,7 +67,7 @@
               <h2>{{ __('business-profile-showrooms.list.heading') }}</h2>
               <p>{{ __('business-profile-showrooms.list.desc') }}</p>
             </div>
-            <div class="bpsh-btn-add"><p>{{ __('business-profile-showrooms.list.add') }}</p></div>
+            <button type="button" class="bpsh-btn-add"><p>{{ __('business-profile-showrooms.list.add') }}</p></button>
           </div>
 
           @foreach ([
@@ -90,22 +90,22 @@
                 <p>{{ __("business-profile-showrooms.state.{$room['state']}") }}</p>
               </div>
               <div class="bpsh-sh-actions">
-                <div class="bpsh-btn-edit"><p>{{ __('business-profile-showrooms.list.edit') }}</p></div>
-                <div class="bpsh-btn-del"><p>{{ __('business-profile-showrooms.list.delete') }}</p></div>
+                <button type="button" class="bpsh-btn-edit"><p>{{ __('business-profile-showrooms.list.edit') }}</p></button>
+                <button type="button" class="bpsh-btn-del"><p>{{ __('business-profile-showrooms.list.delete') }}</p></button>
               </div>
             </div>
           @endforeach
         </div>
 
         {{-- save bar --}}
-        <div class="bpsh-save-bar" data-saved-message="{{ __('business-profile-showrooms.save.saved_alert') }}">
+        <div class="bpsh-save-bar" data-saved="false" data-saved-message="{{ __('business-profile-showrooms.save.saved') }}">
           <div class="bpsh-save-left">
             <span class="dot"></span>
-            <p>{{ __('business-profile-showrooms.save.unsaved') }}</p>
+            <p class="bpsh-save-msg" aria-live="polite">{{ __('business-profile-showrooms.save.unsaved') }}</p>
           </div>
           <div class="bpsh-save-right">
-            <div class="bpsh-btn-cancel"><p>{{ __('business-profile-showrooms.save.cancel') }}</p></div>
-            <div class="bpsh-btn-save"><p>{{ __('business-profile-showrooms.save.save') }}</p></div>
+            <button type="button" class="bpsh-btn-cancel"><p>{{ __('business-profile-showrooms.save.cancel') }}</p></button>
+            <button type="button" class="bpsh-btn-save"><p>{{ __('business-profile-showrooms.save.save') }}</p></button>
           </div>
         </div>
 

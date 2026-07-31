@@ -73,6 +73,9 @@
   .pd-add img      { @apply size-[22px]; }
   .pd-add[data-added="true"]     { @apply bg-green text-white; }
   .pd-add[data-added="true"] img { @apply brightness-0 invert; }
+  /* repeat click while the product is already in the cart — neutral, not a success */
+  .pd-add[data-added="already"]     { @apply bg-gray-soft text-black/60; }
+  .pd-add[data-added="already"] img { @apply opacity-50; }
   .pd-wish         { @apply flex size-[54px] items-center justify-center border border-black/20 transition-[background] duration-200 hover:bg-gray-soft; }
   .pd-wish img     { @apply size-[22px]; }
   .pd-wish[data-liked="true"] { @apply border-yellow bg-yellow; }
@@ -181,6 +184,10 @@
   .rev-card .sd .date  { @apply text-[13px] text-[#808080]; }
   .rev-card .txt       { @apply text-[15px] leading-[1.45] text-black/75; }
   .rev-card .help      { @apply mt-auto cursor-pointer self-start rounded-pill border border-black/10 px-3.5 py-[7px] text-[13px] text-black/50 transition duration-200 hover:border-black/35 hover:text-ink; }
+  /* voted state — colours only, the box keeps its size (no layout shift) */
+  .rev-card .help[data-on="true"] { @apply border-yellow bg-yellow text-ink; }
+  .rev-card .help .n   { @apply tabular-nums; }
   .rev-all             { @apply mt-6 flex justify-center; }
-  .sec-more2           { @apply inline-flex cursor-pointer items-center border-b border-yellow-line pb-1 text-base font-medium text-[#141414]; }
+  /* not a link (there is no reviews route) — no `cursor-pointer` affordance */
+  .sec-more2           { @apply inline-flex items-center border-b border-yellow-line pb-1 text-base font-medium text-[#141414]; }
 }

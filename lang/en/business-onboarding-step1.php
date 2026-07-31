@@ -35,6 +35,21 @@ return [
         'about_placeholder' => 'Introduce yourself to customers — what you sell, how many years you have been on the market…',
     ],
 
+    'cities' => [
+        'Baku',
+        'Ganja',
+        'Sumgait',
+        'Mingachevir',
+        'Shirvan',
+        'Nakhchivan',
+        'Shaki',
+        'Yevlakh',
+        'Lankaran',
+        'Guba',
+        'Gabala',
+        'Khankendi',
+    ],
+
     'actions' => [
         'save' => 'Save and continue  →',
         'later' => 'I will continue later',

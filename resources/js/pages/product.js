@@ -64,7 +64,10 @@ function initAddToCart() {
   const btn = document.getElementById('addCart');
   if (!btn) return;
   const d = btn.dataset;
+  let resetTimer = 0;
 
+  // Writes the product into the cart. Returns true only when it was really pushed,
+  // so a repeat click can say "already in cart" instead of faking a success.
   function store() {
     try {
       const name = (document.querySelector('.pd-info h1') || {}).textContent || '';
@@ -72,33 +75,53 @@ function initAddToCart() {
       const now = (document.querySelector('.pd-price .now') || {}).textContent || '0';
       const price = parseFloat(now.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
       const cart = JSON.parse(localStorage.getItem('archi-cart') || '[]');
-      if (!cart.some((c) => c.name === name.trim())) {
-        cart.push({
-          name: name.trim(),
-          brand: d.cartBrand || '',
-          cat: cat.trim(),
-          calc: d.cartUnit || '',
-          price,
-          stock: d.cartStock || '',
-          inStock: true,
-        });
-        localStorage.setItem('archi-cart', JSON.stringify(cart));
-      }
+      if (cart.some((c) => c.name === name.trim())) return false;
+      cart.push({
+        name: name.trim(),
+        brand: d.cartBrand || '',
+        cat: cat.trim(),
+        calc: d.cartUnit || '',
+        price,
+        stock: d.cartStock || '',
+        inStock: true,
+      });
+      localStorage.setItem('archi-cart', JSON.stringify(cart));
+      return true;
     } catch (e) {
-      // localStorage blocked — the visual feedback still runs
+      // localStorage blocked — nothing is persisted, but the click is still a fresh add
+      return true;
     }
   }
 
   btn.addEventListener('click', () => {
-    btn.dataset.added = 'true';
-    setButton(btn, '/assets/ic-check.svg', d.labelAdded || '');
-    store();
+    clearTimeout(resetTimer);
+    const added = store();
+    btn.dataset.added = added ? 'true' : 'already';
+    setButton(
+      btn,
+      added ? '/assets/ic-check.svg' : '/assets/ic-cart.svg',
+      (added ? d.labelAdded : d.labelInCart) || ''
+    );
     syncCartBadge();
-    setTimeout(() => {
+    resetTimer = setTimeout(() => {
       btn.dataset.added = 'false';
       setButton(btn, '/assets/ic-cart.svg', d.labelAdd || '');
-      syncCartBadge();
     }, 1800);
+  });
+}
+
+// "Helpful" vote on a review card: toggles the state and the counter next to it.
+function initHelpful() {
+  document.querySelectorAll('.rev-card .help').forEach((btn) => {
+    const n = btn.querySelector('.n');
+    if (!n) return;
+    const base = parseInt(n.textContent, 10) || 0;
+    btn.addEventListener('click', () => {
+      const on = btn.dataset.on !== 'true';
+      btn.dataset.on = on ? 'true' : 'false';
+      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      n.textContent = base + (on ? 1 : 0);
+    });
   });
 }
 
@@ -169,6 +192,7 @@ export default function init() {
   initWish();
   initTabs();
   initReviewFilter();
+  initHelpful();
   initScrollToReviews();
   initReveal();
 }

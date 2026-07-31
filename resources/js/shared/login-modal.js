@@ -20,7 +20,12 @@ function close() {
 }
 
 // Any element carrying [data-login] opens the modal too (old behaviour).
-document.querySelectorAll('.signin .txt, [data-login]').forEach((el) =>
+// On /login itself the navbar link just follows its href — a modal there would only
+// duplicate the page underneath it.
+const onLoginPage = document.body.dataset.page === 'login';
+const openers = onLoginPage ? '[data-login]' : '.signin .txt, [data-login]';
+
+document.querySelectorAll(openers).forEach((el) =>
   el.addEventListener('click', (e) => {
     if (!overlay) return; // no modal on the page -> follow the /login href
     e.preventDefault();
@@ -41,6 +46,12 @@ if (overlay) {
 
   document.getElementById('lmForm')?.addEventListener('submit', (e) => {
     e.preventDefault();
+    // Same flag the /login page and register.js write, so sell.js agrees on auth state.
+    try {
+      localStorage.setItem('archi-auth', '1');
+    } catch (err) {
+      /* storage unavailable */
+    }
     const ok = document.getElementById('lmOk');
     if (ok) ok.dataset.on = 'true';
   });

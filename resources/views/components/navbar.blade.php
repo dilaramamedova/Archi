@@ -77,7 +77,8 @@
     <div class="nav-menu">
       <div class="nav-icons">
         {{-- Language switcher — server-side: /lang/{locale} stores the session and redirects back --}}
-        <div class="lang" id="langBtn" role="button" tabindex="0" aria-label="{{ __('nav.lang_aria') }}" aria-haspopup="true">
+        <div class="lang" id="langBtn" role="button" tabindex="0" aria-label="{{ __('nav.lang_aria') }}"
+             aria-haspopup="true" aria-controls="langMenu" aria-expanded="false">
           <span id="langLabel">{{ $langLabels[$locale] ?? 'AZ' }}</span> <img src="/assets/ic-caret.svg" alt="">
           <ul class="lang-menu" id="langMenu">
             @foreach ($langLabels as $code => $label)
@@ -103,9 +104,14 @@
   <div class="nav-row2">
     <div class="inner">
       <div class="nav-left">
-        <a class="nav-item catalog @if ($isCatalog) active @endif" data-mega="catalog" href="{{ route('catalog') }}" aria-label="{{ __('nav.catalog') }}"><img src="/assets/ic-grip.svg" alt="">{{ __('nav.catalog') }}</a>
-        <a class="nav-item @if ($isSpec) active @endif" data-mega="spec" href="{{ route('specialists') }}">{{ __('nav.specialists') }} <img class="mcaret" src="/assets/ic-caret.svg" alt=""></a>
-        <a class="nav-item @if ($isBlog) active @endif" data-mega="blog" href="{{ route('blog') }}">{{ __('nav.blog') }} <img class="mcaret" src="/assets/ic-caret.svg" alt=""></a>
+        {{-- The [data-mega] links open their panel on click (navbar.js preventDefaults);
+             the href stays as the no-JS fallback and the panel repeats it as real links. --}}
+        <a class="nav-item catalog @if ($isCatalog) active @endif" data-mega="catalog" href="{{ route('catalog') }}" aria-label="{{ __('nav.catalog') }}"
+           aria-haspopup="true" aria-controls="megaCatalog" aria-expanded="false"><img src="/assets/ic-grip.svg" alt="">{{ __('nav.catalog') }}</a>
+        <a class="nav-item @if ($isSpec) active @endif" data-mega="spec" href="{{ route('specialists') }}"
+           aria-haspopup="true" aria-controls="megaSpec" aria-expanded="false">{{ __('nav.specialists') }} <img class="mcaret" src="/assets/ic-caret.svg" alt=""></a>
+        <a class="nav-item @if ($isBlog) active @endif" data-mega="blog" href="{{ route('blog') }}"
+           aria-haspopup="true" aria-controls="megaBlog" aria-expanded="false">{{ __('nav.blog') }} <img class="mcaret" src="/assets/ic-caret.svg" alt=""></a>
         <a class="nav-item" href="#">{{ __('nav.about') }}</a>
         <a class="nav-item @if ($isB2B) active @endif" href="{{ route('business.register') }}">{{ __('nav.b2b') }}</a>
       </div>
@@ -114,7 +120,7 @@
   </div>
 
   {{-- MEGA: catalog (3x2) --}}
-  <div class="mega-panel" data-panel="catalog">
+  <div class="mega-panel" id="megaCatalog" data-panel="catalog">
     <div class="mega-inner">
       <div class="mega-cats">
         @foreach (__('nav.mega_catalog') as $i => $item)
@@ -128,7 +134,7 @@
   </div>
 
   {{-- MEGA: specialists --}}
-  <div class="mega-panel" data-panel="spec">
+  <div class="mega-panel" id="megaSpec" data-panel="spec">
     <div class="mega-inner">
       <div class="mega-spec">
         <div class="grid">
@@ -151,7 +157,7 @@
   </div>
 
   {{-- MEGA: blog (3 cards) --}}
-  <div class="mega-panel" data-panel="blog">
+  <div class="mega-panel" id="megaBlog" data-panel="blog">
     <div class="mega-inner">
       <div class="mega-blog">
         @foreach (__('nav.mega_blog') as $i => $item)

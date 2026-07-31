@@ -18,7 +18,7 @@
         <div class="bpsec-dot"></div>
         <p>{{ __('business-profile-security.status') }}</p>
       </div>
-      <div class="bpsec-btn-view"><p>{{ __('business-profile-security.view_profile') }}</p></div>
+      <a class="bpsec-btn-view" href="{{ route('business.profile') }}"><p>{{ __('business-profile-security.view_profile') }}</p></a>
     </div>
   </div>
 
@@ -26,7 +26,6 @@
 
     {{-- Settings nav --}}
     <div class="bpsec-snav">
-      <div class="bpsec-snav-item" data-on="false"><p>{{ __('business-profile-security.nav.basic') }}</p></div>
       <a class="bpsec-snav-item" data-on="false" href="{{ route('business.profile.company') }}"><p>{{ __('business-profile-security.nav.company') }}</p></a>
       <a class="bpsec-snav-item" data-on="false" href="{{ route('business.profile.contact') }}"><p>{{ __('business-profile-security.nav.contact') }}</p></a>
       <a class="bpsec-snav-item" data-on="false" href="{{ route('business.profile.showrooms') }}"><p>{{ __('business-profile-security.nav.showrooms') }}</p><p class="count">{{ __('business-profile-security.nav.showrooms_count') }}</p></a>
@@ -56,26 +55,26 @@
           <div class="bpsec-field">
             <label>{{ __('business-profile-security.password.current_label') }}</label>
             <div class="bpsec-input">
-              <p class="dots">{{ __('business-profile-security.password.mask') }}</p>
-              <p class="eye" data-on="false">{{ __('business-profile-security.password.eye') }}</p>
+              <p class="dots" data-mask="{{ __('business-profile-security.password.mask') }}" data-value="{{ __('business-profile-security.password.value') }}">{{ __('business-profile-security.password.mask') }}</p>
+              <button type="button" class="eye" data-on="false" aria-pressed="false">{{ __('business-profile-security.password.eye') }}</button>
             </div>
           </div>
           <div class="bpsec-field">
             <label>{{ __('business-profile-security.password.new_label') }}</label>
             <div class="bpsec-input">
-              <p class="dots">{{ __('business-profile-security.password.mask') }}</p>
-              <p class="eye" data-on="false">{{ __('business-profile-security.password.eye') }}</p>
+              <p class="dots" data-mask="{{ __('business-profile-security.password.mask') }}" data-value="{{ __('business-profile-security.password.value') }}">{{ __('business-profile-security.password.mask') }}</p>
+              <button type="button" class="eye" data-on="false" aria-pressed="false">{{ __('business-profile-security.password.eye') }}</button>
             </div>
           </div>
           <div class="bpsec-field">
             <label>{{ __('business-profile-security.password.repeat_label') }}</label>
             <div class="bpsec-input">
-              <p class="dots">{{ __('business-profile-security.password.mask') }}</p>
-              <p class="eye" data-on="false">{{ __('business-profile-security.password.eye') }}</p>
+              <p class="dots" data-mask="{{ __('business-profile-security.password.mask') }}" data-value="{{ __('business-profile-security.password.value') }}">{{ __('business-profile-security.password.mask') }}</p>
+              <button type="button" class="eye" data-on="false" aria-pressed="false">{{ __('business-profile-security.password.eye') }}</button>
             </div>
           </div>
         </div>
-        <div class="bpsec-btn-yellow"><p>{{ __('business-profile-security.password.submit') }}</p></div>
+        <button type="button" class="bpsec-btn-yellow"><p>{{ __('business-profile-security.password.submit') }}</p></button>
       </div>
 
       {{-- Two-factor authentication --}}
@@ -83,7 +82,7 @@
         <div class="bpsec-card-head single"><h2>{{ __('business-profile-security.twofa.title') }}</h2></div>
         <div class="bpsec-row">
           <p class="desc">{{ __('business-profile-security.twofa.desc') }}</p>
-          <div class="bpsec-toggle" data-on="true" role="switch" aria-checked="true" aria-label="{{ __('business-profile-security.twofa.title') }}"><span class="knob"></span></div>
+          <button type="button" class="bpsec-toggle" data-on="true" aria-pressed="true" aria-label="{{ __('business-profile-security.twofa.title') }}"><span class="knob"></span></button>
         </div>
       </div>
 
@@ -104,14 +103,14 @@
             <div class="bpsec-session-title nogap"><p>{{ __('business-profile-security.sessions.s2_device') }}</p></div>
             <p class="bpsec-session-sub">{{ __('business-profile-security.sessions.s2_meta') }}</p>
           </div>
-          <p class="bpsec-logout">{{ __('business-profile-security.sessions.logout') }}</p>
+          <button type="button" class="bpsec-logout">{{ __('business-profile-security.sessions.logout') }}</button>
         </div>
         <div class="bpsec-session">
           <div class="bpsec-session-info">
             <div class="bpsec-session-title nogap"><p>{{ __('business-profile-security.sessions.s3_device') }}</p></div>
             <p class="bpsec-session-sub">{{ __('business-profile-security.sessions.s3_meta') }}</p>
           </div>
-          <p class="bpsec-logout">{{ __('business-profile-security.sessions.logout') }}</p>
+          <button type="button" class="bpsec-logout">{{ __('business-profile-security.sessions.logout') }}</button>
         </div>
       </div>
 
@@ -123,19 +122,19 @@
         </div>
         <div class="bpsec-row">
           <p class="desc">{{ __('business-profile-security.danger.deactivate_desc') }}</p>
-          <div class="bpsec-btn-danger"><p>{{ __('business-profile-security.danger.deactivate') }}</p></div>
+          <button type="button" class="bpsec-btn-danger"><p>{{ __('business-profile-security.danger.deactivate') }}</p></button>
         </div>
       </div>
 
       {{-- Save bar --}}
-      <div class="bpsec-save-bar">
+      <div class="bpsec-save-bar" data-saved="false" data-saved-message="{{ __('business-profile-security.save.saved') }}">
         <div class="bpsec-save-l">
           <div class="bpsec-dot"></div>
-          <p>{{ __('business-profile-security.save.unsaved') }}</p>
+          <p class="bpsec-save-msg" aria-live="polite">{{ __('business-profile-security.save.unsaved') }}</p>
         </div>
         <div class="bpsec-save-r">
-          <div class="bpsec-btn-cancel"><p>{{ __('business-profile-security.save.cancel') }}</p></div>
-          <div class="bpsec-btn-save"><p>{{ __('business-profile-security.save.save') }}</p></div>
+          <button type="button" class="bpsec-btn-cancel"><p>{{ __('business-profile-security.save.cancel') }}</p></button>
+          <button type="button" class="bpsec-btn-save"><p>{{ __('business-profile-security.save.save') }}</p></button>
         </div>
       </div>
 

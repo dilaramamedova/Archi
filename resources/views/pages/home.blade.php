@@ -11,23 +11,6 @@
         ['img' => '/assets/cat-laminant.png', 'href' => route('calculator')],
     ];
 
-    // Labels the side calculator renders from JS (field names, units, hints)
-    $calcLabels = [
-        'roomSize' => __('home.calc.room_size'),
-        'length' => __('home.calc.length'),
-        'width' => __('home.calc.width'),
-        'height' => __('home.calc.height'),
-        'meter' => __('home.calc.meter'),
-        'm2' => __('home.calc.unit_m2'),
-        'unitLiter' => __('home.calc.unit_liter'),
-        'unitSheet' => __('home.calc.unit_sheet'),
-        'unitBox' => __('home.calc.unit_box'),
-        'unitPack' => __('home.calc.unit_pack'),
-        'hintPaint' => __('home.calc.hint_paint'),
-        'hintRoof' => __('home.calc.hint_roof'),
-        'hintFloor' => __('home.calc.hint_floor'),
-    ];
-
     $categories = [
         ['img' => '/assets/cat-bathroom.png', 'name' => __('home.categories.tiles'), 'count' => __('home.categories.count_860'), 'open' => true],
         ['img' => '/assets/cat-roof.png', 'name' => __('home.categories.roofing'), 'count' => __('home.categories.count_340')],
@@ -114,34 +97,6 @@
         <div class="dots" id="roleDots"><i class="on"></i><i></i><i></i></div>
       </div>
     </div>
-
-    {{-- Side calculator — hidden in Figma too, revealed by the `open` class --}}
-    <aside class="side-calc" id="sideCalc"
-           data-url-calculator="{{ route('calculator') }}"
-           data-labels="{{ json_encode($calcLabels, JSON_UNESCAPED_UNICODE) }}">
-      <button class="sc-close" id="scClose"><img src="/assets/ic-cancel.svg" alt="{{ __('home.calc.close') }}"></button>
-      <div class="sc-head">
-        <div class="tag"><span class="line"></span><p>{{ __('home.calc.tag') }}</p></div>
-        <h3>{{ __('home.calc.title') }}</h3>
-      </div>
-      <div class="sc-tabs" id="scTabs">
-        <button class="on" data-mat="paint">{{ __('home.calc.tab_paint') }}</button>
-        <button data-mat="roof">{{ __('home.calc.tab_roof') }}</button>
-        <button data-mat="tile">{{ __('home.calc.tab_tile') }}</button>
-        <button data-mat="laminate">{{ __('home.calc.tab_laminate') }}</button>
-      </div>
-      <div class="sc-body" id="scBody"></div>
-      <div class="sc-result">
-        <div>
-          <div class="litr"><b id="scQty">8</b><span id="scUnit">{{ __('home.calc.unit_liter') }}</span></div>
-          <div class="desc">
-            <div class="r"><span id="scHint">{{ __('home.calc.hint_paint') }}</span><b id="scArea">{{ __('home.calc.area_initial') }}</b></div>
-          </div>
-        </div>
-        <div class="price"><span class="p1">~</span><span class="p2" id="scPrice">96</span><span class="p3">₼</span></div>
-      </div>
-      <a class="sc-full" id="scFull" href="{{ route('calculator', ['mat' => 'paint']) }}">{{ __('home.calc.full') }}</a>
-    </aside>
   </div>
 </div>
 
@@ -160,7 +115,7 @@
   <x-section-head :tag="__('home.categories.tag')" :title="__('home.categories.title')" />
   <div class="cat-row">
     @foreach ($categories as $c)
-      <a @class(['cat-thumb', 'open' => ! empty($c['open'])])><img src="{{ $c['img'] }}" alt=""><div class="ov"></div><div class="info"><div><h4>{{ $c['name'] }}</h4><p>{{ $c['count'] }}</p></div><img src="/assets/ic-arrow.svg" alt=""></div></a>
+      <a @class(['cat-thumb', 'open' => ! empty($c['open'])]) href="{{ route('catalog') }}"><img src="{{ $c['img'] }}" alt=""><div class="ov"></div><div class="info"><div><h4>{{ $c['name'] }}</h4><p>{{ $c['count'] }}</p></div><img src="/assets/ic-arrow.svg" alt=""></div></a>
     @endforeach
   </div>
 </div></div>
@@ -182,7 +137,8 @@
         <p>{{ __('home.promo.text_before') }} <b>ARCHI60</b> {{ __('home.promo.text_after') }}</p>
       </div>
     </div>
-    <button class="pb-copy" type="button" data-code="ARCHI60" data-copied="{{ __('home.promo.copied') }}">ARCHI60 · {{ __('home.promo.copy') }}</button>
+    {{-- Both labels are stacked in one grid cell, so the confirmation never resizes the button --}}
+    <button class="pb-copy" type="button" data-code="ARCHI60" data-on="false">ARCHI60 · <span class="pb-swap"><span class="pb-copy-label">{{ __('home.promo.copy') }}</span><span class="pb-copied-label">{{ __('home.promo.copied') }}</span></span></button>
   </div>
   <x-section-head :tag="__('home.sale.tag')" :title="__('home.sale.title')" :more="route('cart')" />
   <div class="grid4" id="campGrid">
@@ -211,7 +167,7 @@
         <p>{{ __('home.promo.text_before') }} <b>ARCHI15</b> {{ __('home.promo.text_after') }}</p>
       </div>
     </div>
-    <button class="pb-copy" type="button" data-code="ARCHI15" data-copied="{{ __('home.promo.copied') }}">ARCHI15 · {{ __('home.promo.copy') }}</button>
+    <button class="pb-copy" type="button" data-code="ARCHI15" data-on="false">ARCHI15 · <span class="pb-swap"><span class="pb-copy-label">{{ __('home.promo.copy') }}</span><span class="pb-copied-label">{{ __('home.promo.copied') }}</span></span></button>
   </div>
   <x-section-head :tag="__('home.products.tag')" :title="__('home.products.title')" :more="route('search', ['tab' => 'prod'])" />
   {{-- Products the visitor posted on /sell are stored in localStorage and prepended by home.js --}}

@@ -56,8 +56,8 @@
             </div>
         </div>
         <div class="id-actions">
-            <div class="btn-yellow"><p>{{ __('business-profile.identity.go_to_products') }}</p></div>
-            <div class="btn-outline"><p>{{ __('business-profile.identity.follow') }}</p></div>
+            <a class="btn-yellow" href="{{ route('search', ['tab' => 'prod']) }}"><p>{{ __('business-profile.identity.go_to_products') }}</p></a>
+            <button type="button" class="btn-outline"><span>{{ __('business-profile.identity.follow') }}</span></button>
         </div>
     </div>
 
@@ -92,14 +92,14 @@
                     <div class="kicker"><div class="bar"></div><p>{{ __('business-profile.catalog.kicker') }}</p></div>
                     <p class="sec-title">{{ __('business-profile.catalog.title') }}</p>
                 </div>
-                <div class="see-all"><p>{{ __('business-profile.catalog.see_all') }}</p></div>
+                <a class="see-all" href="{{ route('search', ['tab' => 'prod']) }}"><p>{{ __('business-profile.catalog.see_all') }}</p></a>
             </div>
 
             <div class="cards">
                 @foreach ($cards as $card)
                     <div class="card">
                         <div class="card-img">
-                            <div class="card-heart"><div class="ic20"><img src="/assets/ic-heart2.svg" alt=""></div></div>
+                            <button type="button" class="card-heart" aria-label="{{ __('business-profile.catalog.favourite') }}"><span class="ic20"><img src="/assets/ic-heart2.svg" alt=""></span></button>
                             <div class="card-badges">
                                 <div class="card-badge"><p>{{ __('common.badge_new') }}</p></div>
                                 <div class="card-badge"><p>{{ __('common.badge_in_stock') }}</p></div>
@@ -121,6 +121,10 @@
                                 <div class="card-off"><p>-48%</p></div>
                             </div>
                         </div>
+                        {{-- Overlay link: keeps the whole card clickable without nesting the
+                             favourite button inside an <a> (invalid HTML). --}}
+                        <a class="card-link" href="{{ route('product') }}"
+                           aria-label="{{ __("business-profile.catalog.prod_{$card['name']}") }}"></a>
                     </div>
                 @endforeach
             </div>
@@ -141,8 +145,8 @@
                 <div class="sb-chip"><p>RU</p></div>
                 <div class="sb-chip"><p>EN</p></div>
             </div>
-            <div class="sb-btn-yellow"><p>{{ __('business-profile.contact.get_in_touch') }}</p></div>
-            <div class="sb-btn-outline"><p>{{ __('business-profile.contact.send_message') }}</p></div>
+            <button type="button" class="sb-btn-yellow"><span>{{ __('business-profile.contact.get_in_touch') }}</span></button>
+            <button type="button" class="sb-btn-outline"><span>{{ __('business-profile.contact.send_message') }}</span></button>
             <div class="sb-line"></div>
             <div class="sb-row"><p class="k">{{ __('business-profile.contact.response_time') }}</p><p class="v">{{ __('business-profile.contact.response_time_value') }}</p></div>
             <div class="sb-row"><p class="k">{{ __('business-profile.contact.products') }}</p><p class="v">1,240</p></div>

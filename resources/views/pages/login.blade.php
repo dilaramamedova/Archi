@@ -27,7 +27,7 @@
           <label class="flex items-center gap-2 text-black/70"><input class="size-[18px] accent-yellow" type="checkbox"> {{ __('login.form.remember') }}</label>
           <a class="border-b border-yellow-line text-black/70" href="#">{{ __('login.form.forgot') }}</a>
         </div>
-        <button class="h-[54px] cursor-pointer border-none bg-yellow text-lg font-semibold text-ink transition-[filter] duration-200 hover:brightness-[.93]" type="submit">{{ __('login.form.submit') }}</button>
+        <button class="h-[54px] cursor-pointer border-none bg-yellow text-lg font-semibold text-ink transition-[filter] duration-200 hover:brightness-[.93] disabled:cursor-default disabled:opacity-55 disabled:hover:brightness-100" type="submit">{{ __('login.form.submit') }}</button>
         <p class="text-center text-[15px] text-black/60">{{ __('login.form.no_account') }} <a class="border-b-2 border-yellow-line font-semibold text-ink" href="{{ route('register') }}">{{ __('login.form.sign_up') }}</a></p>
       </form>
     </div>

@@ -44,22 +44,26 @@ export default function init() {
   const sortVal = document.getElementById('spSortVal');
   const sortMenu = document.getElementById('spSortMenu');
 
-  sortEl.addEventListener('click', (e) => {
-    const li = e.target.closest('li');
-    if (li) {
-      $$('li', sortMenu).forEach((x) => { x.dataset.on = 'false'; });
-      li.dataset.on = 'true';
-      sortVal.textContent = li.textContent;
-      sortKey = li.dataset.sort;
-      render();
-      sortEl.dataset.open = 'false';
-      return;
-    }
-    sortEl.dataset.open = sortEl.dataset.open === 'true' ? 'false' : 'true';
-  });
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('#spSort')) sortEl.dataset.open = 'false';
-  });
+  // Every block below is guarded on its own nodes, so a missing id disables that one
+  // feature instead of aborting init() and leaving the page half-wired (same as catalog.js).
+  if (sortEl && sortVal && sortMenu) {
+    sortEl.addEventListener('click', (e) => {
+      const li = e.target.closest('li');
+      if (li) {
+        $$('li', sortMenu).forEach((x) => { x.dataset.on = 'false'; });
+        li.dataset.on = 'true';
+        sortVal.textContent = li.textContent;
+        sortKey = li.dataset.sort;
+        render();
+        sortEl.dataset.open = 'false';
+        return;
+      }
+      sortEl.dataset.open = sortEl.dataset.open === 'true' ? 'false' : 'true';
+    });
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#spSort')) sortEl.dataset.open = 'false';
+    });
+  }
 
   /* ---- sidebar filter controls ---- */
   const cats = $$('#spSpecBlock .sp-cat');
@@ -96,7 +100,8 @@ export default function init() {
       if (!was) y.dataset.on = 'true';
     })
   );
-  [swVerified, swFree].forEach((s) =>
+  const switches = [swVerified, swFree].filter(Boolean);
+  switches.forEach((s) =>
     s.addEventListener('click', () => {
       s.dataset.on = s.dataset.on === 'true' ? 'false' : 'true';
     })
@@ -120,6 +125,7 @@ export default function init() {
   }
 
   function renderChips() {
+    if (!chipWrap || !clearBtn) return;
     $$('.sp-chip', chipWrap).forEach((c) => c.remove());
     const items = activeFilters();
     items.forEach((it) => {
@@ -136,24 +142,30 @@ export default function init() {
     clearBtn.style.display = items.length ? '' : 'none';
   }
 
-  chipWrap.addEventListener('click', (e) => {
-    const chip = e.target.closest('.sp-chip');
-    if (!chip) return;
-    const source = chipSource.get(chip);
-    if (!source) return;
-    source.dataset.on = 'false';
-    renderChips();
-  });
+  if (chipWrap && clearBtn) {
+    chipWrap.addEventListener('click', (e) => {
+      const chip = e.target.closest('.sp-chip');
+      if (!chip) return;
+      const source = chipSource.get(chip);
+      if (!source) return;
+      source.dataset.on = 'false';
+      renderChips();
+    });
 
-  clearBtn.addEventListener('click', () => {
-    cats.concat(checks, radios).forEach((el) => { el.dataset.on = 'false'; });
-    renderChips();
-  });
+    // Clearing must reset EVERY control (the experience chips and the two switches are not
+    // mirrored as chips, and #spVerified ships on) and re-run the filter, otherwise the grid
+    // keeps showing a filtered result the chip row claims is no longer active.
+    clearBtn.addEventListener('click', () => {
+      cats.concat(checks, radios, years, switches).forEach((el) => { el.dataset.on = 'false'; });
+      renderChips();
+      applyFilters();
+    });
 
-  renderChips();
+    renderChips();
+  }
 
   /* ---- "Apply filters" — narrows the list down to the current selection ---- */
-  document.getElementById('spApply').addEventListener('click', () => {
+  function applyFilters() {
     const cat = $('#spSpecBlock .sp-cat[data-on="true"]');
     const spec = cat ? cat.dataset.spec : null;
     const cities = checks.filter((c) => c.dataset.on === 'true').map((c) => c.dataset.city);
@@ -162,8 +174,8 @@ export default function init() {
     const y = $('#spYearBlock .sp-year[data-on="true"]');
     const yearMin = y ? +y.dataset.min : 0;
     const yearMax = y ? +y.dataset.max : 99;
-    const needVerified = swVerified.dataset.on === 'true';
-    const needFree = swFree.dataset.on === 'true';
+    const needVerified = !!swVerified && swVerified.dataset.on === 'true';
+    const needFree = !!swFree && swFree.dataset.on === 'true';
 
     cards.forEach((card) => {
       const d = card.dataset;
@@ -182,7 +194,10 @@ export default function init() {
     });
 
     render();
-  });
+  }
+
+  const applyBtn = document.getElementById('spApply');
+  if (applyBtn) applyBtn.addEventListener('click', applyFilters);
 }
 
 init();

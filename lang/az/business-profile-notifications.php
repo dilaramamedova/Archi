@@ -61,5 +61,6 @@ return [
         'unsaved' => 'Yadda saxlanmamış dəyişikliklər var',
         'cancel' => 'Ləğv et',
         'save' => 'Yadda saxla',
+        'saved' => 'Dəyişikliklər yadda saxlanıldı.',
     ],
 ];

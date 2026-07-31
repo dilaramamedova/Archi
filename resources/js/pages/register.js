@@ -1,6 +1,6 @@
 // Page module for "register": role selection (data-sel) + role-specific fields (data-for).
-const ROLES = ['buyer', 'seller', 'master'];
-
+// The initial role (?role=, default buyer) is rendered server-side by the Blade view,
+// so this module only reacts to clicks.
 export default function init() {
   const roles = document.querySelectorAll('#roles [data-role]');
   const form = document.getElementById('regForm');
@@ -18,10 +18,6 @@ export default function init() {
   };
 
   roles.forEach((r) => r.addEventListener('click', () => pick(r.dataset.role)));
-
-  // Preselect from ?role= (default: buyer).
-  const want = new URLSearchParams(location.search).get('role');
-  pick(ROLES.includes(want) ? want : 'buyer');
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();

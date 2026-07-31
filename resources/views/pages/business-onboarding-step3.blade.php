@@ -35,7 +35,7 @@
     </div>
 
     {{-- Form card — Figma 1105:22608 --}}
-    <div class="relative flex w-full shrink-0 flex-col items-start gap-5 overflow-hidden rounded-ds border border-black/10 bg-white px-8 py-7">
+    <div class="flex w-full shrink-0 flex-col items-start gap-5 rounded-ds border border-black/10 bg-white px-8 py-7">
 
       <div class="flex w-full shrink-0 flex-col items-start gap-2 overflow-hidden bg-white">
         <p class="text-[13px] font-semibold leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step3.form.images_label') }}</p>
@@ -56,19 +56,31 @@
         </div>
       </div>
 
-      <div class="flex w-full shrink-0 items-start gap-4 overflow-hidden bg-white">
+      <div class="flex w-full shrink-0 items-start gap-4 bg-white">
         <div class="flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden bg-white">
           <label class="text-[13px] font-semibold leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step3.form.name_label') }}</label>
           <div class="flex w-full shrink-0 items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px]">
             <input class="w-full border-none bg-transparent font-sans text-sm font-normal leading-[normal] text-ink outline-none placeholder:text-black/40" type="text" placeholder="{{ __('business-onboarding-step3.form.name_placeholder') }}">
           </div>
         </div>
-        <div class="flex min-w-px flex-[1_0_0] flex-col items-start gap-2 overflow-hidden bg-white">
+        <div class="relative flex min-w-px flex-[1_0_0] flex-col items-start gap-2 bg-white">
           <label class="text-[13px] font-semibold leading-[normal] whitespace-nowrap text-ink">{{ __('business-onboarding-step3.form.category_label') }}</label>
-          {{-- Open state (Figma default): 1.5px ink outline --}}
-          <div class="flex w-full shrink-0 cursor-pointer items-center justify-between overflow-hidden rounded-ds border border-black/14 bg-white px-4 py-[13px] data-[on=true]:border-[1.5px] data-[on=true]:border-ink" data-cat-trigger data-on="true">
+          {{-- Border width is reserved in the closed state; open state only changes the colour.
+               Padding compensates the 1.5px border so the box matches the 1px fields next to it. --}}
+          <div class="flex w-full shrink-0 cursor-pointer items-center justify-between overflow-hidden rounded-ds border-[1.5px] border-black/14 bg-white px-[15.5px] py-[12.5px] data-[on=true]:border-ink" data-cat-trigger data-on="false">
             <p class="text-sm font-normal leading-[normal] whitespace-nowrap text-black/40 data-[filled=true]:text-ink" data-cat-value>{{ __('business-onboarding-step3.form.category_placeholder') }}</p>
-            <p class="text-xs leading-[normal] text-black/50" data-cat-caret>▴</p>
+            <p class="text-xs leading-[normal] text-black/50" data-cat-caret>▾</p>
+          </div>
+
+          {{-- Category menu — anchored to the trigger, scrolls when the list grows --}}
+          <div class="absolute top-[calc(100%+4px)] left-0 z-20 flex max-h-[300px] w-full flex-col items-start overflow-y-auto rounded-ds border border-black/10 bg-white shadow-[0px_4px_16px_0px_rgba(0,0,0,0.08)] data-[on=false]:hidden" data-cat-menu data-on="false">
+            @foreach (__('business-onboarding-step3.categories') as $category)
+              <div class="group flex h-[38px] w-full shrink-0 cursor-pointer items-center justify-between overflow-hidden bg-white px-4 py-2.5 data-[sel=true]:bg-sel-bg"
+                   data-cat-option="{{ $category }}" data-sel="false">
+                <p class="text-sm font-normal leading-[normal] whitespace-nowrap text-black/70 group-data-[sel=true]:font-medium group-data-[sel=true]:text-ink">{{ $category }}</p>
+                <p class="hidden text-[13px] font-bold leading-[normal] whitespace-nowrap text-ink group-data-[sel=true]:block">✓</p>
+              </div>
+            @endforeach
           </div>
         </div>
       </div>
@@ -115,17 +127,6 @@
           <p class="font-sans text-[15px] font-semibold leading-[normal] whitespace-pre text-ink">{{ __('business-onboarding-step3.form.submit') }}</p>
         </button>
         <p class="cursor-pointer text-sm font-medium leading-[normal] whitespace-nowrap text-black/50">{{ __('business-onboarding-step3.form.later') }}</p>
-      </div>
-
-      {{-- Category menu — absolute inside the form card (Figma shows the open state) --}}
-      <div class="absolute top-[252px] left-[447px] flex flex-col items-start overflow-hidden rounded-ds border border-black/10 bg-white shadow-[0px_4px_16px_0px_rgba(0,0,0,0.08)] data-[on=false]:hidden" data-cat-menu data-on="true">
-        @foreach (__('business-onboarding-step3.categories') as $i => $category)
-          <div class="group flex h-[38px] w-full shrink-0 cursor-pointer items-center justify-between overflow-hidden bg-white px-4 py-2.5 data-[sel=true]:bg-sel-bg"
-               data-cat-option="{{ $category }}" data-sel="{{ $i === 1 ? 'true' : 'false' }}">
-            <p class="text-sm font-normal leading-[normal] whitespace-nowrap text-black/70 group-data-[sel=true]:font-medium group-data-[sel=true]:text-ink">{{ $category }}</p>
-            <p class="hidden text-[13px] font-bold leading-[normal] whitespace-nowrap text-ink group-data-[sel=true]:block">✓</p>
-          </div>
-        @endforeach
       </div>
     </div>
   </div>

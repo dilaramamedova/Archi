@@ -17,6 +17,10 @@
   .sr-tab                 { @apply cursor-pointer rounded-ds border border-black/14 bg-white px-4 py-2.5 text-sm font-medium text-black transition-[border-color,background] duration-200; }
   .sr-tab:hover           { @apply border-black/35; }
   .sr-tab[data-on="true"] { @apply border-black bg-ink font-semibold text-white; }
+  /* the active tab is bolder, so every button reserves its bold width up front
+     through a hidden ghost label — otherwise a tab click resizes the button and
+     shifts the whole row (worst in ru, where the labels are longest) */
+  .sr-tab::after          { @apply invisible block h-0 overflow-hidden font-semibold; content: attr(data-label); }
 
   .sr-more              { @apply relative pb-1 text-xs font-medium tracking-[.6px] text-[#141414] uppercase; }
   .sr-more::before      { @apply absolute inset-x-0 bottom-0 h-0.5 bg-yellow-line content-['']; }

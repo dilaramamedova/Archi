@@ -16,6 +16,8 @@ return [
     'items' => [
         'unit_price' => 'Цена за единицу: :price ₼',
         'remove' => 'Удалить',
+        'increase' => 'Увеличить количество',
+        'decrease' => 'Уменьшить количество',
     ],
 
     'promo' => [

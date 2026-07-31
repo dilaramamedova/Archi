@@ -45,6 +45,7 @@ return [
         'kicker' => 'KATALOQ',
         'title' => 'Məhsullarımız',
         'see_all' => 'HAMISINA BAX (1,240) →',
+        'favourite' => 'Seçilmişlərə əlavə et',
         'reviews' => '(1,876 rəy)',
         'cat_paint' => 'Boya',
         'cat_insulation' => 'İzolyasiya',

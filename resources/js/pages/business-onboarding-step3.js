@@ -1,6 +1,6 @@
 // Page module for "business-onboarding-step3": the category dropdown.
-// The Figma default is the open menu with the second option selected, so the markup
-// already ships data-on="true" / data-sel="true" — this module only adds interaction.
+// The markup ships closed (data-on="false", nothing selected); the Figma frame that shows
+// the menu open only documents the open state. This module drives open/close and selection.
 export default function init() {
   const trigger = document.querySelector('[data-cat-trigger]');
   const menu = document.querySelector('[data-cat-menu]');

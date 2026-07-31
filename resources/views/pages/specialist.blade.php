@@ -30,7 +30,7 @@
         <div class="pp-ava">
           <div class="ring"><img src="/assets/sp-avatar.png" alt="{{ __('specialist.id.name') }}"></div>
           <span class="pp-badge"><img src="/assets/ic-crown.svg" alt="">{{ __('specialist.id.badge_top') }}</span>
-          <span class="pp-fav" id="ppFav" data-on="false" role="button" aria-label="{{ __('specialist.id.fav_aria') }}"><img src="/assets/ic-heart2.svg" alt=""></span>
+          <button type="button" class="pp-fav" id="ppFav" data-on="false" aria-pressed="false" aria-label="{{ __('specialist.id.fav_aria') }}"><img src="/assets/ic-heart2.svg" alt=""></button>
         </div>
         <div class="pp-id-r">
           <span class="pp-verified"><img src="/assets/ic-check.svg" alt="">{{ __('specialist.id.verified') }}</span>

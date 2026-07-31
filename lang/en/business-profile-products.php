@@ -36,11 +36,18 @@ return [
         'add' => '＋ Add product',
         'edit' => 'Edit',
         'toggle' => 'Product visibility',
+        'empty' => 'No matching products found',
     ],
     'filters' => [
         'search' => 'Search a product...',
         'category' => 'Category',
+        'cat_all' => 'All categories',
+        'cat_tile' => 'Tiles & metlakh',
         'status' => 'Status',
+        'status_all' => 'All statuses',
+        'status_active' => 'Active',
+        'status_low' => 'Running low',
+        'status_hidden' => 'Hidden',
     ],
 
     'products' => [
@@ -71,6 +78,9 @@ return [
     ],
 
     'pager' => [
+        'label' => 'Pagination',
+        'prev_label' => 'Previous page',
+        'next_label' => 'Next page',
         'prev' => '←',
         'page1' => '1',
         'page2' => '2',
@@ -84,5 +94,6 @@ return [
         'unsaved' => 'You have unsaved changes',
         'cancel' => 'Cancel',
         'save' => 'Save',
+        'saved' => 'Changes saved.',
     ],
 ];

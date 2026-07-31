@@ -1,7 +1,8 @@
-// Shared navbar behaviour, ported from the old project's archi.js: mega menu,
-// search autocomplete, language dropdown toggle and the localStorage cart badge.
+// Shared navbar behaviour, ported from the old project's archi.js: mega menus,
+// search autocomplete, language dropdown and the localStorage cart badge.
 // The i18n TreeWalker, the markup injection, the JS-computed active nav item and
 // the login modal are gone — Laravel renders all of that server-side now.
+// The old hover-opened menus were replaced by the click-driven controller below.
 
 function initCartBadge() {
   try {
@@ -154,65 +155,89 @@ function initSearch() {
   overlay.addEventListener('click', close);
 }
 
-function initMega() {
-  const triggers = document.querySelectorAll('.nav-item[data-mega]');
-  const panels = document.querySelectorAll('.mega-panel');
-  if (!triggers.length) return;
-  let hideTimer;
+// Every navbar surface (mega panels + language dropdown) is CLICK-driven: hover
+// never opens or closes anything, there are no open/close timers, and only one
+// surface can be open at a time. The search autocomplete is not registered here —
+// it is input-driven and keeps its own focus/input handling.
+function initMenus() {
+  let current = null;
 
-  function closeAll() {
-    panels.forEach((p) => p.classList.remove('open'));
-    triggers.forEach((t) => t.classList.remove('mega-active'));
-  }
-  function open(key) {
-    closeAll();
-    const p = document.querySelector('.mega-panel[data-panel="' + key + '"]');
-    const t = document.querySelector('.nav-item[data-mega="' + key + '"]');
-    if (p) p.classList.add('open');
-    if (t) t.classList.add('mega-active');
-  }
-  function toggle(key) {
-    const p = document.querySelector('.mega-panel[data-panel="' + key + '"]');
-    if (p && p.classList.contains('open')) closeAll();
-    else open(key);
+  function closeCurrent(focusTrigger) {
+    if (!current) return;
+    const menu = current;
+    current = null;
+    menu.hide();
+    menu.trigger.setAttribute('aria-expanded', 'false');
+    if (focusTrigger) menu.trigger.focus();
   }
 
-  triggers.forEach((t) => {
-    t.addEventListener('mouseenter', () => { clearTimeout(hideTimer); open(t.dataset.mega); });
-    t.addEventListener('mouseleave', () => { hideTimer = setTimeout(closeAll, 160); });
-    t.addEventListener('click', (e) => { if (t.getAttribute('href')) return; e.preventDefault(); toggle(t.dataset.mega); });
-    t.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') { closeAll(); return; }
-      if (e.key === 'Enter' || e.key === ' ') {
-        if (t.getAttribute('href')) return;
+  function openMenu(menu) {
+    if (current === menu) return;
+    closeCurrent(false); // opening one menu closes any other
+    current = menu;
+    menu.show();
+    menu.trigger.setAttribute('aria-expanded', 'true');
+  }
+
+  function toggleMenu(menu) {
+    if (current === menu) closeCurrent(false);
+    else openMenu(menu);
+  }
+
+  // `surface` is the panel the trigger controls. When the surface sits INSIDE the
+  // trigger (language dropdown) its own links must keep working, so events coming
+  // from within the surface are never treated as a toggle.
+  function register(trigger, surface, show, hide) {
+    const menu = { trigger, surface, show, hide };
+    trigger.setAttribute('aria-expanded', 'false');
+
+    trigger.addEventListener('click', (e) => {
+      if (surface.contains(e.target)) return;
+      e.preventDefault(); // the trigger only opens the menu; its href is the no-JS fallback
+      toggleMenu(menu);
+    });
+
+    trigger.addEventListener('keydown', (e) => {
+      if (surface.contains(e.target)) return;
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
         e.preventDefault();
-        toggle(t.dataset.mega);
+        toggleMenu(menu);
       }
     });
-  });
-  panels.forEach((p) => {
-    p.addEventListener('mouseenter', () => clearTimeout(hideTimer));
-    p.addEventListener('mouseleave', () => { hideTimer = setTimeout(closeAll, 160); });
-  });
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.nav-item[data-mega]') && !e.target.closest('.mega-panel')) closeAll();
-  });
-}
 
-// Switching the language is server-side (<a href="/lang/az">), so this only opens
-// and closes the dropdown.
-function initLang() {
-  const langBtn = document.getElementById('langBtn');
-  if (!langBtn) return;
-  langBtn.addEventListener('click', (e) => { e.stopPropagation(); langBtn.classList.toggle('open'); });
-  langBtn.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); langBtn.classList.toggle('open'); }
-    if (e.key === 'Escape') langBtn.classList.remove('open');
+    return menu;
+  }
+
+  document.querySelectorAll('.nav-item[data-mega]').forEach((trigger) => {
+    const panel = document.querySelector('.mega-panel[data-panel="' + trigger.dataset.mega + '"]');
+    if (!panel) return;
+    register(
+      trigger,
+      panel,
+      () => { panel.classList.add('open'); trigger.classList.add('mega-active'); },
+      () => { panel.classList.remove('open'); trigger.classList.remove('mega-active'); }
+    );
   });
-  document.addEventListener('click', () => langBtn.classList.remove('open'));
+
+  // Switching the language is server-side (<a href="/lang/az">), so this only
+  // opens and closes the dropdown.
+  const langBtn = document.getElementById('langBtn');
+  const langMenu = document.getElementById('langMenu');
+  if (langBtn && langMenu) {
+    register(langBtn, langMenu, () => langBtn.classList.add('open'), () => langBtn.classList.remove('open'));
+  }
+
+  // Click outside the open surface closes it; Escape closes it and returns focus.
+  document.addEventListener('click', (e) => {
+    if (!current) return;
+    if (current.trigger.contains(e.target) || current.surface.contains(e.target)) return;
+    closeCurrent(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeCurrent(true);
+  });
 }
 
 initCartBadge();
 initSearch();
-initMega();
-initLang();
+initMenus();

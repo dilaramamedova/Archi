@@ -20,6 +20,13 @@
   .promo-banner p      { @apply mt-1 text-sm text-white/70; }
   .promo-banner p b    { @apply text-yellow; }
   .pb-copy             { @apply cursor-pointer rounded-ds border-none bg-yellow px-[22px] py-[13px] text-sm font-bold whitespace-nowrap text-ink transition-[filter] duration-200 [font-family:inherit] hover:brightness-[.93]; }
+  /* Both labels share one grid cell: the button is always as wide as the longer one,
+     so switching to the confirmation cannot reflow the banner. */
+  .pb-swap                          { @apply inline-grid; }
+  .pb-swap > span                   { @apply col-start-1 row-start-1 text-left; }
+  .pb-copied-label                  { @apply invisible; }
+  .pb-copy[data-on="true"] .pb-copy-label   { @apply invisible; }
+  .pb-copy[data-on="true"] .pb-copied-label { @apply visible; }
 
   /* ============ SERVICE STRIP — 1:1 with Figma nav-section-3 (628:7820) ============ */
   .service-strip        { @apply border-y border-black/15 bg-white; }
@@ -79,39 +86,9 @@
   .hero-role .d        { @apply mt-2 text-sm leading-[1.25] text-black/60; }
   .hero-role .reg      { @apply self-start bg-ink px-6 py-3 text-sm text-off-white; }
 
-  /* ---- SIDE CALCULATOR ---- */
-  .side-calc      { @apply invisible absolute top-0 right-0 z-30 flex w-[464px] translate-x-4 flex-col gap-6 border border-black/50 bg-white p-6 opacity-0 shadow-[-4px_4px_4px_rgba(0,0,0,0.25)] transition-all duration-[250ms]; }
-  .side-calc.open { @apply visible translate-x-0 opacity-100; }
-  .sc-head .tag        { @apply mb-2 flex items-center gap-2; }
-  .sc-head .tag .line  { @apply h-1 w-8 rounded-[2px] bg-yellow; }
-  .sc-head .tag p      { @apply text-xs font-medium tracking-[1.4px] text-black/55 uppercase; }
-  .sc-head h3          { @apply text-xl font-semibold tracking-[-.4px] text-black/90; }
-  .sc-tabs             { @apply flex border border-black/20; }
-  .sc-tabs button      { @apply h-10 flex-1 text-sm text-black/50; }
-  .sc-tabs button.on   { @apply bg-black text-white; }
-  .sc-body             { @apply flex flex-col gap-6 border-b border-black/20 pb-6; }
-  .sc-group            { @apply flex flex-col gap-3; }
-  .sc-group > label    { @apply text-lg font-semibold text-black; }
-  .sc-inputs           { @apply flex gap-2; }
-  .sc-field            { @apply flex flex-col gap-1; }
-  .sc-field > span     { @apply text-sm font-medium text-black/70; }
-  .sc-field .ip        { @apply flex items-center justify-center gap-2.5 border border-black/20 p-3; }
-  .sc-field .ip input  { @apply w-20 border-none text-lg text-black outline-none; }
-  .sc-field .ip .u     { @apply text-base text-black/50; }
-  .sc-result           { @apply flex items-start justify-between; }
-  .sc-result .litr     { @apply flex items-end gap-2; }
-  .sc-result .litr b   { @apply text-[40px] leading-[normal] font-semibold text-black; }
-  .sc-result .litr span{ @apply text-xl font-medium text-black/80; }
-  .sc-result .desc     { @apply mt-6 flex flex-col gap-2 text-base text-black/80; }
-  .sc-result .desc .r  { @apply flex gap-2; }
-  .sc-result .desc .r b{ @apply font-medium; }
-  .sc-result .price    { @apply flex items-end gap-1 text-black; }
-  .sc-result .price .p1,
-  .sc-result .price .p2{ @apply text-2xl font-semibold; }
-  .sc-result .price .p3{ @apply text-xl font-medium; }
-  .sc-full             { @apply flex h-10 items-center justify-center bg-yellow text-base font-medium text-black/90; }
-  .sc-close            { @apply absolute top-[23px] right-6 flex size-10 items-center justify-center bg-black; }
-  .sc-close img        { @apply size-6; }
+  /* The old page also carried a `.side-calc` / `.sc-*` block for a slide-in calculator
+     that nothing ever opened (the class was only ever removed). Dropped together with
+     the markup — /calculator is the real page. */
 
   /* ============ CATEGORIES ============ */
   /* `.cat-first` was dropped: it existed in the old style block but no page ever
@@ -137,4 +114,18 @@
   .cat-row:hover .cat-thumb.open:not(:hover)       { @apply grow; }
   .cat-row:hover .cat-thumb.open:not(:hover) .ov   { @apply opacity-0; }
   .cat-row:hover .cat-thumb.open:not(:hover) .info { @apply translate-y-2 opacity-0; }
+
+  /* Touch devices have no hover: without this the first tile stays expanded forever and
+     the other six never reveal their label. Show every tile at equal width instead. */
+  @media (hover: none) {
+    .cat-row .cat-thumb,
+    .cat-row .cat-thumb.open,
+    .cat-row:hover .cat-thumb.open:not(:hover)       { @apply grow; }
+    .cat-row .cat-thumb .ov,
+    .cat-row:hover .cat-thumb.open:not(:hover) .ov   { @apply opacity-100; }
+    .cat-row .cat-thumb .info,
+    .cat-row:hover .cat-thumb.open:not(:hover) .info { @apply translate-y-0 opacity-100; }
+    .cat-row .cat-thumb .info h4,
+    .cat-row .cat-thumb .info p                      { @apply whitespace-normal; }
+  }
 }

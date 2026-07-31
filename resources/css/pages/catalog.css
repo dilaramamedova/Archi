@@ -30,11 +30,19 @@
   .cat-sort      { @apply h-[41px] gap-2 border border-black/14 px-4; }
   .cat-sort .car { @apply ml-1 text-xs text-black/50; }
   .sort-menu     { @apply min-w-[200px]; }
+  /* The value and an invisible stack of every option share one grid cell, so the
+     control is always as wide as the longest option of the current locale and
+     picking another one never reflows `.cat-head`. */
+  .cat-sort .val-wrap        { @apply grid; }
+  .cat-sort .val-wrap > *    { grid-area: 1 / 1; }
+  .cat-sort .val-ghost       { @apply invisible h-0 overflow-hidden; }
+  .cat-sort .val-ghost i     { @apply block text-sm font-semibold not-italic; }
 
-  /* active filter chips */
-  .cat-chips   { @apply mt-5 flex flex-wrap items-center gap-2; }
-  .cat-chip    { @apply inline-flex h-8 cursor-pointer items-center rounded-ds border border-black/10 bg-gray-soft px-3 text-sm text-ink hover:border-black/35; }
-  .cat-chip .x { @apply ml-2 text-black/50; }
+  /* active filter chips — `min-h-8` keeps the band from collapsing when the last
+     chip and the clear button are gone */
+  .cat-chips   { @apply mt-5 flex min-h-8 flex-wrap items-center gap-2; }
+  .cat-chip    { @apply inline-flex h-8 items-center rounded-ds border border-black/10 bg-gray-soft px-3 text-sm text-ink hover:border-black/35; }
+  .cat-chip .x { @apply ml-2 cursor-pointer text-black/50 hover:text-ink; }
   .cat-clear   { @apply cursor-pointer border-none px-1 text-sm text-black/50 [background:none] [font-family:inherit] hover:text-ink; }
 
   /* Body: sidebar + grid. `items-start` is REQUIRED: with stretch the sticky sidebar
@@ -68,10 +76,15 @@
   .fs-check .lbl { @apply flex-1 text-sm text-ink; }
   .fs-check .n   { @apply text-[13px] text-black/40; }
 
-  /* size chips */
+  /* size chips — the label and a bold ghost of the same text share one grid cell, so
+     the chip is always sized for its selected (semibold) state and toggling it cannot
+     push its neighbours around or rewrap the row */
   .fs-sizes { @apply flex flex-wrap gap-1.5; }
-  .fs-size  { @apply inline-flex h-[29px] cursor-pointer items-center justify-center rounded-ds border border-black/14 px-[11px] text-[13px] text-black/70 hover:border-black/35; }
-  .fs-size[data-on="true"] { @apply border-yellow-line bg-sel-bg font-semibold text-ink; }
+  .fs-size  { @apply inline-grid h-[29px] cursor-pointer place-items-center rounded-ds border border-black/14 px-[11px] text-[13px] text-black/70 hover:border-black/35; }
+  .fs-size > .t { grid-area: 1 / 1; }
+  .fs-size::after { content: attr(data-size); grid-area: 1 / 1; @apply invisible font-semibold; }
+  .fs-size[data-on="true"] { @apply border-yellow-line bg-sel-bg text-ink; }
+  .fs-size[data-on="true"] > .t { @apply font-semibold; }
 
   /* stock switch — the old page called this `.switch`, renamed because every page CSS
      file now lands in one global bundle and a single-word selector would be a collision
@@ -91,4 +104,8 @@
   .cat-grid .pcard .ph     { @apply h-auto aspect-square; }
   /* two badges do not fit on one line in a narrow card — let them wrap */
   .cat-grid .pcard .badges { @apply max-w-[calc(100%-44px)] flex-wrap; }
+  /* `.pcard` is a flex box, so [hidden] needs an explicit override (ARCHITECTURE §6.5) */
+  .cat-grid .pcard[hidden],
+  .cat-grid .cat-empty[hidden] { @apply hidden; }
+  .cat-empty { @apply col-span-full py-16 text-center text-[15px] text-black/50; }
 }

@@ -69,8 +69,10 @@ export default function init() {
     T.steps.summary,
   ];
   const WORKS = D.works;
-  const SERVICES = D.services;
   const money = (n) => tr(T.money, { amount: fmt(n) });
+  const catalogUrl = page.dataset.urlCatalog || '#';
+  // The step-1 "demolition needed" switch and this work item are the same decision.
+  const DEMOLITION = WORKS.findIndex((w) => w.key === 'demolition');
 
   // Cart from localStorage ('archi-cart', written by the product and cart pages),
   // with the demo list from Blade as a fallback.
@@ -108,7 +110,6 @@ export default function init() {
     works: {},
     useCart: true,
     cart: loadCart(),
-    services: {},
   };
 
   WORKS.forEach((w, i) => {
@@ -123,6 +124,18 @@ export default function init() {
     return state.rooms.filter((r) => re.test(r.name)).length || 1;
   }
 
+  // Object type, property type and condition scale the labour, positionally parallel
+  // to the chip lists they are picked from (see the *Factors arrays in Blade).
+  function pick(list, factors, value) {
+    const i = list.indexOf(value);
+    return i < 0 ? 1 : factors[i];
+  }
+
+  const siteFactor = () =>
+    pick(D.objectTypes, D.objectFactors, state.objV) *
+    pick(D.propertyTypes, D.propertyFactors, state.prop) *
+    pick(D.conditions, D.conditionFactors, state.cond);
+
   function worksCost() {
     const A = totalArea();
     const pts = Math.max(1, Math.round(A / 8));
@@ -131,8 +144,12 @@ export default function init() {
       if (!state.works[i]) return;
       s += w.unit === 'm2' ? w.price * A : w.unit === 'point' ? w.price * pts : w.price;
     });
-    return s;
+    return Math.round(s * siteFactor());
   }
+
+  // Both switches read "I already have it", so the fee applies while they are OFF.
+  const servicesCost = () =>
+    (state.design ? 0 : D.services.design) + (state.drawings ? 0 : D.services.drawings);
 
   const cartTotal = () =>
     state.useCart ? state.cart.filter((c) => c.included).reduce((s, c) => s + (+c.price || 0), 0) : 0;
@@ -157,7 +174,7 @@ export default function init() {
     const lighting = Math.round(A * 44);
     const doors = byCat(D.cats.doors) + state.rooms.length * 400;
     const works = worksCost();
-    const extras = SERVICES.reduce((s, p, i) => s + (state.services[i] ? p : 0), 0);
+    const extras = servicesCost();
     const sub =
       rough + finish + plumbing + electrical + lighting + doors + works + DELIVERY_COST + extras;
     const reserve = Math.round(sub * RESERVE_RATE);
@@ -213,12 +230,18 @@ export default function init() {
     stepEl.querySelectorAll('.dc-step').forEach((s) =>
       s.addEventListener('click', () => {
         const i = +s.dataset.i;
-        if (i <= state.step) {
-          state.step = i;
-          render();
-        }
+        if (i <= state.step) goToStep(i);
       })
     );
+  }
+
+  // Only a step change scrolls back up. `render()` also runs for every chip, switch and
+  // tick inside a step, and scrolling there would throw the user out of a long list.
+  function goToStep(i) {
+    if (i === state.step) return;
+    state.step = i;
+    render();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function stepObject() {
@@ -246,7 +269,9 @@ export default function init() {
     const rooms = state.rooms
       .map((r, i) => {
         if (i === state.editRoom) {
-          return `<div class="dc-room exp"><div class="dc-room-h"><b>${esc(r.name)}</b><button class="rm" data-rm="${i}">${esc(t.remove)}</button></div>
+          // the last room cannot be removed, so the button is disabled rather than inert
+          const rm = state.rooms.length > 1 ? `data-rm="${i}"` : 'disabled';
+          return `<div class="dc-room exp"><div class="dc-room-h"><b>${esc(r.name)}</b><button class="rm" ${rm}>${esc(t.remove)}</button></div>
       <div class="dc-fields">
         <div class="dc-fb"><span>${esc(t.floor_area)}</span><div class="ip"><input data-r="${i}" data-f="area" type="number" value="${esc(r.area)}"><span class="u">${esc(T.units.m2)}</span></div></div>
         <div class="dc-fb"><span>${esc(t.height)}</span><div class="ip"><input data-r="${i}" data-f="h" type="number" value="${esc(r.h)}"><span class="u">${esc(T.units.m)}</span></div></div>
@@ -292,12 +317,12 @@ export default function init() {
           const qty = String(item.calc || '').split('→').pop().trim();
           return `<div class="dc-mr"><div class="ml"><b>${esc(label)}</b><span>${esc(item.name)} · ${esc(qty)}</span></div><div class="mr-r"><span class="price">${esc(money(item.price))}</span><span class="dc-badge">${esc(t.from_cart)}</span></div></div>`;
         }
-        return `<div class="dc-mr"><div class="ml"><b>${esc(label)}</b><span class="no">${esc(t.not_selected)}</span></div><div class="mr-r"><button class="dc-pick">${esc(t.pick)}</button></div></div>`;
+        return `<div class="dc-mr"><div class="ml"><b>${esc(label)}</b><span class="no">${esc(t.not_selected)}</span></div><div class="mr-r"><a class="dc-pick" href="${esc(catalogUrl)}">${esc(t.pick)}</a></div></div>`;
       })
       .join('');
     const n = state.useCart ? state.cart.filter((c) => c.included).length : 0;
     return `<div class="dc-sh"><div class="k">${esc(t.k)}</div><h2>${esc(t.h)}</h2><div class="d">${esc(t.d)}</div></div>
-  <div class="dc-banner"><b>${esc(tr(t.banner, { count: n }))}</b><div class="dc-tg grn ${state.useCart ? 'on' : ''}" data-t="useCart"><div class="dc-sw"></div></div></div>
+  <div class="dc-banner"><b>${esc(tr(t.banner, { count: n }))}</b><div class="dc-tg grn ${state.useCart ? 'on' : ''}" data-t="useCart"><span>${esc(T.side.use_in_calc)}</span><div class="dc-sw"></div></div></div>
   ${rows}`;
   }
 
@@ -393,18 +418,10 @@ export default function init() {
     <button class="dc-next" id="dcNextBtn">${esc(state.step === 4 ? s.calculate : s.next)}  →</button>
   </div>`;
     const back = document.getElementById('dcBack');
-    if (back) {
-      back.addEventListener('click', () => {
-        state.step--;
-        render();
-      });
-    }
-    document.getElementById('dcNextBtn').addEventListener('click', () => {
-      if (state.step < 5) {
-        state.step++;
-        render();
-      }
-    });
+    if (back) back.addEventListener('click', () => goToStep(state.step - 1));
+    document
+      .getElementById('dcNextBtn')
+      .addEventListener('click', () => goToStep(Math.min(state.step + 1, 5)));
     bindToggles(sideEl);
   }
 
@@ -413,6 +430,7 @@ export default function init() {
       t.addEventListener('click', () => {
         const k = t.dataset.t;
         state[k] = !state[k];
+        if (k === 'demolition' && DEMOLITION >= 0) state.works[DEMOLITION] = state.demolition;
         render();
       })
     );
@@ -424,7 +442,6 @@ export default function init() {
     mainEl.innerHTML = fns[state.step]();
     bindMain();
     renderSide();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function bindMain() {
@@ -486,12 +503,10 @@ export default function init() {
     mainEl.querySelectorAll('[data-rm]').forEach((el) =>
       el.addEventListener('click', (ev) => {
         ev.stopPropagation();
-        const i = +el.dataset.rm;
-        if (state.rooms.length > 1) {
-          state.rooms.splice(i, 1);
-          state.editRoom = 0;
-          render();
-        }
+        // `data-rm` is only rendered while more than one room is left
+        state.rooms.splice(+el.dataset.rm, 1);
+        state.editRoom = 0;
+        render();
       })
     );
     const add = document.getElementById('dcAddRoom');
@@ -507,6 +522,7 @@ export default function init() {
       el.addEventListener('click', () => {
         const i = +el.dataset.w;
         state.works[i] = !state.works[i];
+        if (i === DEMOLITION) state.demolition = state.works[i];
         render();
       })
     );

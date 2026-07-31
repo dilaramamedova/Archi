@@ -1,6 +1,8 @@
 // Page module for "catalog" — ported from the inline <script> of the old catalog.html.
 // The 20 product cards are rendered server-side, so sorting only reorders the existing
-// DOM nodes (numeric values come from data-i / data-now / data-rate).
+// DOM nodes and filtering only toggles `hidden` (every value comes from a data-*
+// attribute: data-i / data-now / data-rate / data-cat / data-brand / data-surface /
+// data-size / data-stock).
 // Shared behaviour (navbar, round product cursor) lives in resources/js/shared/.
 
 const PRICE_MIN = 0;
@@ -9,13 +11,12 @@ const PRICE_MAX = 100;
 const num = (el, key) => parseFloat(el.dataset[key]) || 0;
 
 // Sorts the cards in place; `pop` restores the server-rendered order.
-function initSort(grid) {
+function initSort(grid, cards, empty) {
   const sortEl = document.getElementById('catSort');
   const sortVal = document.getElementById('sortVal');
   const sortMenu = document.getElementById('sortMenu');
   if (!sortEl || !sortVal || !sortMenu) return;
 
-  const cards = [...grid.children];
   const sorters = {
     pop: (a, b) => num(a, 'i') - num(b, 'i'),
     cheap: (a, b) => num(a, 'now') - num(b, 'now'),
@@ -31,6 +32,7 @@ function initSort(grid) {
       li.dataset.on = 'true';
       sortVal.textContent = li.textContent;
       cards.slice().sort(sorters[li.dataset.sort] || sorters.pop).forEach((c) => grid.appendChild(c));
+      if (empty) grid.appendChild(empty); // the empty state always stays last
       sortEl.dataset.open = 'false';
       return;
     }
@@ -40,10 +42,13 @@ function initSort(grid) {
   document.addEventListener('click', (e) => {
     if (!e.target.closest('#catSort')) sortEl.dataset.open = 'false';
   });
+
+  // an absolutely positioned menu would otherwise scroll under/over the sticky navbar
+  window.addEventListener('scroll', () => { sortEl.dataset.open = 'false'; }, { passive: true });
 }
 
-// Dual-range price slider + the active filter chips above the grid.
-function initFilters() {
+// Dual-range price slider, the active filter chips above the grid and "Apply filters".
+function initFilters(grid, cards, empty) {
   const chipWrap = document.getElementById('catChips');
   const clearBtn = document.getElementById('catClear');
   const slider = document.getElementById('fsSlider');
@@ -94,11 +99,15 @@ function initFilters() {
       const x = document.createElement('span');
       x.className = 'x';
       x.textContent = '✕';
+      x.setAttribute('role', 'button');
+      x.setAttribute('tabindex', '0');
+      x.setAttribute('aria-label', fmt(L.lRemove, { v: it.label }));
       chip.appendChild(x);
       chip._filter = it;
       chipWrap.insertBefore(chip, clearBtn);
     });
-    clearBtn.style.display = items.length ? '' : 'none';
+    // `visibility` instead of `display` — the row must not collapse (layout shift)
+    clearBtn.style.visibility = items.length ? '' : 'hidden';
   }
 
   function paint() {
@@ -150,9 +159,8 @@ function initFilters() {
   inMin.addEventListener('change', clampInputs);
   inMax.addEventListener('change', clampInputs);
 
-  // the chip's ✕ switches the matching filter off
-  chipWrap.addEventListener('click', (e) => {
-    const chip = e.target.closest('.cat-chip');
+  // only the ✕ removes a filter — clicking the label must not destroy the chip
+  function removeChip(chip) {
     if (!chip || !chip._filter) return;
     if (chip._filter.price) {
       vMin = PRICE_MIN;
@@ -162,6 +170,17 @@ function initFilters() {
       chip._filter.el.dataset.on = 'false';
       renderChips();
     }
+  }
+  chipWrap.addEventListener('click', (e) => {
+    if (!e.target.closest('.cat-chip .x')) return;
+    removeChip(e.target.closest('.cat-chip'));
+  });
+  chipWrap.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const x = e.target.closest('.cat-chip .x');
+    if (!x) return;
+    e.preventDefault();
+    removeChip(x.closest('.cat-chip'));
   });
 
   clearBtn.addEventListener('click', () => {
@@ -194,14 +213,52 @@ function initFilters() {
     });
   }
 
+  /* ---- "Apply filters" — narrows the grid down to the current sidebar selection ---- */
+  const applyBtn = document.getElementById('catApply');
+  if (applyBtn) {
+    const picked = (sel, key) =>
+      [...document.querySelectorAll(sel)].map((el) => el.dataset[key]);
+
+    applyBtn.addEventListener('click', () => {
+      const cat = document.querySelector('.fs-cat[data-on="true"]');
+      const category = cat ? cat.dataset.cat : null;
+      const brands = picked('#brandBlock .fs-check[data-on="true"]', 'brand');
+      const surfaces = picked('#surfBlock .fs-check[data-on="true"]', 'surface');
+      const sizes = picked('.fs-size[data-on="true"]', 'size');
+      const inStockOnly = stock ? stock.dataset.on === 'true' : false;
+
+      let shown = 0;
+      cards.forEach((card) => {
+        const d = card.dataset;
+        const price = num(card, 'now');
+        const ok =
+          (!category || d.cat === category) &&
+          (!brands.length || brands.indexOf(d.brand) !== -1) &&
+          (!surfaces.length || surfaces.indexOf(d.surface) !== -1) &&
+          (!sizes.length || sizes.indexOf(d.size) !== -1) &&
+          price >= vMin && price <= vMax &&
+          (!inStockOnly || d.stock === 'true');
+        card.hidden = !ok;
+        if (ok) shown += 1;
+      });
+
+      if (empty) {
+        grid.appendChild(empty);
+        empty.hidden = shown > 0;
+      }
+    });
+  }
+
   paint(); // initial render — also builds the chips
 }
 
 export default function init() {
   const grid = document.getElementById('catGrid');
   if (!grid) return;
-  initSort(grid);
-  initFilters();
+  const cards = [...grid.querySelectorAll('.pcard')];
+  const empty = document.getElementById('catEmpty');
+  initSort(grid, cards, empty);
+  initFilters(grid, cards, empty);
 }
 
 init();

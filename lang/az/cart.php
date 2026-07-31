@@ -16,6 +16,8 @@ return [
     'items' => [
         'unit_price' => 'Vahid qiymət: :price ₼',
         'remove' => 'Sil',
+        'increase' => 'Sayı artır',
+        'decrease' => 'Sayı azalt',
     ],
 
     'promo' => [

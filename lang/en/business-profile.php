@@ -43,6 +43,7 @@ return [
         'kicker' => 'CATALOG',
         'title' => 'Our products',
         'see_all' => 'VIEW ALL (1,240) →',
+        'favourite' => 'Add to favourites',
         'reviews' => '(1,876 reviews)',
         'cat_paint' => 'Paint',
         'cat_insulation' => 'Insulation',

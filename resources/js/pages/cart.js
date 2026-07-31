@@ -22,7 +22,19 @@ const CLS = {
   rm: 'cursor-pointer border-none p-1 text-[22px] leading-none text-black/35 [font-family:inherit] hover:text-[#c0392b]',
 };
 
-const fmt = (n) => Math.round(n).toLocaleString('ru-RU');
+// Thousands grouping follows the active locale (from Blade), not a hardcoded one.
+const LOCALE_TAG = { az: 'az-AZ', ru: 'ru-RU', en: 'en-US' };
+
+function makeFmt(locale) {
+  const tag = LOCALE_TAG[locale] || 'az-AZ';
+  let nf;
+  try {
+    nf = new Intl.NumberFormat(tag, { maximumFractionDigits: 0 });
+  } catch (e) {
+    nf = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
+  }
+  return (n) => nf.format(Math.round(n));
+}
 
 const esc = (s) =>
   String(s == null ? '' : s).replace(
@@ -48,6 +60,7 @@ export default function init() {
 
   const T = readJson(page.dataset.i18n, {});
   const PROMOS = readJson(page.dataset.promos, {});
+  const fmt = makeFmt(T.locale);
   const money = (n) => tr(T.money, { amount: fmt(n) });
 
   const rowsEl = document.getElementById('ctRows');
@@ -107,9 +120,9 @@ export default function init() {
     <div class="${CLS.row}" data-i="${i}">
       <div class="${CLS.thumb}"></div>
       <div class="${CLS.info}"><b class="${CLS.name}">${esc(c.name)}</b><div class="${CLS.meta}">${esc(c.cat || '')}${c.brand ? ' · ' + esc(c.brand) : ''}</div><div class="${CLS.unit}">${esc(tr(T.unitPrice, { price: fmt(+c.price || 0) }))}</div></div>
-      <div class="${CLS.qty}"><button class="${CLS.qtyBtn}" data-a="dec">−</button><span class="${CLS.qtyNum}">${c.qty}</span><button class="${CLS.qtyBtn}" data-a="inc">+</button></div>
-      <div class="${CLS.line}">${esc(money((+c.price || 0) * (c.qty || 1)))}</div>
-      <button class="${CLS.rm}" data-a="rm" title="${esc(T.remove)}">×</button>
+      <div class="${CLS.qty}"><button type="button" class="${CLS.qtyBtn}" data-a="dec" aria-label="${esc(T.decrease)}">−</button><span class="${CLS.qtyNum}" data-qty>${c.qty}</span><button type="button" class="${CLS.qtyBtn}" data-a="inc" aria-label="${esc(T.increase)}">+</button></div>
+      <div class="${CLS.line}" data-line>${esc(money((+c.price || 0) * (c.qty || 1)))}</div>
+      <button type="button" class="${CLS.rm}" data-a="rm" title="${esc(T.remove)}" aria-label="${esc(T.remove)}">×</button>
     </div>`
       )
       .join('');
@@ -166,6 +179,9 @@ export default function init() {
   }
 
   // Quantity and remove buttons — one delegated listener survives every re-render.
+  // Quantity changes patch the affected row in place instead of rebuilding the list:
+  // re-rendering would destroy the button being clicked, dropping keyboard focus back
+  // to <body> and losing :hover/:active mid-click.
   if (rowsEl) {
     rowsEl.addEventListener('click', (e) => {
       const btn = e.target.closest('[data-a]');
@@ -173,12 +189,38 @@ export default function init() {
       const row = btn.closest('[data-i]');
       if (!row) return;
       const i = +row.dataset.i;
+      const item = cart[i];
+      if (!item) return;
       const a = btn.dataset.a;
-      if (a === 'inc') cart[i].qty++;
-      else if (a === 'dec') cart[i].qty = Math.max(1, cart[i].qty - 1);
-      else if (a === 'rm') cart.splice(i, 1);
+
+      if (a === 'rm') {
+        const next = row.nextElementSibling || row.previousElementSibling;
+        cart.splice(i, 1);
+        row.remove();
+        // indices are positional, so everything after the removed row shifts up
+        rowsEl.querySelectorAll('[data-i]').forEach((el, n) => {
+          el.dataset.i = n;
+        });
+        if (emptyEl) emptyEl.hidden = cart.length > 0;
+        // the focused button just left the document — keep the tab position nearby
+        const nextRm = next && next.querySelector('[data-a="rm"]');
+        if (nextRm) nextRm.focus();
+        else if (emptyEl && !emptyEl.hidden) {
+          const cta = emptyEl.querySelector('a');
+          if (cta) cta.focus();
+        }
+      } else if (a === 'inc' || a === 'dec') {
+        item.qty = a === 'inc' ? item.qty + 1 : Math.max(1, item.qty - 1);
+        const qtyEl = row.querySelector('[data-qty]');
+        const lineEl = row.querySelector('[data-line]');
+        if (qtyEl) qtyEl.textContent = item.qty;
+        if (lineEl) lineEl.textContent = money((+item.price || 0) * item.qty);
+      } else {
+        return;
+      }
+
       save();
-      render();
+      currentTotal = renderSum();
     });
   }
 

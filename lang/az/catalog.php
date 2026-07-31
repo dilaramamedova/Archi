@@ -27,7 +27,10 @@ return [
         'size' => ':v sm',
         'surface' => ':v səth',
         'price' => ':min–:max ₼',
+        'remove' => 'Filtri sil: :v',
     ],
+
+    'empty' => 'Seçilmiş filtrlərə uyğun məhsul tapılmadı.',
 
     'filters' => [
         'categories' => 'Kateqoriyalar',

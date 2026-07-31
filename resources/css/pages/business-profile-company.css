@@ -62,7 +62,12 @@
   .bpc-cover .bg           { @apply pointer-events-none absolute inset-0 rounded-ds; }
   .bpc-cover .bg img       { @apply absolute size-full max-w-none rounded-ds object-cover; }
   .bpc-cover .overlay      { @apply absolute inset-0 rounded-ds bg-black/20; }
-  .bpc-cover-btn           { @apply absolute top-[130px] left-[840px] flex cursor-pointer items-start overflow-hidden rounded-ds bg-white px-3.5 py-[9px]; }
+  /* Anchored to the cover's own bottom-right corner. The Figma coordinates were absolute
+     (top 130 / left 840 inside a 1048x180 cover), but the cover width is derived from the
+     viewport, so below ~1400px the button slid out of `overflow-hidden` and disappeared.
+     right-24/bottom-4 reproduce the same 96px/16px gaps at 1440 and hold at any width —
+     a longer label (ru "Изменить обложку") now grows leftwards instead of being clipped. */
+  .bpc-cover-btn           { @apply absolute right-24 bottom-4 flex cursor-pointer items-start overflow-hidden rounded-ds bg-white px-3.5 py-[9px]; }
   .bpc-cover-btn p         { @apply text-[13px] font-semibold whitespace-nowrap text-ink; }
   .bpc-logo-row            { @apply flex items-center gap-4 overflow-hidden; }
   .bpc-logo-box            { @apply relative size-20 shrink-0 overflow-hidden rounded-ds-md bg-ink; }

@@ -14,6 +14,7 @@ function initFavourite() {
   fav.addEventListener('click', () => {
     const on = fav.dataset.on !== 'true';
     fav.dataset.on = on ? 'true' : 'false';
+    fav.setAttribute('aria-pressed', on ? 'true' : 'false');
     icon.src = on ? HEART_ON : HEART_OFF;
   });
 }

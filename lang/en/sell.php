@@ -54,6 +54,7 @@ return [
         'add_another' => 'Add another product',
         'sign_up' => 'Sign up',
         'not_now' => 'Not now, view on site',
+        'close' => 'Close',
     ],
 
     'product' => [
