@@ -29,17 +29,31 @@ Route::get('/login', fn () => archiView('pages.login'))->name('login');
 Route::get('/register', fn () => archiView('pages.register'))->name('register');
 Route::get('/cart', fn () => archiView('pages.cart'))->name('cart');
 
-// Specialist owner mode + onboarding + cabinet. Reached after login in reality, so the
-// public navbar/footer do not link them; the three groups link to each other.
+// Specialist owner mode + onboarding + cabinet.
 Route::get('/specialist/owner', fn () => archiView('pages.specialist-owner'))->name('specialist.owner');
 Route::get('/specialist/onboarding', fn () => archiView('pages.specialist-onboarding'))->name('specialist.onboarding');
-Route::get('/specialist/cabinet', fn () => archiView('pages.specialist-cabinet'))->name('specialist.cabinet');
-Route::get('/specialist/cabinet/portfolio', fn () => archiView('pages.specialist-cabinet-portfolio'))->name('specialist.cabinet.portfolio');
-Route::get('/specialist/cabinet/services', fn () => archiView('pages.specialist-cabinet-services'))->name('specialist.cabinet.services');
-Route::get('/specialist/cabinet/schedule', fn () => archiView('pages.specialist-cabinet-schedule'))->name('specialist.cabinet.schedule');
-Route::get('/specialist/cabinet/reviews', fn () => archiView('pages.specialist-cabinet-reviews'))->name('specialist.cabinet.reviews');
-Route::get('/specialist/cabinet/notifications', fn () => archiView('pages.specialist-cabinet-notifications'))->name('specialist.cabinet.notifications');
-Route::get('/specialist/cabinet/security', fn () => archiView('pages.specialist-cabinet-security'))->name('specialist.cabinet.security');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/specialist/cabinet', function () {
+        app()->setLocale(session('locale', config('app.locale')));
+        $user = auth()->user();
+        $profile = $user->specialistProfile;
+
+        return view('pages.specialist-cabinet', compact('user', 'profile'));
+    })->name('specialist.cabinet');
+
+    Route::get('/specialist/cabinet/security', function () {
+        app()->setLocale(session('locale', config('app.locale')));
+
+        return view('pages.specialist-cabinet-security');
+    })->name('specialist.cabinet.security');
+
+    Route::get('/specialist/cabinet/portfolio', fn () => archiView('pages.specialist-cabinet-portfolio'))->name('specialist.cabinet.portfolio');
+    Route::get('/specialist/cabinet/services', fn () => archiView('pages.specialist-cabinet-services'))->name('specialist.cabinet.services');
+    Route::get('/specialist/cabinet/schedule', fn () => archiView('pages.specialist-cabinet-schedule'))->name('specialist.cabinet.schedule');
+    Route::get('/specialist/cabinet/reviews', fn () => archiView('pages.specialist-cabinet-reviews'))->name('specialist.cabinet.reviews');
+    Route::get('/specialist/cabinet/notifications', fn () => archiView('pages.specialist-cabinet-notifications'))->name('specialist.cabinet.notifications');
+});
 
 Route::get('/calculator', fn () => archiView('pages.calculator'))->name('calculator');
 Route::get('/calculator/detailed', fn () => archiView('pages.calculator-detailed'))->name('calculator.detailed');
@@ -62,6 +76,18 @@ Route::get('/business/profile/security', fn () => archiView('pages.business-prof
 Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
 Route::post('/login', [LoginController::class, 'store'])->name('login.store');
 Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
+
+// Cabinet routes (authenticated)
+Route::middleware('auth')->group(function () {
+    // Security (shared by all user types)
+    Route::post('/cabinet/password', [\App\Http\Controllers\Cabinet\SecurityController::class, 'changePassword'])->name('cabinet.password');
+    Route::get('/cabinet/sessions', [\App\Http\Controllers\Cabinet\SecurityController::class, 'sessions'])->name('cabinet.sessions');
+    Route::delete('/cabinet/sessions', [\App\Http\Controllers\Cabinet\SecurityController::class, 'destroySession'])->name('cabinet.sessions.destroy');
+    Route::post('/cabinet/deactivate', [\App\Http\Controllers\Cabinet\SecurityController::class, 'deactivateAccount'])->name('cabinet.deactivate');
+
+    // Specialist profile
+    Route::put('/specialist/cabinet', [\App\Http\Controllers\Cabinet\SpecialistProfileController::class, 'update'])->name('specialist.cabinet.update');
+});
 
 // Language switch: stores the locale in the session and returns the user to the same page.
 Route::get('/lang/{locale}', function (string $locale) {

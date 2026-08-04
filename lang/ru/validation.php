@@ -29,5 +29,6 @@ return [
         'specialization' => 'Специализация',
         'city' => 'Город',
         'identifier' => 'E-mail или телефон',
+        'current_password' => 'Текущий пароль',
     ],
 ];

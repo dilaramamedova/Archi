@@ -29,5 +29,6 @@ return [
         'specialization' => 'specialization',
         'city' => 'city',
         'identifier' => 'email or phone',
+        'current_password' => 'current password',
     ],
 ];

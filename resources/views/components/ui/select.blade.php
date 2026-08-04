@@ -15,11 +15,12 @@
     'variant' => null,
     'options' => [],
     'placeholder' => null,
+    'value' => null,
 ])
 <select {{ $attributes->merge(['class' => $variant === 'b2b' ? 'ui-control-b2b' : 'ui-control']) }}>
   @if ($placeholder !== null)<option value="">{{ $placeholder }}</option>@endif
   @foreach ($options as $option)
-    <option>{{ $option }}</option>
+    <option @selected($value !== null && $value === $option)>{{ $option }}</option>
   @endforeach
   {{ $slot }}
 </select>

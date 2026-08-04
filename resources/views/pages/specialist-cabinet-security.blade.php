@@ -22,27 +22,23 @@
   <x-cabinet.card gap="gap-4"
       :title="__('specialist-cabinet-security.password.title')"
       :desc="__('specialist-cabinet-security.password.desc')">
-    <div class="cab-field-row">
-      <x-cabinet.field tag="p" :label="__('specialist-cabinet-security.password.current_label')">
-        <div class="spsec-input">
-          <p class="dots" data-mask="{{ __('specialist-cabinet-security.password.mask') }}" data-value="{{ __('specialist-cabinet-security.password.value') }}">{{ __('specialist-cabinet-security.password.mask') }}</p>
-          <button type="button" class="eye" data-on="false" aria-pressed="false" aria-label="{{ __('specialist-cabinet-security.password.eye_label') }}">{{ __('specialist-cabinet-security.password.eye') }}</button>
-        </div>
-      </x-cabinet.field>
-      <x-cabinet.field tag="p" :label="__('specialist-cabinet-security.password.new_label')">
-        <div class="spsec-input">
-          <p class="dots" data-mask="{{ __('specialist-cabinet-security.password.mask') }}" data-value="{{ __('specialist-cabinet-security.password.value') }}">{{ __('specialist-cabinet-security.password.mask') }}</p>
-          <button type="button" class="eye" data-on="false" aria-pressed="false" aria-label="{{ __('specialist-cabinet-security.password.eye_label') }}">{{ __('specialist-cabinet-security.password.eye') }}</button>
-        </div>
-      </x-cabinet.field>
-      <x-cabinet.field tag="p" :label="__('specialist-cabinet-security.password.repeat_label')">
-        <div class="spsec-input">
-          <p class="dots" data-mask="{{ __('specialist-cabinet-security.password.mask') }}" data-value="{{ __('specialist-cabinet-security.password.value') }}">{{ __('specialist-cabinet-security.password.mask') }}</p>
-          <button type="button" class="eye" data-on="false" aria-pressed="false" aria-label="{{ __('specialist-cabinet-security.password.eye_label') }}">{{ __('specialist-cabinet-security.password.eye') }}</button>
-        </div>
-      </x-cabinet.field>
-    </div>
-    <x-ui.button variant="primary" class="h-11 px-[22px] text-[13px] leading-[normal] font-bold whitespace-nowrap">{{ __('specialist-cabinet-security.password.submit') }}</x-ui.button>
+    <form id="passwordForm" autocomplete="off">
+      <x-ui.alert tone="error" id="pwdErr" class="mb-4" />
+      <x-ui.alert tone="ok" id="pwdOk" class="mb-4" />
+      <div class="cab-field-row">
+        <x-cabinet.field :label="__('specialist-cabinet-security.password.current_label')" for="spsec-current">
+          <x-ui.input variant="b2b" type="password" id="spsec-current" name="current_password" autocomplete="current-password" />
+        </x-cabinet.field>
+        <x-cabinet.field :label="__('specialist-cabinet-security.password.new_label')" for="spsec-new">
+          <x-ui.input variant="b2b" type="password" id="spsec-new" name="password" autocomplete="new-password" />
+        </x-cabinet.field>
+        <x-cabinet.field :label="__('specialist-cabinet-security.password.repeat_label')" for="spsec-confirm">
+          <x-ui.input variant="b2b" type="password" id="spsec-confirm" name="password_confirmation" autocomplete="new-password" />
+        </x-cabinet.field>
+      </div>
+      <x-ui.button variant="primary" type="submit" id="pwdSubmit"
+        class="h-11 px-[22px] text-[13px] leading-[normal] font-bold whitespace-nowrap mt-2">{{ __('specialist-cabinet-security.password.submit') }}</x-ui.button>
+    </form>
   </x-cabinet.card>
 
   {{-- Two-factor authentication (OFF in the specialist frame) --}}
@@ -53,24 +49,11 @@
     </div>
   </x-cabinet.card>
 
-  {{-- Active sessions --}}
+  {{-- Active sessions (loaded from backend) --}}
   <x-cabinet.card gap="gap-4" :title="__('specialist-cabinet-security.sessions.title')">
-    <x-cabinet.row class="justify-between">
-      <div class="spsec-session-info">
-        <div class="spsec-session-title">
-          <p>{{ __('specialist-cabinet-security.sessions.s1_device') }}</p>
-          <x-ui.badge tone="ok" size="xs">{{ __('specialist-cabinet-security.sessions.this_device') }}</x-ui.badge>
-        </div>
-        <p class="spsec-session-sub">{{ __('specialist-cabinet-security.sessions.s1_meta') }}</p>
-      </div>
-    </x-cabinet.row>
-    <x-cabinet.row class="justify-between">
-      <div class="spsec-session-info">
-        <div class="spsec-session-title nogap"><p>{{ __('specialist-cabinet-security.sessions.s2_device') }}</p></div>
-        <p class="spsec-session-sub">{{ __('specialist-cabinet-security.sessions.s2_meta') }}</p>
-      </div>
-      <button type="button" class="spsec-logout">{{ __('specialist-cabinet-security.sessions.logout') }}</button>
-    </x-cabinet.row>
+    <div id="sessionsContainer">
+      <p class="text-[14px] text-muted">{{ __('specialist-cabinet-security.sessions.loading') }}</p>
+    </div>
   </x-cabinet.card>
 
   {{-- Danger zone --}}
@@ -79,12 +62,25 @@
       :desc="__('specialist-cabinet-security.danger.desc')">
     <div class="spsec-row">
       <p class="desc">{{ __('specialist-cabinet-security.danger.deactivate_desc') }}</p>
-      <x-ui.button variant="danger" class="h-[42px] px-[18px] text-[13px] leading-[normal] font-semibold whitespace-nowrap">{{ __('specialist-cabinet-security.danger.deactivate') }}</x-ui.button>
+      <x-ui.button variant="danger" id="deactivateBtn"
+        class="h-[42px] px-[18px] text-[13px] leading-[normal] font-semibold whitespace-nowrap">{{ __('specialist-cabinet-security.danger.deactivate') }}</x-ui.button>
+    </div>
+
+    {{-- Deactivation confirmation (hidden) --}}
+    <div id="deactivateConfirm" class="hidden mt-4 p-4 bg-[#fef2f2] border border-red rounded-[12px]">
+      <p class="text-[14px] text-[#b91c1c] mb-3">{{ __('specialist-cabinet-security.danger.confirm_text') }}</p>
+      <x-cabinet.field :label="__('specialist-cabinet-security.danger.password_label')" for="deactivate-pwd">
+        <x-ui.input variant="b2b" type="password" id="deactivate-pwd" name="deactivate_password" />
+      </x-cabinet.field>
+      <x-ui.alert tone="error" id="deactivateErr" class="mt-3" />
+      <div class="flex gap-3 mt-3">
+        <x-ui.button variant="danger" id="deactivateConfirmBtn"
+          class="h-[42px] px-[18px] text-[13px] leading-[normal] font-semibold">{{ __('specialist-cabinet-security.danger.confirm_deactivate') }}</x-ui.button>
+        <x-ui.button variant="outline" id="deactivateCancelBtn"
+          class="h-[42px] px-[18px] text-[13px] leading-[normal] font-semibold">{{ __('specialist-cabinet-security.danger.cancel') }}</x-ui.button>
+      </div>
     </div>
   </x-cabinet.card>
-
-  {{-- Save bar --}}
-  <x-cabinet.save-bar ns="specialist-cabinet-security" />
 
 </x-cabinet.shell>
 

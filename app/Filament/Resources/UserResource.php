@@ -72,7 +72,7 @@ class UserResource extends Resource
                     ->required(),
                 Forms\Components\Textarea::make('rejection_reason')
                     ->label('Rədd səbəbi')
-                    ->visible(fn (Forms\Get $get) => $get('status') === 'rejected'),
+                    ->visible(fn (Schemas\Components\Utilities\Get $get) => $get('status') === 'rejected'),
             ])->columns(2),
         ]);
     }

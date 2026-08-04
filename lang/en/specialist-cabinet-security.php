@@ -54,10 +54,7 @@ return [
         'title' => 'Active sessions',
         'this_device' => 'This device',
         'logout' => 'Sign out',
-        's1_device' => 'iPhone 15 · ARCHİ App',
-        's1_meta' => 'Baku · Active now',
-        's2_device' => 'Samsung TV · Browser',
-        's2_meta' => 'Baku · 5 days ago',
+        'loading' => 'Loading sessions...',
     ],
 
     'danger' => [
@@ -65,6 +62,10 @@ return [
         'desc' => 'These actions cannot be undone.',
         'deactivate_desc' => 'If you deactivate the profile, it will be removed from the catalog and new requests will stop.',
         'deactivate' => 'Deactivate profile',
+        'confirm_text' => 'Enter your current password to deactivate your account. This action cannot be undone.',
+        'password_label' => 'Enter your password',
+        'confirm_deactivate' => 'Yes, deactivate',
+        'cancel' => 'Cancel',
     ],
 
     'save' => [

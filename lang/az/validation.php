@@ -29,5 +29,6 @@ return [
         'specialization' => 'İxtisas',
         'city' => 'Şəhər',
         'identifier' => 'E-poçt və ya telefon',
+        'current_password' => 'Cari şifrə',
     ],
 ];

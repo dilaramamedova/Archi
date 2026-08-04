@@ -96,7 +96,18 @@
       <div class="signin">
         <span class="divider"></span>
         @auth
-          <span class="txt nav-user" data-user>{{ Auth::user()->first_name }}</span>
+          @php
+            $profileRoute = match(Auth::user()->role) {
+              \App\Enums\UserRole::Seller => route('business.profile'),
+              \App\Enums\UserRole::Master => route('specialist.cabinet'),
+              default => null,
+            };
+          @endphp
+          @if($profileRoute)
+            <a class="txt nav-user" href="{{ $profileRoute }}" data-user>{{ Auth::user()->first_name }}</a>
+          @else
+            <span class="txt nav-user" data-user>{{ Auth::user()->first_name }}</span>
+          @endif
           <form method="POST" action="{{ route('logout') }}" class="inline">
             @csrf
             <button type="submit" class="txt nav-logout">{{ __('nav.logout') }}</button>

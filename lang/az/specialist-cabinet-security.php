@@ -54,10 +54,7 @@ return [
         'title' => 'Aktiv sessiyalar',
         'this_device' => 'Bu cihaz',
         'logout' => 'Çıxış et',
-        's1_device' => 'iPhone 15 · ARCHİ App',
-        's1_meta' => 'Bakı · İndi aktiv',
-        's2_device' => 'Samsung TV · Brauzer',
-        's2_meta' => 'Bakı · 5 gün əvvəl',
+        'loading' => 'Sessiyalar yüklənir...',
     ],
 
     'danger' => [
@@ -65,6 +62,10 @@ return [
         'desc' => 'Bu əməliyyatlar geri qaytarıla bilməz.',
         'deactivate_desc' => 'Profili deaktiv etsəniz, kataloqdan çıxarılacaq və yeni müraciətlər dayandırılacaq.',
         'deactivate' => 'Profili deaktiv et',
+        'confirm_text' => 'Hesabı deaktiv etmək üçün cari şifrənizi daxil edin. Bu əməliyyat geri qaytarıla bilməz.',
+        'password_label' => 'Şifrənizi daxil edin',
+        'confirm_deactivate' => 'Bəli, deaktiv et',
+        'cancel' => 'Ləğv et',
     ],
 
     'save' => [

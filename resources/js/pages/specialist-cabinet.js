@@ -96,7 +96,58 @@ export default function init() {
   });
 
   if (bar) {
-    bar.querySelector('[data-save]')?.addEventListener('click', () => setSaved(true));
+    bar.querySelector('[data-save]')?.addEventListener('click', async () => {
+      const skills = [];
+      root.querySelectorAll('.sc-skill .lbl').forEach((el) => {
+        const t = el.textContent.trim();
+        if (t) skills.push(t);
+      });
+
+      const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+      const saveBtn = bar.querySelector('[data-save]');
+      if (saveBtn) saveBtn.disabled = true;
+
+      try {
+        const res = await fetch('/specialist/cabinet', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrf,
+          },
+          body: JSON.stringify({
+            first_name: root.querySelector('[name="first_name"]')?.value || '',
+            last_name: root.querySelector('[name="last_name"]')?.value || '',
+            craft: root.querySelector('[name="craft"]')?.value || '',
+            experience_years: root.querySelector('[name="experience_years"]')?.value || '',
+            city: root.querySelector('[name="city"]')?.value || '',
+            phone: root.querySelector('[name="phone"]')?.value || '',
+            whatsapp: root.querySelector('[name="whatsapp"]')?.value || '',
+            about: root.querySelector('[name="about"]')?.value || '',
+            skills,
+          }),
+        });
+
+        const data = await res.json();
+        const errBox = document.getElementById('profileErr');
+        const okBox = document.getElementById('profileOk');
+
+        if (res.ok) {
+          if (okBox) { okBox.textContent = data.message; okBox.dataset.on = 'true'; }
+          if (errBox) errBox.dataset.on = 'false';
+          setSaved(true);
+        } else {
+          const msgs = data.errors ? Object.values(data.errors).flat().join('. ') : data.message || 'Error';
+          if (errBox) { errBox.textContent = msgs; errBox.dataset.on = 'true'; }
+          if (okBox) okBox.dataset.on = 'false';
+        }
+      } catch {
+        const errBox = document.getElementById('profileErr');
+        if (errBox) { errBox.textContent = 'Network error'; errBox.dataset.on = 'true'; }
+      } finally {
+        if (saveBtn) saveBtn.disabled = false;
+      }
+    });
     bar.querySelector('[data-cancel]')?.addEventListener('click', () => window.location.reload());
   }
 }
