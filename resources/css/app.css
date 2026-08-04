@@ -620,6 +620,12 @@
   .lm-ok[data-on="true"] {
     @apply block;
   }
+  .lm-err {
+    @apply hidden border border-red bg-[#fef2f2] px-4 py-[13px] text-[15px] text-[#b91c1c];
+  }
+  .lm-err[data-on="true"] {
+    @apply block;
+  }
 
   @media (max-width: 640px) {
     .lm-dialog {
@@ -776,6 +782,10 @@
   .ui-alert[data-on="true"]    { @apply block; }
   .ui-alert[data-tone="ok"]    { @apply border border-green bg-success-soft px-4 py-3.5 text-[15px] text-success; }
   .ui-alert[data-tone="error"] { @apply border border-red bg-error-soft px-[15px] py-3 text-sm text-error; }
+
+  /* ---- field-level validation error ---- */
+  .field-error { @apply mt-1 text-[13px] text-error; }
+  .ui-control-error { @apply border-red! focus:border-red!; }
 
   /* ---- surface (<x-ui.card>) — padding/gap come from the caller ---- */
   .ui-card { @apply w-full rounded-ds border border-black/10 bg-white; }

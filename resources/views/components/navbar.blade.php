@@ -95,7 +95,15 @@
 
       <div class="signin">
         <span class="divider"></span>
-        <a class="txt" href="{{ route('login') }}">{{ __('nav.sign_in') }}</a>
+        @auth
+          <span class="txt nav-user" data-user>{{ Auth::user()->first_name }}</span>
+          <form method="POST" action="{{ route('logout') }}" class="inline">
+            @csrf
+            <button type="submit" class="txt nav-logout">{{ __('nav.logout') }}</button>
+          </form>
+        @else
+          <a class="txt" href="{{ route('login') }}">{{ __('nav.sign_in') }}</a>
+        @endauth
         <a class="btn-post" href="{{ route('sell') }}"><img src="/assets/icon-plus.svg" alt=""><span>{{ __('nav.post_product') }}</span></a>
       </div>
     </div>

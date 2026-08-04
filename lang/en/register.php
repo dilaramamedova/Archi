@@ -11,7 +11,7 @@ return [
         'subtitle' => 'Choose an account type — buyer, seller or master/specialist.',
     ],
 
-    'success' => 'Registration complete! (demo — no backend connected)',
+    'success' => 'Registration complete!',
 
     'roles' => [
         'label' => 'Account type',
@@ -75,4 +75,6 @@ return [
         'shirvan' => 'Shirvan',
         'other' => 'Other',
     ],
+
+    'pending_message' => 'Registration complete! You can sign in after your account is approved by an administrator.',
 ];

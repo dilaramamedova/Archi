@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
 use Illuminate\Support\Facades\Route;
 
 if (! function_exists('archiView')) {
@@ -55,6 +57,11 @@ Route::get('/business/profile/products', fn () => archiView('pages.business-prof
 Route::get('/business/profile/showrooms', fn () => archiView('pages.business-profile-showrooms'))->name('business.profile.showrooms');
 Route::get('/business/profile/notifications', fn () => archiView('pages.business-profile-notifications'))->name('business.profile.notifications');
 Route::get('/business/profile/security', fn () => archiView('pages.business-profile-security'))->name('business.profile.security');
+
+// Auth routes
+Route::post('/register', [RegisterController::class, 'store'])->name('register.store');
+Route::post('/login', [LoginController::class, 'store'])->name('login.store');
+Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
 // Language switch: stores the locale in the session and returns the user to the same page.
 Route::get('/lang/{locale}', function (string $locale) {

@@ -17,7 +17,8 @@
         <p class="text-base leading-[1.5] text-black/55">{{ __('register.head.subtitle') }}</p>
       </div>
 
-      <x-ui.alert tone="ok" id="okMsg">{{ __('register.success') }}</x-ui.alert>
+      <x-ui.alert tone="ok" id="okMsg">{{ __('register.pending_message') }}</x-ui.alert>
+      <x-ui.alert tone="error" id="regErr"></x-ui.alert>
 
       {{-- Role selection — the selected state is a data-sel attribute + Tailwind group-data variants. --}}
       <div>
@@ -45,48 +46,49 @@
       </div>
 
       <form class="flex flex-col gap-[18px]" id="regForm">
+        <input type="hidden" name="role" value="{{ $role }}">
         <div class="flex gap-3.5 max-[640px]:flex-col">
           <x-ui.field class="flex-1" :label="__('register.form.first_name_label')">
-            <x-ui.input type="text" :placeholder="__('register.form.first_name_placeholder')" required />
+            <x-ui.input name="first_name" type="text" :placeholder="__('register.form.first_name_placeholder')" required />
           </x-ui.field>
           <x-ui.field class="flex-1" :label="__('register.form.last_name_label')">
-            <x-ui.input type="text" :placeholder="__('register.form.last_name_placeholder')" required />
+            <x-ui.input name="last_name" type="text" :placeholder="__('register.form.last_name_placeholder')" required />
           </x-ui.field>
         </div>
 
         {{-- Seller only · [&[hidden]]:hidden is required because `flex` beats the UA [hidden] rule. --}}
         <x-ui.field class="[&[hidden]]:hidden" data-for="seller" :hidden="$role !== 'seller'" :label="__('register.form.company_label')">
-          <x-ui.input type="text" :placeholder="__('register.form.company_placeholder')" />
+          <x-ui.input name="company_name" type="text" :placeholder="__('register.form.company_placeholder')" />
         </x-ui.field>
 
         {{-- Master only --}}
         <div class="flex gap-3.5 max-[640px]:flex-col [&[hidden]]:hidden" data-for="master" @if ($role !== 'master') hidden @endif>
           <x-ui.field class="flex-1" :label="__('register.form.specialization_label')">
-            <x-ui.select :placeholder="__('register.form.select_placeholder')" :options="__('register.specializations')" />
+            <x-ui.select name="specialization" :placeholder="__('register.form.select_placeholder')" :options="__('register.specializations')" />
           </x-ui.field>
           <x-ui.field class="flex-1" :label="__('register.form.city_label')">
-            <x-ui.select :placeholder="__('register.form.select_placeholder')" :options="__('register.cities')" />
+            <x-ui.select name="city" :placeholder="__('register.form.select_placeholder')" :options="__('register.cities')" />
           </x-ui.field>
         </div>
 
         <div class="flex gap-3.5 max-[640px]:flex-col">
           <x-ui.field class="flex-1" :label="__('register.form.email_label')">
-            <x-ui.input type="email" :placeholder="__('register.form.email_placeholder')" required />
+            <x-ui.input name="email" type="email" :placeholder="__('register.form.email_placeholder')" required />
           </x-ui.field>
           <x-ui.field class="flex-1" :label="__('register.form.phone_label')">
-            <x-ui.input type="tel" :placeholder="__('register.form.phone_placeholder')" required />
+            <x-ui.input name="phone" type="tel" :placeholder="__('register.form.phone_placeholder')" required />
           </x-ui.field>
         </div>
         <div class="flex gap-3.5 max-[640px]:flex-col">
           <x-ui.field class="flex-1" :label="__('register.form.password_label')">
-            <x-ui.input type="password" :placeholder="__('register.form.password_placeholder')" required />
+            <x-ui.input name="password" type="password" :placeholder="__('register.form.password_placeholder')" required />
           </x-ui.field>
           <x-ui.field class="flex-1" :label="__('register.form.password_confirm_label')">
-            <x-ui.input type="password" :placeholder="__('register.form.password_confirm_placeholder')" required />
+            <x-ui.input name="password_confirmation" type="password" :placeholder="__('register.form.password_confirm_placeholder')" required />
           </x-ui.field>
         </div>
 
-        <x-ui.checkbox required class="gap-2.5"><span><a class="border-b border-yellow-line" href="#">{{ __('register.form.terms_link') }}</a> {{ __('register.form.terms_and') }} <a class="border-b border-yellow-line" href="#">{{ __('register.form.privacy_link') }}</a> {{ __('register.form.terms_agree') }}</span></x-ui.checkbox>
+        <x-ui.checkbox name="terms" required class="gap-2.5"><span><a class="border-b border-yellow-line" href="#">{{ __('register.form.terms_link') }}</a> {{ __('register.form.terms_and') }} <a class="border-b border-yellow-line" href="#">{{ __('register.form.privacy_link') }}</a> {{ __('register.form.terms_agree') }}</span></x-ui.checkbox>
 
         <x-ui.button variant="primary" type="submit" class="h-[54px] rounded-none text-lg font-semibold hover:brightness-[.93]">{{ __('register.form.submit') }}</x-ui.button>
         <p class="text-center text-[15px] text-black/60">{{ __('register.form.have_account') }} <a class="border-b-2 border-yellow-line font-semibold text-ink" href="{{ route('login') }}">{{ __('register.form.sign_in') }}</a></p>

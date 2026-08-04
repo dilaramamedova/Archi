@@ -1,12 +1,12 @@
-// Page module for "register": role selection (data-sel) + role-specific fields (data-for).
-// The initial role (?role=, default buyer) is rendered server-side by the Blade view,
-// so this module only reacts to clicks.
+import { authFetch, clearErrors, showErrors, setLoading } from '../shared/auth.js';
+
 export default function init() {
   const roles = document.querySelectorAll('#roles [data-role]');
   const form = document.getElementById('regForm');
   if (!roles.length || !form) return;
 
   const fields = form.querySelectorAll('[data-for]');
+  const roleInput = form.querySelector('[name=role]');
 
   const pick = (role) => {
     roles.forEach((r) => {
@@ -15,20 +15,54 @@ export default function init() {
     fields.forEach((el) => {
       el.hidden = el.dataset.for !== role;
     });
+    if (roleInput) roleInput.value = role;
   };
 
   roles.forEach((r) => r.addEventListener('click', () => pick(r.dataset.role)));
 
-  form.addEventListener('submit', (e) => {
+  const btn = form.querySelector('[type=submit]');
+  const ok = document.getElementById('okMsg');
+
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
-    try {
-      localStorage.setItem('archi-auth', '1');
-    } catch (err) {
-      /* storage unavailable */
+    clearErrors(form);
+    if (ok) ok.dataset.on = 'false';
+    setLoading(btn, true);
+
+    const data = {
+      first_name: form.querySelector('[name=first_name]').value,
+      last_name: form.querySelector('[name=last_name]').value,
+      email: form.querySelector('[name=email]').value,
+      phone: form.querySelector('[name=phone]').value,
+      password: form.querySelector('[name=password]').value,
+      password_confirmation: form.querySelector('[name=password_confirmation]').value,
+      role: roleInput.value,
+      terms: form.querySelector('[name=terms]')?.checked ? true : false,
+    };
+
+    const role = roleInput.value;
+    if (role === 'seller') {
+      data.company_name = form.querySelector('[name=company_name]')?.value ?? '';
     }
-    // <x-ui.alert> visibility is driven by data-on (ARCHITECTURE.md 7.1).
-    const ok = document.getElementById('okMsg');
-    if (ok) ok.dataset.on = 'true';
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (role === 'master') {
+      data.specialization = form.querySelector('[name=specialization]')?.value ?? '';
+      data.city = form.querySelector('[name=city]')?.value ?? '';
+    }
+
+    const res = await authFetch('/register', data);
+
+    if (res.ok) {
+      if (ok) {
+        ok.textContent = res.data.message;
+        ok.dataset.on = 'true';
+      }
+      form.reset();
+      pick('buyer');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      showErrors(form, res.errors, 'regErr');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    setLoading(btn, false);
   });
 }

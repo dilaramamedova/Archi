@@ -10,6 +10,7 @@ return [
     'favorites' => 'Favorites',
     'cart' => 'Cart',
     'sign_in' => 'Sign in',
+    'logout' => 'Sign out',
     'post_product' => 'Post a product',
 
     'sd_quick' => 'Quick search',

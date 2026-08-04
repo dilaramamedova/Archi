@@ -15,11 +15,12 @@
       <p class="sub">{{ __('login.head.subtitle') }}</p>
     </div>
     <div class="lm-ok" id="lmOk" data-on="false">{{ __('login.success') }}</div>
+    <div class="lm-err" id="lmErr" data-on="false"></div>
     <form class="lm-form" id="lmForm">
-      <div class="lm-field"><label for="lmIdentifier">{{ __('login.form.identifier_label') }}</label><input id="lmIdentifier" type="text" placeholder="{{ __('login.form.identifier_placeholder') }}" required></div>
-      <div class="lm-field"><label for="lmPassword">{{ __('login.form.password_label') }}</label><input id="lmPassword" type="password" placeholder="{{ __('login.form.password_placeholder') }}" required></div>
+      <div class="lm-field"><label for="lmIdentifier">{{ __('login.form.identifier_label') }}</label><input id="lmIdentifier" name="identifier" type="text" placeholder="{{ __('login.form.identifier_placeholder') }}" required></div>
+      <div class="lm-field"><label for="lmPassword">{{ __('login.form.password_label') }}</label><input id="lmPassword" name="password" type="password" placeholder="{{ __('login.form.password_placeholder') }}" required></div>
       <div class="lm-row">
-        <label class="rem"><input type="checkbox"> {{ __('login.form.remember') }}</label>
+        <label class="rem"><input type="checkbox" name="remember"> {{ __('login.form.remember') }}</label>
         <a href="#">{{ __('login.form.forgot') }}</a>
       </div>
       <button class="lm-submit" type="submit">{{ __('login.form.submit') }}</button>

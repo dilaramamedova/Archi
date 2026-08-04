@@ -11,7 +11,7 @@ return [
         'subtitle' => 'Hesabına gir — alıcı, satıcı və ya usta kabinetinə davam et.',
     ],
 
-    'success' => 'Giriş uğurlu oldu! (demo — backend qoşulmayıb)',
+    'success' => 'Giriş uğurlu oldu!',
 
     'form' => [
         'identifier_label' => 'E-poçt və ya telefon',
@@ -27,5 +27,13 @@ return [
 
     'modal' => [
         'close' => 'Bağla',
+    ],
+
+    'errors' => [
+        'invalid_credentials' => 'E-poçt/telefon və ya şifrə yanlışdır.',
+        'pending_approval' => 'Hesabınız hələ admin tərəfindən təsdiqlənməyib. Zəhmət olmasa gözləyin.',
+        'rejected' => 'Hesabınız rədd edilib. Əlavə məlumat üçün bizimlə əlaqə saxlayın.',
+        'blocked' => 'Hesabınız bloklanıb. Əlavə məlumat üçün bizimlə əlaqə saxlayın.',
+        'not_active' => 'Hesabınız aktiv deyil.',
     ],
 ];

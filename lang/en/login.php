@@ -11,7 +11,7 @@ return [
         'subtitle' => 'Sign in to your account — buyer, seller or master.',
     ],
 
-    'success' => 'Signed in successfully! (demo — no backend connected)',
+    'success' => 'Signed in successfully!',
 
     'form' => [
         'identifier_label' => 'E-mail or phone',
@@ -27,5 +27,13 @@ return [
 
     'modal' => [
         'close' => 'Close',
+    ],
+
+    'errors' => [
+        'invalid_credentials' => 'Invalid e-mail/phone or password.',
+        'pending_approval' => 'Your account has not been approved by an administrator yet. Please wait.',
+        'rejected' => 'Your account has been rejected. Please contact us for details.',
+        'blocked' => 'Your account has been blocked. Please contact us for details.',
+        'not_active' => 'Your account is not active.',
     ],
 ];

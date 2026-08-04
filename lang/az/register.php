@@ -11,7 +11,7 @@ return [
         'subtitle' => 'Hesab növünü seç — alıcı, satıcı, yoxsa usta/mütəxəssis kimi davam et.',
     ],
 
-    'success' => 'Qeydiyyat uğurla tamamlandı! (demo — backend qoşulmayıb)',
+    'success' => 'Qeydiyyat uğurla tamamlandı!',
 
     'roles' => [
         'label' => 'Hesab növü',
@@ -75,4 +75,6 @@ return [
         'shirvan' => 'Şirvan',
         'other' => 'Digər',
     ],
+
+    'pending_message' => 'Qeydiyyat uğurla tamamlandı! Hesabınız admin tərəfindən təsdiqləndikdən sonra daxil ola bilərsiniz.',
 ];

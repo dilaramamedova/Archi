@@ -1,7 +1,4 @@
-// Shared login modal — ported from the old archi.js (window.ARCHI.openLogin).
-// The markup is server-rendered by <x-login-modal/> in the layout, so this module only
-// wires the open/close behaviour. The navbar "sign in" link keeps its /login href, so
-// without JS the standalone page still works as the fallback.
+import { authFetch, setLoading } from './auth.js';
 
 const overlay = document.getElementById('lmOverlay');
 
@@ -19,15 +16,12 @@ function close() {
   delete document.body.dataset.lmLock;
 }
 
-// Any element carrying [data-login] opens the modal too (old behaviour).
-// On /login itself the navbar link just follows its href — a modal there would only
-// duplicate the page underneath it.
 const onLoginPage = document.body.dataset.page === 'login';
-const openers = onLoginPage ? '[data-login]' : '.signin .txt, [data-login]';
+const openers = onLoginPage ? '[data-login]' : '.signin .txt:not([data-user]):not(.nav-logout), [data-login]';
 
 document.querySelectorAll(openers).forEach((el) =>
   el.addEventListener('click', (e) => {
-    if (!overlay) return; // no modal on the page -> follow the /login href
+    if (!overlay) return;
     e.preventDefault();
     open();
   })
@@ -44,16 +38,36 @@ if (overlay) {
     if (e.key === 'Escape' && overlay.dataset.on === 'true') close();
   });
 
-  document.getElementById('lmForm')?.addEventListener('submit', (e) => {
+  const form = document.getElementById('lmForm');
+  const ok = document.getElementById('lmOk');
+  const err = document.getElementById('lmErr');
+  const btn = form?.querySelector('[type=submit]');
+
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    // Same flag the /login page and register.js write, so sell.js agrees on auth state.
-    try {
-      localStorage.setItem('archi-auth', '1');
-    } catch (err) {
-      /* storage unavailable */
+    if (ok) ok.dataset.on = 'false';
+    if (err) err.dataset.on = 'false';
+    if (btn) setLoading(btn, true);
+
+    const data = {
+      identifier: form.querySelector('[name=identifier]').value,
+      password: form.querySelector('[name=password]').value,
+      remember: form.querySelector('[name=remember]')?.checked ?? false,
+    };
+
+    const res = await authFetch('/login', data);
+
+    if (res.ok) {
+      if (ok) ok.dataset.on = 'true';
+      setTimeout(() => { window.location.href = res.data.redirect; }, 600);
+    } else {
+      const msg = res.errors?.identifier?.[0] ?? res.message ?? 'Error';
+      if (err) {
+        err.textContent = msg;
+        err.dataset.on = 'true';
+      }
+      if (btn) setLoading(btn, false);
     }
-    const ok = document.getElementById('lmOk');
-    if (ok) ok.dataset.on = 'true';
   });
 }
 

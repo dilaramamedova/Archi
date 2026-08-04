@@ -10,16 +10,17 @@
       </div>
 
       <x-ui.alert tone="ok" id="loginOk">{{ __('login.success') }}</x-ui.alert>
+      <x-ui.alert tone="error" id="loginErr"></x-ui.alert>
 
       <form class="flex flex-col gap-[18px]" id="loginForm">
         <x-ui.field :label="__('login.form.identifier_label')" for="loginIdentifier">
-          <x-ui.input id="loginIdentifier" type="text" :placeholder="__('login.form.identifier_placeholder')" required />
+          <x-ui.input id="loginIdentifier" name="identifier" type="text" :placeholder="__('login.form.identifier_placeholder')" required />
         </x-ui.field>
         <x-ui.field :label="__('login.form.password_label')" for="loginPassword">
-          <x-ui.input id="loginPassword" type="password" :placeholder="__('login.form.password_placeholder')" required />
+          <x-ui.input id="loginPassword" name="password" type="password" :placeholder="__('login.form.password_placeholder')" required />
         </x-ui.field>
         <div class="flex items-center justify-between text-sm">
-          <x-ui.checkbox>{{ __('login.form.remember') }}</x-ui.checkbox>
+          <x-ui.checkbox name="remember">{{ __('login.form.remember') }}</x-ui.checkbox>
           <a class="border-b border-yellow-line text-black/70" href="#">{{ __('login.form.forgot') }}</a>
         </div>
         <x-ui.button variant="primary" type="submit"

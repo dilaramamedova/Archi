@@ -12,6 +12,7 @@ return [
     'favorites' => 'Sevimlilər',
     'cart' => 'Səbət',
     'sign_in' => 'Daxil ol',
+    'logout' => 'Çıxış',
     'post_product' => 'Məhsul yerləşdir',
 
     /* --- search dropdown (built in JS, labels passed through data-* attributes) --- */
