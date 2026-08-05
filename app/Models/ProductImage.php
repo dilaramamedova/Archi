@@ -14,6 +14,10 @@ class ProductImage extends Model
 
     public array $translatable = ['alt_text'];
 
+    protected $attributes = [
+        'sort_order' => 0,
+    ];
+
     protected $casts = [
         'is_main' => 'boolean',
     ];

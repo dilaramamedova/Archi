@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\UserStatus;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Review;
@@ -75,12 +76,10 @@ class CatalogController extends Controller
         if ($request->filled('brand')) {
             $brandSlugs = array_filter(explode(',', $request->input('brand')));
             if (! empty($brandSlugs)) {
-                $query->where(function ($q) use ($brandSlugs) {
-                    foreach ($brandSlugs as $slug) {
-                        // Match brand name whose slug version equals the filter value
-                        $q->orWhereRaw('LOWER(REPLACE(REPLACE(brand, " ", "-"), ".", "")) LIKE ?', [$slug]);
-                    }
-                });
+                $brandIds = Brand::whereIn('slug', $brandSlugs)->pluck('id');
+                if ($brandIds->isNotEmpty()) {
+                    $query->whereIn('brand_id', $brandIds);
+                }
             }
         }
 
@@ -139,6 +138,10 @@ class CatalogController extends Controller
             ->take(5)
             ->get();
 
+        $filterBrands = Brand::active()->showInFilters()->ordered()
+            ->withCount(['products' => fn ($q) => $q->visible()->approved()])
+            ->get();
+
         return view('pages.catalog', compact(
             'categories',
             'products',
@@ -146,6 +149,7 @@ class CatalogController extends Controller
             'priceRange',
             'featuredSpecialists',
             'latestReviews',
+            'filterBrands',
         ));
     }
 }

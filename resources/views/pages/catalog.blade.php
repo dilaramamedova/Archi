@@ -106,25 +106,12 @@
 
       <div class="fs-div"></div>
 
-      {{-- TODO: Brand filters need a Brand model with product counts from DB --}}
       <div class="fs-block" id="brandBlock">
         <p class="fs-title">{{ __('catalog.filters.brand') }}</p>
-        @php
-            $brands = \App\Models\Product::visible()->approved()
-                ->whereNotNull('brand')->where('brand', '!=', '')
-                ->selectRaw('brand, count(*) as cnt')
-                ->groupBy('brand')
-                ->orderByDesc('cnt')
-                ->limit(10)
-                ->pluck('cnt', 'brand');
-        @endphp
-        @forelse ($brands as $brand => $count)
-          <div class="fs-check" data-brand="{{ \Illuminate\Support\Str::slug($brand) }}" data-on="{{ in_array(\Illuminate\Support\Str::slug($brand), $activeBrands) ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ $brand }}</span><span class="n">{{ $count }}</span></div>
+        @forelse ($filterBrands as $brandItem)
+          <div class="fs-check" data-brand="{{ $brandItem->slug }}" data-on="{{ in_array($brandItem->slug, $activeBrands) ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ $brandItem->name }}</span><span class="n">{{ $brandItem->products_count }}</span></div>
         @empty
-          <div class="fs-check" data-brand="marca_corona" data-on="false"><span class="fside-box fs-box"></span><span class="lbl">{{ __('catalog.filters.brand_marca_corona') }}</span><span class="n">—</span></div>
-          <div class="fs-check" data-brand="kutahya" data-on="false"><span class="fside-box fs-box"></span><span class="lbl">{{ __('catalog.filters.brand_kutahya') }}</span><span class="n">—</span></div>
-          <div class="fs-check" data-brand="vitra" data-on="false"><span class="fside-box fs-box"></span><span class="lbl">{{ __('catalog.filters.brand_vitra') }}</span><span class="n">—</span></div>
-          <div class="fs-check" data-brand="cersanit" data-on="false"><span class="fside-box fs-box"></span><span class="lbl">{{ __('catalog.filters.brand_cersanit') }}</span><span class="n">—</span></div>
+          <div class="fs-check" data-brand="no-brands" data-on="false"><span class="fside-box fs-box"></span><span class="lbl">—</span><span class="n">0</span></div>
         @endforelse
       </div>
 

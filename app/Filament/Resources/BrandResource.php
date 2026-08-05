@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\CategoryResource\Pages;
-use App\Models\Category;
+use App\Filament\Resources\BrandResource\Pages;
+use App\Models\Brand;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Schemas\Components\Section;
@@ -12,21 +12,21 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
-class CategoryResource extends Resource
+class BrandResource extends Resource
 {
-    protected static ?string $model = Category::class;
+    protected static ?string $model = Brand::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-squares-2x2';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-building-storefront';
     protected static string | \UnitEnum | null $navigationGroup = 'Kataloq';
-    protected static ?string $navigationLabel = 'Kateqoriyalar';
-    protected static ?string $modelLabel = 'Kateqoriya';
-    protected static ?string $pluralModelLabel = 'Kateqoriyalar';
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 4;
+    protected static ?string $navigationLabel = 'Brendlər';
+    protected static ?string $modelLabel = 'Brend';
+    protected static ?string $pluralModelLabel = 'Brendlər';
 
     public static function form(Schema $form): Schema
     {
         return $form->schema([
-            Section::make('Əsas məlumatlar')->schema([
+            Section::make()->schema([
                 Forms\Components\TextInput::make('name')
                     ->label('Ad')
                     ->required()
@@ -45,29 +45,16 @@ class CategoryResource extends Resource
                 Forms\Components\TextInput::make('slug')
                     ->label('Slug')
                     ->required()
-                    ->unique(ignoreRecord: true)
-                    ->maxLength(255),
+                    ->unique(ignoreRecord: true),
 
-                Forms\Components\Select::make('parent_id')
-                    ->label('Ana kateqoriya')
-                    ->relationship('parent', 'name')
-                    ->searchable()
-                    ->nullable()
-                    ->preload(),
+                Forms\Components\Textarea::make('short_description')
+                    ->label('Qısa təsvir')
+                    ->rows(2)
+                    ->translatable(),
 
-                Forms\Components\FileUpload::make('icon')
-                    ->label('İkon (SVG)')
-                    ->disk('public')
-                    ->directory('categories/icons')
-                    ->acceptedFileTypes(['image/svg+xml', 'image/png'])
-                    ->nullable(),
-
-                Forms\Components\FileUpload::make('image')
-                    ->label('Şəkil')
-                    ->image()
-                    ->disk('public')
-                    ->directory('categories/images')
-                    ->nullable(),
+                Forms\Components\RichEditor::make('description')
+                    ->label('Təsvir')
+                    ->translatable(),
 
                 Forms\Components\TextInput::make('sort_order')
                     ->label('Sıra')
@@ -78,8 +65,9 @@ class CategoryResource extends Resource
                     ->label('Aktiv')
                     ->default(true),
 
-                Forms\Components\Toggle::make('show_on_home')
-                    ->label('Ana səhifədə göstər')
+                Forms\Components\Toggle::make('show_in_filters')
+                    ->label('Filterlərdə göstər')
+                    ->helperText('Kataloq səhifəsində brend filteri kimi görünsün?')
                     ->default(false),
             ]),
         ]);
@@ -90,38 +78,31 @@ class CategoryResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable()->width(60),
-                Tables\Columns\ImageColumn::make('icon')->label('İkon')->width(40)->height(40),
                 Tables\Columns\TextColumn::make('name')->label('Ad')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('parent.name')->label('Ana kateqoriya')->placeholder('—'),
                 Tables\Columns\TextColumn::make('slug')->label('Slug'),
+                Tables\Columns\TextColumn::make('products_count')
+                    ->label('Məhsul sayı')
+                    ->counts('products')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('sort_order')->label('Sıra')->sortable(),
                 Tables\Columns\ToggleColumn::make('is_active')->label('Aktiv'),
-                Tables\Columns\ToggleColumn::make('show_on_home')->label('Ana səhifə'),
+                Tables\Columns\ToggleColumn::make('show_in_filters')->label('Filterdə'),
             ])
             ->defaultSort('sort_order')
             ->reorderable('sort_order')
-            ->filters([
-                Tables\Filters\SelectFilter::make('parent_id')
-                    ->label('Ana kateqoriya')
-                    ->relationship('parent', 'name')
-                    ->searchable()
-                    ->preload(),
-            ])
             ->actions([
                 Actions\EditAction::make(),
                 Actions\DeleteAction::make(),
             ])
-            ->bulkActions([
-                Actions\DeleteBulkAction::make(),
-            ]);
+            ->bulkActions([Actions\DeleteBulkAction::make()]);
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCategories::route('/'),
-            'create' => Pages\CreateCategory::route('/create'),
-            'edit' => Pages\EditCategory::route('/{record}/edit'),
+            'index' => Pages\ListBrands::route('/'),
+            'create' => Pages\CreateBrand::route('/create'),
+            'edit' => Pages\EditBrand::route('/{record}/edit'),
         ];
     }
 }

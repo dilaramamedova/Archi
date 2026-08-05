@@ -3,7 +3,10 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
+use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductBadge;
+use App\Models\SubCategory;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Schemas\Components\Tabs;
@@ -35,7 +38,11 @@ class ProductResource extends Resource
                         ->live(onBlur: true)
                         ->afterStateUpdated(function ($state, callable $set, $record) {
                             if (! $record) {
-                                $set('slug', \Illuminate\Support\Str::slug($state));
+                                $value = $state;
+                                while (is_array($value)) {
+                                    $value = $value['az'] ?? reset($value) ?: '';
+                                }
+                                $set('slug', \Illuminate\Support\Str::slug((string) $value));
                             }
                         }),
 
@@ -60,10 +67,29 @@ class ProductResource extends Resource
                         ->relationship('category', 'name')
                         ->searchable()
                         ->preload()
+                        ->live()
+                        ->afterStateUpdated(fn (callable $set) => $set('sub_category_id', null))
                         ->nullable(),
 
-                    Forms\Components\TextInput::make('brand')
+                    Forms\Components\Select::make('sub_category_id')
+                        ->label('Alt kateqoriya')
+                        ->relationship(
+                            'subCategory',
+                            'name',
+                            modifyQueryUsing: fn ($query) => $query->active()->ordered()
+                        )
+                        ->searchable()
+                        ->preload()
+                        ->noOptionsMessage('Aktiv alt kateqoriya tapılmadı.')
+                        ->noSearchResultsMessage('Axtarışa uyğun alt kateqoriya tapılmadı.')
+                        ->required()
+                        ->visible(fn (callable $get) => (bool) $get('category_id')),
+
+                    Forms\Components\Select::make('brand_id')
                         ->label('Brend')
+                        ->relationship('brand', 'name')
+                        ->searchable()
+                        ->preload()
                         ->nullable(),
 
                     Forms\Components\TextInput::make('sku')
@@ -110,6 +136,11 @@ class ProductResource extends Resource
                         ->numeric()
                         ->default(0),
 
+                    Forms\Components\TextInput::make('sold_count')
+                        ->label('Satış sayı')
+                        ->numeric()
+                        ->default(0),
+
                     Forms\Components\TextInput::make('min_order')
                         ->label('Min. sifariş')
                         ->numeric()
@@ -133,21 +164,7 @@ class ProductResource extends Resource
                                 ->label('Şəkil')
                                 ->image()
                                 ->disk('public')
-                                ->directory('products')
-                                ->getUploadedFileUrlUsing(function ($file) {
-                                    if (! $file) {
-                                        return null;
-                                    }
-                                    // New uploads stored on the public disk (storage/app/public/)
-                                    if (\Illuminate\Support\Facades\Storage::disk('public')->exists($file)) {
-                                        return \Illuminate\Support\Facades\Storage::disk('public')->url($file);
-                                    }
-                                    // Legacy images stored directly in public/ (e.g. assets/...)
-                                    if (file_exists(public_path($file))) {
-                                        return asset($file);
-                                    }
-                                    return null;
-                                }),
+                                ->directory('products'),
                             Forms\Components\Toggle::make('is_main')->label('Əsas şəkil'),
                             Forms\Components\TextInput::make('sort_order')->label('Sıra')->numeric()->default(0),
                         ])
@@ -164,15 +181,24 @@ class ProductResource extends Resource
                         ->keyLabel('Parametr')
                         ->valueLabel('Dəyər'),
 
-                    Forms\Components\KeyValue::make('features')
+                    Forms\Components\RichEditor::make('features_text')
                         ->label('Özəlliklər')
-                        ->keyLabel('Özəllik')
-                        ->valueLabel('Dəyər'),
+                        ->translatable(),
 
-                    Forms\Components\TagsInput::make('accessories')
-                        ->label('Aksessuarlar (ID-lər)')
-                        ->placeholder('Məhsul ID əlavə edin')
-                        ->nullable(),
+                    Forms\Components\Select::make('accessoryProducts')
+                        ->label('Aksessuarlar')
+                        ->relationship('accessoryProducts', 'name')
+                        ->multiple()
+                        ->searchable()
+                        ->preload(),
+
+                    Forms\Components\Select::make('badges')
+                        ->label('Badge-lər')
+                        ->relationship('badges', 'name')
+                        ->multiple()
+                        ->searchable()
+                        ->preload()
+                        ->maxItems(3),
 
                     Forms\Components\Select::make('condition')
                         ->label('Vəziyyət')

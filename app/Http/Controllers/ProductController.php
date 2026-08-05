@@ -13,7 +13,7 @@ class ProductController extends Controller
         $product = Product::where('slug', $slug)
             ->visible()
             ->approved()
-            ->with(['images', 'category', 'user.sellerProfile'])
+            ->with(['images', 'category', 'user.sellerProfile', 'badges'])
             ->firstOrFail();
 
         // Eager load approved reviews with their users

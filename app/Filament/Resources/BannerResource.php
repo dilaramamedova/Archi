@@ -17,7 +17,8 @@ class BannerResource extends Resource
     protected static ?string $model = Banner::class;
 
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-photo';
-    protected static string | \UnitEnum | null $navigationGroup = 'Kontent';
+    protected static string | \UnitEnum | null $navigationGroup = 'Ana səhifə';
+    protected static ?int $navigationSort = 1;
     protected static ?string $navigationLabel = 'Bannerlər';
     protected static ?string $modelLabel = 'Banner';
     protected static ?string $pluralModelLabel = 'Bannerlər';

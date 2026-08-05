@@ -53,8 +53,13 @@
         </div>
         <div class="pd-main">
           <div class="badges">
-            @if ($product->is_sale)<span class="b new">{{ __('common.badge_new') }}</span>@endif
-            <span class="b">{{ $product->stock > 0 ? __('common.badge_in_stock') : __('common.badge_out_of_stock') }}</span>
+            @foreach ($product->badges as $badge)
+              <span class="b" style="background:{{ $badge->bg_color }};color:{{ $badge->color }}">{{ $badge->name }}</span>
+            @endforeach
+            @if ($product->badges->isEmpty())
+              @if ($product->is_sale)<span class="b new">{{ __('common.badge_new') }}</span>@endif
+              <span class="b">{{ $product->stock > 0 ? __('common.badge_in_stock') : __('common.badge_out_of_stock') }}</span>
+            @endif
           </div>
           <div class="heart" id="pdHeartTop" data-liked="false"><img src="/assets/icon-heart-pointed.svg" alt="{{ __('product.gallery.favorite') }}"></div>
           <img id="pdMainImg" src="{{ $mainImg }}" alt="{{ $product->name }}">
@@ -75,7 +80,7 @@
           <span class="rev" data-goto="reviews">{{ $reviewsCount }} {{ __('product.info.reviews') }}</span>
           <span class="dot"></span>
           @endif
-          <span class="sold">{{ __('product.info.sold') }}</span>
+          <span class="sold">{{ $product->sold_count ? number_format($product->sold_count) . '+ ' . __('product.info.sold') : __('product.info.sold') }}</span>
         </div>
 
         <div class="pd-price">
@@ -94,13 +99,17 @@
         <div class="pd-line"></div>
 
         <div class="pd-feats">
-          @forelse ($product->features ?? [] as $key => $feat)
-            <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ is_string($key) ? $key . ': ' . $feat : $feat }}</div>
-          @empty
+          @if ($product->features_text)
+            <div class="f-rich">{!! $product->features_text !!}</div>
+          @elseif ($product->features)
+            @foreach ($product->features as $key => $feat)
+              <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ is_string($key) ? $key . ': ' . $feat : $feat }}</div>
+            @endforeach
+          @else
             <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ __('product.info.feat_1') }}</div>
             <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ __('product.info.feat_2') }}</div>
             <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ __('product.info.feat_3') }}</div>
-          @endforelse
+          @endif
         </div>
 
         <div class="pd-stock"><i></i> {{ $product->stock > 0 ? __('product.info.stock') : __('product.info.out_of_stock') }}</div>
@@ -161,11 +170,11 @@
             <div class="ps-stat"><b>{{ number_format($sellerProductCount) }}</b><span>{{ __('product.seller.products_label') }}</span></div>
             <div class="ps-stat"><b>{{ __('product.seller.response') }}</b><span>{{ __('product.seller.response_label') }}</span></div>
           </div>
-          <div class="ps-actions">
+          {{-- <div class="ps-actions">
             <x-ui.button variant="primary" href="#"
                 class="h-[46px] flex-1 rounded-none text-sm font-semibold duration-200 hover:brightness-[.93]">{{ __('product.seller.visit') }}</x-ui.button>
             <button class="ps-btn" type="button">{{ __('product.seller.follow') }}</button>
-          </div>
+          </div> --}}
         </div>
       </div>
     </div>
@@ -265,121 +274,14 @@
     </div>
     @endif
 
-    {{-- ===================== RATING / REVIEWS ===================== --}}
+    {{-- ===================== RATING / REVIEWS (commented out) ===================== --}}
+    {{--
     <div class="pd-section" id="reviews">
       <div class="sec-tag"><span class="line"></span><p>{{ __('product.reviews.tag') }}</p></div>
       <div class="sec-title mb-6">{{ __('product.reviews.title') }}</div>
-
-      <div class="rev-summary">
-        <div class="rs-score">
-          <div class="num">{{ number_format($avgRating, 1) }}</div>
-          <div class="s"><x-ui.stars :rating="$avgRating" /></div>
-          <div class="c1">{{ $totalRatings }} {{ __('product.reviews.ratings') }}</div>
-          <div class="c2">{{ $reviewsCount }} {{ __('product.reviews.written') }}</div>
-        </div>
-        <div class="rs-div"></div>
-        <div class="rs-dist" id="rsDist">
-          @foreach ($dist as $stars => $count)
-            <div class="row">
-              <span class="st">{{ $stars }} <img src="/assets/icon-star-yellow.svg" alt=""></span>
-              <span class="track"><span style="width:{{ $distMax > 0 ? round($count / $distMax * 100) : 0 }}%"></span></span>
-              <span class="cnt">{{ $count }}</span>
-            </div>
-          @endforeach
-        </div>
-        <div class="rs-div"></div>
-        <div class="rs-rec">
-          @php
-              $recommendPct = $totalRatings > 0 ? round(($ratingCounts->get(4, 0) + $ratingCounts->get(5, 0)) / $totalRatings * 100) : 0;
-          @endphp
-          <div class="num">{{ $recommendPct }}%</div>
-          <div class="t">{{ __('product.reviews.recommend') }}</div>
-          <div class="track"><span style="width:{{ $recommendPct }}%"></span></div>
-        </div>
-      </div>
-
-      <div class="rev-filter">
-        <button type="button" data-on="true" data-filter="helpful">{{ __('product.reviews.filter_helpful') }}</button>
-        <button type="button" data-on="false" data-filter="newest">{{ __('product.reviews.filter_newest') }}</button>
-        <button type="button" data-on="false" data-filter="photo">{{ __('product.reviews.filter_photo') }}</button>
-        <button type="button" data-on="false" data-filter="5star">{{ __('product.reviews.filter_5star') }}</button>
-      </div>
-
-      {{-- Write a review form --}}
-      <div class="rev-write" id="revWrite">
-        @auth
-          <div id="revFormWrap">
-            <h3 class="rev-write-title">{{ __('product.reviews.write_title') }}</h3>
-            <form id="revForm" data-url="{{ route('api.reviews.store') }}">
-              @csrf
-              <input type="hidden" name="reviewable_type" value="product">
-              <input type="hidden" name="reviewable_id" value="{{ $product->id }}">
-              <div class="rev-stars-input" id="revStarsInput">
-                <label>{{ __('product.reviews.your_rating') }}</label>
-                <div class="stars-select" data-rating="0">
-                  @for ($s = 1; $s <= 5; $s++)
-                    <button type="button" class="star-btn" data-star="{{ $s }}" aria-label="{{ $s }} ulduz">
-                      <img src="/assets/icon-star-yellow.svg" alt="" style="opacity:0.3">
-                    </button>
-                  @endfor
-                </div>
-                <input type="hidden" name="rating" id="revRating" value="">
-              </div>
-              <div class="rev-comment-input">
-                <textarea name="comment" id="revComment" rows="4" maxlength="1000" placeholder="{{ __('product.reviews.comment_placeholder') }}" required></textarea>
-              </div>
-              <button type="submit" class="rev-submit">{{ __('product.reviews.submit') }}</button>
-            </form>
-            <div id="revSuccess" style="display:none" class="rev-success">
-              <img src="/assets/icon-check-green.svg" alt="" style="width:20px;height:20px">
-              <span>{{ __('product.reviews.pending_message') }}</span>
-            </div>
-            <div id="revError" style="display:none" class="rev-error"></div>
-          </div>
-        @else
-          <div class="rev-login-prompt">
-            <p>{{ __('product.reviews.login_prompt') }} <a href="{{ route('login') }}">{{ __('product.reviews.login_link') }}</a>.</p>
-          </div>
-        @endauth
-      </div>
-
-      <div class="rev-cards" id="revCards">
-        @php
-            $avatarColors = [
-                ['bg' => '#eef1f4', 'fg' => '#5a6472'],
-                ['bg' => '#e8f5ec', 'fg' => '#2f7d44'],
-                ['bg' => '#fdf3e3', 'fg' => '#b07626'],
-                ['bg' => '#e9f0fb', 'fg' => '#3c62a8'],
-            ];
-            $approvedReviews = $product->reviews->where('status', 'approved');
-        @endphp
-        @forelse ($approvedReviews as $i => $review)
-          @php $color = $avatarColors[$i % count($avatarColors)]; @endphp
-          <div class="rev-card" data-rating="{{ $review->rating }}" data-date="{{ $review->created_at->timestamp }}" data-helpful="{{ $review->helpful_count ?? 0 }}" data-has-photo="{{ $review->photos ? 'true' : 'false' }}">
-            <div class="h">
-              <div class="av" style="background:{{ $color['bg'] }};color:{{ $color['fg'] }}">{{ mb_strtoupper(mb_substr($review->user->name ?? 'U', 0, 1)) }}</div>
-              <div>
-                <div class="nm">{{ $review->user->name ?? __('product.reviews.anonymous') }}</div>
-                @if ($review->is_verified_purchase)
-                  <div class="vf"><img src="/assets/icon-check-green.svg" alt="">{{ __('product.reviews.verified') }}</div>
-                @endif
-              </div>
-            </div>
-            <div class="sd"><span class="s"><x-ui.stars :rating="$review->rating" /></span><span class="date">{{ $review->created_at->format('d.m.Y') }}</span></div>
-            <div class="txt">{{ $review->comment }}</div>
-            <button type="button" class="help" data-on="false" aria-pressed="false"
-                    data-review-id="{{ $review->id }}"
-                    data-url="{{ route('api.reviews.helpful', $review) }}">{{ __('product.reviews.helpful') }}&nbsp;&nbsp;&middot;&nbsp;&nbsp;<span class="n">{{ $review->helpful_count ?? 0 }}</span></button>
-          </div>
-        @empty
-          <p class="text-center text-gray-500 py-8">{{ __('product.reviews.empty') }}</p>
-        @endforelse
-      </div>
-
-      {{-- No reviews route exists, so this stays a plain label (not an <a>) — it must
-           not advertise a link it cannot follow. --}}
-      <div class="rev-all"><span class="sec-more2">{{ __('product.reviews.all') }}&nbsp;&nbsp;→</span></div>
+      ...
     </div>
+    --}}
 
   </div></div>
 </section>

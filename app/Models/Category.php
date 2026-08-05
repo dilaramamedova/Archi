@@ -11,12 +11,13 @@ class Category extends Model
 {
     use HasTranslations;
 
-    protected $fillable = ['parent_id', 'name', 'slug', 'icon', 'image', 'sort_order', 'is_active'];
+    protected $fillable = ['parent_id', 'name', 'slug', 'icon', 'image', 'sort_order', 'is_active', 'show_on_home'];
 
     public array $translatable = ['name'];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'show_on_home' => 'boolean',
     ];
 
     public function parent(): BelongsTo
@@ -47,5 +48,10 @@ class Category extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order');
+    }
+
+    public function scopeShowOnHome($query)
+    {
+        return $query->where('show_on_home', true);
     }
 }

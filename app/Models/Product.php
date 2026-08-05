@@ -4,8 +4,10 @@ namespace App\Models;
 
 use App\Services\SearchService;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\Brand;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Spatie\Translatable\HasTranslations;
@@ -16,7 +18,7 @@ class Product extends Model
 
     protected $guarded = ['id'];
 
-    public array $translatable = ['name', 'description'];
+    public array $translatable = ['name', 'description', 'features_text'];
 
     protected $casts = [
         'price' => 'decimal:2',
@@ -43,6 +45,11 @@ class Product extends Model
         return $this->belongsTo(Category::class);
     }
 
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
     public function images(): HasMany
     {
         return $this->hasMany(ProductImage::class)->orderBy('sort_order');
@@ -56,6 +63,21 @@ class Product extends Model
     public function reviews(): MorphMany
     {
         return $this->morphMany(Review::class, 'reviewable');
+    }
+
+    public function subCategory(): BelongsTo
+    {
+        return $this->belongsTo(SubCategory::class);
+    }
+
+    public function badges(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductBadge::class, 'badge_product');
+    }
+
+    public function accessoryProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'product_accessory', 'product_id', 'accessory_id');
     }
 
     public function wishlists(): HasMany
@@ -104,8 +126,8 @@ class Product extends Model
         return $query->where(function (Builder $q) use ($terms) {
             foreach ($terms as $t) {
                 $q->orWhere('name', 'like', "%{$t}%")
-                  ->orWhere('brand', 'like', "%{$t}%")
-                  ->orWhere('description', 'like', "%{$t}%");
+                  ->orWhere('description', 'like', "%{$t}%")
+                  ->orWhereHas('brand', fn (Builder $bq) => $bq->where('name', 'like', "%{$t}%"));
             }
 
             // Also match products whose category name matches any term

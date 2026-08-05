@@ -8,6 +8,8 @@ use App\Models\BlogPost;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\PromoBanner;
+use App\Models\SaleBanner;
+use App\Models\ServiceIcon;
 use App\Models\SpecialistProfile;
 
 class HomeController extends Controller
@@ -20,7 +22,7 @@ class HomeController extends Controller
 
         $heroRole = Banner::position('hero_role')->active()->ordered()->get();
 
-        $categories = Category::roots()->active()->ordered()->take(7)->get();
+        $categories = Category::roots()->active()->showOnHome()->ordered()->get();
 
         $saleProducts = Product::visible()->approved()->sale()
             ->with(['images', 'category'])
@@ -47,10 +49,15 @@ class HomeController extends Controller
 
         $promoBanners = PromoBanner::active()->ordered()->get();
 
+        $serviceIcons = ServiceIcon::active()->ordered()->get();
+
+        $saleBanners = SaleBanner::active()->ordered()->get();
+
         return view('pages.home', compact(
             'heroMain', 'heroPromo', 'heroRole',
             'categories', 'saleProducts', 'featuredProducts',
-            'specialists', 'blogPosts', 'promoBanners'
+            'specialists', 'blogPosts', 'promoBanners',
+            'serviceIcons', 'saleBanners'
         ));
     }
 }

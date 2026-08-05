@@ -129,10 +129,14 @@
 {{-- ===================== SERVICE STRIP ===================== --}}
 <div class="service-strip">
   <div class="inner">
-    <div class="svc"><span class="ic"><img src="/assets/icon-user-grey.svg" alt=""></span><div><div class="t1">{{ __('home.services.masters_t1') }}</div><div class="t2">{{ __('home.services.masters_t2') }}</div></div></div>
-    <div class="svc"><span class="ic"><img src="/assets/icon-truck-grey.svg" alt=""></span><div><div class="t1">{{ __('home.services.delivery_t1') }}</div><div class="t2">{{ __('home.services.delivery_t2') }}</div></div></div>
-    <div class="svc"><span class="ic"><img src="/assets/icon-shield-grey.svg" alt=""></span><div><div class="t1">{{ __('home.services.payment_t1') }}</div><div class="t2">{{ __('home.services.payment_t2') }}</div></div></div>
-    <div class="svc"><span class="ic"><img src="/assets/icon-chat-grey.svg" alt=""></span><div><div class="t1">{{ __('home.services.consult_t1') }}</div><div class="t2">{{ __('home.services.consult_t2') }}</div></div></div>
+    @forelse ($serviceIcons as $svc)
+      <div class="svc"><span class="ic"><img src="{{ $svc->icon_url }}" alt=""></span><div><div class="t1">{{ $svc->title }}</div><div class="t2">{{ $svc->text }}</div></div></div>
+    @empty
+      <div class="svc"><span class="ic"><img src="/assets/icon-user-grey.svg" alt=""></span><div><div class="t1">{{ __('home.services.masters_t1') }}</div><div class="t2">{{ __('home.services.masters_t2') }}</div></div></div>
+      <div class="svc"><span class="ic"><img src="/assets/icon-truck-grey.svg" alt=""></span><div><div class="t1">{{ __('home.services.delivery_t1') }}</div><div class="t2">{{ __('home.services.delivery_t2') }}</div></div></div>
+      <div class="svc"><span class="ic"><img src="/assets/icon-shield-grey.svg" alt=""></span><div><div class="t1">{{ __('home.services.payment_t1') }}</div><div class="t2">{{ __('home.services.payment_t2') }}</div></div></div>
+      <div class="svc"><span class="ic"><img src="/assets/icon-chat-grey.svg" alt=""></span><div><div class="t1">{{ __('home.services.consult_t1') }}</div><div class="t2">{{ __('home.services.consult_t2') }}</div></div></div>
+    @endforelse
   </div>
 </div>
 
@@ -155,7 +159,15 @@
 {{-- ===================== SALE MARQUEE ===================== --}}
 <div class="sale-marquee" aria-hidden="true">
   <div class="sale-track">
-    @for ($i = 0; $i < 10; $i++)<span>{{ __('home.sale.marquee') }}</span>@endfor
+    @if($saleBanners->isNotEmpty())
+      @for ($i = 0; $i < 10; $i++)
+        @foreach($saleBanners as $sb)
+          <span>{!! strip_tags($sb->title) !!}</span>
+        @endforeach
+      @endfor
+    @else
+      @for ($i = 0; $i < 10; $i++)<span>{{ __('home.sale.marquee') }}</span>@endfor
+    @endif
   </div>
 </div>
 
@@ -171,7 +183,7 @@
         </div>
       </div>
       @if($promo->code)
-        <button class="pb-copy" type="button" data-code="{{ $promo->code }}" data-on="false">{{ $promo->code }} · <span class="pb-swap"><span class="pb-copy-label">{{ __('home.promo.copy') }}</span><span class="pb-copied-label">{{ __('home.promo.copied') }}</span></span></button>
+        <button class="pb-copy" type="button" data-code="{{ $promo->code }}" data-on="false">{{ $promo->code }}</button>
       @elseif($promo->button_url)
         <a class="pb-copy" href="{{ $promo->button_url }}">{{ $promo->button_text ?? __('common.view_details') }}</a>
       @endif
@@ -185,7 +197,7 @@
           <p>{{ __('home.promo.text_before') }} <b>ARCHI60</b> {{ __('home.promo.text_after') }}</p>
         </div>
       </div>
-      <button class="pb-copy" type="button" data-code="ARCHI60" data-on="false">ARCHI60 · <span class="pb-swap"><span class="pb-copy-label">{{ __('home.promo.copy') }}</span><span class="pb-copied-label">{{ __('home.promo.copied') }}</span></span></button>
+      <button class="pb-copy" type="button" data-code="ARCHI60" data-on="false">ARCHI60</button>
     </div>
   @endif
   <x-section-head :tag="__('home.sale.tag')" :title="__('home.sale.title')" :more="route('catalog', ['sale' => 1])" />
@@ -230,7 +242,7 @@
         </div>
       </div>
       @if($promo2->code)
-        <button class="pb-copy" type="button" data-code="{{ $promo2->code }}" data-on="false">{{ $promo2->code }} · <span class="pb-swap"><span class="pb-copy-label">{{ __('home.promo.copy') }}</span><span class="pb-copied-label">{{ __('home.promo.copied') }}</span></span></button>
+        <button class="pb-copy" type="button" data-code="{{ $promo2->code }}" data-on="false">{{ $promo2->code }}</button>
       @elseif($promo2->button_url)
         <a class="pb-copy" href="{{ $promo2->button_url }}">{{ $promo2->button_text ?? __('common.view_details') }}</a>
       @endif
@@ -244,7 +256,7 @@
           <p>{{ __('home.promo.text_before') }} <b>ARCHI15</b> {{ __('home.promo.text_after') }}</p>
         </div>
       </div>
-      <button class="pb-copy" type="button" data-code="ARCHI15" data-on="false">ARCHI15 · <span class="pb-swap"><span class="pb-copy-label">{{ __('home.promo.copy') }}</span><span class="pb-copied-label">{{ __('home.promo.copied') }}</span></span></button>
+      <button class="pb-copy" type="button" data-code="ARCHI15" data-on="false">ARCHI15</button>
     </div>
   @endif
   <x-section-head :tag="__('home.products.tag')" :title="__('home.products.title')" :more="route('search', ['tab' => 'prod'])" />

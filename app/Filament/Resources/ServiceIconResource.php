@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\PromoBannerResource\Pages;
-use App\Models\PromoBanner;
+use App\Filament\Resources\ServiceIconResource\Pages;
+use App\Models\ServiceIcon;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Schemas\Components\Section;
@@ -12,28 +12,30 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
-class PromoBannerResource extends Resource
+class ServiceIconResource extends Resource
 {
-    protected static ?string $model = PromoBanner::class;
+    protected static ?string $model = ServiceIcon::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-megaphone';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-sparkles';
     protected static string | \UnitEnum | null $navigationGroup = 'Ana səhifə';
-    protected static ?int $navigationSort = 3;
-    protected static ?string $navigationLabel = 'Kampaniya bannerləri';
-    protected static ?string $modelLabel = 'Kampaniya banneri';
-    protected static ?string $pluralModelLabel = 'Kampaniya bannerləri';
+    protected static ?string $navigationLabel = 'Xidmət ikonları';
+    protected static ?string $modelLabel = 'Xidmət ikonu';
+    protected static ?string $pluralModelLabel = 'Xidmət ikonları';
+    protected static ?int $navigationSort = 2;
 
     public static function form(Schema $form): Schema
     {
         return $form->schema([
             Section::make()->schema([
-                Forms\Components\TextInput::make('badge_text')->label('Badge mətni')->translatable(),
                 Forms\Components\TextInput::make('title')->label('Başlıq')->required()->translatable(),
-                Forms\Components\Textarea::make('description')->label('Açıqlama')->rows(2)->translatable(),
-                Forms\Components\TextInput::make('code')->label('Promo kodu')->nullable(),
-                Forms\Components\TextInput::make('button_text')->label('Düymə mətni')->translatable(),
-                Forms\Components\TextInput::make('button_url')->label('Düymə linki')->nullable(),
-                Forms\Components\ColorPicker::make('background_color')->label('Arxa plan rəngi')->nullable(),
+                Forms\Components\TextInput::make('text')->label('Alt yazı')->translatable(),
+
+                Forms\Components\FileUpload::make('icon')
+                    ->label('İkon')
+                    ->image()
+                    ->disk('public')
+                    ->directory('service-icons'),
+
                 Forms\Components\TextInput::make('sort_order')->label('Sıra')->numeric()->default(0),
                 Forms\Components\Toggle::make('is_active')->label('Aktiv')->default(true),
             ]),
@@ -44,8 +46,9 @@ class PromoBannerResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('icon')->label('İkon')->width(40)->height(40),
                 Tables\Columns\TextColumn::make('title')->label('Başlıq')->limit(40),
-                Tables\Columns\TextColumn::make('code')->label('Kod')->badge(),
+                Tables\Columns\TextColumn::make('text')->label('Alt yazı')->limit(40),
                 Tables\Columns\TextColumn::make('sort_order')->label('Sıra')->sortable(),
                 Tables\Columns\ToggleColumn::make('is_active')->label('Aktiv'),
             ])
@@ -61,9 +64,9 @@ class PromoBannerResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListPromoBanners::route('/'),
-            'create' => Pages\CreatePromoBanner::route('/create'),
-            'edit' => Pages\EditPromoBanner::route('/{record}/edit'),
+            'index' => Pages\ListServiceIcons::route('/'),
+            'create' => Pages\CreateServiceIcon::route('/create'),
+            'edit' => Pages\EditServiceIcon::route('/{record}/edit'),
         ];
     }
 }
