@@ -67,7 +67,7 @@
         @foreach ($values as $value)
           <x-ui.card class="about-value flex flex-col gap-3 overflow-hidden px-[22px] py-6">
             <span class="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-yellow">
-              <img class="size-6" src="{{ $value->icon }}" alt="">
+              <img class="size-6" src="{{ storage_url($value->icon) }}" alt="">
             </span>
             <h3 class="text-lg leading-[normal] font-bold text-ink">{{ $value->title }}</h3>
             <p class="text-[13px] leading-[1.55] text-black/60">{{ $value->description }}</p>

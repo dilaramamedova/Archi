@@ -1,17 +1,3 @@
-{{--
-  A row of star icons with support for filled, half-filled, and empty stars
-  based on a numeric rating.
-
-  Example:
-    <x-ui.stars :rating="4.5" />
-    <x-ui.stars :rating="$avgRating" />
-    <x-ui.stars />  {{-- defaults to 0 (all empty) --}}
-
-  Props:
-    rating — numeric rating 0–5 (default 0)
-    count  — total number of stars (default 5)
-    icon   — filled star icon path (default /assets/icon-star-yellow.svg)
---}}
 @props([
     'rating' => 0,
     'count' => 5,

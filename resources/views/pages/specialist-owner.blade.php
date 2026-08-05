@@ -78,7 +78,7 @@
 
       <div class="spo-id">
         @if($profile?->avatar_path)
-          <img class="spo-ava" src="{{ Storage::url($profile->avatar_path) }}" alt="{{ $user->name }}">
+          <img class="spo-ava" src="{{ storage_url($profile->avatar_path) }}" alt="{{ $user->name }}">
         @else
           <div class="spo-ava" aria-hidden="true">{{ $initials ?: __('specialist-owner.id.initials_fallback') }}</div>
         @endif
@@ -153,7 +153,7 @@
         @foreach (array_chunk($portfolioItems->all(), 3) as $row)
           <div class="spo-grow">
             @foreach ($row as $item)
-              <a class="spo-tile" href="{{ route('specialist.cabinet.portfolio') }}"><img src="{{ Storage::url($item->image_path) }}" alt="{{ $item->title ?? '' }}"></a>
+              <a class="spo-tile" href="{{ route('specialist.cabinet.portfolio') }}"><img src="{{ storage_url($item->image_path) }}" alt="{{ $item->title ?? '' }}"></a>
             @endforeach
           </div>
         @endforeach

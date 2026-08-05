@@ -154,11 +154,24 @@ function csrf() {
   return document.querySelector('meta[name="csrf-token"]')?.content || '';
 }
 
+function isGuest() {
+  return !document.querySelector('[data-user]');
+}
+
+function requireAuth() {
+  if (isGuest()) {
+    window.location.href = '/login';
+    return true;
+  }
+  return false;
+}
+
 function initHelpful() {
   document.querySelectorAll('.rev-card .help').forEach((btn) => {
     const n = btn.querySelector('.n');
     if (!n) return;
     btn.addEventListener('click', async () => {
+      if (requireAuth()) return;
       const url = btn.dataset.url;
       if (!url) {
         const on = btn.dataset.on !== 'true';
@@ -248,6 +261,7 @@ function initWish() {
 
   els.forEach((el) => {
     el.addEventListener('click', async () => {
+      if (requireAuth()) return;
       const nowLiked = el.dataset.liked !== 'true';
       setAll(nowLiked);
 
@@ -283,10 +297,37 @@ function initTabs() {
 
 function initReviewFilter() {
   const buttons = [...document.querySelectorAll('.rev-filter button')];
+  const container = document.getElementById('revCards');
+  if (!container) return;
+
+  function applyFilter(filter) {
+    const cards = [...container.querySelectorAll('.rev-card')];
+    cards.forEach((c) => (c.style.display = ''));
+
+    if (filter === '5star') {
+      cards.forEach((c) => {
+        if (+c.dataset.rating !== 5) c.style.display = 'none';
+      });
+    } else if (filter === 'photo') {
+      cards.forEach((c) => {
+        if (c.dataset.hasPhoto !== 'true') c.style.display = 'none';
+      });
+    }
+
+    const visible = cards.filter((c) => c.style.display !== 'none');
+    if (filter === 'newest') {
+      visible.sort((a, b) => +b.dataset.date - +a.dataset.date);
+    } else if (filter === 'helpful') {
+      visible.sort((a, b) => +b.dataset.helpful - +a.dataset.helpful);
+    }
+    visible.forEach((c) => container.appendChild(c));
+  }
+
   buttons.forEach((b) =>
     b.addEventListener('click', () => {
       buttons.forEach((x) => (x.dataset.on = 'false'));
       b.dataset.on = 'true';
+      applyFilter(b.dataset.filter);
     })
   );
 }

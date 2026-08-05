@@ -6,11 +6,11 @@
 @php
     // Hero promo carousel: image + target of each slide, read by resources/js/pages/home.js
     $promoSlides = $heroPromo->isNotEmpty()
-        ? $heroPromo->map(fn ($b) => ['img' => $b->image, 'href' => $b->button_url ?? route('product')])->toArray()
+        ? $heroPromo->map(fn ($b) => ['img' => $b->image_url, 'href' => $b->button_url ?? route('product'), 'btn' => strip_tags($b->button_text ?? __('common.view_details'))])->toArray()
         : [
-            ['img' => '/assets/hero-promo-power-tools.png', 'href' => route('product')],
-            ['img' => '/assets/blog-cover-modern-villa.jpg', 'href' => route('blog')],
-            ['img' => '/assets/category-laminate-flooring.png', 'href' => route('calculator')],
+            ['img' => '/assets/hero-promo-power-tools.png', 'href' => route('product'), 'btn' => __('common.view_details')],
+            ['img' => '/assets/blog-cover-modern-villa.jpg', 'href' => route('blog'), 'btn' => __('common.view_details')],
+            ['img' => '/assets/category-laminate-flooring.png', 'href' => route('calculator'), 'btn' => __('common.view_details')],
         ];
 
     // Fallback arrays used when dynamic collections are empty
@@ -37,67 +37,90 @@
 <div class="hero">
   <div class="inner hero-grid">
     <div class="hero-main">
-      <img src="/assets/hero-bricklayer.jpg" alt="">
+      <img src="{{ $heroMain ? $heroMain->image_url : '/assets/hero-bricklayer.jpg' }}" alt="">
       <div class="ov"></div>
       <div class="copy">
-        <div class="hero-tag"><span class="line"></span><p>{{ __('home.hero.tag') }}</p></div>
+        <div class="hero-tag"><span class="line"></span><p>{!! $heroMain->subtitle ?? __('home.hero.tag') !!}</p></div>
         <div>
-          <h1>{{ __('home.hero.title') }}</h1>
-          <p class="sub">{{ __('home.hero.subtitle') }}</p>
+          <h1>{!! $heroMain->title ?? __('home.hero.title') !!}</h1>
+          <p class="sub">{!! $heroMain ? ($heroMain->button_text ?? __('home.hero.subtitle')) : __('home.hero.subtitle') !!}</p>
         </div>
-        <div class="hero-info"><p>{{ __('home.hero.info') }}</p><p class="u">{{ __('home.hero.info_link') }}</p></div>
+        <div class="hero-info">{!! $heroMain && $heroMain->description ? $heroMain->description : '<p>' . __('home.hero.info') . '</p><p class="u">' . __('home.hero.info_link') . '</p>' !!}</div>
       </div>
     </div>
     <div class="hero-side">
       <div class="hero-promo" id="heroPromo" data-slides="{{ json_encode($promoSlides, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) }}">
         <img src="/assets/hero-promo-power-tools.png" alt="" id="hpImg">
-        <a class="cta-white" id="hpCta" href="{{ route('product') }}"><p>{{ __('common.view_details') }}</p><img src="/assets/icon-arrow-right.svg" alt=""></a>
+        <a class="cta-white" id="hpCta" href="{{ route('product') }}"><p id="hpBtnText">{{ __('common.view_details') }}</p><img src="/assets/icon-arrow-right.svg" alt=""></a>
         <div class="dots" id="hpDots"><i class="on"></i><i></i><i></i></div>
       </div>
-      {{-- Role banner: 3 slides sliding horizontally (Figma 630:8871 / 630:8835 / 630:8898) --}}
+      {{-- Role banner: slides sliding horizontally (Figma 630:8871 / 630:8835 / 630:8898) --}}
       <div class="hero-role" id="heroRole">
         <div class="hr-track" id="roleTrack">
-          <div class="hr-slide">
-            <img src="/assets/hero-tiler-at-work.jpg" alt="">
-            <div class="box">
-              <div class="tag"><span class="line"></span><p>{{ __('home.roles.master_tag') }}</p></div>
-              <div class="mid">
-                <div>
-                  <h3>{{ __('home.roles.master_title') }}</h3>
-                  <div class="d">{{ __('home.roles.master_line1') }}<br>{{ __('home.roles.master_line2') }}</div>
+          @if($heroRole->isNotEmpty())
+            @foreach($heroRole as $role)
+              <div class="hr-slide">
+                <img src="{{ $role->image_url }}" alt="">
+                <div class="box">
+                  <div class="tag"><span class="line"></span><p>{!! $role->subtitle ?? '' !!}</p></div>
+                  <div class="mid">
+                    <div>
+                      <h3>{!! $role->title !!}</h3>
+                      <div class="d">{!! $role->description ?? '' !!}</div>
+                    </div>
+                    <a class="reg" href="{{ $role->button_url ?? route('register') }}">{!! strip_tags($role->button_text ?? __('common.sign_up')) !!}</a>
+                  </div>
                 </div>
-                <a class="reg" href="{{ route('register', ['role' => 'master']) }}">{{ __('common.sign_up') }}</a>
+              </div>
+            @endforeach
+          @else
+            <div class="hr-slide">
+              <img src="/assets/hero-tiler-at-work.jpg" alt="">
+              <div class="box">
+                <div class="tag"><span class="line"></span><p>{{ __('home.roles.master_tag') }}</p></div>
+                <div class="mid">
+                  <div>
+                    <h3>{{ __('home.roles.master_title') }}</h3>
+                    <div class="d">{{ __('home.roles.master_line1') }}<br>{{ __('home.roles.master_line2') }}</div>
+                  </div>
+                  <a class="reg" href="{{ route('register', ['role' => 'master']) }}">{{ __('common.sign_up') }}</a>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="hr-slide">
-            <img src="/assets/hero-seller-with-tile.png" alt="">
-            <div class="box">
-              <div class="tag"><span class="line"></span><p>{{ __('home.roles.seller_tag') }}</p></div>
-              <div class="mid">
-                <div>
-                  <h3>{{ __('home.roles.seller_title') }}</h3>
-                  <div class="d">{{ __('home.roles.seller_line1') }}<br>{{ __('home.roles.seller_line2') }}</div>
+            <div class="hr-slide">
+              <img src="/assets/hero-seller-with-tile.png" alt="">
+              <div class="box">
+                <div class="tag"><span class="line"></span><p>{{ __('home.roles.seller_tag') }}</p></div>
+                <div class="mid">
+                  <div>
+                    <h3>{{ __('home.roles.seller_title') }}</h3>
+                    <div class="d">{{ __('home.roles.seller_line1') }}<br>{{ __('home.roles.seller_line2') }}</div>
+                  </div>
+                  <a class="reg" href="{{ route('register', ['role' => 'seller']) }}">{{ __('common.sign_up') }}</a>
                 </div>
-                <a class="reg" href="{{ route('register', ['role' => 'seller']) }}">{{ __('common.sign_up') }}</a>
               </div>
             </div>
-          </div>
-          <div class="hr-slide">
-            <img src="/assets/hero-customer-in-tile-store.jpg" alt="">
-            <div class="box">
-              <div class="tag"><span class="line"></span><p>{{ __('home.roles.customer_tag') }}</p></div>
-              <div class="mid">
-                <div>
-                  <h3>{{ __('home.roles.customer_title') }}</h3>
-                  <div class="d">{{ __('home.roles.customer_line1') }}<br>{{ __('home.roles.customer_line2') }}</div>
+            <div class="hr-slide">
+              <img src="/assets/hero-customer-in-tile-store.jpg" alt="">
+              <div class="box">
+                <div class="tag"><span class="line"></span><p>{{ __('home.roles.customer_tag') }}</p></div>
+                <div class="mid">
+                  <div>
+                    <h3>{{ __('home.roles.customer_title') }}</h3>
+                    <div class="d">{{ __('home.roles.customer_line1') }}<br>{{ __('home.roles.customer_line2') }}</div>
+                  </div>
+                  <a class="reg" href="{{ route('register', ['role' => 'buyer']) }}">{{ __('common.sign_up') }}</a>
                 </div>
-                <a class="reg" href="{{ route('register', ['role' => 'buyer']) }}">{{ __('common.sign_up') }}</a>
               </div>
             </div>
-          </div>
+          @endif
         </div>
-        <div class="dots" id="roleDots"><i class="on"></i><i></i><i></i></div>
+        <div class="dots" id="roleDots">
+          @php $roleCount = $heroRole->isNotEmpty() ? $heroRole->count() : 3; @endphp
+          @for($i = 0; $i < $roleCount; $i++)
+            <i @if($i === 0) class="on" @endif></i>
+          @endfor
+        </div>
       </div>
     </div>
   </div>
@@ -119,7 +142,7 @@
   <div class="cat-row">
     @if($categories->isNotEmpty())
       @foreach ($categories as $c)
-        <a @class(['cat-thumb', 'open' => $loop->first]) href="{{ route('catalog', ['category' => $c->slug]) }}"><img src="{{ $c->image ?? '/assets/category-tile-showroom.png' }}" alt=""><div class="ov"></div><div class="info"><div><h4>{{ $c->name }}</h4><p>{{ $c->products()->count() }} {{ __('common.products_count') }}</p></div><img src="/assets/icon-arrow-right.svg" alt=""></div></a>
+        <a @class(['cat-thumb', 'open' => $loop->first]) href="{{ route('catalog', ['category' => $c->slug]) }}"><img src="{{ storage_url($c->image, '/assets/category-tile-showroom.png') }}" alt=""><div class="ov"></div><div class="info"><div><h4>{{ $c->name }}</h4><p>{{ $c->products()->count() }} {{ __('common.products_count') }}</p></div><img src="/assets/icon-arrow-right.svg" alt=""></div></a>
       @endforeach
     @else
       @foreach ($fallbackCategories as $c)
@@ -283,8 +306,8 @@
   <div class="blog-grid" id="blogGrid">
     @forelse ($blogPosts as $post)
       <x-post :href="route('blog.show', $post->slug)"
-              :img="$post->cover_image ?? '/assets/blog-cover-default.png'"
-              :time="$post->reading_time ?? __('home.blog.time_1')"
+              :img="$post->cover_image_url"
+              :time="$post->reading_time"
               :title="$post->title"
               :excerpt="$post->excerpt" />
     @empty

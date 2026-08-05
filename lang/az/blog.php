@@ -55,4 +55,6 @@ return [
         'title_4' => 'Təmirə hardan başlamaq lazımdır?',
         'excerpt_4' => 'İlk addımlar, büdcə planı və ən çox edilən səhvlər — başlamazdan əvvəl bilməli olduqlar.',
     ],
+
+    'reading_min' => 'dəq oxu',
 ];

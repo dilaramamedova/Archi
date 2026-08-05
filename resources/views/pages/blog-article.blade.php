@@ -45,7 +45,7 @@
 
     {{-- ===================== HERO IMAGE ===================== --}}
     <div class="h-[480px] w-[1000px] max-w-full overflow-hidden rounded-ds max-[900px]:h-[320px]">
-      <img class="size-full object-cover" src="{{ $post->cover_image }}" alt="{{ $post->title }}">
+      <img class="size-full object-cover" src="{{ $post->cover_image_url }}" alt="{{ $post->title }}">
     </div>
 
     {{-- ===================== ARTICLE BODY ===================== --}}
@@ -96,7 +96,7 @@
       <div class="blog-grid max-[1200px]:flex-wrap max-[640px]:flex-col">
         @foreach ($related as $relatedPost)
           <x-post :href="route('blog.show', $relatedPost->slug)"
-                  :img="$relatedPost->cover_image"
+                  :img="$relatedPost->cover_image_url"
                   :time="$relatedPost->reading_time"
                   :title="$relatedPost->title"
                   :excerpt="$relatedPost->excerpt" />

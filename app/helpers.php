@@ -78,3 +78,19 @@ if (! function_exists('translate_craft')) {
         return $craft;
     }
 }
+
+if (! function_exists('storage_url')) {
+    /**
+     * Resolve an image path from the DB to a public URL.
+     * Admin uploads go to the public disk (storage/app/public/) and need /storage/ prefix.
+     * Legacy seeder paths like "assets/..." or "/assets/..." point to public/assets/ directly.
+     */
+    function storage_url(?string $path, string $fallback = ''): string
+    {
+        if (!$path) return $fallback;
+        if (str_starts_with($path, '/') || str_starts_with($path, 'http')) return $path;
+        if (str_starts_with($path, 'assets/')) return asset($path);
+        if (!str_contains($path, '/')) return asset('assets/' . $path);
+        return asset('storage/' . $path);
+    }
+}

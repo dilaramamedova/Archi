@@ -45,7 +45,7 @@
       @php $feat = $featured->first(); @endphp
       <div class="mt-20 flex items-start gap-10 max-[1200px]:flex-col" id="featured">
         <a class="group h-[516px] w-[680px] shrink-0 overflow-hidden rounded-ds max-[1200px]:h-[420px] max-[1200px]:w-full" href="{{ route('blog.show', $feat->slug) }}">
-          <img class="size-full object-cover transition-transform duration-[600ms] group-hover:scale-105" src="{{ $feat->cover_image }}" alt="{{ $feat->title }}">
+          <img class="size-full object-cover transition-transform duration-[600ms] group-hover:scale-105" src="{{ $feat->cover_image_url }}" alt="{{ $feat->title }}">
         </a>
         <div class="flex flex-1 flex-col gap-5 max-[1200px]:w-full">
           <x-ui.eyebrow variant="lg" :label="__('blog.featured.tag_1')">
@@ -73,7 +73,7 @@
         @foreach ($posts as $post)
           <x-post class="rounded-ds max-[1200px]:min-w-[260px]"
                   :href="route('blog.show', $post->slug)"
-                  :img="$post->cover_image"
+                  :img="$post->cover_image_url"
                   :time="$post->reading_time"
                   :title="$post->title"
                   :excerpt="$post->excerpt" />

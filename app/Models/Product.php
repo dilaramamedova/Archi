@@ -130,21 +130,16 @@ class Product extends Model
         if (! $main?->path) {
             return null;
         }
-        // New uploads stored on the public disk (storage/app/public/)
-        if (\Illuminate\Support\Facades\Storage::disk('public')->exists($main->path)) {
-            return asset('storage/' . $main->path);
-        }
-        // Legacy images stored directly in public/ (e.g. assets/...)
-        return asset($main->path);
+        return storage_url($main->path);
     }
 
     public function getAverageRatingAttribute(): float
     {
-        return round($this->reviews()->avg('rating') ?? 0, 1);
+        return round($this->reviews()->where('status', 'approved')->avg('rating') ?? 0, 1);
     }
 
     public function getReviewsCountAttribute(): int
     {
-        return $this->reviews()->count();
+        return $this->reviews()->where('status', 'approved')->count();
     }
 }

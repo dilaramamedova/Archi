@@ -86,6 +86,7 @@ function initPromoCarousel() {
   const wrap = document.getElementById('heroPromo');
   const img = document.getElementById('hpImg');
   const cta = document.getElementById('hpCta');
+  const btnText = document.getElementById('hpBtnText');
   if (!wrap) return;
 
   let slides = [];
@@ -99,6 +100,7 @@ function initPromoCarousel() {
   carousel(document.getElementById('hpDots'), slides.length, (n) => {
     if (img) img.src = slides[n].img;
     if (cta) cta.href = slides[n].href;
+    if (btnText && slides[n].btn) btnText.textContent = slides[n].btn;
   }, 4000);
 }
 

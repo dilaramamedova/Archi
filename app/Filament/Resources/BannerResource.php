@@ -35,16 +35,18 @@ class BannerResource extends Resource
                     ])
                     ->required(),
 
-                Forms\Components\TextInput::make('title')->label('Başlıq')->translatable(),
-                Forms\Components\Textarea::make('subtitle')->label('Alt yazı')->rows(2)->translatable(),
+                Forms\Components\RichEditor::make('title')->label('Başlıq')->translatable(),
+                Forms\Components\RichEditor::make('subtitle')->label('Alt yazı')->translatable(),
+                Forms\Components\RichEditor::make('description')->label('Açıqlama / info mətni')->translatable(),
 
                 Forms\Components\FileUpload::make('image')
                     ->label('Şəkil')
                     ->image()
+                    ->disk('public')
                     ->directory('banners')
                     ->required(),
 
-                Forms\Components\TextInput::make('button_text')->label('Düymə mətni')->translatable(),
+                Forms\Components\RichEditor::make('button_text')->label('Düymə mətni')->translatable(),
                 Forms\Components\TextInput::make('button_url')->label('Düymə linki')->url()->nullable(),
                 Forms\Components\TextInput::make('sort_order')->label('Sıra')->numeric()->default(0),
                 Forms\Components\Toggle::make('is_active')->label('Aktiv')->default(true),

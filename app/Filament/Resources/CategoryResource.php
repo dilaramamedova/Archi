@@ -53,6 +53,7 @@ class CategoryResource extends Resource
 
                 Forms\Components\FileUpload::make('icon')
                     ->label('İkon (SVG)')
+                    ->disk('public')
                     ->directory('categories/icons')
                     ->acceptedFileTypes(['image/svg+xml', 'image/png'])
                     ->nullable(),
@@ -60,6 +61,7 @@ class CategoryResource extends Resource
                 Forms\Components\FileUpload::make('image')
                     ->label('Şəkil')
                     ->image()
+                    ->disk('public')
                     ->directory('categories/images')
                     ->nullable(),
 

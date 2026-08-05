@@ -61,7 +61,7 @@
           </ul>
         </div>
 
-        <a href="{{ route('wishlist') }}" aria-label="{{ __('nav.favorites') }}"><img src="/assets/icon-heart-rounded.svg" alt=""></a>
+        <a href="{{ route('wishlist') }}" class="nav-wish" aria-label="{{ __('nav.favorites') }}"><img src="/assets/icon-heart-rounded.svg" alt=""></a>
         <a href="{{ route('cart') }}" class="nav-cart" aria-label="{{ __('nav.cart') }}"><img src="/assets/icon-cart.svg" alt=""><span class="cart-badge" id="navCartCount"></span></a>
       </div>
 
@@ -112,7 +112,7 @@
       <div class="mega-cats">
         @foreach ($megaCatalog as $item)
           <a class="mcat" href="{{ $item->resolved_url }}">
-            <div class="top"><img src="/assets/{{ $item->icon }}" alt=""><p>{{ $item->label }}</p></div>
+            <div class="top"><img src="{{ storage_url($item->icon) }}" alt=""><p>{{ $item->label }}</p></div>
             <div class="desc">{{ $item->description }}</div>
           </a>
         @endforeach
@@ -127,7 +127,7 @@
         <div class="grid">
           @foreach ($megaSpecialists as $item)
             <a class="mcat" href="{{ $item->resolved_url }}">
-              <div class="top"><img src="/assets/{{ $item->icon }}" alt=""><p>{{ $item->label }}</p></div>
+              <div class="top"><img src="{{ storage_url($item->icon) }}" alt=""><p>{{ $item->label }}</p></div>
               <div class="desc">{{ $item->description }}</div>
             </a>
           @endforeach
@@ -151,7 +151,7 @@
           {{-- Each mega card is a single article teaser, so it opens the article page.
                The "Bloq" nav item itself still goes to the blog index. --}}
           <a class="mblog" href="{{ route('blog.show', $post->slug) }}">
-            <img class="ph" src="/{{ $post->cover_image }}" alt="">
+            <img class="ph" src="{{ $post->cover_image_url }}" alt="">
             <div class="info">
               <h4>{{ $post->title }}</h4>
               <div class="d">{{ $post->excerpt }}</div>

@@ -10,11 +10,11 @@ class Banner extends Model
     use HasTranslations;
 
     protected $fillable = [
-        'position', 'title', 'subtitle', 'image',
+        'position', 'title', 'subtitle', 'description', 'image',
         'button_text', 'button_url', 'sort_order', 'is_active',
     ];
 
-    public array $translatable = ['title', 'subtitle', 'button_text'];
+    public array $translatable = ['title', 'subtitle', 'description', 'button_text'];
 
     protected $casts = [
         'is_active' => 'boolean',
@@ -33,5 +33,10 @@ class Banner extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order');
+    }
+
+    public function getImageUrlAttribute(): string
+    {
+        return storage_url($this->attributes['image'] ?? '');
     }
 }

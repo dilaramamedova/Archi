@@ -88,7 +88,7 @@
           <x-scard
             :href="route('specialist.show', $m->id)"
             :bg="$masterBgs[$i % count($masterBgs)]"
-            :avatar="$m->avatar_path ? asset('storage/' . $m->avatar_path) : null"
+            :avatar="$m->avatar_path ? storage_url($m->avatar_path) : null"
             :role="translate_craft($m->craft)"
             :name="$m->user->first_name . ' ' . $m->user->last_name"
             rate=""
@@ -117,7 +117,7 @@
             :time="$readingMinutes . ' ' . __('search.min_read')"
             :title="$post->title"
             :excerpt="$post->excerpt"
-            :img="$post->cover_image ? asset('storage/' . $post->cover_image) : '/assets/blog-cover-renovation.jpg'"
+            :img="$post->cover_image_url"
             :href="route('blog.show', $post->slug)" />
         @endforeach
       </div>

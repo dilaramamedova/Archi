@@ -54,12 +54,14 @@ class MenuItemResource extends Resource
 
                 Forms\Components\FileUpload::make('icon')
                     ->label('İkon')
+                    ->disk('public')
                     ->directory('menu/icons')
                     ->nullable(),
 
                 Forms\Components\FileUpload::make('image')
                     ->label('Şəkil')
                     ->image()
+                    ->disk('public')
                     ->directory('menu/images')
                     ->nullable(),
 

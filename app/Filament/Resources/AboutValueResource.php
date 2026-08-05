@@ -28,6 +28,7 @@ class AboutValueResource extends Resource
             Section::make()->schema([
                 Forms\Components\FileUpload::make('icon')
                     ->label('İkon (SVG)')
+                    ->disk('public')
                     ->directory('about/icons')
                     ->acceptedFileTypes(['image/svg+xml', 'image/png']),
 

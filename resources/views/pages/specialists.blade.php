@@ -133,7 +133,7 @@
      </div>{{-- /.fside-scroll --}}
 
       <div class="fside-apply-sep"></div>
-      <button class="fside-apply" id="spApply">{{ __('specialists.filters.apply') }}</button>
+      <button type="button" class="fside-apply" id="spApply">{{ __('specialists.filters.apply') }}</button>
     </aside>
 
     {{-- grid --}}
@@ -161,7 +161,7 @@
           <div class="top" style="background:{{ $tints[$i % 4] }}">
             <div class="badges">@foreach ($badges as $b)<span class="b {{ $b['class'] }}">{{ $b['label'] }}</span>@endforeach</div>
             @if ($s->avatar_path)
-              <img class="avatar" src="{{ Storage::url($s->avatar_path) }}" alt="{{ $s->user->name }}">
+              <img class="avatar" src="{{ storage_url($s->avatar_path) }}" alt="{{ $s->user->name }}">
             @else
               <div class="avatar">{{ $initials }}</div>
             @endif

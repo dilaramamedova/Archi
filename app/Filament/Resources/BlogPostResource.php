@@ -40,6 +40,7 @@ class BlogPostResource extends Resource
                 Forms\Components\FileUpload::make('cover_image')
                     ->label('Üz şəkli')
                     ->image()
+                    ->disk('public')
                     ->directory('blog'),
 
                 Forms\Components\TagsInput::make('tags')
@@ -61,6 +62,7 @@ class BlogPostResource extends Resource
                 Forms\Components\FileUpload::make('og_image')
                     ->label('OG şəkil')
                     ->image()
+                    ->disk('public')
                     ->directory('blog/og'),
             ])->collapsed(),
         ]);

@@ -8,7 +8,7 @@
 @php
     // Build thumbnail list from product images, fall back to hardcoded if none
     $thumbs = $product->images->count()
-        ? $product->images->map(fn ($img) => asset('storage/' . $img->path))->toArray()
+        ? $product->images->map(fn ($img) => storage_url($img->path))->toArray()
         : [
             '/assets/product-marble-tile-square.jpg',
             '/assets/interior-marble-corridor.jpg',
@@ -94,8 +94,8 @@
         <div class="pd-line"></div>
 
         <div class="pd-feats">
-          @forelse ($product->features ?? [] as $feat)
-            <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ $feat }}</div>
+          @forelse ($product->features ?? [] as $key => $feat)
+            <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ is_string($key) ? $key . ': ' . $feat : $feat }}</div>
           @empty
             <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ __('product.info.feat_1') }}</div>
             <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ __('product.info.feat_2') }}</div>
@@ -152,6 +152,7 @@
                 $sellerAvgRating = $sellerProductIds->isNotEmpty()
                     ? \App\Models\Review::whereIn('reviewable_id', $sellerProductIds)
                         ->where('reviewable_type', \App\Models\Product::class)
+                        ->where('status', 'approved')
                         ->avg('rating')
                     : null;
                 $sellerProductCount = $product->user?->products()->count() ?? 0;
@@ -271,7 +272,7 @@
 
       <div class="rev-summary">
         <div class="rs-score">
-          <div class="num">{{ $avgRating }}</div>
+          <div class="num">{{ number_format($avgRating, 1) }}</div>
           <div class="s"><x-ui.stars :rating="$avgRating" /></div>
           <div class="c1">{{ $totalRatings }} {{ __('product.reviews.ratings') }}</div>
           <div class="c2">{{ $reviewsCount }} {{ __('product.reviews.written') }}</div>
@@ -298,10 +299,10 @@
       </div>
 
       <div class="rev-filter">
-        <button type="button" data-on="true">{{ __('product.reviews.filter_helpful') }}</button>
-        <button type="button" data-on="false">{{ __('product.reviews.filter_newest') }}</button>
-        <button type="button" data-on="false">{{ __('product.reviews.filter_photo') }}</button>
-        <button type="button" data-on="false">{{ __('product.reviews.filter_5star') }}</button>
+        <button type="button" data-on="true" data-filter="helpful">{{ __('product.reviews.filter_helpful') }}</button>
+        <button type="button" data-on="false" data-filter="newest">{{ __('product.reviews.filter_newest') }}</button>
+        <button type="button" data-on="false" data-filter="photo">{{ __('product.reviews.filter_photo') }}</button>
+        <button type="button" data-on="false" data-filter="5star">{{ __('product.reviews.filter_5star') }}</button>
       </div>
 
       {{-- Write a review form --}}
@@ -354,7 +355,7 @@
         @endphp
         @forelse ($approvedReviews as $i => $review)
           @php $color = $avatarColors[$i % count($avatarColors)]; @endphp
-          <div class="rev-card">
+          <div class="rev-card" data-rating="{{ $review->rating }}" data-date="{{ $review->created_at->timestamp }}" data-helpful="{{ $review->helpful_count ?? 0 }}" data-has-photo="{{ $review->photos ? 'true' : 'false' }}">
             <div class="h">
               <div class="av" style="background:{{ $color['bg'] }};color:{{ $color['fg'] }}">{{ mb_strtoupper(mb_substr($review->user->name ?? 'U', 0, 1)) }}</div>
               <div>

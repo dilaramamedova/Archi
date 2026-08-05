@@ -55,4 +55,6 @@ return [
         'title_4' => 'Where should you start a renovation?',
         'excerpt_4' => 'First steps, budget planning and the most common mistakes — what to know before you begin.',
     ],
+
+    'reading_min' => 'min read',
 ];

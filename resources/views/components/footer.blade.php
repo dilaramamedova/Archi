@@ -63,7 +63,7 @@
       </div>
       <div class="foot-social">
         @foreach ($socialLinks as $social)
-        <a href="{{ $social->url }}" aria-label="{{ $social->platform }}" target="_blank" rel="noopener"><img src="{{ $social->icon }}" alt="{{ $social->platform }}"></a>
+        <a href="{{ $social->url }}" aria-label="{{ $social->platform }}" target="_blank" rel="noopener"><img src="{{ storage_url($social->icon) }}" alt="{{ $social->platform }}"></a>
         @endforeach
       </div>
     </div>

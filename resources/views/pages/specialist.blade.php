@@ -7,7 +7,7 @@
     $user = $specialist->user;
     $fullName = trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) ?: $user->name;
     $initials = mb_strtoupper(mb_substr($user->first_name ?? $user->name, 0, 1) . mb_substr($user->last_name ?? '', 0, 1));
-    $avatarUrl = $specialist->avatar_path ? asset('storage/' . $specialist->avatar_path) : '/assets/avatar-placeholder.png';
+    $avatarUrl = $specialist->avatar_path ? storage_url($specialist->avatar_path) : '/assets/avatar-placeholder.png';
     $skills = is_array($specialist->skills) ? $specialist->skills : [];
     $portfolioItems = $specialist->portfolioItems;
     $services = $specialist->services;
@@ -124,16 +124,16 @@
       <div class="pp-grid">
         <div class="pp-grow">
           @foreach ($portfolioItems->take(3) as $item)
-            <a class="pp-tile"><img src="{{ asset('storage/' . $item->image_path) }}" alt="{{ $item->title ?? '' }}"><span class="lb">{{ $item->title ?? '' }}</span></a>
+            <a class="pp-tile"><img src="{{ storage_url($item->image_path) }}" alt="{{ $item->title ?? '' }}"><span class="lb">{{ $item->title ?? '' }}</span></a>
           @endforeach
         </div>
         <div class="pp-grow">
           @foreach ($portfolioItems->slice(3, 2) as $item)
-            <a class="pp-tile"><img src="{{ asset('storage/' . $item->image_path) }}" alt="{{ $item->title ?? '' }}"><span class="lb">{{ $item->title ?? '' }}</span></a>
+            <a class="pp-tile"><img src="{{ storage_url($item->image_path) }}" alt="{{ $item->title ?? '' }}"><span class="lb">{{ $item->title ?? '' }}</span></a>
           @endforeach
           @if ($portfolioItems->count() > 5)
             <a class="pp-tile more">
-              <img src="{{ asset('storage/' . $portfolioItems->get(5)?->image_path) }}" alt="">
+              <img src="{{ storage_url($portfolioItems->get(5)?->image_path) }}" alt="">
               <span class="ov"><b>+{{ $portfolioItems->count() - 5 }}</b><span>{{ __('specialist.portfolio.more_link') }}</span></span>
             </a>
           @endif
