@@ -1,16 +1,20 @@
 {{-- Specialist cabinet — notifications tab (Figma 831:12996). --}}
 @php
     // The seven specialist cabinet rows — identical on all seven pages (ARCHITECTURE.md 4.9.1).
+    $portfolioCount = $profile ? $profile->portfolioItems()->count() : 0;
+    $servicesCount = $profile ? $profile->services()->count() : 0;
+
     $specNav = [
         ['key' => 'main',          'route' => 'specialist.cabinet'],
-        ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count'],
-        ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count'],
+        ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count', 'count_value' => $portfolioCount],
+        ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count', 'count_value' => $servicesCount],
         ['key' => 'schedule',      'route' => 'specialist.cabinet.schedule'],
         ['key' => 'reviews',       'route' => 'specialist.cabinet.reviews',       'count' => 'reviews_count'],
         ['key' => 'notifications', 'route' => 'specialist.cabinet.notifications'],
         ['key' => 'security',      'route' => 'specialist.cabinet.security'],
     ];
 
+    // TODO: Replace with dynamic data from controller — notification preferences should be loaded from user settings in DB.
     // type key => switch state. Only "platform news" ships OFF in the frame.
     $types = [
         'request' => true,
@@ -21,6 +25,7 @@
         'weekly' => true,
     ];
 
+    // TODO: Replace with dynamic data from controller — channel preferences should be loaded from user settings in DB.
     // channel key => selected. E-mail is the only unselected chip in the frame.
     $channels = [
         'push' => true,

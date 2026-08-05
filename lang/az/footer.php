@@ -34,11 +34,13 @@ return [
     'news_sub' => 'Endirimlərdən, yeni məhsullar, faydalı məqalələr və yeniliklər barədə ilk siz məlumat alın.',
     'news_email' => 'E-poçt ünvanın',
     'news_submit' => 'Abunə ol',
+    'newsletter_error' => 'Xəta',
+    'newsletter_network_error' => 'Şəbəkə xətası. Zəhmət olmasa yenidən cəhd edin.',
 
     'legal_terms' => 'İstifadə şərtləri',
     'legal_privacy' => 'Məxfilik siyasəti',
     'legal_delivery' => 'Çatdırılma & qaytarılma',
     'legal_cookie' => 'Cookie siyasəti',
     'legal_sitemap' => 'Sayt xəritəsi',
-    'copy' => '©2026 ARCHI - Bütün hüquqlar qorunur.',
+    'copy' => '©:year ARCHI - Bütün hüquqlar qorunur.',
 ];

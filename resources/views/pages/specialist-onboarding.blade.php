@@ -1,6 +1,7 @@
 {{-- Specialist onboarding (profile completion) — Figma node 1054:9643 (1440x1560; navbar + banner + content).
      The navbar comes from the layout; the frame has no footer of its own. --}}
 @php
+    // TODO: Replace with dynamic data from controller — step completion states should come from the user's profile progress.
     // The checklist rows. `done` renders the yellow check pill + the green completed label;
     // every other row gets the gray number pill and the yellow add button.
     // Targets follow ARCHITECTURE §3.1: the checklist is the hub of the specialist cabinet.
@@ -25,8 +26,8 @@
       {{-- 420x6 track, 40% (168px) yellow fill. Not <x-ui.progress>: that bar is 6px with a
            rounded-ds-sm fill and no track tint. --}}
       <div class="relative h-1.5 w-[420px] max-w-full shrink-0 overflow-hidden rounded-ds bg-black/8" role="progressbar"
-           aria-valuemin="0" aria-valuemax="100" aria-valuenow="40" aria-label="{{ __('specialist-onboarding.banner.progress_label') }}">
-        <div class="absolute top-0 left-0 h-1.5 w-[168px] max-w-full rounded-ds bg-yellow"></div>
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $progressPercent ?? 40 }}" aria-label="{{ __('specialist-onboarding.banner.progress_label') }}">
+        <div class="absolute top-0 left-0 h-1.5 max-w-full rounded-ds bg-yellow" style="width: {{ $progressPercent ?? 40 }}%"></div>
       </div>
     </div>
     {{-- Stays on the page (§3.1): it scrolls the checklist into view and highlights the
@@ -83,7 +84,7 @@
         class="w-[340px] max-w-full flex-none opacity-45"
         aria-hidden="true"
         :role="__('specialist-onboarding.preview.card.role')"
-        rate="4.9"
+        :rate="__('specialist-onboarding.preview.card.rate')"
         :reviews="__('specialist-onboarding.preview.card.reviews')"
         :name="__('specialist-onboarding.preview.card.name')"
         :exp="__('specialist-onboarding.preview.card.exp')"

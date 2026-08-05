@@ -3,10 +3,15 @@
 {{-- Specialist cabinet — security (Figma 831:13282). Same shell as the business cabinet
      (ARCHITECTURE.md §4.9.1): only the sidebar rows and the "view profile" target differ. --}}
 @php
+    $user = auth()->user();
+    $profile = $user->specialistProfile;
+    $portfolioCount = $profile ? $profile->portfolioItems()->count() : 0;
+    $servicesCount = $profile ? $profile->services()->count() : 0;
+
     $specNav = [
         ['key' => 'main',          'route' => 'specialist.cabinet'],
-        ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count'],
-        ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count'],
+        ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count', 'count_value' => $portfolioCount],
+        ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count', 'count_value' => $servicesCount],
         ['key' => 'schedule',      'route' => 'specialist.cabinet.schedule'],
         ['key' => 'reviews',       'route' => 'specialist.cabinet.reviews',       'count' => 'reviews_count'],
         ['key' => 'notifications', 'route' => 'specialist.cabinet.notifications'],

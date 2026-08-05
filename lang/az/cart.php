@@ -49,4 +49,31 @@ return [
         'empty' => 'Səbət boşdur.',
         'done' => 'Sifariş qəbul olundu! Yekun: :total',
     ],
+
+    'checkout_form' => [
+        'title' => 'Çatdırılma məlumatları',
+        'name' => 'Ad, soyad',
+        'phone' => 'Telefon',
+        'address' => 'Ünvan',
+        'notes' => 'Qeydlər (istəyə bağlı)',
+        'submit' => 'Sifarişi təsdiqlə',
+        'cancel' => 'Geri',
+        'name_required' => 'Ad daxil edin',
+        'phone_required' => 'Telefon daxil edin',
+        'address_required' => 'Ünvan daxil edin',
+        'error' => 'Xəta baş verdi. Yenidən cəhd edin.',
+        'sending' => 'Göndərilir...',
+    ],
+
+    'order_success' => [
+        'title' => 'Sifariş #:number — ARCHİ',
+        'heading' => 'Sifarişiniz qəbul olundu!',
+        'message' => 'Təşəkkür edirik! Sifarişiniz uğurla qeydiyyata alındı. Tezliklə sizinlə əlaqə saxlanılacaq.',
+        'order_number' => 'Sifariş nömrəsi',
+        'total' => 'Yekun məbləğ',
+        'status' => 'Status',
+        'status_pending' => 'Gözləyir',
+        'back_home' => 'Ana səhifə',
+        'back_catalog' => 'Kataloqa bax',
+    ],
 ];

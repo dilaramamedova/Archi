@@ -17,6 +17,8 @@ return [
     'sd_products' => 'Products',
     'sd_masters' => 'Pros',
     'sd_all_results' => 'See all results',
+    'sd_loading' => 'Loading…',
+    'sd_no_results' => 'No results found',
 
     'catalog' => 'Catalog',
     'specialists' => 'Specialists',

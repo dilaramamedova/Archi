@@ -6,23 +6,23 @@
 --}}
 @php
     // The seven specialist-cabinet tabs — copied verbatim across all seven pages.
+    $portfolioCount = $portfolioItems->count();
+    $servicesCount = $profile ? $profile->services()->count() : 0;
+
     $specNav = [
         ['key' => 'main',          'route' => 'specialist.cabinet'],
-        ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count'],
-        ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count'],
+        ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count', 'count_value' => $portfolioCount],
+        ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count', 'count_value' => $servicesCount],
         ['key' => 'schedule',      'route' => 'specialist.cabinet.schedule'],
         ['key' => 'reviews',       'route' => 'specialist.cabinet.reviews',       'count' => 'reviews_count'],
         ['key' => 'notifications', 'route' => 'specialist.cabinet.notifications'],
         ['key' => 'security',      'route' => 'specialist.cabinet.security'],
     ];
 
-    // Portfolio tiles (831:11952 + 831:11975): six photos, then the dashed uploader.
-    // The photos are the ones the public profile and specialist-owner already ship.
-    $tiles = ['t1' => 'portfolio-stone-tile-samples.jpg', 't2' => 'portfolio-marble-tile-dark.jpg', 't3' => 'portfolio-renovation-before-after.jpg', 't4' => 'portfolio-roof-tile-showroom.jpg', 't5' => 'portfolio-electrical-showroom.jpg', 't6' => 'portfolio-laminate-flooring.jpg'];
-
-    // The counter is the profile's real total, not the number of visible tiles.
-    $count = 24;
-    $max = 30;
+    // Portfolio items loaded from DB via route closure.
+    // $portfolioItems and $maxPortfolio are passed from the route.
+    $count = $portfolioItems->count();
+    $max = $maxPortfolio;
 @endphp
 <x-layout page="specialist-cabinet-portfolio" :title="__('specialist-cabinet-portfolio.title')" bodyClass="bg-gray-soft2">
 
@@ -47,14 +47,13 @@
     </x-slot:action>
 
     <div class="scp-grid" data-count="{{ $count }}" data-max="{{ $max }}">
-      @foreach ($tiles as $key => $img)
-        <div class="scp-tile" draggable="true" data-drag="false" data-over="false">
-          <img src="/assets/{{ $img }}" alt="{{ __('specialist-cabinet-portfolio.tiles.' . $key) }}">
-          {{-- the cover badge always belongs to the first tile, so reordering moves it --}}
-          <p class="scp-cover" @if (! $loop->first) hidden @endif>{{ __('specialist-cabinet-portfolio.tile.cover') }}</p>
+      @foreach ($portfolioItems as $item)
+        <div class="scp-tile" draggable="true" data-drag="false" data-over="false" data-id="{{ $item->id }}">
+          <img src="{{ $item->image_path }}" alt="{{ $item->title ?? __('specialist-cabinet-portfolio.tile.untitled') }}">
+          <p class="scp-cover" @if (! $item->is_cover) hidden @endif>{{ __('specialist-cabinet-portfolio.tile.cover') }}</p>
           <button type="button" class="scp-del" data-del
                   aria-label="{{ __('specialist-cabinet-portfolio.tile.remove_label') }}">{{ __('specialist-cabinet-portfolio.tile.remove') }}</button>
-          <p class="scp-cap">{{ __('specialist-cabinet-portfolio.tiles.' . $key) }}</p>
+          <p class="scp-cap">{{ $item->title ?? '' }}</p>
         </div>
       @endforeach
 

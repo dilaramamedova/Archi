@@ -3,12 +3,12 @@
 // Catalog page (RU).
 
 return [
-    'title' => 'Плитка и метлах — Каталог — ARCHİ',
-    'crumb_current' => 'Плитка и метлах',
+    'title' => 'Каталог — ARCHİ',
+    'crumb_current' => 'Каталог',
 
     'head' => [
         'eyebrow' => 'Каталог',
-        'title' => 'Плитка и метлах',
+        'title' => 'Каталог',
         'count' => '860 товаров',
     ],
 

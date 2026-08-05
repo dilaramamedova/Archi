@@ -21,7 +21,7 @@
       <div class="lm-field"><label for="lmPassword">{{ __('login.form.password_label') }}</label><input id="lmPassword" name="password" type="password" placeholder="{{ __('login.form.password_placeholder') }}" required></div>
       <div class="lm-row">
         <label class="rem"><input type="checkbox" name="remember"> {{ __('login.form.remember') }}</label>
-        <a href="#">{{ __('login.form.forgot') }}</a>
+        <a href="{{ route('password.request') }}">{{ __('login.form.forgot') }}</a>
       </div>
       <button class="lm-submit" type="submit">{{ __('login.form.submit') }}</button>
       <p class="lm-alt">{{ __('login.form.no_account') }} <a href="{{ route('register') }}">{{ __('login.form.sign_up') }}</a></p>

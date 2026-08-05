@@ -26,37 +26,25 @@ function initSearch() {
   const drop = document.getElementById('searchDrop');
   if (!box || !input || !drop) return;
 
-  // URLs, labels and the demo dataset all arrive from Blade as data-* attributes,
-  // already translated for the current locale.
+  // URLs and labels arrive from Blade as data-* attributes, already translated.
   const d = box.dataset;
+  const URL_API = d.urlApi || '/api/search';
   const URL_SEARCH = d.urlSearch || '/search';
+  const URL_SPECIALISTS = d.urlSpecialists || '/specialist';
   const URL_PRODUCT = d.urlProduct || '/product';
-  const URL_SPECIALISTS = d.urlSpecialists || '/specialists';
   const L_QUICK = d.lQuick || '';
   const L_PRODUCTS = d.lProducts || '';
   const L_MASTERS = d.lMasters || '';
   const L_ALL = d.lAll || '';
-
-  const parse = (raw) => {
-    try {
-      const v = JSON.parse(raw || '[]');
-      return Array.isArray(v) ? v : [];
-    } catch (e) {
-      return [];
-    }
-  };
-
-  // Placeholder dataset — replaced by the API response once a backend exists.
-  const SUGGESTS = parse(d.demoSuggests);
-  const PRODUCTS = parse(d.demoProducts);
-  const MASTERS = parse(d.demoMasters);
+  const L_LOADING = d.lLoading || 'Loading…';
+  const L_NO_RESULTS = d.lNoResults || 'No results';
 
   const overlay = document.createElement('div');
   overlay.className = 'search-overlay';
   (document.querySelector('.topbar') || document.body).appendChild(overlay);
 
   const esc = (s) =>
-    s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+    String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
   // Comparison key that folds Azerbaijani diacritics to their ASCII base letter
   const norm = (s) =>
@@ -71,18 +59,6 @@ function initSearch() {
       .replace(/ş/g, 's')
       .replace(/ğ/g, 'g');
 
-  // Nothing matched means the dropdown stays closed
-  function match(qRaw) {
-    const q = norm((qRaw || '').trim());
-    if (q.length < 2) return null; // do not open on a single character
-    const has = (txt) => norm(txt).indexOf(q) !== -1;
-    const sug = SUGGESTS.filter(has).slice(0, 4);
-    const prod = PRODUCTS.filter((p) => has(p.name) || has(p.cat)).slice(0, 3);
-    const masters = MASTERS.filter((m) => has(m.name) || has(m.role)).slice(0, 2);
-    if (!sug.length && !prod.length && !masters.length) return null;
-    return { sug, prod, masters, total: sug.length + prod.length + masters.length };
-  }
-
   function hl(txt, qRaw) {
     const q = norm((qRaw || '').trim());
     const i = norm(txt).indexOf(q);
@@ -95,58 +71,98 @@ function initSearch() {
     return URL_SEARCH + (q ? '?q=' + encodeURIComponent(q) : '');
   }
 
-  function render(qRaw, m) {
+  function render(qRaw, data) {
+    const sug = data.suggests || [];
+    const prod = data.products || [];
+    const masters = data.masters || [];
+    const total = data.total != null ? data.total : (sug.length + prod.length + masters.length);
+
     let html = '';
-    if (m.sug.length) {
+    if (sug.length) {
       html +=
         '<div class="sd-head">' + esc(L_QUICK) + '</div>' +
-        m.sug
+        sug
           .map((s) => '<a class="sd-sug" href="' + resultsHref(s) + '"><img src="/assets/icon-search.svg" alt=""><span>' + hl(s, qRaw) + '</span></a>')
           .join('');
     }
-    if (m.prod.length) {
+    if (prod.length) {
       if (html) html += '<div class="sd-div"></div>';
       html +=
         '<div class="sd-head">' + esc(L_PRODUCTS) + '</div>' +
-        m.prod
+        prod
           .map((p) =>
-            '<a class="sd-prod" href="' + URL_PRODUCT + '"><span class="im"><img src="' + p.img + '" alt=""></span>' +
+            '<a class="sd-prod" href="' + (p.slug ? URL_PRODUCT + '/' + encodeURIComponent(p.slug) : resultsHref(qRaw)) + '"><span class="im"><img src="' + esc(p.img || '') + '" alt=""></span>' +
             '<span class="tx"><span class="t1">' + hl(p.name, qRaw) + '</span><br><span class="t2">' + esc(p.cat) + '</span></span>' +
             '<span class="pr">' + esc(p.price) + '</span></a>')
           .join('');
     }
-    if (m.masters.length) {
+    if (masters.length) {
       if (html) html += '<div class="sd-div"></div>';
       html +=
         '<div class="sd-head">' + esc(L_MASTERS) + '</div>' +
-        m.masters
+        masters
           .map((u) =>
-            '<a class="sd-master" href="' + URL_SPECIALISTS + '"><span class="av">' + esc(u.initials) + '</span>' +
+            '<a class="sd-master" href="' + URL_SPECIALISTS + '/' + encodeURIComponent(u.id) + '"><span class="av">' + esc(u.initials) + '</span>' +
             '<span class="tx"><span class="t1">' + hl(u.name, qRaw) + '</span><br><span class="t2">' + esc(u.role) + '</span></span>' +
             '<span class="rt"><span class="st">★</span>' + esc(u.rate) + '</span></a>')
           .join('');
     }
-    html += '<a class="sd-all" href="' + resultsHref(qRaw) + '">' + esc(L_ALL) + ' (' + m.total + ') →</a>';
+    if (!sug.length && !prod.length && !masters.length) {
+      html += '<div class="sd-head" style="text-align:center;padding:18px 0">' + esc(L_NO_RESULTS) + '</div>';
+    } else {
+      html += '<a class="sd-all" href="' + resultsHref(qRaw) + '">' + esc(L_ALL) + ' (' + total + ') →</a>';
+    }
     drop.innerHTML = html;
   }
 
-  function update() {
-    const m = match(input.value);
-    if (!m) {
-      close();
-      return;
-    }
-    render(input.value, m);
+  // Debounce + fetch
+  let timer = null;
+  let abortCtrl = null;
+
+  function fetchResults() {
+    const q = (input.value || '').trim();
+    if (q.length < 1) { close(); return; }
+
+    // Show loading state
+    drop.innerHTML = '<div class="sd-head" style="text-align:center;padding:18px 0">' + esc(L_LOADING) + '</div>';
     drop.classList.add('on');
     overlay.classList.add('on');
+
+    // Abort any in-flight request
+    if (abortCtrl) abortCtrl.abort();
+    abortCtrl = new AbortController();
+
+    fetch(URL_API + '?q=' + encodeURIComponent(q), { signal: abortCtrl.signal })
+      .then((r) => r.json())
+      .then((data) => {
+        // If input changed while fetching, ignore stale response
+        if ((input.value || '').trim() !== q) return;
+        render(q, data);
+        drop.classList.add('on');
+        overlay.classList.add('on');
+      })
+      .catch((err) => {
+        if (err.name === 'AbortError') return;
+        close();
+      });
   }
+
+  function scheduleSearch() {
+    if (timer) clearTimeout(timer);
+    const q = (input.value || '').trim();
+    if (q.length < 1) { close(); return; }
+    timer = setTimeout(fetchResults, 300);
+  }
+
   function close() {
     drop.classList.remove('on');
     overlay.classList.remove('on');
   }
 
-  input.addEventListener('focus', update);
-  input.addEventListener('input', update);
+  input.addEventListener('focus', () => {
+    if ((input.value || '').trim().length >= 1) scheduleSearch();
+  });
+  input.addEventListener('input', scheduleSearch);
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { close(); input.blur(); }
     if (e.key === 'Enter') { location.href = resultsHref(input.value); }

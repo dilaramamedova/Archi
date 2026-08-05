@@ -79,6 +79,22 @@ return [
         'cat_plumbing' => 'Santexnika',
         'name_mixer' => 'Qarışdırıcı, xrom',
         'reviews_210' => '(210 rəy)',
+        'price_now_1' => '23.90 ₼',
+        'price_old_1' => '45.99 ₼',
+        'discount_1' => '-48%',
+        'rate_1' => '4.6',
+        'price_now_2' => '29.90 ₼',
+        'price_old_2' => '42.00 ₼',
+        'discount_2' => '-29%',
+        'rate_2' => '4.8',
+        'price_now_3' => '49.00 ₼',
+        'price_old_3' => '72.00 ₼',
+        'discount_3' => '-32%',
+        'rate_3' => '4.7',
+        'price_now_4' => '64.00 ₼',
+        'price_old_4' => '95.00 ₼',
+        'discount_4' => '-33%',
+        'rate_4' => '4.9',
     ],
 
     'products' => [
@@ -88,6 +104,10 @@ return [
         'name_tile_matte' => 'Keramik kafel 60×60, mat',
         'reviews_1876' => '(1,876 rəy)',
         'condition_new' => 'Yeni',
+        'fallback_price_now' => '23.90 ₼',
+        'fallback_price_old' => '15.99 ₼',
+        'fallback_discount' => '-48%',
+        'fallback_rate' => '4.4',
     ],
 
     'specialists' => [
@@ -98,8 +118,11 @@ return [
         'name_1' => 'Rəşad Məmmədov',
         'name_2' => 'Rəna Məmmədova',
         'reviews_416' => '(416 rəy)',
+        'fallback_rate' => '4.9',
         'exp_12' => '12 illik təcrübə',
         'proj_320' => '320 layihə',
+        'years' => 'il təcrübə',
+        'projects' => 'layihə',
     ],
 
     'blog' => [

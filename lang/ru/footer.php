@@ -34,11 +34,13 @@ return [
     'news_sub' => 'Узнавайте первыми о скидках, новинках, полезных статьях и новостях.',
     'news_email' => 'Ваш e-mail',
     'news_submit' => 'Подписаться',
+    'newsletter_error' => 'Ошибка',
+    'newsletter_network_error' => 'Ошибка сети. Пожалуйста, попробуйте снова.',
 
     'legal_terms' => 'Условия использования',
     'legal_privacy' => 'Политика конфиденциальности',
     'legal_delivery' => 'Доставка и возврат',
     'legal_cookie' => 'Политика cookie',
     'legal_sitemap' => 'Карта сайта',
-    'copy' => '©2026 ARCHI — Все права защищены.',
+    'copy' => '©:year ARCHI — Все права защищены.',
 ];

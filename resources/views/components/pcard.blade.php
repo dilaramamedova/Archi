@@ -49,6 +49,7 @@
     'dots' => 3,
     'dot' => 0,
     'cursor' => null,
+    'productId' => null,
 ])
 @php
     $badgeList = $badges ?? [
@@ -56,7 +57,7 @@
         ['label' => __('common.badge_in_stock')],
     ];
 @endphp
-<a {{ $attributes->merge(['class' => 'pcard', 'href' => $href ?? route('product')]) }}>
+<a {{ $attributes->merge(['class' => 'pcard', 'href' => $href ?? route('product'), 'data-product-id' => $productId]) }}>
   <div class="prod-cursor"><span>{{ $cursor ?? __('common.go_to_product') }}</span></div>
   <div class="ph">
     <img class="prod" src="{{ $img }}" alt="">

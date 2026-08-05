@@ -4,7 +4,13 @@
   <footer> breaks out of its container with `margin-left: calc(50% - 50vw); width: 100vw`,
   so it must stay a direct child of <body> (x-layout already places it there) — never
   nest it inside page markup.
+
+  Props (passed from x-layout, sourced via AppServiceProvider):
+    $footerMenu  — Collection of root MenuItem models (location='footer'), each with children
+    $footerLegal — Collection of MenuItem models (location='footer_legal')
+    $socialLinks — Collection of SocialLink models (platform, url, icon)
 --}}
+@props(['footerMenu', 'footerLegal', 'socialLinks'])
 <footer>
   <div class="inner">
     <div class="foot-top">
@@ -15,35 +21,14 @@
     <div class="foot-line"></div>
 
     <div class="foot-cols">
+      @foreach ($footerMenu as $column)
       <div class="foot-col">
-        <h5>{{ __('footer.col_products') }}</h5>
-        <a href="{{ route('catalog') }}">{{ __('footer.p_tiles') }}</a>
-        <a href="{{ route('catalog') }}">{{ __('footer.p_paint') }}</a>
-        <a href="{{ route('catalog') }}">{{ __('footer.p_plumbing') }}</a>
-        <a href="{{ route('catalog') }}">{{ __('footer.p_insulation') }}</a>
-        <a href="{{ route('catalog') }}">{{ __('footer.p_all') }}</a>
+        <h5>{{ $column->label }}</h5>
+        @foreach ($column->children as $child)
+        <a href="{{ $child->resolvedUrl ?? '#' }}"@if($child->open_in_new_tab) target="_blank" rel="noopener"@endif>{{ $child->label }}</a>
+        @endforeach
       </div>
-      <div class="foot-col">
-        <h5>{{ __('footer.col_specialists') }}</h5>
-        <a href="{{ route('specialists') }}">{{ __('footer.s_find') }}</a>
-        <a href="{{ route('specialists') }}">{{ __('footer.s_top') }}</a>
-        <a href="{{ route('specialists') }}">{{ __('footer.s_all') }}</a>
-      </div>
-      <div class="foot-col">
-        <h5>{{ __('footer.col_join') }}</h5>
-        <a href="{{ route('sell') }}">{{ __('footer.j_seller') }}</a>
-        <a href="{{ route('register') }}">{{ __('footer.j_master') }}</a>
-        <a href="{{ route('business.register') }}">{{ __('footer.j_partner') }}</a>
-        <a href="{{ route('business.register') }}">{{ __('footer.j_business') }}</a>
-      </div>
-      <div class="foot-col">
-        <h5>{{ __('footer.col_company') }}</h5>
-        <a href="{{ route('about') }}">{{ __('footer.c_about') }}</a>
-        <a href="{{ route('specialists') }}">{{ __('footer.c_consult') }}</a>
-        <a href="{{ route('blog') }}">{{ __('footer.c_articles') }}</a>
-        <a href="#">{{ __('footer.c_help') }}</a>
-        <a href="#">{{ __('footer.c_contact') }}</a>
-      </div>
+      @endforeach
     </div>
 
     <div class="foot-line"></div>
@@ -56,8 +41,10 @@
           <p>{{ __('footer.news_sub') }}</p>
         </div>
       </div>
-      <form class="form" onsubmit="return false">
-        <input class="ip" type="email" aria-label="{{ __('footer.news_email') }}" placeholder="{{ __('footer.news_email') }}">
+      <form class="form" id="footer-newsletter-form"
+            data-error-fallback="{{ __('footer.newsletter_error') }}"
+            data-network-error="{{ __('footer.newsletter_network_error') }}">
+        <input class="ip" type="email" name="email" required aria-label="{{ __('footer.news_email') }}" placeholder="{{ __('footer.news_email') }}">
         <button class="sub" type="submit">{{ __('footer.news_submit') }}</button>
       </form>
     </div>
@@ -67,17 +54,66 @@
     <div class="foot-bottom">
       <div class="foot-legal">
         <div class="links">
-          <a href="#">{{ __('footer.legal_terms') }}</a><span class="sep">|</span>
-          <a href="#">{{ __('footer.legal_privacy') }}</a><span class="sep">|</span>
-          <a href="#">{{ __('footer.legal_delivery') }}</a><span class="sep">|</span>
-          <a href="#">{{ __('footer.legal_cookie') }}</a><span class="sep">|</span>
-          <a href="#">{{ __('footer.legal_sitemap') }}</a>
+          @foreach ($footerLegal as $legalItem)
+          @if (!$loop->first)<span class="sep">|</span>@endif
+          <a href="{{ $legalItem->resolvedUrl ?? '#' }}"@if($legalItem->open_in_new_tab) target="_blank" rel="noopener"@endif>{{ $legalItem->label }}</a>
+          @endforeach
         </div>
-        <div class="copy">{{ __('footer.copy') }}</div>
+        <div class="copy">{{ __('footer.copy', ['year' => date('Y')]) }}</div>
       </div>
       <div class="foot-social">
-        <a href="#" aria-label="Instagram"><img src="/assets/icon-instagram-white.svg" alt="Instagram"></a>
+        @foreach ($socialLinks as $social)
+        <a href="{{ $social->url }}" aria-label="{{ $social->platform }}" target="_blank" rel="noopener"><img src="{{ $social->icon }}" alt="{{ $social->platform }}"></a>
+        @endforeach
       </div>
     </div>
   </div>
 </footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var form = document.getElementById('footer-newsletter-form');
+    if (!form) return;
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var emailInput = form.querySelector('input[name="email"]');
+        var submitBtn = form.querySelector('button[type="submit"]');
+        var email = emailInput.value.trim();
+        if (!email) return;
+
+        submitBtn.disabled = true;
+        var originalText = submitBtn.textContent;
+        submitBtn.textContent = '...';
+
+        fetch('/api/newsletter/subscribe', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            },
+            body: JSON.stringify({ email: email })
+        })
+        .then(function (response) { return response.json().then(function (data) { return { ok: response.ok, data: data }; }); })
+        .then(function (result) {
+            if (result.ok) {
+                emailInput.value = '';
+                submitBtn.textContent = '✓';
+                setTimeout(function () { submitBtn.textContent = originalText; }, 3000);
+            } else {
+                var msg = result.data.message || result.data.errors?.email?.[0] || form.dataset.errorFallback;
+                submitBtn.textContent = originalText;
+                alert(msg);
+            }
+        })
+        .catch(function () {
+            submitBtn.textContent = originalText;
+            alert(form.dataset.networkError);
+        })
+        .finally(function () {
+            submitBtn.disabled = false;
+        });
+    });
+});
+</script>

@@ -35,6 +35,8 @@ return [
         'meta_exp' => '12 illik təcrübə',
         'meta_projects' => '320 tamamlanmış layihə',
         'meta_city' => 'Bakı',
+        'years' => 'il təcrübə',
+        'projects' => 'layihə',
     ],
 
     'book' => [

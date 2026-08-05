@@ -15,6 +15,7 @@ return [
 
     'badge_new' => 'Новинка',
     'badge_in_stock' => 'В наличии',
+    'badge_out_of_stock' => 'Нет в наличии',
     'badge_top_master' => 'Топ мастер',
     'badge_verified' => 'Проверен',
     'your_listing' => 'Ваше объявление',
@@ -28,6 +29,9 @@ return [
     'email' => 'E-mail',
     'phone' => 'Телефон',
     'password' => 'Пароль',
+
+    'reviews' => 'отзывов',
+    'products_count' => 'товаров',
 
     'site_name' => 'ARCHİ',
     'site_title' => 'ARCHİ — Стройка и ремонт в одном месте',

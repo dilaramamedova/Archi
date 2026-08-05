@@ -48,12 +48,12 @@
     data-cur-details="{{ __('common.view_details') }}"
 >
 
-<x-navbar />
+<x-navbar :megaCatalog="$megaCatalog" :megaSpecialists="$megaSpecialists" :megaBlog="$megaBlog" />
 
 {{ $slot }}
 
 @if ($footer)
-<x-footer />
+<x-footer :footerMenu="$footerMenu" :footerLegal="$footerLegal" :socialLinks="$socialLinks" />
 @endif
 
 {{-- Shared login modal — opened by the navbar "sign in" link; /login is the no-JS fallback --}}

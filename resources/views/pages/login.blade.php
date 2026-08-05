@@ -21,7 +21,7 @@
         </x-ui.field>
         <div class="flex items-center justify-between text-sm">
           <x-ui.checkbox name="remember">{{ __('login.form.remember') }}</x-ui.checkbox>
-          <a class="border-b border-yellow-line text-black/70" href="#">{{ __('login.form.forgot') }}</a>
+          <a class="border-b border-yellow-line text-black/70" href="{{ route('password.request') }}">{{ __('login.form.forgot') }}</a>
         </div>
         <x-ui.button variant="primary" type="submit"
                      class="h-[54px] rounded-none text-lg font-semibold duration-200 hover:brightness-[.93] disabled:cursor-default disabled:opacity-55 disabled:hover:brightness-100">{{ __('login.form.submit') }}</x-ui.button>

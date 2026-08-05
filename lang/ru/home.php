@@ -79,6 +79,22 @@ return [
         'cat_plumbing' => 'Сантехника',
         'name_mixer' => 'Смеситель, хром',
         'reviews_210' => '(210 отзывов)',
+        'price_now_1' => '23.90 ₼',
+        'price_old_1' => '45.99 ₼',
+        'discount_1' => '-48%',
+        'rate_1' => '4.6',
+        'price_now_2' => '29.90 ₼',
+        'price_old_2' => '42.00 ₼',
+        'discount_2' => '-29%',
+        'rate_2' => '4.8',
+        'price_now_3' => '49.00 ₼',
+        'price_old_3' => '72.00 ₼',
+        'discount_3' => '-32%',
+        'rate_3' => '4.7',
+        'price_now_4' => '64.00 ₼',
+        'price_old_4' => '95.00 ₼',
+        'discount_4' => '-33%',
+        'rate_4' => '4.9',
     ],
 
     'products' => [
@@ -88,6 +104,10 @@ return [
         'name_tile_matte' => 'Керамическая плитка 60×60, мат',
         'reviews_1876' => '(1 876 отзывов)',
         'condition_new' => 'Новый',
+        'fallback_price_now' => '23.90 ₼',
+        'fallback_price_old' => '15.99 ₼',
+        'fallback_discount' => '-48%',
+        'fallback_rate' => '4.4',
     ],
 
     'specialists' => [
@@ -98,8 +118,11 @@ return [
         'name_1' => 'Рашад Мамедов',
         'name_2' => 'Рена Мамедова',
         'reviews_416' => '(416 отзывов)',
+        'fallback_rate' => '4.9',
         'exp_12' => '12 лет опыта',
         'proj_320' => '320 проектов',
+        'years' => 'лет опыта',
+        'projects' => 'проектов',
     ],
 
     'blog' => [

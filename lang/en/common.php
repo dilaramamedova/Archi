@@ -15,6 +15,7 @@ return [
 
     'badge_new' => 'New',
     'badge_in_stock' => 'In stock',
+    'badge_out_of_stock' => 'Out of stock',
     'badge_top_master' => 'Top pro',
     'badge_verified' => 'Verified',
     'your_listing' => 'Your listing',
@@ -28,6 +29,9 @@ return [
     'email' => 'E-mail',
     'phone' => 'Phone',
     'password' => 'Password',
+
+    'reviews' => 'reviews',
+    'products_count' => 'products',
 
     'site_name' => 'ARCHİ',
     'site_title' => 'ARCHİ — Construction & repair in one place',

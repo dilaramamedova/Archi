@@ -20,20 +20,39 @@ const CLS = {
   qtyNum: 'min-w-[34px] text-center text-sm font-semibold',
   line: 'min-w-[92px] text-right text-base font-bold text-ink max-[560px]:min-w-[auto]',
   rm: 'cursor-pointer border-none p-1 text-[22px] leading-none text-black/35 [font-family:inherit] hover:text-[#c0392b]',
+  // Checkout modal classes
+  overlay: 'fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4',
+  modal: 'relative w-full max-w-[440px] rounded-ds bg-white p-6 shadow-xl',
+  modalTitle: 'mb-5 text-lg font-bold text-ink',
+  field: 'flex flex-col gap-1.5',
+  label: 'text-[13px] font-semibold text-ink',
+  input: 'rounded-ds border border-black/15 px-3.5 py-[11px] text-sm outline-none [font-family:inherit] focus:border-ink',
+  textarea: 'rounded-ds border border-black/15 px-3.5 py-[11px] text-sm outline-none [font-family:inherit] focus:border-ink resize-none',
+  fieldError: 'text-xs text-[#c0392b]',
+  modalBtns: 'mt-5 flex gap-3',
+  modalErr: 'mt-3 rounded-ds bg-[#fdecea] px-4 py-2.5 text-sm text-[#c0392b]',
 };
 
 // Thousands grouping follows the active locale (from Blade), not a hardcoded one.
+// Bug fix: use minimumFractionDigits:2 + maximumFractionDigits:2 to preserve decimals
+// (e.g. 29.90 stays "29,90" instead of rounding to "30").
 const LOCALE_TAG = { az: 'az-AZ', ru: 'ru-RU', en: 'en-US' };
 
 function makeFmt(locale) {
   const tag = LOCALE_TAG[locale] || 'az-AZ';
   let nf;
   try {
-    nf = new Intl.NumberFormat(tag, { maximumFractionDigits: 0 });
+    nf = new Intl.NumberFormat(tag, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   } catch (e) {
-    nf = new Intl.NumberFormat('ru-RU', { maximumFractionDigits: 0 });
+    nf = new Intl.NumberFormat('ru-RU', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   }
-  return (n) => nf.format(Math.round(n));
+  return (n) => nf.format(n);
 }
 
 const esc = (s) =>
@@ -54,12 +73,18 @@ function readJson(raw, fallback) {
   }
 }
 
+function csrf() {
+  return document.querySelector('meta[name="csrf-token"]')?.content || '';
+}
+
 export default function init() {
   const page = document.getElementById('ctPage');
   if (!page) return;
 
   const T = readJson(page.dataset.i18n, {});
   const PROMOS = readJson(page.dataset.promos, {});
+  const authUser = readJson(page.dataset.auth, null);
+  const orderUrl = page.dataset.orderUrl || '/api/orders';
   const fmt = makeFmt(T.locale);
   const money = (n) => tr(T.money, { amount: fmt(n) });
 
@@ -242,13 +267,184 @@ export default function init() {
     });
   }
 
+  // ---- Checkout flow ----
+  // For all users: show a modal form collecting name/phone/address.
+  // Auth users get their name/phone pre-filled from the server.
+
+  function removeModal() {
+    const existing = document.getElementById('ctModal');
+    if (existing) existing.remove();
+  }
+
+  function showCheckoutForm() {
+    removeModal();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'ctModal';
+    overlay.className = CLS.overlay;
+    overlay.innerHTML = `
+      <div class="${CLS.modal}">
+        <h3 class="${CLS.modalTitle}">${esc(T.checkoutTitle)}</h3>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div class="${CLS.field}">
+            <label class="${CLS.label}">${esc(T.checkoutName)} *</label>
+            <input class="${CLS.input}" id="coName" value="${esc(authUser?.name || '')}" autocomplete="name">
+            <div class="${CLS.fieldError}" id="coNameErr" hidden></div>
+          </div>
+          <div class="${CLS.field}">
+            <label class="${CLS.label}">${esc(T.checkoutPhone)} *</label>
+            <input class="${CLS.input}" id="coPhone" type="tel" value="${esc(authUser?.phone || '')}" autocomplete="tel">
+            <div class="${CLS.fieldError}" id="coPhoneErr" hidden></div>
+          </div>
+          <div class="${CLS.field}">
+            <label class="${CLS.label}">${esc(T.checkoutAddress)} *</label>
+            <input class="${CLS.input}" id="coAddr" autocomplete="street-address">
+            <div class="${CLS.fieldError}" id="coAddrErr" hidden></div>
+          </div>
+          <div class="${CLS.field}">
+            <label class="${CLS.label}">${esc(T.checkoutNotes)}</label>
+            <textarea class="${CLS.textarea}" id="coNotes" rows="2"></textarea>
+          </div>
+        </div>
+        <div id="coGlobalErr" class="${CLS.modalErr}" hidden></div>
+        <div class="${CLS.modalBtns}">
+          <button type="button" id="coCancel" class="flex-1 rounded-ds border border-black/15 bg-white px-5 py-3 text-sm font-semibold text-ink [font-family:inherit] hover:bg-gray-soft cursor-pointer">${esc(T.checkoutCancel)}</button>
+          <button type="button" id="coSubmit" class="flex-1 rounded-ds bg-[#c8a24e] px-5 py-3 text-sm font-semibold text-white [font-family:inherit] hover:brightness-[.93] cursor-pointer">${esc(T.checkoutSubmit)}</button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Close on overlay click (not on modal body)
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) removeModal();
+    });
+
+    document.getElementById('coCancel').addEventListener('click', removeModal);
+    document.getElementById('coSubmit').addEventListener('click', submitOrder);
+
+    // Close on Escape
+    overlay.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') removeModal();
+    });
+
+    // Focus first empty field
+    const nameEl = document.getElementById('coName');
+    if (nameEl) nameEl.focus();
+  }
+
+  async function submitOrder() {
+    const nameEl = document.getElementById('coName');
+    const phoneEl = document.getElementById('coPhone');
+    const addrEl = document.getElementById('coAddr');
+    const notesEl = document.getElementById('coNotes');
+    const submitBtn = document.getElementById('coSubmit');
+    const globalErr = document.getElementById('coGlobalErr');
+
+    // Validation
+    let valid = true;
+
+    function showFieldErr(id, msg) {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = msg; el.hidden = false; }
+    }
+    function hideFieldErr(id) {
+      const el = document.getElementById(id);
+      if (el) el.hidden = true;
+    }
+
+    hideFieldErr('coNameErr');
+    hideFieldErr('coPhoneErr');
+    hideFieldErr('coAddrErr');
+    if (globalErr) globalErr.hidden = true;
+
+    const name = (nameEl?.value || '').trim();
+    const phone = (phoneEl?.value || '').trim();
+    const address = (addrEl?.value || '').trim();
+    const notes = (notesEl?.value || '').trim();
+
+    if (!name) { showFieldErr('coNameErr', T.checkoutNameReq); valid = false; }
+    if (!phone) { showFieldErr('coPhoneErr', T.checkoutPhoneReq); valid = false; }
+    if (!address) { showFieldErr('coAddrErr', T.checkoutAddrReq); valid = false; }
+
+    if (!valid) return;
+
+    // Disable button
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = T.checkoutSending || '...';
+    }
+
+    try {
+      const res = await fetch(orderUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrf(),
+        },
+        body: JSON.stringify({
+          items: cart.map((c) => ({
+            name: c.name,
+            price: +c.price || 0,
+            qty: c.qty || 1,
+            brand: c.brand || '',
+            cat: c.cat || '',
+          })),
+          delivery_name: name,
+          delivery_phone: phone,
+          delivery_address: address,
+          notes: notes || null,
+          promo_code: promo || null,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        // Clear cart
+        cart = [];
+        save();
+        try { localStorage.removeItem('archi-promo'); } catch (e) { /* skip */ }
+        removeModal();
+        // Redirect to success page
+        window.location.href = data.redirect;
+      } else {
+        // Show error
+        if (globalErr) {
+          globalErr.textContent = data.message || T.checkoutError;
+          globalErr.hidden = false;
+        }
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = T.checkoutSubmit;
+        }
+      }
+    } catch (e) {
+      if (globalErr) {
+        globalErr.textContent = T.checkoutError;
+        globalErr.hidden = false;
+      }
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = T.checkoutSubmit;
+      }
+    }
+  }
+
   if (checkoutBtn) {
     checkoutBtn.addEventListener('click', () => {
       if (!cart.length) {
-        alert(T.alertEmpty);
+        // Show the empty state instead of alert()
+        if (emptyEl) {
+          emptyEl.hidden = false;
+          const cta = emptyEl.querySelector('a');
+          if (cta) cta.focus();
+        }
         return;
       }
-      alert(tr(T.alertDone, { total: money(currentTotal) }));
+      showCheckoutForm();
     });
   }
 

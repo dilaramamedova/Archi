@@ -10,6 +10,11 @@
   fixed `width`/`min-width: 1440px` on `body` or `.page` — that caused the width
   mismatch in the old project.
 --}}
+@props([
+    'megaCatalog' => collect(),
+    'megaSpecialists' => collect(),
+    'megaBlog' => collect(),
+])
 @php
     // Active nav item, matched by route name
     $isCatalog = request()->routeIs('catalog');
@@ -19,39 +24,6 @@
     $locale = app()->getLocale();
     $langLabels = ['az' => 'AZ', 'ru' => 'RUS', 'en' => 'ENG'];
 
-    // Locale-independent structure. The lang files hold only translatable text
-    // (title/desc/name/cat/price); assets and layout flags are zipped in by index,
-    // so renaming an asset is a one-line change instead of three.
-    $catalogIcons = [
-        'icon-bricks.svg',
-        'icon-faucet.svg',
-        'icon-power-plug.svg',
-        'icon-floor-tiles.svg',
-        'icon-pendant-lamp.svg',
-        'icon-armchair.svg',
-    ];
-    $specIcons = [
-        'icon-blueprint.svg',
-        'icon-interior-design.svg',
-        'icon-hammer-wrench.svg',
-        'icon-tower-crane.svg',
-    ];
-    $blogImages = ['marble-onyx-texture.jpg', 'architecture-concrete-villa.jpg', 'architecture-concrete-villa.jpg'];
-    $blogCtas = ['read', 'read', 'pill'];
-
-    // Search autocomplete demo dataset: images live here, text in lang/*/nav.php
-    $searchProductImages = [
-        '/assets/product-marble-tile-wide.jpg',
-        '/assets/product-marble-tile-dark.jpg',
-        '/assets/product-marble-tile-thumb.jpg',
-        '/assets/product-facade-paint-bucket.jpg',
-        '/assets/product-mineral-wool-roll.jpg',
-        '/assets/bricklayer-at-work.jpg',
-    ];
-    $searchProducts = [];
-    foreach (__('nav.sd_demo_products') as $i => $product) {
-        $searchProducts[] = $product + ['img' => $searchProductImages[$i] ?? ''];
-    }
 @endphp
 
 <header class="topbar">
@@ -59,16 +31,16 @@
     <a href="{{ route('home') }}" aria-label="{{ __('nav.logo_aria') }}"><img class="logo" src="/assets/logo-archi-black.png" alt="ARCHI"></a>
 
     <div class="search"
+         data-url-api="/api/search"
          data-url-search="{{ route('search') }}"
-         data-url-product="{{ route('product') }}"
-         data-url-specialists="{{ route('specialists') }}"
+         data-url-specialists="/specialist"
+         data-url-product="/product"
          data-l-quick="{{ __('nav.sd_quick') }}"
          data-l-products="{{ __('nav.sd_products') }}"
          data-l-masters="{{ __('nav.sd_masters') }}"
          data-l-all="{{ __('nav.sd_all_results') }}"
-         data-demo-suggests="{{ json_encode(__('nav.sd_demo_suggests'), JSON_UNESCAPED_UNICODE) }}"
-         data-demo-products="{{ json_encode($searchProducts, JSON_UNESCAPED_UNICODE) }}"
-         data-demo-masters="{{ json_encode(__('nav.sd_demo_masters'), JSON_UNESCAPED_UNICODE) }}">
+         data-l-loading="{{ __('nav.sd_loading', [], app()->getLocale()) }}"
+         data-l-no-results="{{ __('nav.sd_no_results', [], app()->getLocale()) }}">
       <img src="/assets/icon-search.svg" alt="">
       <input type="text" id="navSearch" aria-label="{{ __('nav.search_aria') }}" placeholder="{{ __('nav.search_placeholder') }}" autocomplete="off">
       <div class="search-dropdown" id="searchDrop"></div>
@@ -89,7 +61,7 @@
           </ul>
         </div>
 
-        <img src="/assets/icon-heart-rounded.svg" alt="" role="button" tabindex="0" aria-label="{{ __('nav.favorites') }}">
+        <a href="{{ route('wishlist') }}" aria-label="{{ __('nav.favorites') }}"><img src="/assets/icon-heart-rounded.svg" alt=""></a>
         <a href="{{ route('cart') }}" class="nav-cart" aria-label="{{ __('nav.cart') }}"><img src="/assets/icon-cart.svg" alt=""><span class="cart-badge" id="navCartCount"></span></a>
       </div>
 
@@ -100,14 +72,10 @@
             $profileRoute = match(Auth::user()->role) {
               \App\Enums\UserRole::Seller => route('business.profile'),
               \App\Enums\UserRole::Master => route('specialist.cabinet'),
-              default => null,
+              default => route('account'),
             };
           @endphp
-          @if($profileRoute)
-            <a class="txt nav-user" href="{{ $profileRoute }}" data-user>{{ Auth::user()->first_name }}</a>
-          @else
-            <span class="txt nav-user" data-user>{{ Auth::user()->first_name }}</span>
-          @endif
+          <a class="txt nav-user" href="{{ $profileRoute }}" data-user>{{ Auth::user()->first_name }}</a>
           <form method="POST" action="{{ route('logout') }}" class="inline">
             @csrf
             <button type="submit" class="txt nav-logout">{{ __('nav.logout') }}</button>
@@ -142,10 +110,10 @@
   <div class="mega-panel" id="megaCatalog" data-panel="catalog">
     <div class="mega-inner">
       <div class="mega-cats">
-        @foreach (__('nav.mega_catalog') as $i => $item)
-          <a class="mcat" href="{{ route('catalog') }}">
-            <div class="top"><img src="/assets/{{ $catalogIcons[$i] ?? '' }}" alt=""><p>{{ $item['title'] }}</p></div>
-            <div class="desc">{{ $item['desc'] }}</div>
+        @foreach ($megaCatalog as $item)
+          <a class="mcat" href="{{ $item->resolved_url }}">
+            <div class="top"><img src="/assets/{{ $item->icon }}" alt=""><p>{{ $item->label }}</p></div>
+            <div class="desc">{{ $item->description }}</div>
           </a>
         @endforeach
       </div>
@@ -157,10 +125,10 @@
     <div class="mega-inner">
       <div class="mega-spec">
         <div class="grid">
-          @foreach (__('nav.mega_spec') as $i => $item)
-            <a class="mcat" href="{{ route('specialists') }}">
-              <div class="top"><img src="/assets/{{ $specIcons[$i] ?? '' }}" alt=""><p>{{ $item['title'] }}</p></div>
-              <div class="desc">{{ $item['desc'] }}</div>
+          @foreach ($megaSpecialists as $item)
+            <a class="mcat" href="{{ $item->resolved_url }}">
+              <div class="top"><img src="/assets/{{ $item->icon }}" alt=""><p>{{ $item->label }}</p></div>
+              <div class="desc">{{ $item->description }}</div>
             </a>
           @endforeach
         </div>
@@ -179,15 +147,15 @@
   <div class="mega-panel" id="megaBlog" data-panel="blog">
     <div class="mega-inner">
       <div class="mega-blog">
-        @foreach (__('nav.mega_blog') as $i => $item)
+        @foreach ($megaBlog as $i => $post)
           {{-- Each mega card is a single article teaser, so it opens the article page.
                The "Bloq" nav item itself still goes to the blog index. --}}
-          <a class="mblog" href="{{ route('blog.article') }}">
-            <img class="ph" src="/assets/{{ $blogImages[$i] ?? '' }}" alt="">
+          <a class="mblog" href="{{ route('blog.show', $post->slug) }}">
+            <img class="ph" src="/{{ $post->cover_image }}" alt="">
             <div class="info">
-              <h4>{{ $item['title'] }}</h4>
-              <div class="d">{{ $item['desc'] }}</div>
-              @if (($blogCtas[$i] ?? 'read') === 'pill')
+              <h4>{{ $post->title }}</h4>
+              <div class="d">{{ $post->excerpt }}</div>
+              @if ($loop->last)
                 <span class="pill">{{ __('common.more') }}</span>
               @else
                 <span class="read">{{ __('common.read_more') }} <img src="/assets/icon-arrow-right.svg" alt=""></span>

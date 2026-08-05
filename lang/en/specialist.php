@@ -18,8 +18,13 @@ return [
         'rate' => '4.9',
         'reviews' => '(416 reviews)',
         'meta_exp' => '12 years of experience',
-        'meta_projects' => '320 completed projects',
+        'meta_projects' => ':count completed projects',
         'meta_city' => 'Baku',
+    ],
+
+    'meta' => [
+        'experience' => ':years years experience',
+        'projects_label' => 'completed projects',
     ],
 
     'about' => [
@@ -45,10 +50,11 @@ return [
         'response_k' => 'Response time',
         'response_v' => '~1 hour',
         'done_k' => 'Completed',
-        'done_v' => '320 projects',
+        'done_v' => ':count projects',
         'member_k' => 'Member',
         'member_v' => 'since 2021',
         'free' => '3 slots left this week',
+        'on_vacation' => 'Currently unavailable',
     ],
 
     'portfolio' => [
@@ -96,5 +102,8 @@ return [
             ],
         ],
         'more' => 'View all reviews',
+        'count_label' => 'reviews',
+        'empty' => 'No reviews yet.',
+        'anonymous' => 'Anonymous',
     ],
 ];

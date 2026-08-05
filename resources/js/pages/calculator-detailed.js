@@ -116,6 +116,21 @@ export default function init() {
     if (state.works[i] === undefined) state.works[i] = w.on;
   });
 
+  // Room-area proportions, used to redistribute area when the global area input
+  // changes.  Recomputed whenever a room is added, removed, or individually edited.
+  let roomProportions = computeProportions();
+
+  function computeProportions() {
+    const sum = state.rooms.reduce((s, r) => s + (+r.area || 0), 0) || 1;
+    return state.rooms.map((r) => (+r.area || 0) / sum);
+  }
+
+  function distributeArea(newArea) {
+    state.rooms.forEach((r, i) => {
+      r.area = Math.round(newArea * (roomProportions[i] || 0) * 10) / 10;
+    });
+  }
+
   // ---------- compute ----------
   const totalArea = () => state.rooms.reduce((s, r) => s + (+r.area || 0), 0) || state.area;
 
@@ -168,7 +183,15 @@ export default function init() {
       : 0;
 
     const rough = Math.round(A * 150);
-    const finish = cartMat || Math.round(A * 280);
+    // Calculate finish cost from room material choices so the side panel reacts to
+    // floor/wall cover changes.  Use the higher of room-based rates and cart
+    // materials so that both user selections and cart items are reflected.
+    const finishFromRooms = state.rooms.reduce((s, r) => {
+      const floorRate = (D.floorRates && D.floorRates[r.floor]) || 180;
+      const wallRate = (D.wallRates && D.wallRates[r.wall]) || 80;
+      return s + (+r.area || 0) * (floorRate + wallRate);
+    }, 0);
+    const finish = Math.max(cartMat, Math.round(finishFromRooms)) || Math.round(A * 280);
     const plumbing = byCat(D.cats.plumbing) + bathrooms() * 1800;
     const electrical = Math.round(A * 52);
     const lighting = Math.round(A * 44);
@@ -467,7 +490,15 @@ export default function init() {
     const area = document.getElementById('dcArea');
     if (area) {
       area.addEventListener('input', () => {
-        state.area = +area.value || 0;
+        const newArea = +area.value || 0;
+        state.area = newArea;
+
+        // Proportionally scale every room so the room-area sum matches the new
+        // total.  This keeps the side panel ("Cari smeta") in sync because
+        // totalArea() reads from room areas first.  We use the stored
+        // proportions so repeated keystrokes don't compound rounding errors.
+        if (newArea > 0) distributeArea(newArea);
+
         renderSide();
       });
     }
@@ -490,6 +521,7 @@ export default function init() {
         const i = +inp.dataset.r;
         const field = inp.dataset.f;
         state.rooms[i][field] = /area|h|per|doors|win/.test(field) ? +inp.value || 0 : inp.value;
+        if (field === 'area') roomProportions = computeProportions();
         renderSide();
       })
     );
@@ -506,6 +538,7 @@ export default function init() {
         // `data-rm` is only rendered while more than one room is left
         state.rooms.splice(+el.dataset.rm, 1);
         state.editRoom = 0;
+        roomProportions = computeProportions();
         render();
       })
     );
@@ -514,6 +547,7 @@ export default function init() {
       add.addEventListener('click', () => {
         state.rooms.push({ ...D.newRoom });
         state.editRoom = state.rooms.length - 1;
+        roomProportions = computeProportions();
         render();
       });
     }

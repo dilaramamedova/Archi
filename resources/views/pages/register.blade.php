@@ -88,7 +88,7 @@
           </x-ui.field>
         </div>
 
-        <x-ui.checkbox name="terms" required class="gap-2.5"><span><a class="border-b border-yellow-line" href="#">{{ __('register.form.terms_link') }}</a> {{ __('register.form.terms_and') }} <a class="border-b border-yellow-line" href="#">{{ __('register.form.privacy_link') }}</a> {{ __('register.form.terms_agree') }}</span></x-ui.checkbox>
+        <x-ui.checkbox name="terms" required class="gap-2.5"><span><a class="border-b border-yellow-line" href="/terms">{{ __('register.form.terms_link') }}</a> {{ __('register.form.terms_and') }} <a class="border-b border-yellow-line" href="/privacy">{{ __('register.form.privacy_link') }}</a> {{ __('register.form.terms_agree') }}</span></x-ui.checkbox>
 
         <x-ui.button variant="primary" type="submit" class="h-[54px] rounded-none text-lg font-semibold hover:brightness-[.93]">{{ __('register.form.submit') }}</x-ui.button>
         <p class="text-center text-[15px] text-black/60">{{ __('register.form.have_account') }} <a class="border-b-2 border-yellow-line font-semibold text-ink" href="{{ route('login') }}">{{ __('register.form.sign_in') }}</a></p>

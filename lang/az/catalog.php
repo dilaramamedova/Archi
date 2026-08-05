@@ -3,12 +3,12 @@
 // Catalog page (AZ) — values are the exact strings from the old catalog.html.
 
 return [
-    'title' => 'Kafel & metlax — Kataloq — ARCHİ',
-    'crumb_current' => 'Kafel & metlax',
+    'title' => 'Kataloq — ARCHİ',
+    'crumb_current' => 'Kataloq',
 
     'head' => [
         'eyebrow' => 'Kataloq',
-        'title' => 'Kafel & metlax',
+        'title' => 'Kataloq',
         'count' => '860 məhsul',
     ],
 

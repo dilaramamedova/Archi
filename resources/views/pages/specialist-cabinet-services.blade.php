@@ -4,25 +4,21 @@
 @php
     // The seven specialist-cabinet tabs — identical on every specialist-cabinet-* page
     // (ARCHITECTURE.md 4.9.1); only `active` differs.
+    $portfolioCount = $profile ? $profile->portfolioItems()->count() : 0;
+    $servicesCount = $services->count();
+
     $specNav = [
         ['key' => 'main',          'route' => 'specialist.cabinet'],
-        ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count'],
-        ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count'],
+        ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count', 'count_value' => $portfolioCount],
+        ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count', 'count_value' => $servicesCount],
         ['key' => 'schedule',      'route' => 'specialist.cabinet.schedule'],
         ['key' => 'reviews',       'route' => 'specialist.cabinet.reviews',       'count' => 'reviews_count'],
         ['key' => 'notifications', 'route' => 'specialist.cabinet.notifications'],
         ['key' => 'security',      'route' => 'specialist.cabinet.security'],
     ];
 
-    // Non-text row data: the price and the visibility switch. Every label is a lang key.
-    $services = [
-        ['key' => 'tile_floor',  'price' => '25', 'on' => true],
-        ['key' => 'mosaic',      'price' => '35', 'on' => true],
-        ['key' => 'waterproof',  'price' => '18', 'on' => true],
-        ['key' => 'demolition',  'price' => '8',  'on' => false],
-    ];
-
-    // Price units of the <select>; the first one is the design's default.
+    // Services loaded from DB via route closure ($services collection passed from route).
+    // Price units for the <select>; the first one is the design's default.
     $units = ['sqm', 'hour', 'piece', 'linear'];
 @endphp
 
@@ -49,26 +45,26 @@
 
     <div class="scs-list">
       @foreach ($services as $service)
-        <x-cabinet.row>
+        <x-cabinet.row data-id="{{ $service->id }}">
           {{-- The ⠿ glyph is presentational, so it lives in the CSS, not in a lang file. --}}
           <button type="button" class="scs-grip" data-grip aria-label="{{ __('specialist-cabinet-services.list.reorder') }}"></button>
 
           <div class="scs-info">
-            <p class="n">{{ __('specialist-cabinet-services.services.' . $service['key'] . '.name') }}</p>
-            <p class="d">{{ __('specialist-cabinet-services.services.' . $service['key'] . '.desc') }}</p>
+            <p class="n">{{ $service->name }}</p>
+            <p class="d">{{ $service->description ?? '' }}</p>
           </div>
 
-          <input type="text" inputmode="decimal" class="scs-price" value="{{ $service['price'] }}"
+          <input type="text" inputmode="decimal" class="scs-price" value="{{ $service->price ? number_format($service->price, 0) : '' }}"
                  aria-label="{{ __('specialist-cabinet-services.list.price_label') }}">
 
           <select class="scs-unit" aria-label="{{ __('specialist-cabinet-services.list.unit_label') }}">
             @foreach ($units as $unit)
-              <option>{{ __('specialist-cabinet-services.units.' . $unit) }}</option>
+              <option value="{{ $unit }}" @selected(($service->unit ?? 'sqm') === $unit)>{{ __('specialist-cabinet-services.units.' . $unit) }}</option>
             @endforeach
           </select>
 
           <x-ui.toggle
-              :on="$service['on']"
+              :on="$service->is_active"
               size="sm"
               tone="ok"
               :aria-label="__('specialist-cabinet-services.list.toggle')" />

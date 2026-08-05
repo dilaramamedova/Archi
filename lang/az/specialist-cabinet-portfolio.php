@@ -44,6 +44,7 @@ return [
         'cover' => 'Əsas şəkil',
         'remove' => '✕',
         'remove_label' => 'Şəkli sil',
+        'untitled' => 'Adsız şəkil',
     ],
     'tiles' => [
         't1' => 'Mətbəx üzlüyü',

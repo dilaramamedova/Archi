@@ -1,51 +1,64 @@
-// Page module for "specialists" — ported from the inline <script> of the old
-// specialists.html. The 20 cards are rendered server-side now, so this module only
-// sorts, filters and mirrors the active filters as chips; every value it reads comes
-// from a data-* attribute. Shared behaviour (navbar, round cursor) lives in
-// resources/js/shared/.
+// Page module for "specialists" — all filtering and sorting is done server-side
+// via URL query parameters. The JS collects the sidebar state, builds a URL and
+// navigates to it.
 
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.prototype.slice.call(root.querySelectorAll(sel));
 
-// Cities the sidebar lists explicitly; anything else counts as "other".
-const KNOWN_CITIES = ['baku', 'sumgait', 'ganja'];
+function buildFilterUrl() {
+  const params = new URLSearchParams();
 
-const num = (el, key) => parseFloat(el.dataset[key]) || 0;
+  // Specialization
+  const cat = $('#spSpecBlock .sp-cat[data-on="true"]');
+  if (cat) params.set('spec', cat.dataset.spec);
 
-const SORTERS = {
-  rating: (a, b) => num(b, 'rate') - num(a, 'rate') || num(b, 'reviews') - num(a, 'reviews'),
-  reviews: (a, b) => num(b, 'reviews') - num(a, 'reviews'),
-  exp: (a, b) => num(b, 'years') - num(a, 'years'),
-  cheap: (a, b) => num(a, 'price') - num(b, 'price'),
-  projects: (a, b) => num(b, 'projects') - num(a, 'projects'),
-};
+  // City
+  const city = $('#spCityBlock .sp-check[data-on="true"]');
+  if (city) params.set('city', city.dataset.city);
+
+  // Rating
+  const rating = $('#spRateBlock .sp-radio[data-on="true"]');
+  if (rating) params.set('min_rating', rating.dataset.min);
+
+  // Experience years
+  const year = $('#spYearBlock .sp-year[data-on="true"]');
+  if (year) {
+    params.set('min_years', year.dataset.min);
+    params.set('max_years', year.dataset.max);
+  }
+
+  // Verified
+  const swVerified = document.getElementById('spVerified');
+  if (swVerified && swVerified.dataset.on === 'true') params.set('verified', '1');
+
+  // Free this week
+  const swFree = document.getElementById('spFree');
+  if (swFree && swFree.dataset.on === 'true') params.set('free', '1');
+
+  // Sort
+  const sortLi = $('#spSortMenu li[data-on="true"]');
+  if (sortLi && sortLi.dataset.sort !== 'rating') params.set('sort', sortLi.dataset.sort);
+
+  const qs = params.toString();
+  return window.location.pathname + (qs ? '?' + qs : '');
+}
 
 export default function init() {
   const grid = document.getElementById('spGrid');
   if (!grid) return;
 
-  const cards = $$('.sp-card', grid);
-  const empty = document.getElementById('spEmpty');
-
-  // The first paint keeps the Figma order; "rating" only kicks in on the next render.
-  let sortKey = 'rating';
-
-  function render() {
-    const list = cards.slice().sort(SORTERS[sortKey]);
-    list.forEach((card) => grid.appendChild(card));
-    if (empty) {
-      grid.appendChild(empty);
-      empty.hidden = list.some((card) => !card.hidden);
-    }
-  }
+  const cats = $$('#spSpecBlock .sp-cat');
+  const checks = $$('#spCityBlock .sp-check');
+  const radios = $$('#spRateBlock .sp-radio');
+  const years = $$('#spYearBlock .sp-year');
+  const swVerified = document.getElementById('spVerified');
+  const swFree = document.getElementById('spFree');
 
   /* ---- sort dropdown ---- */
   const sortEl = document.getElementById('spSort');
   const sortVal = document.getElementById('spSortVal');
   const sortMenu = document.getElementById('spSortMenu');
 
-  // Every block below is guarded on its own nodes, so a missing id disables that one
-  // feature instead of aborting init() and leaving the page half-wired (same as catalog.js).
   if (sortEl && sortVal && sortMenu) {
     sortEl.addEventListener('click', (e) => {
       const li = e.target.closest('li');
@@ -53,9 +66,9 @@ export default function init() {
         $$('li', sortMenu).forEach((x) => { x.dataset.on = 'false'; });
         li.dataset.on = 'true';
         sortVal.textContent = li.textContent;
-        sortKey = li.dataset.sort;
-        render();
         sortEl.dataset.open = 'false';
+        // Navigate with new sort
+        window.location.href = buildFilterUrl();
         return;
       }
       sortEl.dataset.open = sortEl.dataset.open === 'true' ? 'false' : 'true';
@@ -65,14 +78,7 @@ export default function init() {
     });
   }
 
-  /* ---- sidebar filter controls ---- */
-  const cats = $$('#spSpecBlock .sp-cat');
-  const checks = $$('#spCityBlock .sp-check');
-  const radios = $$('#spRateBlock .sp-radio');
-  const years = $$('#spYearBlock .sp-year');
-  const swVerified = document.getElementById('spVerified');
-  const swFree = document.getElementById('spFree');
-
+  /* ---- sidebar filter controls (toggle data-on, visual only until Apply) ---- */
   cats.forEach((c) =>
     c.addEventListener('click', () => {
       cats.forEach((x) => { x.dataset.on = 'false'; });
@@ -107,7 +113,7 @@ export default function init() {
     })
   );
 
-  /* ---- active filter chips (Figma: specialization + city/cities + rating) ---- */
+  /* ---- active filter chips ---- */
   const chipWrap = document.getElementById('spChips');
   const clearBtn = document.getElementById('spClear');
   const chipSource = new WeakMap();
@@ -152,50 +158,19 @@ export default function init() {
       renderChips();
     });
 
-    // Clearing must reset EVERY control (the experience chips and the two switches are not
-    // mirrored as chips, and #spVerified ships on) and re-run the filter, otherwise the grid
-    // keeps showing a filtered result the chip row claims is no longer active.
+    // Clear all filters — navigate to clean URL
     clearBtn.addEventListener('click', () => {
-      cats.concat(checks, radios, years, switches).forEach((el) => { el.dataset.on = 'false'; });
-      renderChips();
-      applyFilters();
+      window.location.href = window.location.pathname;
     });
 
     renderChips();
   }
 
-  /* ---- "Apply filters" — narrows the list down to the current selection ---- */
-  function applyFilters() {
-    const cat = $('#spSpecBlock .sp-cat[data-on="true"]');
-    const spec = cat ? cat.dataset.spec : null;
-    const cities = checks.filter((c) => c.dataset.on === 'true').map((c) => c.dataset.city);
-    const r = $('#spRateBlock .sp-radio[data-on="true"]');
-    const minRate = r ? parseFloat(r.dataset.min) : 0;
-    const y = $('#spYearBlock .sp-year[data-on="true"]');
-    const yearMin = y ? +y.dataset.min : 0;
-    const yearMax = y ? +y.dataset.max : 99;
-    const needVerified = !!swVerified && swVerified.dataset.on === 'true';
-    const needFree = !!swFree && swFree.dataset.on === 'true';
-
-    cards.forEach((card) => {
-      const d = card.dataset;
-      let ok = true;
-      if (spec && d.specs.split(',').indexOf(spec) === -1) ok = false;
-      // "other" = any city outside the three listed above
-      if (ok && cities.length) {
-        ok = cities.indexOf(d.city) !== -1 ||
-          (cities.indexOf('other') !== -1 && KNOWN_CITIES.indexOf(d.city) === -1);
-      }
-      if (ok && num(card, 'rate') < minRate) ok = false;
-      if (ok && (num(card, 'years') < yearMin || num(card, 'years') > yearMax)) ok = false;
-      if (ok && needVerified && d.verified !== 'true') ok = false;
-      if (ok && needFree && d.free !== 'true') ok = false;
-      card.hidden = !ok;
-    });
-
-    render();
-  }
-
+  /* ---- "Apply filters" — navigate to filtered URL ---- */
   const applyBtn = document.getElementById('spApply');
-  if (applyBtn) applyBtn.addEventListener('click', applyFilters);
+  if (applyBtn) {
+    applyBtn.addEventListener('click', () => {
+      window.location.href = buildFilterUrl();
+    });
+  }
 }

@@ -18,8 +18,13 @@ return [
         'rate' => '4.9',
         'reviews' => '(416 rəy)',
         'meta_exp' => '12 illik təcrübə',
-        'meta_projects' => '320 tamamlanmış layihə',
+        'meta_projects' => ':count tamamlanmış layihə',
         'meta_city' => 'Bakı',
+    ],
+
+    'meta' => [
+        'experience' => ':years il təcrübə',
+        'projects_label' => 'tamamlanmış layihə',
     ],
 
     'about' => [
@@ -45,10 +50,11 @@ return [
         'response_k' => 'Cavab vaxtı',
         'response_v' => '~1 saat',
         'done_k' => 'Tamamlanmış',
-        'done_v' => '320 layihə',
+        'done_v' => ':count layihə',
         'member_k' => 'Üzv',
         'member_v' => '2021-dən',
         'free' => 'Bu həftə üçün 3 boş yer',
+        'on_vacation' => 'Hal-hazırda müsait deyil',
     ],
 
     'portfolio' => [
@@ -96,5 +102,8 @@ return [
             ],
         ],
         'more' => 'Bütün rəylərə bax',
+        'count_label' => 'rəy',
+        'empty' => 'Hələ rəy yoxdur.',
+        'anonymous' => 'Anonim',
     ],
 ];

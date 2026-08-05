@@ -44,6 +44,7 @@ return [
         'cover' => 'Cover photo',
         'remove' => '✕',
         'remove_label' => 'Remove photo',
+        'untitled' => 'Untitled photo',
     ],
     'tiles' => [
         't1' => 'Kitchen backsplash',

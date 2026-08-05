@@ -44,7 +44,7 @@
        @if (in_array($item['key'], (array) $strong, true)) data-strong="true" @endif
        href="{{ route($item['route']) }}">
       <p class="lbl">{{ __($ns . '.nav.' . $item['key']) }}</p>
-      @isset($item['count'])<p class="cnt">{{ __($ns . '.nav.' . $item['count']) }}</p>@endisset
+      @isset($item['count'])<p class="cnt">{{ $item['count_value'] ?? __($ns . '.nav.' . $item['count']) }}</p>@endisset
     </a>
   @endforeach
 

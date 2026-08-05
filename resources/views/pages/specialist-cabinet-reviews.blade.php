@@ -8,12 +8,16 @@
 --}}
 @php
     // The seven specialist-cabinet tabs — copied verbatim across all seven pages.
+    $portfolioCount = $profile ? $profile->portfolioItems()->count() : 0;
+    $servicesCount = $profile ? $profile->services()->count() : 0;
+    $reviewsCount = $reviews->count();
+
     $specNav = [
         ['key' => 'main',          'route' => 'specialist.cabinet'],
-        ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count'],
-        ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count'],
+        ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count', 'count_value' => $portfolioCount],
+        ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count', 'count_value' => $servicesCount],
         ['key' => 'schedule',      'route' => 'specialist.cabinet.schedule'],
-        ['key' => 'reviews',       'route' => 'specialist.cabinet.reviews',       'count' => 'reviews_count'],
+        ['key' => 'reviews',       'route' => 'specialist.cabinet.reviews',       'count' => 'reviews_count', 'count_value' => $reviewsCount],
         ['key' => 'notifications', 'route' => 'specialist.cabinet.notifications'],
         ['key' => 'security',      'route' => 'specialist.cabinet.security'],
     ];
@@ -21,15 +25,9 @@
     // Filter tabs (831:12814). The key doubles as the lang key and as the JS filter.
     $tabs = ['all', 'unanswered', 'five', 'low'];
 
-    // The three reviews of the frame (831:12823 / 831:12835 / 831:12846). Only the
-    // non-text facts live here; every string comes from the lang file. `replied`
-    // decides whether the answer block or the "write a reply" button is rendered.
-    $reviews = [
-        ['key' => 'r1', 'rating' => 5, 'replied' => true],
-        ['key' => 'r2', 'rating' => 5, 'replied' => false],
-        ['key' => 'r3', 'rating' => 5, 'replied' => false],
-    ];
-
+    // Reviews are passed from the route closure ($reviews collection).
+    // When a Review model is implemented, each review will have: id, rating, text,
+    // reviewer_name, reviewer_avatar, created_at, reply_text, replied_at.
     $star = __('specialist-cabinet-reviews.rating.star');
 @endphp
 <x-layout page="specialist-cabinet-reviews" :title="__('specialist-cabinet-reviews.title')" bodyClass="bg-gray-soft2">
@@ -68,30 +66,30 @@
       @endforeach
     </div>
 
-    @foreach ($reviews as $review)
-      @php $ns = 'specialist-cabinet-reviews.reviews.' . $review['key'] . '.'; @endphp
-      <article class="scr-rev" data-rating="{{ $review['rating'] }}" data-replied="{{ $review['replied'] ? 'true' : 'false' }}">
+    @forelse ($reviews as $review)
+      @php
+        $reviewerName = $review->reviewer_name ?? __('specialist-cabinet-reviews.list.anonymous');
+        $hasReply = ! empty($review->reply_text);
+      @endphp
+      <article class="scr-rev" data-id="{{ $review->id }}" data-rating="{{ $review->rating }}" data-replied="{{ $hasReply ? 'true' : 'false' }}">
         <div class="hd">
-          {{-- the avatar letter is the first letter of the name, so it follows the locale --}}
-          <p class="av" aria-hidden="true">{{ mb_substr(__($ns . 'name'), 0, 1) }}</p>
+          <p class="av" aria-hidden="true">{{ mb_substr($reviewerName, 0, 1) }}</p>
           <div class="who">
-            <p class="n">{{ __($ns . 'name') }}</p>
-            <p class="d">{{ __($ns . 'date') }}</p>
+            <p class="n">{{ $reviewerName }}</p>
+            <p class="d">{{ $review->created_at?->diffForHumans() ?? '' }}</p>
           </div>
-          <p class="st" aria-label="{{ __('specialist-cabinet-reviews.list.stars_label', ['count' => $review['rating']]) }}">{{ str_repeat($star, $review['rating']) }}</p>
+          <p class="st" aria-label="{{ __('specialist-cabinet-reviews.list.stars_label', ['count' => $review->rating]) }}">{{ str_repeat($star, $review->rating) }}</p>
         </div>
 
-        <p class="tx">{{ __($ns . 'text') }}</p>
+        <p class="tx">{{ $review->text ?? '' }}</p>
 
-        {{-- the specialist's answer (831:12832); empty and hidden until a reply is sent --}}
-        <div class="scr-reply" @unless ($review['replied']) hidden @endunless>
+        <div class="scr-reply" @unless ($hasReply) hidden @endunless>
           <p class="lb">{{ __('specialist-cabinet-reviews.reply.label') }}</p>
-          <p class="tx">{{ $review['replied'] ? __($ns . 'reply') : '' }}</p>
+          <p class="tx">{{ $review->reply_text ?? '' }}</p>
         </div>
 
-        <x-ui.button variant="primary" class="scr-btn" data-reply :hidden="$review['replied']">{{ __('specialist-cabinet-reviews.reply.action') }}</x-ui.button>
+        <x-ui.button variant="primary" class="scr-btn" data-reply :hidden="$hasReply">{{ __('specialist-cabinet-reviews.reply.action') }}</x-ui.button>
 
-        {{-- inline composer: the step between the button and the answer above --}}
         <div class="scr-compose" hidden>
           <x-ui.textarea variant="b2b" class="scr-ta" rows="3"
               :placeholder="__('specialist-cabinet-reviews.compose.placeholder')"
@@ -102,9 +100,9 @@
           </div>
         </div>
       </article>
-    @endforeach
-
-    <p class="scr-empty" hidden>{{ __('specialist-cabinet-reviews.list.empty') }}</p>
+    @empty
+      <p class="scr-empty">{{ __('specialist-cabinet-reviews.list.empty') }}</p>
+    @endforelse
 
     {{-- load more (831:12857) --}}
     <x-ui.button variant="outline" class="scr-more" data-more>{{ __('specialist-cabinet-reviews.list.more') }}</x-ui.button>

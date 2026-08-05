@@ -1,39 +1,79 @@
-// Page module for "catalog" — ported from the inline <script> of the old catalog.html.
-// The 20 product cards are rendered server-side, so sorting only reorders the existing
-// DOM nodes and filtering only toggles `hidden` (every value comes from a data-*
-// attribute: data-i / data-now / data-rate / data-cat / data-brand / data-surface /
-// data-size / data-stock).
-// Shared behaviour (navbar, round product cursor) lives in resources/js/shared/.
+// Page module for "catalog" — all filtering and sorting is done server-side via
+// URL query parameters. The JS collects the sidebar state, builds a URL and
+// navigates to it. Sort, category clicks, and the "Apply" button all work this way.
 
-const PRICE_MIN = 0;
-const PRICE_MAX = 100;
+// Read actual price range from the slider data attributes (set by the server)
+const sliderEl = document.getElementById('fsSlider');
+const PRICE_MIN = sliderEl ? parseInt(sliderEl.dataset.priceMin, 10) || 0 : 0;
+const PRICE_MAX = sliderEl ? parseInt(sliderEl.dataset.priceMax, 10) || 100 : 100;
+const HAS_PRICE_FILTER = sliderEl ? sliderEl.dataset.priceFiltered === 'true' : false;
 
 const num = (el, key) => parseFloat(el.dataset[key]) || 0;
 
-// Sorts the cards in place; `pop` restores the server-rendered order.
-function initSort(grid, cards, empty) {
+function buildFilterUrl() {
+  const params = new URLSearchParams();
+
+  // Category
+  const cat = document.querySelector('.fs-cat[data-on="true"]');
+  if (cat) params.set('category', cat.dataset.cat);
+
+  // Sort
+  const sortLi = document.querySelector('#sortMenu li[data-on="true"]');
+  if (sortLi && sortLi.dataset.sort !== 'pop') params.set('sort', sortLi.dataset.sort);
+
+  // Price range
+  const inMin = document.getElementById('fsMin');
+  const inMax = document.getElementById('fsMax');
+  if (inMin && inMin.value && parseInt(inMin.value, 10) > PRICE_MIN) {
+    params.set('min_price', inMin.value);
+  }
+  if (inMax && inMax.value && parseInt(inMax.value, 10) < PRICE_MAX) {
+    params.set('max_price', inMax.value);
+  }
+
+  // Brands (comma-separated)
+  const brands = [...document.querySelectorAll('#brandBlock .fs-check[data-on="true"]')]
+    .map((el) => el.dataset.brand);
+  if (brands.length) params.set('brand', brands.join(','));
+
+  // Surfaces (comma-separated)
+  const surfaces = [...document.querySelectorAll('#surfBlock .fs-check[data-on="true"]')]
+    .map((el) => el.dataset.surface);
+  if (surfaces.length) params.set('surface', surfaces.join(','));
+
+  // Sizes (comma-separated)
+  const sizes = [...document.querySelectorAll('.fs-size[data-on="true"]')]
+    .map((el) => el.dataset.size);
+  if (sizes.length) params.set('size', sizes.join(','));
+
+  // In-stock only
+  const stock = document.getElementById('stockSwitch');
+  if (stock && stock.dataset.on === 'true') params.set('in_stock', '1');
+
+  // Preserve search query if present
+  const url = new URL(window.location.href);
+  if (url.searchParams.has('q')) params.set('q', url.searchParams.get('q'));
+
+  const qs = params.toString();
+  return window.location.pathname + (qs ? '?' + qs : '');
+}
+
+function initSort() {
   const sortEl = document.getElementById('catSort');
   const sortVal = document.getElementById('sortVal');
   const sortMenu = document.getElementById('sortMenu');
   if (!sortEl || !sortVal || !sortMenu) return;
 
-  const sorters = {
-    pop: (a, b) => num(a, 'i') - num(b, 'i'),
-    cheap: (a, b) => num(a, 'now') - num(b, 'now'),
-    exp: (a, b) => num(b, 'now') - num(a, 'now'),
-    rating: (a, b) => num(b, 'rate') - num(a, 'rate'),
-    new: (a, b) => num(b, 'i') - num(a, 'i'),
-  };
-
   sortEl.addEventListener('click', (e) => {
     const li = e.target.closest('li');
     if (li) {
+      // Update visual state then navigate
       sortMenu.querySelectorAll('li').forEach((x) => (x.dataset.on = 'false'));
       li.dataset.on = 'true';
       sortVal.textContent = li.textContent;
-      cards.slice().sort(sorters[li.dataset.sort] || sorters.pop).forEach((c) => grid.appendChild(c));
-      if (empty) grid.appendChild(empty); // the empty state always stays last
       sortEl.dataset.open = 'false';
+      // Navigate with new sort
+      window.location.href = buildFilterUrl();
       return;
     }
     sortEl.dataset.open = sortEl.dataset.open === 'true' ? 'false' : 'true';
@@ -43,12 +83,10 @@ function initSort(grid, cards, empty) {
     if (!e.target.closest('#catSort')) sortEl.dataset.open = 'false';
   });
 
-  // an absolutely positioned menu would otherwise scroll under/over the sticky navbar
   window.addEventListener('scroll', () => { sortEl.dataset.open = 'false'; }, { passive: true });
 }
 
-// Dual-range price slider, the active filter chips above the grid and "Apply filters".
-function initFilters(grid, cards, empty) {
+function initFilters() {
   const chipWrap = document.getElementById('catChips');
   const clearBtn = document.getElementById('catClear');
   const slider = document.getElementById('fsSlider');
@@ -59,7 +97,6 @@ function initFilters(grid, cards, empty) {
   const inMax = document.getElementById('fsMax');
   if (!chipWrap || !clearBtn || !slider) return;
 
-  // Label formats come from Blade, e.g. ":v sm" / ":min–:max ₼".
   const fmt = (tpl, values) =>
     Object.keys(values).reduce((s, k) => s.split(':' + k).join(values[k]), tpl || '');
   const L = chipWrap.dataset;
@@ -80,6 +117,8 @@ function initFilters(grid, cards, empty) {
     document.querySelectorAll('#brandBlock .fs-check[data-on="true"]').forEach((el) =>
       out.push({ el, label: el.querySelector('.lbl').textContent.trim() })
     );
+    // Show price chip only when the range differs from the full product range
+    // (i.e. user has explicitly narrowed it via URL params or slider drag)
     if (!(Math.round(vMin) === PRICE_MIN && Math.round(vMax) === PRICE_MAX)) {
       out.push({
         price: true,
@@ -106,7 +145,6 @@ function initFilters(grid, cards, empty) {
       chip._filter = it;
       chipWrap.insertBefore(chip, clearBtn);
     });
-    // `visibility` instead of `display` — the row must not collapse (layout shift)
     clearBtn.style.visibility = items.length ? '' : 'hidden';
   }
 
@@ -159,7 +197,7 @@ function initFilters(grid, cards, empty) {
   inMin.addEventListener('change', clampInputs);
   inMax.addEventListener('change', clampInputs);
 
-  // only the ✕ removes a filter — clicking the label must not destroy the chip
+  // Chip removal
   function removeChip(chip) {
     if (!chip || !chip._filter) return;
     if (chip._filter.price) {
@@ -183,15 +221,24 @@ function initFilters(grid, cards, empty) {
     removeChip(x.closest('.cat-chip'));
   });
 
+  // Clear all filters — navigate to clean URL
   clearBtn.addEventListener('click', () => {
+    // Reset all UI state
     document
       .querySelectorAll('.fs-size[data-on="true"], #surfBlock .fs-check[data-on="true"], #brandBlock .fs-check[data-on="true"]')
       .forEach((el) => (el.dataset.on = 'false'));
+    document.querySelectorAll('.fs-cat').forEach((el) => (el.dataset.on = 'false'));
+    const stock = document.getElementById('stockSwitch');
+    if (stock) stock.dataset.on = 'false';
     vMin = PRICE_MIN;
     vMax = PRICE_MAX;
-    paint();
+    // Navigate to page with no filters (preserve only q if present)
+    const url = new URL(window.location.href);
+    const q = url.searchParams.get('q');
+    window.location.href = window.location.pathname + (q ? '?q=' + encodeURIComponent(q) : '');
   });
 
+  // Toggle sidebar filter controls
   document.querySelectorAll('.fs-check, .fs-size').forEach((el) =>
     el.addEventListener('click', () => {
       el.dataset.on = el.dataset.on === 'true' ? 'false' : 'true';
@@ -199,6 +246,7 @@ function initFilters(grid, cards, empty) {
     })
   );
 
+  // Category selection (single-select)
   document.querySelectorAll('.fs-cat').forEach((c) =>
     c.addEventListener('click', () => {
       document.querySelectorAll('.fs-cat').forEach((x) => (x.dataset.on = 'false'));
@@ -213,39 +261,11 @@ function initFilters(grid, cards, empty) {
     });
   }
 
-  /* ---- "Apply filters" — narrows the grid down to the current sidebar selection ---- */
+  // "Apply filters" — build URL from current sidebar state and navigate
   const applyBtn = document.getElementById('catApply');
   if (applyBtn) {
-    const picked = (sel, key) =>
-      [...document.querySelectorAll(sel)].map((el) => el.dataset[key]);
-
     applyBtn.addEventListener('click', () => {
-      const cat = document.querySelector('.fs-cat[data-on="true"]');
-      const category = cat ? cat.dataset.cat : null;
-      const brands = picked('#brandBlock .fs-check[data-on="true"]', 'brand');
-      const surfaces = picked('#surfBlock .fs-check[data-on="true"]', 'surface');
-      const sizes = picked('.fs-size[data-on="true"]', 'size');
-      const inStockOnly = stock ? stock.dataset.on === 'true' : false;
-
-      let shown = 0;
-      cards.forEach((card) => {
-        const d = card.dataset;
-        const price = num(card, 'now');
-        const ok =
-          (!category || d.cat === category) &&
-          (!brands.length || brands.indexOf(d.brand) !== -1) &&
-          (!surfaces.length || surfaces.indexOf(d.surface) !== -1) &&
-          (!sizes.length || sizes.indexOf(d.size) !== -1) &&
-          price >= vMin && price <= vMax &&
-          (!inStockOnly || d.stock === 'true');
-        card.hidden = !ok;
-        if (ok) shown += 1;
-      });
-
-      if (empty) {
-        grid.appendChild(empty);
-        empty.hidden = shown > 0;
-      }
+      window.location.href = buildFilterUrl();
     });
   }
 
@@ -255,8 +275,6 @@ function initFilters(grid, cards, empty) {
 export default function init() {
   const grid = document.getElementById('catGrid');
   if (!grid) return;
-  const cards = [...grid.querySelectorAll('.pcard')];
-  const empty = document.getElementById('catEmpty');
-  initSort(grid, cards, empty);
-  initFilters(grid, cards, empty);
+  initSort();
+  initFilters();
 }

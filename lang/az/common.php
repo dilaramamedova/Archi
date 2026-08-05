@@ -18,6 +18,7 @@ return [
     /* --- badges --- */
     'badge_new' => 'Yeni məhsul',
     'badge_in_stock' => 'Stokda var',
+    'badge_out_of_stock' => 'Stokda yoxdur',
     'badge_top_master' => 'Top usta',
     'badge_verified' => 'Təsdiqlənmiş',
     'your_listing' => 'Sənin elanın',
@@ -33,6 +34,10 @@ return [
     'email' => 'E-poçt',
     'phone' => 'Telefon',
     'password' => 'Şifrə',
+
+    /* --- counts --- */
+    'reviews' => 'rəy',
+    'products_count' => 'məhsul',
 
     /* --- meta --- */
     'site_name' => 'ARCHİ',

@@ -6,15 +6,7 @@
   (.sl-chip) and the modal keyframes stay in resources/css/pages/sell.css.
 --}}
 @php
-    $categories = [
-        __('sell.categories.tiles'),
-        __('sell.categories.paint'),
-        __('sell.categories.plumbing'),
-        __('sell.categories.electric'),
-        __('sell.categories.laminate'),
-        __('sell.categories.building'),
-        __('sell.categories.decor'),
-    ];
+    // $categories is passed from SellController (DB categories with translation fallback).
     // sell's control geometry: 15px text, 15/13 padding (the DS default is 16px, 16/14)
     $control = 'px-[15px] py-[13px] text-[15px]';
 @endphp
@@ -31,13 +23,18 @@
     <form class="border border-black/12 bg-white p-8 shadow-[-4px_4px_4px_rgba(0,0,0,0.05)] max-[560px]:p-[22px]" id="sellForm"
           data-url-home="{{ route('home') }}"
           data-url-sell="{{ route('sell') }}"
+          data-url-store="{{ route('sell.store') }}"
+          data-url-login="{{ route('login') }}"
           data-url-register="{{ route('register', ['role' => 'seller']) }}"
           data-l-currency="{{ __('sell.form.currency') }}"
           data-l-reviews-zero="{{ __('sell.product.reviews_zero') }}"
           data-l-view-site="{{ __('sell.success.view_site') }}"
           data-l-add-another="{{ __('sell.success.add_another') }}"
           data-l-sign-up="{{ __('sell.success.sign_up') }}"
-          data-l-not-now="{{ __('sell.success.not_now') }}">
+          data-l-not-now="{{ __('sell.success.not_now') }}"
+          data-l-cond-new="{{ __('sell.form.condition_new') }}"
+          data-l-cond-used="{{ __('sell.form.condition_used') }}"
+          data-l-server-error="{{ __('sell.form.server_error', [], 'Xəta baş verdi. Yenidən cəhd edin.') }}">
       <x-ui.alert tone="error" id="slErr" class="mb-[18px]">{{ __('sell.form.error') }}</x-ui.alert>
 
       <div class="grid grid-cols-[360px_1fr] gap-8 max-[860px]:grid-cols-1">

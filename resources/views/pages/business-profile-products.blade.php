@@ -1,6 +1,7 @@
 {{-- Business cabinet — products (Figma 1105:24229) --}}
 <x-layout page="business-profile-products" :title="__('business-profile-products.title')" bodyClass="bg-gray-soft2">
 
+{{-- TODO: Replace with dynamic data from controller --}}
 @php
     // Non-text row data: thumbnail, category, stock tone and switch state.
     $rows = [

@@ -16,6 +16,7 @@
 
     // Prices, units and default flags are data, not text — they live here, the labels
     // come from the translation file.
+    // TODO: Replace with dynamic data from controller (e.g. WorkType model or config)
     $works = [
         ['key' => 'demolition', 'price' => 8, 'unit' => 'm2', 'on' => true],
         ['key' => 'wall_leveling', 'price' => 14, 'unit' => 'm2', 'on' => true],
@@ -43,6 +44,11 @@
         'floorCovers' => array_values($floors),
         'wallCovers' => array_values($walls),
 
+        // Finish rates per m² for each floor and wall cover, keyed by translated label.
+        // computeEstimate() uses these when the cart has no matching finish materials.
+        'floorRates' => array_combine(array_values($floors), [180, 350, 220, 250]),
+        'wallRates'  => array_combine(array_values($walls),  [80, 120, 200, 250]),
+
         // Labour multipliers, positionally parallel to the three chip groups above.
         // The object-type values match the quick calculator (calculator.blade.php).
         'objectFactors' => [1, 1.1, 0.95, 1.05],
@@ -67,9 +73,11 @@
 
         // Fees behind the step-1 switches. Both labels read "I already have it", so the
         // fee lands in the estimate while the switch is OFF and disappears when it is on.
+        // TODO: Replace with dynamic data from controller (service pricing config)
         'services' => ['design' => 2400, 'drawings' => 1500],
 
         // Fallback cart, used when localStorage has no 'archi-cart' entry.
+        // TODO: Replace with dynamic data from controller (product catalog / default cart items)
         'cart' => [
             ['name' => $cartItems['laminate']['name'], 'brand' => 'Quick-Step', 'cat' => $cats['floor'], 'calc' => $cartItems['laminate']['calc'], 'price' => 1840, 'stock' => $stock['in'], 'inStock' => true],
             ['name' => $cartItems['tile']['name'], 'brand' => 'Marca Corona', 'cat' => $cats['tile'], 'calc' => $cartItems['tile']['calc'], 'price' => 765, 'stock' => $stock['in'], 'inStock' => true],

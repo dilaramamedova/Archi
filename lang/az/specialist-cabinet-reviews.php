@@ -38,8 +38,9 @@ return [
         'title' => 'Rəylər (416)',
         'summary' => 'Cavab yazılan rəylər müştərilərdə etibarı 2 dəfə artırır.',
         'stars_label' => ':count ulduz',
-        'more' => 'Daha çox göstər (413)',
+        'more' => 'Daha çox göstər',
         'empty' => 'Bu filtrə uyğun rəy yoxdur.',
+        'anonymous' => 'Anonim',
     ],
 
     'rating' => [

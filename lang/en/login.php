@@ -25,6 +25,12 @@ return [
         'sign_up' => 'Sign up',
     ],
 
+    'forgot' => 'Forgot your password?',
+    'forgot_subtitle' => 'Enter your email and we will send you a password reset link.',
+    'forgot_success' => 'Password reset link has been sent to your email.',
+    'forgot_submit' => 'Send link',
+    'back_to_login' => 'Back to login',
+
     'modal' => [
         'close' => 'Close',
     ],

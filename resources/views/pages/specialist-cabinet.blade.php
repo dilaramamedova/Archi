@@ -3,10 +3,13 @@
      same header, same 264px sidebar, same cards, same dark save bar — only the nav rows
      and the "view profile" target differ. --}}
 @php
+    $portfolioCount = $profile ? $profile->portfolioItems()->count() : 0;
+    $servicesCount = $profile ? $profile->services()->count() : 0;
+
     $specNav = [
         ['key' => 'main',          'route' => 'specialist.cabinet'],
-        ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count'],
-        ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count'],
+        ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count', 'count_value' => $portfolioCount],
+        ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count', 'count_value' => $servicesCount],
         ['key' => 'schedule',      'route' => 'specialist.cabinet.schedule'],
         ['key' => 'reviews',       'route' => 'specialist.cabinet.reviews',       'count' => 'reviews_count'],
         ['key' => 'notifications', 'route' => 'specialist.cabinet.notifications'],

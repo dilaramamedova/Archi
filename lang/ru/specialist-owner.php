@@ -35,6 +35,8 @@ return [
         'meta_exp' => '12 лет опыта',
         'meta_projects' => '320 завершённых проектов',
         'meta_city' => 'Баку',
+        'years' => 'лет опыта',
+        'projects' => 'проектов',
     ],
 
     'book' => [

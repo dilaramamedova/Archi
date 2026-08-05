@@ -21,5 +21,13 @@ class DatabaseSeeder extends Seeder
                 'status' => UserStatus::Active,
             ],
         );
+
+        $this->call([
+            SettingSeeder::class,
+            MenuItemSeeder::class,
+            SocialLinkSeeder::class,
+            AboutSeeder::class,
+            DemoSeeder::class,
+        ]);
     }
 }

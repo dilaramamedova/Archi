@@ -17,6 +17,8 @@ return [
     'sd_products' => 'Товары',
     'sd_masters' => 'Мастера',
     'sd_all_results' => 'Смотреть все результаты',
+    'sd_loading' => 'Загрузка…',
+    'sd_no_results' => 'Ничего не найдено',
 
     'catalog' => 'Каталог',
     'specialists' => 'Специалисты',

@@ -1,27 +1,39 @@
 {{-- Specialist cabinet — work schedule tab (Figma 831:12428). --}}
 @php
     // The seven specialist cabinet rows — identical on all seven pages (ARCHITECTURE.md 4.9.1).
+    $portfolioCount = $profile ? $profile->portfolioItems()->count() : 0;
+    $servicesCount = $profile ? $profile->services()->count() : 0;
+
     $specNav = [
         ['key' => 'main',          'route' => 'specialist.cabinet'],
-        ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count'],
-        ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count'],
+        ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count', 'count_value' => $portfolioCount],
+        ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count', 'count_value' => $servicesCount],
         ['key' => 'schedule',      'route' => 'specialist.cabinet.schedule'],
         ['key' => 'reviews',       'route' => 'specialist.cabinet.reviews',       'count' => 'reviews_count'],
         ['key' => 'notifications', 'route' => 'specialist.cabinet.notifications'],
         ['key' => 'security',      'route' => 'specialist.cabinet.security'],
     ];
 
-    // day key => [open, start, end]. Sunday ships closed, so its row shows the "day off"
-    // note instead of the two time fields — same markup, driven by data-on.
-    $days = [
-        'monday'    => [true,  '09:00', '19:00'],
-        'tuesday'   => [true,  '09:00', '19:00'],
-        'wednesday' => [true,  '09:00', '19:00'],
-        'thursday'  => [true,  '09:00', '19:00'],
-        'friday'    => [true,  '09:00', '17:00'],
-        'saturday'  => [true,  '10:00', '15:00'],
-        'sunday'    => [false, '10:00', '15:00'],
-    ];
+    // Build schedule from DB data ($schedules passed from route). day_of_week: 1=Monday..7=Sunday.
+    $dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    $schedulesKeyed = $schedules->keyBy('day_of_week');
+    $days = [];
+    foreach ($dayNames as $i => $dayName) {
+        $dow = $i + 1;
+        $sched = $schedulesKeyed->get($dow);
+        if ($sched) {
+            $days[$dayName] = [
+                ! $sched->is_day_off,
+                $sched->start_time ? \Carbon\Carbon::parse($sched->start_time)->format('H:i') : '09:00',
+                $sched->end_time ? \Carbon\Carbon::parse($sched->end_time)->format('H:i') : '18:00',
+            ];
+        } else {
+            // Default: weekdays open 09-18, weekends closed
+            $days[$dayName] = [$dow <= 5, '09:00', '18:00'];
+        }
+    }
+    $availableSlots = $profile->available_slots ?? 0;
+    $isOnVacation = $profile->is_on_vacation ?? false;
 
     $ns = 'specialist-cabinet-schedule';
 @endphp
@@ -61,7 +73,7 @@
     <div class="sch-slots">
       <button type="button" class="sch-step" data-step="-1"
               aria-label="{{ __('specialist-cabinet-schedule.slots.decrease') }}">&minus;</button>
-      <p class="sch-slots-val" data-slots aria-live="polite">3</p>
+      <p class="sch-slots-val" data-slots aria-live="polite">{{ $availableSlots }}</p>
       <button type="button" class="sch-step" data-step="1"
               aria-label="{{ __('specialist-cabinet-schedule.slots.increase') }}">+</button>
       <p class="sch-slots-unit">{{ __('specialist-cabinet-schedule.slots.unit') }}</p>
@@ -72,7 +84,7 @@
   <x-cabinet.card gap="gap-[14px]" :title="__('specialist-cabinet-schedule.vacation.heading')">
     <div class="sch-vacation">
       <p class="txt">{{ __('specialist-cabinet-schedule.vacation.desc') }}</p>
-      <x-ui.toggle size="md" :on="false"
+      <x-ui.toggle size="md" :on="$isOnVacation"
                    :aria-label="__('specialist-cabinet-schedule.vacation.heading')" />
     </div>
   </x-cabinet.card>

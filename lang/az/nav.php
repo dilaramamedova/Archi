@@ -20,6 +20,8 @@ return [
     'sd_products' => 'Məhsullar',
     'sd_masters' => 'Ustalar',
     'sd_all_results' => 'Bütün nəticələrə bax',
+    'sd_loading' => 'Yüklənir…',
+    'sd_no_results' => 'Nəticə tapılmadı',
 
     /* --- row 2 --- */
     'catalog' => 'Kataloq',

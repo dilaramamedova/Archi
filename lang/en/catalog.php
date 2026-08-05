@@ -3,12 +3,12 @@
 // Catalog page (EN).
 
 return [
-    'title' => 'Wall & floor tiles — Catalog — ARCHİ',
-    'crumb_current' => 'Wall & floor tiles',
+    'title' => 'Catalog — ARCHİ',
+    'crumb_current' => 'Catalog',
 
     'head' => [
         'eyebrow' => 'Catalog',
-        'title' => 'Wall & floor tiles',
+        'title' => 'Catalog',
         'count' => '860 products',
     ],
 

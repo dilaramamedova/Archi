@@ -49,4 +49,31 @@ return [
         'empty' => 'The cart is empty.',
         'done' => 'Order accepted! Total: :total',
     ],
+
+    'checkout_form' => [
+        'title' => 'Delivery details',
+        'name' => 'Full name',
+        'phone' => 'Phone',
+        'address' => 'Address',
+        'notes' => 'Notes (optional)',
+        'submit' => 'Confirm order',
+        'cancel' => 'Back',
+        'name_required' => 'Please enter your name',
+        'phone_required' => 'Please enter your phone',
+        'address_required' => 'Please enter your address',
+        'error' => 'Something went wrong. Please try again.',
+        'sending' => 'Sending...',
+    ],
+
+    'order_success' => [
+        'title' => 'Order #:number — ARCHİ',
+        'heading' => 'Your order has been placed!',
+        'message' => 'Thank you! Your order has been successfully registered. We will contact you shortly.',
+        'order_number' => 'Order number',
+        'total' => 'Total',
+        'status' => 'Status',
+        'status_pending' => 'Pending',
+        'back_home' => 'Home page',
+        'back_catalog' => 'Browse catalog',
+    ],
 ];

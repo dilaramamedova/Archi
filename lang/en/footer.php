@@ -34,11 +34,13 @@ return [
     'news_sub' => 'Be the first to know about discounts, new products, useful articles and news.',
     'news_email' => 'Your e-mail',
     'news_submit' => 'Subscribe',
+    'newsletter_error' => 'Error',
+    'newsletter_network_error' => 'Network error. Please try again.',
 
     'legal_terms' => 'Terms of use',
     'legal_privacy' => 'Privacy policy',
     'legal_delivery' => 'Delivery & returns',
     'legal_cookie' => 'Cookie policy',
     'legal_sitemap' => 'Sitemap',
-    'copy' => '©2026 ARCHI — All rights reserved.',
+    'copy' => '©:year ARCHI — All rights reserved.',
 ];

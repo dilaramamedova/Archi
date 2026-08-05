@@ -38,10 +38,16 @@ function initQty() {
 }
 
 // The navbar badge is rendered on load by shared/navbar.js; after a cart write the
-// count has to be refreshed here.
-function syncCartBadge() {
+// count has to be refreshed here.  When a server count is available (logged-in user)
+// prefer it over the localStorage length.
+function syncCartBadge(serverCount) {
   const badge = document.getElementById('navCartCount');
   if (!badge) return;
+  if (typeof serverCount === 'number') {
+    badge.textContent = serverCount;
+    badge.style.display = serverCount ? 'flex' : 'none';
+    return;
+  }
   try {
     const cart = JSON.parse(localStorage.getItem('archi-cart') || '[]');
     badge.textContent = cart.length;
@@ -74,14 +80,23 @@ function initAddToCart() {
       const cat = (document.querySelector('.pd-info .cat') || {}).textContent || '';
       const now = (document.querySelector('.pd-price .now') || {}).textContent || '0';
       const price = parseFloat(now.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+      const qtyInput = document.getElementById('qtyVal');
+      const qty = qtyInput ? Math.max(1, +qtyInput.value || 1) : 1;
       const cart = JSON.parse(localStorage.getItem('archi-cart') || '[]');
-      if (cart.some((c) => c.name === name.trim())) return false;
+      const existing = cart.find((c) => c.name === name.trim());
+      if (existing) {
+        // Update quantity instead of silently ignoring
+        existing.qty = (existing.qty || 1) + qty;
+        localStorage.setItem('archi-cart', JSON.stringify(cart));
+        return false;
+      }
       cart.push({
         name: name.trim(),
         brand: d.cartBrand || '',
         cat: cat.trim(),
         calc: d.cartUnit || '',
         price,
+        qty,
         stock: d.cartStock || '',
         inStock: true,
       });
@@ -93,7 +108,7 @@ function initAddToCart() {
     }
   }
 
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', async () => {
     clearTimeout(resetTimer);
     const added = store();
     btn.dataset.added = added ? 'true' : 'already';
@@ -103,6 +118,31 @@ function initAddToCart() {
       (added ? d.labelAdded : d.labelInCart) || ''
     );
     syncCartBadge();
+
+    // Persist to the server for logged-in users
+    const productId = d.productId;
+    const qty = document.getElementById('qtyVal');
+    if (productId) {
+      try {
+        const res = await fetch('/api/cart', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrf(),
+          },
+          body: JSON.stringify({
+            product_id: +productId,
+            quantity: qty ? +qty.value || 1 : 1,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          syncCartBadge(data.count);
+        }
+      } catch { /* guest user or network error — localStorage fallback already ran */ }
+    }
+
     resetTimer = setTimeout(() => {
       btn.dataset.added = 'false';
       setButton(btn, '/assets/icon-cart.svg', d.labelAdd || '');
@@ -110,26 +150,119 @@ function initAddToCart() {
   });
 }
 
-// "Helpful" vote on a review card: toggles the state and the counter next to it.
+function csrf() {
+  return document.querySelector('meta[name="csrf-token"]')?.content || '';
+}
+
 function initHelpful() {
   document.querySelectorAll('.rev-card .help').forEach((btn) => {
     const n = btn.querySelector('.n');
     if (!n) return;
-    const base = parseInt(n.textContent, 10) || 0;
-    btn.addEventListener('click', () => {
-      const on = btn.dataset.on !== 'true';
-      btn.dataset.on = on ? 'true' : 'false';
-      btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-      n.textContent = base + (on ? 1 : 0);
+    btn.addEventListener('click', async () => {
+      const url = btn.dataset.url;
+      if (!url) {
+        const on = btn.dataset.on !== 'true';
+        btn.dataset.on = on ? 'true' : 'false';
+        btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+        const base = parseInt(n.textContent, 10) || 0;
+        n.textContent = base + (on ? 1 : 0);
+        return;
+      }
+      try {
+        const res = await fetch(url, {
+          method: 'POST',
+          headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() },
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        n.textContent = data.helpful_count;
+        btn.dataset.on = data.voted ? 'true' : 'false';
+        btn.setAttribute('aria-pressed', data.voted ? 'true' : 'false');
+      } catch { /* network error — ignore */ }
     });
   });
 }
 
+function initReviewForm() {
+  const form = document.getElementById('revForm');
+  if (!form) return;
+
+  const starsWrap = form.querySelector('.stars-select');
+  const starBtns = form.querySelectorAll('.star-btn');
+  const ratingInput = form.querySelector('input[name="rating"]');
+
+  starBtns.forEach((star) => {
+    star.addEventListener('click', () => {
+      const val = star.dataset.star;
+      if (ratingInput) ratingInput.value = val;
+      if (starsWrap) starsWrap.dataset.rating = val;
+      starBtns.forEach((s) => {
+        const img = s.querySelector('img');
+        if (img) img.style.opacity = +s.dataset.star <= +val ? '1' : '0.3';
+      });
+    });
+  });
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = form.querySelector('button[type="submit"]');
+    if (btn) btn.disabled = true;
+
+    const url = form.dataset.url || form.action;
+    const body = new FormData(form);
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf() },
+        body,
+      });
+      const data = await res.json();
+      if (res.ok) {
+        form.style.display = 'none';
+        const success = document.getElementById('revSuccess');
+        if (success) success.style.display = 'flex';
+      } else {
+        if (btn) btn.disabled = false;
+        const errEl = document.getElementById('revError');
+        if (errEl) { errEl.textContent = data.message || 'Xəta baş verdi.'; errEl.style.display = 'block'; }
+      }
+    } catch {
+      if (btn) btn.disabled = false;
+      const errEl = document.getElementById('revError');
+      if (errEl) { errEl.textContent = 'Şəbəkə xətası.'; errEl.style.display = 'block'; }
+    }
+  });
+}
+
 function initWish() {
-  [document.getElementById('pdWish'), document.getElementById('pdHeartTop')].forEach((el) => {
-    if (!el) return;
-    el.addEventListener('click', () => {
-      el.dataset.liked = el.dataset.liked === 'true' ? 'false' : 'true';
+  const els = [document.getElementById('pdWish'), document.getElementById('pdHeartTop')].filter(Boolean);
+  if (!els.length) return;
+
+  // Both heart buttons share state — keep them in sync.
+  function setAll(liked) {
+    els.forEach((e) => (e.dataset.liked = liked ? 'true' : 'false'));
+  }
+
+  // Read product_id from the add-to-cart button (it carries data-product-id).
+  const productId = document.getElementById('addCart')?.dataset?.productId;
+
+  els.forEach((el) => {
+    el.addEventListener('click', async () => {
+      const nowLiked = el.dataset.liked !== 'true';
+      setAll(nowLiked);
+
+      if (!productId) return;
+      try {
+        await fetch('/api/wishlist/toggle', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': csrf(),
+          },
+          body: JSON.stringify({ product_id: +productId }),
+        });
+      } catch { /* guest or network error — optimistic toggle stays */ }
     });
   });
 }
@@ -185,6 +318,55 @@ function initReveal() {
   document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 }
 
+function initFbtAddAll() {
+  const btn = document.querySelector('.fbt-addall');
+  if (!btn) return;
+
+  btn.addEventListener('click', async () => {
+    // Collect product IDs from every pcard in the FBT section (including the main product).
+    const container = document.getElementById('fbtCards');
+    if (!container) return;
+
+    const cards = container.querySelectorAll('.pcard');
+    const ids = [];
+    cards.forEach((card) => {
+      // Each pcard may carry a data-product-id; the main product also has its id
+      // on the add-to-cart button.
+      const pid = card.dataset.productId;
+      if (pid) ids.push(+pid);
+    });
+
+    // Fallback: if cards don't have data-product-id, at least add the main product.
+    const mainId = document.getElementById('addCart')?.dataset?.productId;
+    if (!ids.length && mainId) ids.push(+mainId);
+
+    // Fire individual add-to-cart requests in parallel.
+    const token = csrf();
+    const results = await Promise.allSettled(
+      ids.map((id) =>
+        fetch('/api/cart', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': token,
+          },
+          body: JSON.stringify({ product_id: id, quantity: 1 }),
+        }).then((r) => r.json())
+      )
+    );
+
+    // Update badge with the latest count from the last successful response.
+    const last = results.filter((r) => r.status === 'fulfilled' && r.value?.count != null).pop();
+    if (last) syncCartBadge(last.value.count);
+
+    // Visual feedback.
+    const origText = btn.textContent;
+    btn.textContent = '✓';
+    setTimeout(() => { btn.textContent = origText; }, 1800);
+  });
+}
+
 export default function init() {
   initGallery();
   initQty();
@@ -193,6 +375,8 @@ export default function init() {
   initTabs();
   initReviewFilter();
   initHelpful();
+  initReviewForm();
   initScrollToReviews();
+  initFbtAddAll();
   initReveal();
 }

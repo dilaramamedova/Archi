@@ -35,6 +35,8 @@ return [
         'meta_exp' => '12 years of experience',
         'meta_projects' => '320 completed projects',
         'meta_city' => 'Baku',
+        'years' => 'years experience',
+        'projects' => 'projects',
     ],
 
     'book' => [

@@ -5,13 +5,16 @@
 --}}
 @php
     // Hero promo carousel: image + target of each slide, read by resources/js/pages/home.js
-    $promoSlides = [
-        ['img' => '/assets/hero-promo-power-tools.png', 'href' => route('product')],
-        ['img' => '/assets/blog-cover-modern-villa.jpg', 'href' => route('blog')],
-        ['img' => '/assets/category-laminate-flooring.png', 'href' => route('calculator')],
-    ];
+    $promoSlides = $heroPromo->isNotEmpty()
+        ? $heroPromo->map(fn ($b) => ['img' => $b->image, 'href' => $b->button_url ?? route('product')])->toArray()
+        : [
+            ['img' => '/assets/hero-promo-power-tools.png', 'href' => route('product')],
+            ['img' => '/assets/blog-cover-modern-villa.jpg', 'href' => route('blog')],
+            ['img' => '/assets/category-laminate-flooring.png', 'href' => route('calculator')],
+        ];
 
-    $categories = [
+    // Fallback arrays used when dynamic collections are empty
+    $fallbackCategories = [
         ['img' => '/assets/category-tile-showroom.png', 'name' => __('home.categories.tiles'), 'count' => __('home.categories.count_860'), 'open' => true],
         ['img' => '/assets/category-roofing.png', 'name' => __('home.categories.roofing'), 'count' => __('home.categories.count_340')],
         ['img' => '/assets/category-laminate-flooring.png', 'name' => __('home.categories.laminate'), 'count' => __('home.categories.count_340')],
@@ -21,7 +24,7 @@
         ['img' => '/assets/category-cement-bags.png', 'name' => __('home.categories.cement'), 'count' => __('home.categories.count_340')],
     ];
 
-    $specialists = [
+    $fallbackSpecialists = [
         ['bg' => '#f5fbff', 'role' => __('home.specialists.role_tiler'), 'name' => __('home.specialists.name_1')],
         ['bg' => '#fdf5ff', 'role' => __('home.specialists.role_tiler'), 'name' => __('home.specialists.name_1')],
         ['bg' => '#f5fffb', 'role' => __('home.specialists.role_interior'), 'name' => __('home.specialists.name_2')],
@@ -112,11 +115,17 @@
 
 {{-- ===================== CATEGORIES ===================== --}}
 <div class="wrap"><div class="inner section">
-  <x-section-head :tag="__('home.categories.tag')" :title="__('home.categories.title')" />
+  <x-section-head :tag="__('home.categories.tag')" :title="__('home.categories.title')" :more="route('catalog')" />
   <div class="cat-row">
-    @foreach ($categories as $c)
-      <a @class(['cat-thumb', 'open' => ! empty($c['open'])]) href="{{ route('catalog') }}"><img src="{{ $c['img'] }}" alt=""><div class="ov"></div><div class="info"><div><h4>{{ $c['name'] }}</h4><p>{{ $c['count'] }}</p></div><img src="/assets/icon-arrow-right.svg" alt=""></div></a>
-    @endforeach
+    @if($categories->isNotEmpty())
+      @foreach ($categories as $c)
+        <a @class(['cat-thumb', 'open' => $loop->first]) href="{{ route('catalog', ['category' => $c->slug]) }}"><img src="{{ $c->image ?? '/assets/category-tile-showroom.png' }}" alt=""><div class="ov"></div><div class="info"><div><h4>{{ $c->name }}</h4><p>{{ $c->products()->count() }} {{ __('common.products_count') }}</p></div><img src="/assets/icon-arrow-right.svg" alt=""></div></a>
+      @endforeach
+    @else
+      @foreach ($fallbackCategories as $c)
+        <a @class(['cat-thumb', 'open' => ! empty($c['open'])]) href="{{ route('catalog') }}"><img src="{{ $c['img'] }}" alt=""><div class="ov"></div><div class="info"><div><h4>{{ $c['name'] }}</h4><p>{{ $c['count'] }}</p></div><img src="/assets/icon-arrow-right.svg" alt=""></div></a>
+      @endforeach
+    @endif
   </div>
 </div></div>
 
@@ -129,46 +138,92 @@
 
 {{-- ===================== CAMPAIGN (SALE) ===================== --}}
 <div class="wrap"><div class="inner section">
-  <div class="promo-banner">
-    <div class="pb-l">
-      <span class="pb-badge">{{ __('home.promo.badge') }}</span>
-      <div>
-        <h3>{{ __('home.promo.title_60') }}</h3>
-        <p>{{ __('home.promo.text_before') }} <b>ARCHI60</b> {{ __('home.promo.text_after') }}</p>
+  @if($promoBanners->isNotEmpty() && ($promo = $promoBanners->first()))
+    <div class="promo-banner" @if($promo->background_color) style="background-color: {{ $promo->background_color }}" @endif>
+      <div class="pb-l">
+        <span class="pb-badge">{{ $promo->badge_text ?? __('home.promo.badge') }}</span>
+        <div>
+          <h3>{{ $promo->title }}</h3>
+          <p>{{ $promo->description }}</p>
+        </div>
       </div>
+      @if($promo->code)
+        <button class="pb-copy" type="button" data-code="{{ $promo->code }}" data-on="false">{{ $promo->code }} · <span class="pb-swap"><span class="pb-copy-label">{{ __('home.promo.copy') }}</span><span class="pb-copied-label">{{ __('home.promo.copied') }}</span></span></button>
+      @elseif($promo->button_url)
+        <a class="pb-copy" href="{{ $promo->button_url }}">{{ $promo->button_text ?? __('common.view_details') }}</a>
+      @endif
     </div>
-    {{-- Both labels are stacked in one grid cell, so the confirmation never resizes the button --}}
-    <button class="pb-copy" type="button" data-code="ARCHI60" data-on="false">ARCHI60 · <span class="pb-swap"><span class="pb-copy-label">{{ __('home.promo.copy') }}</span><span class="pb-copied-label">{{ __('home.promo.copied') }}</span></span></button>
-  </div>
-  <x-section-head :tag="__('home.sale.tag')" :title="__('home.sale.title')" :more="route('cart')" />
+  @else
+    <div class="promo-banner">
+      <div class="pb-l">
+        <span class="pb-badge">{{ __('home.promo.badge') }}</span>
+        <div>
+          <h3>{{ __('home.promo.title_60') }}</h3>
+          <p>{{ __('home.promo.text_before') }} <b>ARCHI60</b> {{ __('home.promo.text_after') }}</p>
+        </div>
+      </div>
+      <button class="pb-copy" type="button" data-code="ARCHI60" data-on="false">ARCHI60 · <span class="pb-swap"><span class="pb-copy-label">{{ __('home.promo.copy') }}</span><span class="pb-copied-label">{{ __('home.promo.copied') }}</span></span></button>
+    </div>
+  @endif
+  <x-section-head :tag="__('home.sale.tag')" :title="__('home.sale.title')" :more="route('catalog', ['sale' => 1])" />
   <div class="grid4" id="campGrid">
-    <x-pcard :cat="__('home.sale.cat_tiles')" :name="__('home.sale.name_tile_matte')"
-             now="23.90 ₼" old="45.99 ₼" off="-48%" rate="4.6" :reviews="__('home.sale.reviews_1876')"
-             img="/assets/product-marble-tile.png" />
-    <x-pcard :cat="__('home.sale.cat_laminate')" :name="__('home.sale.name_laminate')"
-             now="29.90 ₼" old="42.00 ₼" off="-29%" rate="4.8" :reviews="__('home.sale.reviews_640')"
-             img="/assets/category-laminate-flooring.png" />
-    <x-pcard :cat="__('home.sale.cat_paint')" :name="__('home.sale.name_paint')"
-             now="49.00 ₼" old="72.00 ₼" off="-32%" rate="4.7" :reviews="__('home.sale.reviews_932')"
-             img="/assets/hero-modern-house.jpg" />
-    <x-pcard :cat="__('home.sale.cat_plumbing')" :name="__('home.sale.name_mixer')"
-             now="64.00 ₼" old="95.00 ₼" off="-33%" rate="4.9" :reviews="__('home.sale.reviews_210')"
-             img="/assets/category-plumbing.png" />
+    @forelse ($saleProducts as $product)
+      <x-pcard :href="route('product.show', $product->slug)"
+               :img="$product->mainImageUrl ?? '/assets/product-marble-tile.png'"
+               :cat="$product->category?->name ?? __('home.sale.cat_tiles')"
+               :name="$product->name"
+               :now="number_format($product->price, 2) . ' ₼'"
+               :old="$product->old_price && $product->old_price > $product->price ? number_format($product->old_price, 2) . ' ₼' : null"
+               :off="$product->old_price && $product->old_price > $product->price && $product->discount_percent ? '-' . $product->discount_percent . '%' : null"
+               :rate="$product->reviewsCount > 0 ? number_format($product->averageRating, 1) : null"
+               :reviews="$product->reviewsCount > 0 ? '(' . $product->reviewsCount . ' ' . __('common.reviews') . ')' : null" />
+    {{-- TODO: Replace with dynamic data from controller --}}
+    @empty
+      <x-pcard :cat="__('home.sale.cat_tiles')" :name="__('home.sale.name_tile_matte')"
+               :now="__('home.sale.price_now_1')" :old="__('home.sale.price_old_1')" :off="__('home.sale.discount_1')" :rate="__('home.sale.rate_1')" :reviews="__('home.sale.reviews_1876')"
+               img="/assets/product-marble-tile.png" />
+      <x-pcard :cat="__('home.sale.cat_laminate')" :name="__('home.sale.name_laminate')"
+               :now="__('home.sale.price_now_2')" :old="__('home.sale.price_old_2')" :off="__('home.sale.discount_2')" :rate="__('home.sale.rate_2')" :reviews="__('home.sale.reviews_640')"
+               img="/assets/category-laminate-flooring.png" />
+      <x-pcard :cat="__('home.sale.cat_paint')" :name="__('home.sale.name_paint')"
+               :now="__('home.sale.price_now_3')" :old="__('home.sale.price_old_3')" :off="__('home.sale.discount_3')" :rate="__('home.sale.rate_3')" :reviews="__('home.sale.reviews_932')"
+               img="/assets/hero-modern-house.jpg" />
+      <x-pcard :cat="__('home.sale.cat_plumbing')" :name="__('home.sale.name_mixer')"
+               :now="__('home.sale.price_now_4')" :old="__('home.sale.price_old_4')" :off="__('home.sale.discount_4')" :rate="__('home.sale.rate_4')" :reviews="__('home.sale.reviews_210')"
+               img="/assets/category-plumbing.png" />
+    @endforelse
   </div>
 </div></div>
 
 {{-- ===================== PRODUCTS ===================== --}}
 <div class="wrap"><div class="inner section">
-  <div class="promo-banner">
-    <div class="pb-l">
-      <span class="pb-badge">{{ __('home.promo.badge') }}</span>
-      <div>
-        <h3>{{ __('home.promo.title_15') }}</h3>
-        <p>{{ __('home.promo.text_before') }} <b>ARCHI15</b> {{ __('home.promo.text_after') }}</p>
+  @if($promoBanners->count() > 1 && ($promo2 = $promoBanners->skip(1)->first()))
+    <div class="promo-banner" @if($promo2->background_color) style="background-color: {{ $promo2->background_color }}" @endif>
+      <div class="pb-l">
+        <span class="pb-badge">{{ $promo2->badge_text ?? __('home.promo.badge') }}</span>
+        <div>
+          <h3>{{ $promo2->title }}</h3>
+          <p>{{ $promo2->description }}</p>
+        </div>
       </div>
+      @if($promo2->code)
+        <button class="pb-copy" type="button" data-code="{{ $promo2->code }}" data-on="false">{{ $promo2->code }} · <span class="pb-swap"><span class="pb-copy-label">{{ __('home.promo.copy') }}</span><span class="pb-copied-label">{{ __('home.promo.copied') }}</span></span></button>
+      @elseif($promo2->button_url)
+        <a class="pb-copy" href="{{ $promo2->button_url }}">{{ $promo2->button_text ?? __('common.view_details') }}</a>
+      @endif
     </div>
-    <button class="pb-copy" type="button" data-code="ARCHI15" data-on="false">ARCHI15 · <span class="pb-swap"><span class="pb-copy-label">{{ __('home.promo.copy') }}</span><span class="pb-copied-label">{{ __('home.promo.copied') }}</span></span></button>
-  </div>
+  @else
+    <div class="promo-banner">
+      <div class="pb-l">
+        <span class="pb-badge">{{ __('home.promo.badge') }}</span>
+        <div>
+          <h3>{{ __('home.promo.title_15') }}</h3>
+          <p>{{ __('home.promo.text_before') }} <b>ARCHI15</b> {{ __('home.promo.text_after') }}</p>
+        </div>
+      </div>
+      <button class="pb-copy" type="button" data-code="ARCHI15" data-on="false">ARCHI15 · <span class="pb-swap"><span class="pb-copy-label">{{ __('home.promo.copy') }}</span><span class="pb-copied-label">{{ __('home.promo.copied') }}</span></span></button>
+    </div>
+  @endif
   <x-section-head :tag="__('home.products.tag')" :title="__('home.products.title')" :more="route('search', ['tab' => 'prod'])" />
   {{-- Products the visitor posted on /sell are stored in localStorage and prepended by home.js --}}
   <div class="grid4" id="prodGrid"
@@ -176,10 +231,23 @@
        data-l-cursor="{{ __('common.go_to_product') }}"
        data-l-mine="{{ __('common.your_listing') }}"
        data-l-new="{{ __('home.products.condition_new') }}">
-    @for ($i = 0; $i < 4; $i++)
-      <x-pcard :cat="__('home.products.cat_tiles')" :name="__('home.products.name_tile_matte')"
-               now="23.90 ₼" old="15,99 ₼" off="-48%" rate="4.4" :reviews="__('home.products.reviews_1876')" />
-    @endfor
+    @forelse ($featuredProducts as $product)
+      <x-pcard :href="route('product.show', $product->slug)"
+               :img="$product->mainImageUrl ?? '/assets/product-marble-tile.png'"
+               :cat="$product->category?->name ?? __('home.products.cat_tiles')"
+               :name="$product->name"
+               :now="number_format($product->price, 2) . ' ₼'"
+               :old="$product->old_price && $product->old_price > $product->price ? number_format($product->old_price, 2) . ' ₼' : null"
+               :off="$product->old_price && $product->old_price > $product->price && $product->discount_percent ? '-' . $product->discount_percent . '%' : null"
+               :rate="$product->reviewsCount > 0 ? number_format($product->averageRating, 1) : null"
+               :reviews="$product->reviewsCount > 0 ? '(' . $product->reviewsCount . ' ' . __('common.reviews') . ')' : null" />
+    {{-- TODO: Replace with dynamic data from controller --}}
+    @empty
+      @for ($i = 0; $i < 4; $i++)
+        <x-pcard :cat="__('home.products.cat_tiles')" :name="__('home.products.name_tile_matte')"
+                 :now="__('home.products.fallback_price_now')" :old="__('home.products.fallback_price_old')" :off="__('home.products.fallback_discount')" :rate="__('home.products.fallback_rate')" :reviews="__('home.products.reviews_1876')" />
+      @endfor
+    @endforelse
   </div>
 </div></div>
 
@@ -187,20 +255,43 @@
 <div class="wrap"><div class="inner section">
   <x-section-head :tag="__('home.specialists.tag')" :title="__('home.specialists.title')" :more="route('search', ['tab' => 'usta'])" />
   <div class="grid4" id="specGrid">
-    @foreach ($specialists as $s)
-      <x-scard :bg="$s['bg']" :role="$s['role']" rate="4.9" :reviews="__('home.specialists.reviews_416')"
-               :name="$s['name']" :exp="__('home.specialists.exp_12')" :proj="__('home.specialists.proj_320')" />
-    @endforeach
+    @if($specialists->isNotEmpty())
+      @foreach ($specialists as $s)
+        <x-scard :href="route('specialist.show', $s)"
+                 :bg="['#f5fbff', '#fdf5ff', '#f5fffb', '#fff5f5'][$loop->index % 4]"
+                 :avatar="$s->user?->avatar ?? '/assets/icon-user.svg'"
+                 :role="translate_craft($s->craft)"
+                 :rate="null"
+                 :reviews="null"
+                 :name="$s->user?->name ?? __('home.specialists.name_1')"
+                 :exp="$s->experience_years ? $s->experience_years . ' ' . __('home.specialists.years') : __('home.specialists.exp_12')"
+                 :proj="$s->portfolioItems()->count() . ' ' . __('home.specialists.projects')" />
+      @endforeach
+    @else
+      {{-- TODO: Replace with dynamic data from controller --}}
+      @foreach ($fallbackSpecialists as $s)
+        <x-scard :bg="$s['bg']" :role="$s['role']" :rate="__('home.specialists.fallback_rate')" :reviews="__('home.specialists.reviews_416')"
+                 :name="$s['name']" :exp="__('home.specialists.exp_12')" :proj="'0 ' . __('home.specialists.projects')" />
+      @endforeach
+    @endif
   </div>
 </div></div>
 
 {{-- ===================== BLOG ===================== --}}
 <div class="wrap"><div class="inner section">
-  <x-section-head :tag="__('home.blog.tag')" :title="__('home.blog.title')" />
+  <x-section-head :tag="__('home.blog.tag')" :title="__('home.blog.title')" :more="route('blog')" />
   <div class="blog-grid" id="blogGrid">
-    @for ($i = 1; $i <= 4; $i++)
-      <x-post :href="route('blog.article')" :time="__('home.blog.time_' . $i)" :title="__('home.blog.title_' . $i)" :excerpt="__('home.blog.excerpt_' . $i)" />
-    @endfor
+    @forelse ($blogPosts as $post)
+      <x-post :href="route('blog.show', $post->slug)"
+              :img="$post->cover_image ?? '/assets/blog-cover-default.png'"
+              :time="$post->reading_time ?? __('home.blog.time_1')"
+              :title="$post->title"
+              :excerpt="$post->excerpt" />
+    @empty
+      @for ($i = 1; $i <= 4; $i++)
+        <x-post :href="route('blog.article')" :time="__('home.blog.time_' . $i)" :title="__('home.blog.title_' . $i)" :excerpt="__('home.blog.excerpt_' . $i)" />
+      @endfor
+    @endforelse
   </div>
 </div></div>
 

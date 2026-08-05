@@ -30,13 +30,36 @@
         'promoUnknown' => __('cart.promo.unknown'),
         'alertEmpty' => __('cart.alert.empty'),
         'alertDone' => __('cart.alert.done'),
+        // Checkout form strings
+        'checkoutTitle' => __('cart.checkout_form.title'),
+        'checkoutName' => __('cart.checkout_form.name'),
+        'checkoutPhone' => __('cart.checkout_form.phone'),
+        'checkoutAddress' => __('cart.checkout_form.address'),
+        'checkoutNotes' => __('cart.checkout_form.notes'),
+        'checkoutSubmit' => __('cart.checkout_form.submit'),
+        'checkoutCancel' => __('cart.checkout_form.cancel'),
+        'checkoutNameReq' => __('cart.checkout_form.name_required'),
+        'checkoutPhoneReq' => __('cart.checkout_form.phone_required'),
+        'checkoutAddrReq' => __('cart.checkout_form.address_required'),
+        'checkoutError' => __('cart.checkout_form.error'),
+        'checkoutSending' => __('cart.checkout_form.sending'),
     ];
+
+    $user = auth()->user();
+    $authData = $user ? [
+        'id' => $user->id,
+        'name' => $user->name,
+        'phone' => $user->phone ?? '',
+        'email' => $user->email ?? '',
+    ] : null;
 @endphp
 <x-layout page="cart" :title="__('cart.title')">
 
 <section class="min-h-[60vh] bg-gray-soft2 pt-10 pb-20" id="ctPage"
          data-promos="{{ json_encode($promos) }}"
-         data-i18n="{{ json_encode($strings) }}">
+         data-i18n="{{ json_encode($strings) }}"
+         data-auth="{{ json_encode($authData) }}"
+         data-order-url="{{ route('api.orders.store') }}">
   <div class="wrap-narrow flex flex-col gap-6">
     {{-- geometry + type come from the caller; the shared .ui-crumbs owns tone and state.
          leading-5 restores the 20px line-height text-sm pairs with (.ui-crumbs sets

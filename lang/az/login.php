@@ -25,6 +25,12 @@ return [
         'sign_up' => 'Qeydiyyatdan keç',
     ],
 
+    'forgot' => 'Şifrəni unutmusan?',
+    'forgot_subtitle' => 'E-poçt ünvanını daxil et, şifrə sıfırlama linki göndərək.',
+    'forgot_success' => 'Şifrə sıfırlama linki e-poçtunuza göndərildi.',
+    'forgot_submit' => 'Link göndər',
+    'back_to_login' => 'Girişə qayıt',
+
     'modal' => [
         'close' => 'Bağla',
     ],

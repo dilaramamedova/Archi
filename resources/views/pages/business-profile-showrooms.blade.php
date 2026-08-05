@@ -10,6 +10,7 @@
       <x-ui.button variant="primary" class="cab-btn-add">{{ __('business-profile-showrooms.list.add') }}</x-ui.button>
     </x-slot:action>
 
+    {{-- TODO: Replace with dynamic data from controller --}}
     @foreach ([
         ['key' => 'r1', 'state' => 'active', 'tone' => 'ok'],
         ['key' => 'r2', 'state' => 'active', 'tone' => 'ok'],

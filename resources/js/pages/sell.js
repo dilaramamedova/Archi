@@ -1,7 +1,6 @@
-// Page module for "sell" — ported from the inline <script> of the old sell.html:
-// image upload preview, condition chips and the success modal. The listing is kept in
-// localStorage ('archi-products') and rendered back by the home page grid.
-// Routes and labels come from data-* attributes on the form — never hardcoded here.
+// Page module for "sell" — handles image upload preview, condition chips, and form
+// submission via AJAX to the backend. Products are saved to the database and require
+// admin approval before appearing in the catalog.
 
 // Tailwind class sets for the modal buttons (built in JS, scanned via @source "../js").
 const BTN_BASE = 'flex h-[50px] items-center justify-center text-base font-semibold transition duration-200';
@@ -24,7 +23,7 @@ export default function init() {
   const d = form.dataset;
 
   /* ---- image upload + preview ---- */
-  let imgData = '';
+  let selectedFile = null;
   const upBox = $('upBox');
   const upInput = $('upInput');
   const upPrev = $('upPrev');
@@ -32,10 +31,10 @@ export default function init() {
   upInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    selectedFile = file;
     const reader = new FileReader();
     reader.onload = (ev) => {
-      imgData = ev.target.result;
-      upPrev.src = imgData;
+      upPrev.src = ev.target.result;
       upPrev.hidden = false;
       upBox.dataset.has = 'true';
     };
@@ -45,7 +44,7 @@ export default function init() {
   $('upRm').addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    imgData = '';
+    selectedFile = null;
     upInput.value = '';
     upPrev.hidden = true;
     upBox.dataset.has = 'false';
@@ -79,7 +78,7 @@ export default function init() {
   });
 
   /* ---- submit ---- */
-  form.addEventListener('submit', (e) => {
+  form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const name = $('pName').value.trim();
@@ -95,60 +94,86 @@ export default function init() {
     err.dataset.on = 'false';
 
     const old = parseFloat($('pOld').value);
-    const hasOld = !isNaN(old) && old > price;
+    const desc = $('pDesc').value.trim();
 
-    const product = {
-      name,
-      cat,
-      now: price.toFixed(2) + ' ' + d.lCurrency,
-      old: hasOld ? old.toFixed(2) + ' ' + d.lCurrency : '',
-      off: hasOld ? '-' + Math.round((1 - price / old) * 100) + '%' : '',
-      rate: cond, // shown as the "new / used" badge on the card
-      reviews: d.lReviewsZero,
-      desc: $('pDesc').value.trim(),
-      img: imgData || '',
-      mine: true,
-    };
+    // Determine condition value for the backend
+    const conditionMap = {};
+    conditionMap[d.lCondNew || 'Yeni'] = 'new';
+    conditionMap[d.lCondUsed || 'İşlənmiş'] = 'used';
+    const conditionValue = conditionMap[cond] || 'new';
 
-    // persist so the listing shows up on the site
-    try {
-      const list = JSON.parse(localStorage.getItem('archi-products') || '[]');
-      list.unshift(product);
-      localStorage.setItem('archi-products', JSON.stringify(list));
-    } catch (ex) {
-      // quota exceeded (large image) — the modal still confirms the listing
+    // Build FormData for multipart upload
+    const fd = new FormData();
+    fd.append('name', name);
+    fd.append('category_id', cat);
+    fd.append('price', price);
+    if (!isNaN(old) && old > 0) {
+      fd.append('old_price', old);
+    }
+    fd.append('condition', conditionValue);
+    fd.append('description', desc);
+    if (selectedFile) {
+      fd.append('image', selectedFile);
     }
 
-    /* ---- success modal ---- */
-    $('okName').textContent = '“' + name + '”';
+    // Disable submit button during request
+    const submitBtn = $('pSubmit');
+    submitBtn.disabled = true;
 
-    let authed = false;
     try {
-      authed = localStorage.getItem('archi-auth') === '1';
-    } catch (ex) {
-      // localStorage blocked — treat the visitor as a guest
-    }
+      const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content;
+      const res = await fetch(d.urlStore || '/sell', {
+        method: 'POST',
+        headers: {
+          'X-CSRF-TOKEN': csrfToken,
+          'Accept': 'application/json',
+        },
+        body: fd,
+      });
 
-    const nudge = $('regNudge');
-    const btns = $('okBtns');
-    btns.replaceChildren();
+      if (res.status === 401) {
+        // Not authenticated — redirect to login
+        window.location.href = d.urlLogin || '/login';
+        return;
+      }
 
-    if (authed) {
+      if (res.status === 422) {
+        // Validation error
+        const data = await res.json();
+        const messages = data.errors ? Object.values(data.errors).flat() : [data.message || 'Validation error'];
+        err.textContent = messages.join('. ');
+        err.dataset.on = 'true';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error('Server error');
+      }
+
+      // Success — show the modal
+      const data = await res.json();
+      $('okName').textContent = '"' + name + '"';
+
+      const nudge = $('regNudge');
+      const btns = $('okBtns');
+      btns.replaceChildren();
+
+      // User is authenticated (POST requires auth), so show authenticated flow
       nudge.classList.add('hidden');
       btns.append(
         link(BTN_PRIMARY, d.urlHome, d.lViewSite),
         link(BTN_GHOST, d.urlSell, d.lAddAnother)
       );
-    } else {
-      // sign-up is offered, but the product is already published — nobody is lost
-      nudge.classList.remove('hidden');
-      btns.append(
-        link(BTN_PRIMARY, d.urlRegister, d.lSignUp),
-        link(BTN_GHOST, d.urlHome, d.lNotNow)
-      );
-    }
 
-    openModal();
+      openModal();
+    } catch (ex) {
+      err.textContent = d.lServerError || 'Xəta baş verdi. Yenidən cəhd edin.';
+      err.dataset.on = 'true';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } finally {
+      submitBtn.disabled = false;
+    }
   });
 
   /* ---- success modal open/close ---- */
@@ -176,7 +201,4 @@ export default function init() {
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeModal();
   });
-
-  // clicking the overlay backdrop does not close it — the choice should be deliberate,
-  // the close button and Escape are the deliberate ways out
 }

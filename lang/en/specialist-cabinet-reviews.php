@@ -38,8 +38,9 @@ return [
         'title' => 'Reviews (416)',
         'summary' => 'Reviews you answer make customers trust you twice as much.',
         'stars_label' => ':count stars',
-        'more' => 'Show more (413)',
+        'more' => 'Show more',
         'empty' => 'No reviews match this filter.',
+        'anonymous' => 'Anonymous',
     ],
 
     'rating' => [
