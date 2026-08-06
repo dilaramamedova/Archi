@@ -48,7 +48,7 @@
     data-cur-details="{{ __('common.view_details') }}"
 >
 
-<x-navbar :megaCatalog="$megaCatalog" :megaSpecialists="$megaSpecialists" :megaBlog="$megaBlog" />
+<x-navbar :headerMenu="$headerMenu" :megaCatalog="$megaCatalog" :megaSpecialists="$megaSpecialists" :megaBlog="$megaBlog" />
 
 {{ $slot }}
 

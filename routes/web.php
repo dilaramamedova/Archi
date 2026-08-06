@@ -7,6 +7,7 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\OrderController;
@@ -148,6 +149,12 @@ Route::middleware('auth')->group(function () {
 Route::get('/specialist/{specialist}', [SpecialistController::class, 'show'])->name('specialist.show');
 
 Route::get('/calculator', fn () => archiView('pages.calculator'))->name('calculator');
+
+// Legal / policy pages
+Route::get('/terms', [LegalPageController::class, 'show'])->defaults('slug', 'terms')->name('legal.terms');
+Route::get('/privacy', [LegalPageController::class, 'show'])->defaults('slug', 'privacy')->name('legal.privacy');
+Route::get('/delivery', [LegalPageController::class, 'show'])->defaults('slug', 'delivery')->name('legal.delivery');
+Route::get('/cookies', [LegalPageController::class, 'show'])->defaults('slug', 'cookies')->name('legal.cookies');
 Route::get('/calculator/detailed', fn () => archiView('pages.calculator-detailed'))->name('calculator.detailed');
 
 Route::get('/business/register', fn () => archiView('pages.business-register'))->name('business.register');

@@ -284,6 +284,18 @@
                             font-sans text-base font-medium text-black/80; }
   .nav-calc img    { @apply size-6 transition-transform duration-[400ms]; }
 
+  /* nav dropdown (child items) */
+  .nav-item-wrap          { @apply relative flex h-15 items-stretch; }
+  .nav-item-wrap .nav-item { @apply w-full; }
+  .nav-dropdown           { @apply invisible absolute top-full left-0 z-[60] min-w-[200px] border border-black/10
+                                    bg-white py-2 opacity-0 shadow-[0_4px_12px_rgba(0,0,0,.12)];
+                             transition: opacity .18s ease, visibility .18s; }
+  .nav-item-wrap:hover .nav-dropdown { @apply visible opacity-100; }
+  .nav-item-wrap:hover .mcaret       { @apply rotate-180; }
+  .nav-dropdown li a      { @apply block px-5 py-2.5 text-sm font-medium text-black/80 whitespace-nowrap
+                                    transition-colors duration-150; }
+  .nav-dropdown li a:hover { @apply bg-gray-soft text-black; }
+
   /* ==========================================================================
      MEGA DROPDOWN
      ========================================================================== */

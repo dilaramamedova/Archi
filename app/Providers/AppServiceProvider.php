@@ -20,7 +20,9 @@ class AppServiceProvider extends ServiceProvider
     {
         View::composer('components.layout', function ($view) {
             $view->with([
-                'headerMenu' => MenuItem::location('header_main')->roots()->active()->ordered()->get(),
+                'headerMenu' => MenuItem::location('header_main')->roots()->active()->ordered()
+                    ->with(['children' => fn ($q) => $q->active()->ordered()])
+                    ->get(),
 
                 'megaCatalog' => MenuItem::location('header_mega_catalog')->roots()->active()->ordered()->get(),
 
