@@ -11,7 +11,7 @@ return [
         'current' => 'Profil redaktəsi',
     ],
     'heading' => 'Usta profilinin redaktəsi',
-    'status' => 'Dərc olunub',
+    'status' => 'Təsdiqlənib',
     'view_profile' => 'Profilə bax ↗',
 
     'nav' => [

@@ -90,6 +90,48 @@ export default function init() {
   initCounter(root, markDirty);
   initSkills(root, markDirty);
 
+  const avatar = root.querySelector('[data-avatar]');
+  const avatarPicker = root.querySelector('[data-avatar-picker]');
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
+  root.querySelector('[data-avatar-change]')?.addEventListener('click', () => avatarPicker?.click());
+  avatarPicker?.addEventListener('change', async () => {
+    const file = avatarPicker.files?.[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    const res = await fetch('/specialist/cabinet/avatar', {
+      method: 'POST',
+      headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+      body: formData,
+    });
+    const data = await res.json();
+    if (res.ok && avatar) {
+      avatar.innerHTML = '';
+      const image = document.createElement('img');
+      image.className = 'size-full rounded-full object-cover';
+      image.src = data.url;
+      image.alt = file.name;
+      avatar.appendChild(image);
+    }
+    avatarPicker.value = '';
+  });
+
+  root.querySelector('[data-avatar-delete]')?.addEventListener('click', async () => {
+    const res = await fetch('/specialist/cabinet/avatar', {
+      method: 'DELETE',
+      headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
+    });
+    if (res.ok && avatar) {
+      avatar.innerHTML = '';
+      const initials = document.createElement('p');
+      initials.textContent = avatar.dataset.initials || '';
+      avatar.appendChild(initials);
+    }
+  });
+
   root.querySelectorAll('.sc-input').forEach((el) => {
     el.addEventListener('input', markDirty);
     el.addEventListener('change', markDirty);
@@ -103,7 +145,6 @@ export default function init() {
         if (t) skills.push(t);
       });
 
-      const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
       const saveBtn = bar.querySelector('[data-save]');
       if (saveBtn) saveBtn.disabled = true;
 
@@ -118,7 +159,7 @@ export default function init() {
           body: JSON.stringify({
             first_name: root.querySelector('[name="first_name"]')?.value || '',
             last_name: root.querySelector('[name="last_name"]')?.value || '',
-            craft: root.querySelector('[name="craft"]')?.value || '',
+            specialist_specialty_id: root.querySelector('[name="specialist_specialty_id"]')?.value || '',
             experience_years: root.querySelector('[name="experience_years"]')?.value || '',
             city: root.querySelector('[name="city"]')?.value || '',
             phone: root.querySelector('[name="phone"]')?.value || '',

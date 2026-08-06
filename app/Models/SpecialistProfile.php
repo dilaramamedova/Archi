@@ -11,17 +11,33 @@ class SpecialistProfile extends Model
 {
     protected $guarded = ['id'];
 
+    protected static function booted(): void
+    {
+        static::saving(function (SpecialistProfile $profile): void {
+            if ($profile->specialist_specialty_id) {
+                $profile->craft = SpecialistSpecialty::query()->find($profile->specialist_specialty_id)?->name;
+            }
+        });
+    }
+
     protected function casts(): array
     {
         return [
             'skills' => 'array',
             'is_on_vacation' => 'boolean',
+            'is_featured' => 'boolean',
+            'show_on_homepage' => 'boolean',
         ];
     }
 
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function specialty(): BelongsTo
+    {
+        return $this->belongsTo(SpecialistSpecialty::class, 'specialist_specialty_id');
     }
 
     public function services(): HasMany
@@ -37,6 +53,11 @@ class SpecialistProfile extends Model
     public function portfolioItems(): HasMany
     {
         return $this->hasMany(SpecialistPortfolioItem::class)->orderBy('sort_order');
+    }
+
+    public function approvedPortfolioItems(): HasMany
+    {
+        return $this->portfolioItems()->approved();
     }
 
     public function reviews(): MorphMany

@@ -6,6 +6,7 @@ use App\Models\BlogPost;
 use App\Models\CartItem;
 use App\Models\MenuItem;
 use App\Models\SocialLink;
+use App\Support\WindowsSafeFilesystem;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -13,7 +14,10 @@ class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        //
+        if (PHP_OS_FAMILY === 'Windows') {
+            $this->app->forgetInstance('files');
+            $this->app->singleton('files', fn (): WindowsSafeFilesystem => new WindowsSafeFilesystem);
+        }
     }
 
     public function boot(): void

@@ -11,8 +11,6 @@
         ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count', 'count_value' => $portfolioCount],
         ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count', 'count_value' => $servicesCount],
         ['key' => 'schedule',      'route' => 'specialist.cabinet.schedule'],
-        ['key' => 'reviews',       'route' => 'specialist.cabinet.reviews',       'count' => 'reviews_count'],
-        ['key' => 'notifications', 'route' => 'specialist.cabinet.notifications'],
         ['key' => 'security',      'route' => 'specialist.cabinet.security'],
     ];
 
@@ -33,12 +31,19 @@
       :desc="__('specialist-cabinet.photo.desc')">
 
     <div class="sc-photo">
-      <div class="sc-avatar"><p>{{ $initials }}</p></div>
+      <div class="sc-avatar" data-avatar data-initials="{{ $initials }}">
+        @if ($profile?->avatar_path)
+          <img class="size-full rounded-full object-cover" src="{{ storage_url($profile->avatar_path) }}" alt="{{ $user->name }}">
+        @else
+          <p>{{ $initials }}</p>
+        @endif
+      </div>
       <div class="sc-photo-info">
         <p class="hint">{{ __('specialist-cabinet.photo.hint') }}</p>
         <div class="sc-photo-btns">
-          <x-ui.button variant="outline" class="cab-btn-edit">{{ __('specialist-cabinet.photo.change') }}</x-ui.button>
-          <x-ui.button variant="ghost" class="cab-btn-del">{{ __('specialist-cabinet.photo.delete') }}</x-ui.button>
+          <x-ui.button variant="outline" type="button" class="cab-btn-edit" data-avatar-change>{{ __('specialist-cabinet.photo.change') }}</x-ui.button>
+          <x-ui.button variant="ghost" type="button" class="cab-btn-del" data-avatar-delete>{{ __('specialist-cabinet.photo.delete') }}</x-ui.button>
+          <input type="file" class="sr-only" data-avatar-picker accept="image/jpeg,image/png,image/webp">
         </div>
       </div>
     </div>
@@ -64,9 +69,9 @@
     <div class="cab-field-row">
       <x-cabinet.field :label="__('specialist-cabinet.main.craft')" for="sc-craft">
         <div class="sc-select">
-          <x-ui.select variant="b2b" id="sc-craft" name="craft" class="sc-input sc-select-control"
-                       :options="__('specialist-cabinet.main.craft_options')"
-                       :value="$profile->craft ?? ''" />
+          <x-ui.select variant="b2b" id="sc-craft" name="specialist_specialty_id" class="sc-input sc-select-control"
+                       :options="$specialties"
+                       :value="$profile->specialist_specialty_id ?? ''" />
           <img class="car" src="/assets/icon-chevron-down-small.svg" alt="">
         </div>
       </x-cabinet.field>

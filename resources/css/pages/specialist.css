@@ -73,6 +73,7 @@
   .pp-btn               { @apply flex cursor-pointer items-center justify-center px-6 py-4 text-base font-medium text-ink transition-[filter,border-color] duration-200; }
   .pp-btn.w             { @apply border border-black/20 bg-white hover:border-ink; }
   .pp-book .div         { @apply h-px bg-black/10; }
+  .pp-contact-phone     { @apply text-center text-lg font-semibold text-ink underline underline-offset-4; }
   .pp-stat              { @apply flex items-center justify-between text-sm; }
   .pp-stat .k           { @apply text-black/50; }
   .pp-stat .v           { @apply font-medium text-ink; }

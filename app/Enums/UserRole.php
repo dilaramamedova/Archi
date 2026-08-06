@@ -7,6 +7,7 @@ enum UserRole: string
     case Buyer = 'buyer';
     case Seller = 'seller';
     case Master = 'master';
+    case Admin = 'admin';
 
     public function label(): string
     {
@@ -14,6 +15,7 @@ enum UserRole: string
             self::Buyer => 'Alıcı',
             self::Seller => 'Satıcı',
             self::Master => 'Usta / Mütəxəssis',
+            self::Admin => 'Admin',
         };
     }
 }

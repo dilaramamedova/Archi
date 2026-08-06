@@ -14,7 +14,7 @@ return [
     'heading' => 'Biznes profilinin redaktəsi',
 
     'status' => [
-        'published' => 'Dərc olunub',
+        'published' => 'Təsdiqlənib',
         'view_profile' => 'Profilə bax ↗',
     ],
 
@@ -24,7 +24,7 @@ return [
         'showrooms' => 'Şourumlar',
         'showrooms_count' => '3',
         'products' => 'Məhsullar',
-        'products_count' => '1,240',
+        'products_count' => ':count',
         'notifications' => 'Bildirişlər',
         'security' => 'Təhlükəsizlik',
     ],

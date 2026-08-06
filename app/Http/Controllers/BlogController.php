@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BlogCategory;
 use App\Models\BlogPost;
 use Illuminate\Http\Request;
 
@@ -11,34 +12,16 @@ class BlogController extends Controller
     {
         $query = BlogPost::published();
 
-        // Filter by category/tag — the blog_posts table has a JSON `tags` column.
-        // The filter tab keys (used in ?cat=...) map to one or more actual tag values
-        // stored in the database, because the UI uses English category slugs while
-        // the seeder stores Azerbaijani tag names or slightly different English forms.
-        if ($request->filled('cat') && $request->input('cat') !== 'all') {
-            $cat = $request->input('cat');
+        $categories = BlogCategory::active()->ordered()->get();
+        $activeCategory = null;
 
-            // Map filter keys to the actual tag values stored in the DB
-            $tagMap = [
-                'repair'     => ['repair', 'təmir'],
-                'materials'  => ['material', 'tikinti', 'kafel', 'dam'],
-                'budget'     => ['budget', 'büdcə'],
-                'design'     => ['design', 'dizayn', 'interyer'],
-                'masters'    => ['masters', 'usta', 'mütəxəssis'],
-                'plumbing'   => ['plumbing', 'santexnika'],
-                'insulation' => ['insulation', 'izolyasiya'],
-            ];
-
-            $tags = $tagMap[$cat] ?? [$cat];
-
-            $query->where(function ($q) use ($tags) {
-                foreach ($tags as $tag) {
-                    $q->orWhereJsonContains('tags', $tag);
-                }
-            });
+        if ($request->filled('cat')) {
+            $activeCategory = BlogCategory::where('slug', $request->input('cat'))->first();
+            if ($activeCategory) {
+                $query->where('blog_category_id', $activeCategory->id);
+            }
         }
 
-        // Search
         if ($request->filled('q')) {
             $term = $request->input('q');
             $query->where(function ($q) use ($term) {
@@ -48,16 +31,22 @@ class BlogController extends Controller
             });
         }
 
-        $posts = $query->latest('published_at')
+        $featured = collect();
+
+        if (! $activeCategory) {
+            $featured = BlogPost::published()->featured()
+                ->with(['blogCategory', 'author'])
+                ->latest('published_at')
+                ->take(3)
+                ->get();
+        }
+
+        $posts = $query->with('blogCategory')
+            ->latest('published_at')
             ->paginate(12)
             ->withQueryString();
 
-        $featured = BlogPost::published()->featured()
-            ->latest('published_at')
-            ->take(3)
-            ->get();
-
-        return view('pages.blog', compact('posts', 'featured'));
+        return view('pages.blog', compact('posts', 'featured', 'categories'));
     }
 
     public function show(string $slug)
@@ -70,9 +59,20 @@ class BlogController extends Controller
 
         $related = BlogPost::published()
             ->where('id', '!=', $post->id)
+            ->where('blog_category_id', $post->blog_category_id)
             ->latest('published_at')
             ->take(3)
             ->get();
+
+        if ($related->count() < 3) {
+            $remaining = 3 - $related->count();
+            $extra = BlogPost::published()
+                ->whereNotIn('id', $related->pluck('id')->push($post->id))
+                ->latest('published_at')
+                ->take($remaining)
+                ->get();
+            $related = $related->concat($extra);
+        }
 
         return view('pages.blog-article', compact('post', 'related'));
     }

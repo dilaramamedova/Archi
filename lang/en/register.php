@@ -52,6 +52,7 @@ return [
         'privacy_link' => 'Privacy policy',
         'terms_agree' => '— I agree',
         'submit' => 'Sign up',
+        'info_note' => 'After registering as a specialist or seller, you will be asked to complete additional profile information.',
         'have_account' => 'Already have an account?',
         'sign_in' => 'Sign in',
     ],

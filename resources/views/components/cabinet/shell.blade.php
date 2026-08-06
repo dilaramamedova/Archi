@@ -43,10 +43,13 @@
     'strong' => [],
     'hover' => true,
     'progressFill' => 'w-[184px]',
+    'showStatus' => false,
+    'showViewButton' => true,
 ])
 <div {{ $attributes->merge(['class' => 'cab-page']) }}>
 
-  <x-cabinet.header :ns="$ns" :heading="$heading" :view-href="$viewHref" :hover="$hover" />
+  <x-cabinet.header :ns="$ns" :heading="$heading" :view-href="$viewHref" :hover="$hover"
+      :show-status="$showStatus" :show-view-button="$showViewButton" />
 
   <div class="cab-body">
     <x-cabinet.sidebar :ns="$ns" :active="$active" :items="$navItems" :strong="$strong" :fill="$progressFill" />

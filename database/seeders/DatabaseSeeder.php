@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -17,16 +18,22 @@ class DatabaseSeeder extends Seeder
                 'first_name' => 'ARCHI',
                 'last_name' => 'Admin',
                 'password' => 'password',
-                'role' => 'buyer',
+                'role' => UserRole::Admin,
                 'status' => UserStatus::Active,
             ],
         );
+
+        User::where('email', 'admin@archi.test')->update([
+            'role' => UserRole::Admin,
+            'status' => UserStatus::Active,
+        ]);
 
         $this->call([
             SettingSeeder::class,
             MenuItemSeeder::class,
             SocialLinkSeeder::class,
             AboutSeeder::class,
+            LegalPageSeeder::class,
             DemoSeeder::class,
         ]);
     }

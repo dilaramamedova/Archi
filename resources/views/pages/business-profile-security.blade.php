@@ -30,48 +30,24 @@
     <x-ui.button variant="primary" class="h-11 px-[22px] text-[13px] leading-[normal] font-bold whitespace-nowrap">{{ __('business-profile-security.password.submit') }}</x-ui.button>
   </x-cabinet.card>
 
-  {{-- Two-factor authentication --}}
-  <x-cabinet.card gap="gap-4" :title="__('business-profile-security.twofa.title')">
-    <div class="bpsec-row">
-      <p class="desc">{{ __('business-profile-security.twofa.desc') }}</p>
-      <x-ui.toggle :on="true" size="md" tone="ok" :aria-label="__('business-profile-security.twofa.title')" />
-    </div>
-  </x-cabinet.card>
-
-  {{-- Active sessions --}}
-  <x-cabinet.card gap="gap-4" :title="__('business-profile-security.sessions.title')">
-    <x-cabinet.row class="justify-between">
-      <div class="bpsec-session-info">
-        <div class="bpsec-session-title">
-          <p>{{ __('business-profile-security.sessions.s1_device') }}</p>
-          <x-ui.badge tone="ok" size="xs">{{ __('business-profile-security.sessions.this_device') }}</x-ui.badge>
-        </div>
-        <p class="bpsec-session-sub">{{ __('business-profile-security.sessions.s1_meta') }}</p>
-      </div>
-    </x-cabinet.row>
-    <x-cabinet.row class="justify-between">
-      <div class="bpsec-session-info">
-        <div class="bpsec-session-title nogap"><p>{{ __('business-profile-security.sessions.s2_device') }}</p></div>
-        <p class="bpsec-session-sub">{{ __('business-profile-security.sessions.s2_meta') }}</p>
-      </div>
-      <button type="button" class="bpsec-logout">{{ __('business-profile-security.sessions.logout') }}</button>
-    </x-cabinet.row>
-    <x-cabinet.row class="justify-between">
-      <div class="bpsec-session-info">
-        <div class="bpsec-session-title nogap"><p>{{ __('business-profile-security.sessions.s3_device') }}</p></div>
-        <p class="bpsec-session-sub">{{ __('business-profile-security.sessions.s3_meta') }}</p>
-      </div>
-      <button type="button" class="bpsec-logout">{{ __('business-profile-security.sessions.logout') }}</button>
-    </x-cabinet.row>
-  </x-cabinet.card>
-
   {{-- Danger zone --}}
   <x-cabinet.card class="bpsec-card danger border-danger/50" gap="gap-4"
       :title="__('business-profile-security.danger.title')"
       :desc="__('business-profile-security.danger.desc')">
     <div class="bpsec-row">
       <p class="desc">{{ __('business-profile-security.danger.deactivate_desc') }}</p>
-      <x-ui.button variant="danger" class="h-[42px] px-[18px] text-[13px] leading-[normal] font-semibold whitespace-nowrap">{{ __('business-profile-security.danger.deactivate') }}</x-ui.button>
+      <x-ui.button variant="danger" id="deactivateBtn" class="h-[42px] px-[18px] text-[13px] leading-[normal] font-semibold whitespace-nowrap">{{ __('business-profile-security.danger.deactivate') }}</x-ui.button>
+    </div>
+    <div id="deactivateConfirm" class="mt-4 hidden rounded-[12px] border border-red bg-[#fef2f2] p-4">
+      <p class="mb-3 text-[14px] text-[#b91c1c]">{{ __('specialist-cabinet-security.danger.confirm_text') }}</p>
+      <x-cabinet.field :label="__('specialist-cabinet-security.danger.password_label')" for="deactivate-pwd">
+        <x-ui.input variant="b2b" type="password" id="deactivate-pwd" name="deactivate_password" autocomplete="current-password" />
+      </x-cabinet.field>
+      <x-ui.alert tone="error" id="deactivateErr" class="mt-3" />
+      <div class="mt-3 flex gap-3">
+        <x-ui.button variant="danger" id="deactivateConfirmBtn" class="h-[42px] px-[18px] text-[13px] font-semibold">{{ __('specialist-cabinet-security.danger.confirm_deactivate') }}</x-ui.button>
+        <x-ui.button variant="outline" id="deactivateCancelBtn" class="h-[42px] px-[18px] text-[13px] font-semibold">{{ __('common.cancel') }}</x-ui.button>
+      </div>
     </div>
   </x-cabinet.card>
 

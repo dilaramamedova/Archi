@@ -12,8 +12,6 @@
         ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count', 'count_value' => $portfolioCount],
         ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count', 'count_value' => $servicesCount],
         ['key' => 'schedule',      'route' => 'specialist.cabinet.schedule'],
-        ['key' => 'reviews',       'route' => 'specialist.cabinet.reviews',       'count' => 'reviews_count'],
-        ['key' => 'notifications', 'route' => 'specialist.cabinet.notifications'],
         ['key' => 'security',      'route' => 'specialist.cabinet.security'],
     ];
 
@@ -43,6 +41,9 @@
       <x-ui.button variant="primary" class="cab-btn-add" data-add>{{ __('specialist-cabinet-services.list.add') }}</x-ui.button>
     </x-slot:action>
 
+    <x-ui.alert tone="error" id="servicesErr" />
+    <x-ui.alert tone="ok" id="servicesOk" />
+
     <div class="scs-list">
       @foreach ($services as $service)
         <x-cabinet.row data-id="{{ $service->id }}">
@@ -50,8 +51,8 @@
           <button type="button" class="scs-grip" data-grip aria-label="{{ __('specialist-cabinet-services.list.reorder') }}"></button>
 
           <div class="scs-info">
-            <p class="n">{{ $service->name }}</p>
-            <p class="d">{{ $service->description ?? '' }}</p>
+            <p class="n" contenteditable="true">{{ $service->name }}</p>
+            <p class="d" contenteditable="true">{{ $service->description ?? '' }}</p>
           </div>
 
           <input type="text" inputmode="decimal" class="scs-price" value="{{ $service->price ? number_format($service->price, 0) : '' }}"
@@ -73,6 +74,26 @@
         </x-cabinet.row>
       @endforeach
     </div>
+
+    <template id="specialistServiceRowTemplate">
+      <x-cabinet.row>
+        <button type="button" class="scs-grip" data-grip aria-label="{{ __('specialist-cabinet-services.list.reorder') }}"></button>
+        <div class="scs-info">
+          <p class="n" contenteditable="true"></p>
+          <p class="d" contenteditable="true"></p>
+        </div>
+        <input type="text" inputmode="decimal" class="scs-price" value=""
+               aria-label="{{ __('specialist-cabinet-services.list.price_label') }}">
+        <select class="scs-unit" aria-label="{{ __('specialist-cabinet-services.list.unit_label') }}">
+          @foreach ($units as $unit)
+            <option value="{{ $unit }}">{{ __('specialist-cabinet-services.units.' . $unit) }}</option>
+          @endforeach
+        </select>
+        <x-ui.toggle :on="false" size="sm" tone="ok"
+                     :aria-label="__('specialist-cabinet-services.list.toggle')" />
+        <x-ui.button variant="ghost" class="scs-del" data-del>{{ __('specialist-cabinet-services.list.delete') }}</x-ui.button>
+      </x-cabinet.row>
+    </template>
 
     <p class="scs-hint">{{ __('specialist-cabinet-services.list.hint') }}</p>
   </x-cabinet.card>

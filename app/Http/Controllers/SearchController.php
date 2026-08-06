@@ -105,12 +105,12 @@ class SearchController extends Controller
             ->where(function ($q) use ($terms, $matchingCategoryIds) {
                 foreach ($terms as $term) {
                     $q->orWhere('name', 'like', "%{$term}%")
-                      ->orWhere('brand', 'like', "%{$term}%")
-                      ->orWhere('description', 'like', "%{$term}%");
+                        ->orWhereHas('brand', fn ($bq) => $bq->where('name', 'like', "%{$term}%"))
+                        ->orWhere('description', 'like', "%{$term}%");
                 }
 
                 // Include products from matching categories
-                if (!empty($matchingCategoryIds)) {
+                if (! empty($matchingCategoryIds)) {
                     $q->orWhereIn('category_id', $matchingCategoryIds);
                 }
 
@@ -131,7 +131,7 @@ class SearchController extends Controller
                 'slug' => $p->slug,
                 'name' => $p->name,
                 'cat' => $p->category?->name,
-                'price' => number_format($p->price, 2) . ' ₼',
+                'price' => number_format($p->price, 2).' ₼',
                 'img' => $p->main_image_url,
             ]);
 
@@ -139,26 +139,34 @@ class SearchController extends Controller
             ->where(function ($q) use ($terms) {
                 foreach ($terms as $term) {
                     $q->orWhere('craft', 'like', "%{$term}%")
-                      ->orWhere('skills', 'like', "%{$term}%");
+                        ->orWhere('skills', 'like', "%{$term}%");
                 }
+
+                $q->orWhereHas('specialty', function ($specialtyQuery) use ($terms) {
+                    $specialtyQuery->where(function ($inner) use ($terms) {
+                        foreach ($terms as $term) {
+                            $inner->orWhere('name', 'like', "%{$term}%");
+                        }
+                    });
+                });
 
                 $q->orWhereHas('user', function ($uq) use ($terms) {
                     $uq->where(function ($inner) use ($terms) {
                         foreach ($terms as $term) {
                             $inner->orWhere('first_name', 'like', "%{$term}%")
-                                  ->orWhere('last_name', 'like', "%{$term}%");
+                                ->orWhere('last_name', 'like', "%{$term}%");
                         }
                     });
                 });
             })
-            ->with('user')
+            ->with(['user', 'specialty'])
             ->take(2)
             ->get()
             ->map(fn ($s) => [
                 'id' => $s->id,
-                'initials' => mb_substr($s->user->first_name, 0, 1) . mb_substr($s->user->last_name, 0, 1),
-                'name' => $s->user->first_name . ' ' . mb_substr($s->user->last_name, 0, 1) . '.',
-                'role' => $s->craft,
+                'initials' => mb_substr($s->user->first_name, 0, 1).mb_substr($s->user->last_name, 0, 1),
+                'name' => $s->user->first_name.' '.mb_substr($s->user->last_name, 0, 1).'.',
+                'role' => $s->specialty?->name ?? $s->craft,
                 'rate' => '4.9',
             ]);
 

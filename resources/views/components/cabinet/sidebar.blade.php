@@ -24,14 +24,24 @@
     'fill' => 'w-[184px]',
 ])
 @php
+    $businessUser = auth()->user();
+    $showroomCount = $businessUser?->sellerProfile?->showrooms()->count() ?? 0;
+    $productCount = $businessUser?->products()->count() ?? 0;
     $items = $items ?: [
+        ['key' => 'orders',        'route' => 'business.orders'],
         ['key' => 'company',       'route' => 'business.profile.company'],
         ['key' => 'contact',       'route' => 'business.profile.contact'],
-        ['key' => 'showrooms',     'route' => 'business.profile.showrooms', 'count' => 'showrooms_count'],
-        ['key' => 'products',      'route' => 'business.profile.products',  'count' => 'products_count'],
-        ['key' => 'notifications', 'route' => 'business.profile.notifications'],
+        ['key' => 'showrooms',     'route' => 'business.profile.showrooms', 'count' => 'showrooms_count', 'count_value' => $showroomCount],
+        ['key' => 'products',      'route' => 'business.profile.products',  'count' => 'products_count', 'count_value' => $productCount],
+        ['key' => 'inventory',     'route' => 'business.inventory'],
         ['key' => 'security',      'route' => 'business.profile.security'],
     ];
+
+    // Per-page namespaces own their labels; keys a page doesn't define (e.g. the
+    // orders/inventory rows on the six legacy pages) fall back to business-cabinet.nav.*.
+    $navLabel = fn (string $key) => \Illuminate\Support\Facades\Lang::has($ns . '.nav.' . $key)
+        ? __($ns . '.nav.' . $key)
+        : __('business-cabinet.nav.' . $key);
 
     $noteKey = \Illuminate\Support\Facades\Lang::has($ns . '.progress.note')
         ? $ns . '.progress.note'
@@ -43,8 +53,13 @@
        data-on="{{ $item['key'] === $active ? 'true' : 'false' }}"
        @if (in_array($item['key'], (array) $strong, true)) data-strong="true" @endif
        href="{{ route($item['route']) }}">
-      <p class="lbl">{{ __($ns . '.nav.' . $item['key']) }}</p>
-      @isset($item['count'])<p class="cnt">{{ $item['count_value'] ?? __($ns . '.nav.' . $item['count']) }}</p>@endisset
+      <p class="lbl">{{ $navLabel($item['key']) }}</p>
+      @isset($item['count'])
+        @php $countKey = $ns . '.nav.' . $item['count']; @endphp
+        @if (isset($item['count_value']) || \Illuminate\Support\Facades\Lang::has($countKey))
+          <p class="cnt">{{ $item['count_value'] ?? __($countKey) }}</p>
+        @endif
+      @endisset
     </a>
   @endforeach
 

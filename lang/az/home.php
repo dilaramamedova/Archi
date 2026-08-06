@@ -125,6 +125,21 @@ return [
         'projects' => 'layihə',
     ],
 
+    'lead' => [
+        'tag' => 'Pulsuz konsultasiya',
+        'title' => 'Təmir layihəniz üçün pulsuz məsləhət alın',
+        'subtitle' => 'Mütəxəssislərimiz sizə ən uyğun həlli tapmaqda kömək edəcək. Formu doldurun, 24 saat ərzində sizinlə əlaqə saxlayacağıq.',
+        'name_label' => 'Ad və soyad',
+        'name_placeholder' => 'Adınızı daxil edin',
+        'phone_label' => 'Telefon',
+        'phone_placeholder' => '+994 50 000 00 00',
+        'message_label' => 'Mesaj (istəyə bağlı)',
+        'message_placeholder' => 'Layihəniz haqqında qısa məlumat...',
+        'submit' => 'Pulsuz konsultasiya al',
+        'success' => 'Müraciətiniz qəbul edildi. Tezliklə sizinlə əlaqə saxlanılacaq.',
+        'privacy' => 'Göndərməklə şəxsi məlumatlarınızın emalına razılıq verirsiniz.',
+    ],
+
     'blog' => [
         'tag' => 'Bloq',
         'title' => 'Faydalı məqalələr',

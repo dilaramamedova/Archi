@@ -33,6 +33,12 @@ return [
     'reviews' => 'reviews',
     'products_count' => 'products',
 
+    'cancel' => 'Cancel',
+    'confirm' => 'Confirm',
+    'delete' => 'Delete',
+    'save' => 'Save',
+    'close' => 'Close',
+
     'site_name' => 'ARCHİ',
     'site_title' => 'ARCHİ — Construction & repair in one place',
 ];

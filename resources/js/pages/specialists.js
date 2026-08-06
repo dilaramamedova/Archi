@@ -16,10 +16,6 @@ function buildFilterUrl() {
   const city = $('#spCityBlock .sp-check[data-on="true"]');
   if (city) params.set('city', city.dataset.city);
 
-  // Rating
-  const rating = $('#spRateBlock .sp-radio[data-on="true"]');
-  if (rating) params.set('min_rating', rating.dataset.min);
-
   // Experience years
   const year = $('#spYearBlock .sp-year[data-on="true"]');
   if (year) {
@@ -49,7 +45,6 @@ export default function init() {
 
   const cats = $$('#spSpecBlock .sp-cat');
   const checks = $$('#spCityBlock .sp-check');
-  const radios = $$('#spRateBlock .sp-radio');
   const years = $$('#spYearBlock .sp-year');
   const swVerified = document.getElementById('spVerified');
   const swFree = document.getElementById('spFree');
@@ -92,13 +87,6 @@ export default function init() {
       renderChips();
     })
   );
-  radios.forEach((r) =>
-    r.addEventListener('click', () => {
-      radios.forEach((x) => { x.dataset.on = 'false'; });
-      r.dataset.on = 'true';
-      renderChips();
-    })
-  );
   years.forEach((y) =>
     y.addEventListener('click', () => {
       const was = y.dataset.on === 'true';
@@ -125,8 +113,6 @@ export default function init() {
     checks.forEach((c) => {
       if (c.dataset.on === 'true') out.push({ el: c, label: c.querySelector('.lbl').textContent.trim() });
     });
-    const r = $('#spRateBlock .sp-radio[data-on="true"]');
-    if (r) out.push({ el: r, label: r.dataset.chip });
     return out;
   }
 

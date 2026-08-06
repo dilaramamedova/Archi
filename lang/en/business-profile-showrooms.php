@@ -57,6 +57,19 @@ return [
         'hidden' => 'Hidden',
     ],
 
+    'empty' => 'No showrooms yet. Add your first showroom.',
+
+    'modal' => [
+        'add_title' => 'Add showroom',
+        'edit_title' => 'Edit showroom',
+        'name' => 'Name',
+        'address' => 'Address',
+        'city' => 'City',
+        'phone' => 'Phone',
+        'work_hours' => 'Work hours',
+        'status' => 'Status',
+    ],
+
     'save' => [
         'unsaved' => 'You have unsaved changes',
         'cancel' => 'Cancel',

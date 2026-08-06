@@ -14,8 +14,6 @@
         ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count', 'count_value' => $portfolioCount],
         ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count', 'count_value' => $servicesCount],
         ['key' => 'schedule',      'route' => 'specialist.cabinet.schedule'],
-        ['key' => 'reviews',       'route' => 'specialist.cabinet.reviews',       'count' => 'reviews_count'],
-        ['key' => 'notifications', 'route' => 'specialist.cabinet.notifications'],
         ['key' => 'security',      'route' => 'specialist.cabinet.security'],
     ];
 
@@ -46,14 +44,18 @@
       <x-ui.button variant="primary" class="cab-btn-add" data-add>{{ __('specialist-cabinet-portfolio.list.add') }}</x-ui.button>
     </x-slot:action>
 
+    <x-ui.alert tone="error" id="portfolioErr" />
+    <x-ui.alert tone="ok" id="portfolioOk" />
+
     <div class="scp-grid" data-count="{{ $count }}" data-max="{{ $max }}">
       @foreach ($portfolioItems as $item)
         <div class="scp-tile" draggable="true" data-drag="false" data-over="false" data-id="{{ $item->id }}">
-          <img src="{{ $item->image_path }}" alt="{{ $item->title ?? __('specialist-cabinet-portfolio.tile.untitled') }}">
+          <img src="{{ storage_url($item->image_path) }}" alt="{{ $item->title ?? __('specialist-cabinet-portfolio.tile.untitled') }}">
+          <p class="scp-status" data-status="{{ $item->status->value }}">{{ $item->status->label() }}</p>
           <p class="scp-cover" @if (! $item->is_cover) hidden @endif>{{ __('specialist-cabinet-portfolio.tile.cover') }}</p>
           <button type="button" class="scp-del" data-del
                   aria-label="{{ __('specialist-cabinet-portfolio.tile.remove_label') }}">{{ __('specialist-cabinet-portfolio.tile.remove') }}</button>
-          <p class="scp-cap">{{ $item->title ?? '' }}</p>
+          <p class="scp-cap" contenteditable="true">{{ $item->title ?? '' }}</p>
         </div>
       @endforeach
 
@@ -63,6 +65,17 @@
         <span class="l">{{ __('specialist-cabinet-portfolio.uploader.label') }}</span>
       </button>
     </div>
+
+    <template id="portfolioTileTemplate">
+      <div class="scp-tile" draggable="true" data-drag="false" data-over="false">
+        <img src="" alt="">
+        <p class="scp-status" data-status="pending">Yoxlanılır</p>
+        <p class="scp-cover" hidden>{{ __('specialist-cabinet-portfolio.tile.cover') }}</p>
+        <button type="button" class="scp-del" data-del
+                aria-label="{{ __('specialist-cabinet-portfolio.tile.remove_label') }}">{{ __('specialist-cabinet-portfolio.tile.remove') }}</button>
+        <p class="scp-cap" contenteditable="true"></p>
+      </div>
+    </template>
 
     {{-- The Figma hint marker (831:11991) is the character U+2195 set in Inter, but the
          Google Fonts build of Inter subsets that codepoint away, so the browser fell back
@@ -78,7 +91,7 @@
     </p>
 
     {{-- both "add" affordances open this picker; new tiles are previewed client-side --}}
-    <input type="file" class="sr-only" data-picker multiple accept="image/jpeg,image/png"
+    <input type="file" class="sr-only" data-picker multiple accept="image/jpeg,image/png,image/webp"
            aria-label="{{ __('specialist-cabinet-portfolio.uploader.picker_label') }}">
   </x-cabinet.card>
 

@@ -23,10 +23,12 @@ class Product extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'old_price' => 'decimal:2',
+        'rejected_at' => 'datetime',
         'is_visible' => 'boolean',
         'is_approved' => 'boolean',
         'is_featured' => 'boolean',
         'is_sale' => 'boolean',
+        'show_on_homepage' => 'boolean',
         'free_delivery' => 'boolean',
         'return_14_days' => 'boolean',
         'specifications' => 'array',
@@ -144,6 +146,31 @@ class Product extends Model
     public function scopePopular($query)
     {
         return $query->orderByDesc('views_count');
+    }
+
+    public function scopePendingReview($query)
+    {
+        return $query->where('is_approved', false)->whereNull('rejected_at');
+    }
+
+    public function scopeRejected($query)
+    {
+        return $query->where('is_approved', false)->whereNotNull('rejected_at');
+    }
+
+    /**
+     * Moderation state derived from is_approved + rejected_at:
+     * 'approved' — published (visible in catalog when is_visible),
+     * 'rejected' — declined by admin (rejection_reason shown to the seller),
+     * 'pending'  — awaiting admin review.
+     */
+    public function getModerationStatusAttribute(): string
+    {
+        if ($this->is_approved) {
+            return 'approved';
+        }
+
+        return $this->rejected_at ? 'rejected' : 'pending';
     }
 
     public function getMainImageUrlAttribute(): ?string

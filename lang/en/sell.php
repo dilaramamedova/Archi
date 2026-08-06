@@ -1,6 +1,7 @@
-<?php
+﻿<?php
 
 return [
+    'sellers_only' => 'A business (seller) account is required to post products. Please complete the business registration.',
     'title' => 'Post a product — ARCHİ',
 
     'hero' => [
@@ -61,3 +62,4 @@ return [
         'reviews_zero' => '(0 reviews)',
     ],
 ];
+

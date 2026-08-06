@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 // Business profile — public storefront (RU). Same key tree as lang/az/business-profile.php.
 
@@ -18,6 +18,16 @@ return [
         'product_count' => '1 240 товаров',
         'go_to_products' => 'К товарам',
         'follow' => 'Следить',
+        'send_message' => 'Написать сообщение',
+        'member_since' => 'на площадке с :year',
+        'showroom_count' => ':count шоурум|:count шоурума|:count шоурумов',
+        'coming_soon' => 'Эта функция скоро будет доступна',
+    ],
+
+    'owner' => [
+        'hint' => 'Это профиль вашего магазина — так его видят покупатели.',
+        'edit' => 'Редактировать данные',
+        'add_product' => 'Добавить товар',
     ],
 
     'about' => [
@@ -44,6 +54,9 @@ return [
         'kicker' => 'КАТАЛОГ',
         'title' => 'Наши товары',
         'see_all' => 'СМОТРЕТЬ ВСЕ (1 240) →',
+        'see_all_count' => 'СМОТРЕТЬ ВСЕ (:count) →',
+        'empty_title' => 'Товаров пока нет',
+        'empty_owner_desc' => 'Добавьте первый товар — он появится здесь после одобрения администратором.',
         'favourite' => 'Добавить в избранное',
         'rating_value' => '4.4',
         'reviews' => '(1 876 отзывов)',
@@ -82,3 +95,4 @@ return [
         'member_value' => 'с 2021 года',
     ],
 ];
+

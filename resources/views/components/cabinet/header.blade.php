@@ -16,6 +16,8 @@
     'heading' => null,
     'viewHref' => null,
     'hover' => true,
+    'showStatus' => false,
+    'showViewButton' => true,
 ])
 @php
     // The six lang files were written independently and use two key shapes for the
@@ -44,11 +46,15 @@
     <p class="cab-title">{{ $heading ?? __($ns . '.heading') }}</p>
   </div>
   <div class="cab-head-right">
-    <x-ui.badge tone="ok" size="md" dot>{{ $pick('status.published', 'status') }}</x-ui.badge>
+    @if ($showStatus)
+      <x-ui.badge tone="ok" size="md" dot>{{ $pick('status.published', 'status') }}</x-ui.badge>
+    @endif
+    @if ($showViewButton)
     <x-ui.button
         variant="outline"
         class="cab-btn-view"
         :hover="$hover"
         :href="$href === false ? null : $href">{{ $pick('status.view_profile', 'view_profile') }}</x-ui.button>
+    @endif
   </div>
 </div>

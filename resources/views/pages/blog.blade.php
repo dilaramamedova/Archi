@@ -26,17 +26,22 @@
 
     <div>
       <div class="border-y border-black/30">
-        {{-- scrollbar hidden: scrollbar-width for Firefox, pseudo-element for WebKit --}}
-        @php $activeCat = request('cat', 'all'); @endphp
+        @php $activeCat = request('cat', ''); @endphp
         <div class="flex h-[60px] items-center overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
              role="tablist" aria-label="{{ __('blog.filters.aria_label') }}" id="blogFilters">
-          @foreach (['all', 'repair', 'materials', 'budget', 'design', 'masters', 'plumbing', 'insulation'] as $cat)
-            <a class="fchip" role="tab" data-cat="{{ $cat }}"
-                    id="fchip-{{ $cat }}" aria-controls="blogGrid"
-                    href="{{ route('blog', array_filter(['cat' => $cat !== 'all' ? $cat : null])) }}"
-                    aria-selected="{{ $cat === $activeCat ? 'true' : 'false' }}"
-                    data-on="{{ $cat === $activeCat ? 'true' : 'false' }}"
-                    tabindex="{{ $cat === $activeCat ? '0' : '-1' }}">{{ __('blog.filters.' . $cat) }}</a>
+          <a class="fchip" role="tab" data-cat="all"
+                  id="fchip-all" aria-controls="blogGrid"
+                  href="{{ route('blog') }}"
+                  aria-selected="{{ $activeCat === '' ? 'true' : 'false' }}"
+                  data-on="{{ $activeCat === '' ? 'true' : 'false' }}"
+                  tabindex="{{ $activeCat === '' ? '0' : '-1' }}">{{ __('blog.filters.all') }}</a>
+          @foreach ($categories as $cat)
+            <a class="fchip" role="tab" data-cat="{{ $cat->slug }}"
+                    id="fchip-{{ $cat->slug }}" aria-controls="blogGrid"
+                    href="{{ route('blog', ['cat' => $cat->slug]) }}"
+                    aria-selected="{{ $activeCat === $cat->slug ? 'true' : 'false' }}"
+                    data-on="{{ $activeCat === $cat->slug ? 'true' : 'false' }}"
+                    tabindex="{{ $activeCat === $cat->slug ? '0' : '-1' }}">{{ $cat->title }}</a>
           @endforeach
         </div>
       </div>
@@ -48,7 +53,7 @@
           <img class="size-full object-cover transition-transform duration-[600ms] group-hover:scale-105" src="{{ $feat->cover_image_url }}" alt="{{ $feat->title }}">
         </a>
         <div class="flex flex-1 flex-col gap-5 max-[1200px]:w-full">
-          <x-ui.eyebrow variant="lg" :label="__('blog.featured.tag_1')">
+          <x-ui.eyebrow variant="lg" :label="$feat->blogCategory->title ?? __('blog.featured.tag_1')">
             <span class="size-1 rounded-[14px] bg-[#5c5c5c]"></span>
             <p>{{ $feat->published_at->diffForHumans() }}</p>
           </x-ui.eyebrow>
@@ -68,7 +73,7 @@
 
     <div>
       <x-section-head :tag="__('blog.section.tag')" :title="__('blog.section.title')" />
-      <div class="blog-grid max-[1200px]:flex-wrap max-[640px]:flex-col" id="blogGrid"
+      <div class="blog-grid flex-wrap max-[640px]:flex-col" id="blogGrid"
            role="tabpanel" aria-labelledby="fchip-all" tabindex="0">
         @foreach ($posts as $post)
           <x-post class="rounded-ds max-[1200px]:min-w-[260px]"
@@ -79,7 +84,9 @@
                   :excerpt="$post->excerpt" />
         @endforeach
       </div>
-      <p class="pt-10 text-base text-black/50" id="blogEmpty" aria-live="polite" hidden>{{ __('blog.empty') }}</p>
+      @if ($posts->isEmpty())
+        <p class="pt-10 text-base text-black/50" id="blogEmpty" aria-live="polite">{{ __('blog.empty') }}</p>
+      @endif
       {{ $posts->links() }}
     </div>
 

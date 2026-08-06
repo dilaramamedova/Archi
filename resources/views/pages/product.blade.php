@@ -170,11 +170,11 @@
             <div class="ps-stat"><b>{{ number_format($sellerProductCount) }}</b><span>{{ __('product.seller.products_label') }}</span></div>
             <div class="ps-stat"><b>{{ __('product.seller.response') }}</b><span>{{ __('product.seller.response_label') }}</span></div>
           </div>
-          {{-- <div class="ps-actions">
+          <div class="ps-actions">
             <x-ui.button variant="primary" href="#"
                 class="h-[46px] flex-1 rounded-none text-sm font-semibold duration-200 hover:brightness-[.93]">{{ __('product.seller.visit') }}</x-ui.button>
             <button class="ps-btn" type="button">{{ __('product.seller.follow') }}</button>
-          </div> --}}
+          </div>
         </div>
       </div>
     </div>
@@ -274,14 +274,58 @@
     </div>
     @endif
 
-    {{-- ===================== RATING / REVIEWS (commented out) ===================== --}}
-    {{--
+    {{-- ===================== RATING / REVIEWS ===================== --}}
+    @if (false)
+    {{-- Müştəri qiymətləndirməsi bölməsi hazırda göstərilmir. --}}
+    @if ($product->reviews->isNotEmpty())
     <div class="pd-section" id="reviews">
       <div class="sec-tag"><span class="line"></span><p>{{ __('product.reviews.tag') }}</p></div>
       <div class="sec-title mb-6">{{ __('product.reviews.title') }}</div>
-      ...
+
+      <div class="flex gap-10 max-[900px]:flex-col">
+        {{-- Rating summary --}}
+        <div class="flex w-[240px] shrink-0 flex-col items-center gap-3 max-[900px]:w-full max-[900px]:flex-row max-[900px]:justify-center">
+          <p class="text-[48px] font-bold leading-none text-ink">{{ number_format($product->averageRating, 1) }}</p>
+          <x-ui.stars :rating="$product->averageRating" />
+          <p class="text-sm text-black/50">{{ $product->reviews->count() }} {{ __('common.reviews') }}</p>
+        </div>
+
+        {{-- Rating bars --}}
+        <div class="flex flex-1 flex-col gap-2">
+          @for ($star = 5; $star >= 1; $star--)
+            @php $count = $product->reviews->where('rating', $star)->count(); $pct = $product->reviews->count() > 0 ? ($count / $product->reviews->count()) * 100 : 0; @endphp
+            <div class="flex items-center gap-3">
+              <span class="w-8 text-right text-sm font-medium text-ink">{{ $star }} ★</span>
+              <div class="h-2 flex-1 rounded-full bg-black/8">
+                <div class="h-2 rounded-full bg-yellow" style="width: {{ $pct }}%"></div>
+              </div>
+              <span class="w-8 text-sm text-black/50">{{ $count }}</span>
+            </div>
+          @endfor
+        </div>
+      </div>
+
+      {{-- Review cards --}}
+      <div class="mt-8 flex flex-col gap-4">
+        @foreach ($product->reviews->take(5) as $review)
+          <div class="rounded border border-black/8 bg-white p-5">
+            <div class="mb-2 flex items-center gap-3">
+              <span class="flex size-9 items-center justify-center rounded-full bg-[#f5f7f9] text-xs font-bold text-ink">{{ mb_strtoupper(mb_substr($review->user?->first_name ?? 'A', 0, 1) . mb_substr($review->user?->last_name ?? '', 0, 1)) }}</span>
+              <div>
+                <p class="text-sm font-semibold text-ink">{{ $review->user?->first_name }} {{ $review->user?->last_name }}</p>
+                <p class="text-xs text-black/40">{{ $review->created_at->diffForHumans() }}</p>
+              </div>
+              <div class="ml-auto"><x-ui.stars :rating="$review->rating" size="sm" /></div>
+            </div>
+            @if ($review->comment)
+              <p class="text-sm leading-[1.6] text-black/60">{{ $review->comment }}</p>
+            @endif
+          </div>
+        @endforeach
+      </div>
     </div>
-    --}}
+    @endif
+    @endif
 
   </div></div>
 </section>
@@ -332,12 +376,12 @@
         <x-scard :href="route('specialist.show', $s)"
                  :bg="['#f5fbff', '#fdf5ff', '#f5fffb', '#fff5f5'][$loop->index % 4]"
                  :avatar="$s->user?->avatar ?? '/assets/icon-user.svg'"
-                 :role="translate_craft($s->craft)"
+                 :role="$s->specialty?->name ?? translate_craft($s->craft)"
                  :rate="null"
                  :reviews="__('product.specialists.reviews_416')"
                  :name="$s->user?->name ?? __('product.specialists.name_1')"
                  :exp="$s->experience_years ? $s->experience_years . ' ' . __('home.specialists.years') : __('product.specialists.exp_12')"
-                 :proj="$s->portfolioItems()->count() . ' ' . __('home.specialists.projects')" />
+                 :proj="$s->approvedPortfolioItems()->count() . ' ' . __('home.specialists.projects')" />
       @endforeach
     @else
       @php

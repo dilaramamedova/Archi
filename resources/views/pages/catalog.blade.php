@@ -183,19 +183,19 @@
 {{-- ===================== FEATURED SPECIALISTS ===================== --}}
 <div class="wrap"><div class="inner section">
   <x-section-head :tag="__('product.specialists.tag')" :title="__('product.specialists.title')"
-                  :more="route('specialists')" />
+                  :more="route('specialists', ['featured' => 1])" />
   <div class="grid4" id="specGrid">
     @if($featuredSpecialists->isNotEmpty())
       @foreach ($featuredSpecialists as $s)
-        <x-scard :href="route('search', ['tab' => 'usta'])"
+        <x-scard :href="route('specialist.show', $s)"
                  :bg="['#f5fbff', '#fdf5ff', '#f5fffb', '#fff5f5'][$loop->index % 4]"
                  :avatar="$s->user?->avatar ?? '/assets/icon-user.svg'"
-                 :role="translate_craft($s->craft)"
+                 :role="$s->specialty?->name ?? translate_craft($s->craft)"
                  :rate="null"
                  :reviews="__('product.specialists.reviews_416')"
                  :name="$s->user?->name ?? __('product.specialists.name_1')"
                  :exp="$s->experience_years ? $s->experience_years . ' ' . __('home.specialists.years') : __('product.specialists.exp_12')"
-                 :proj="$s->portfolioItems()->count() . ' ' . __('home.specialists.projects')" />
+                 :proj="$s->approvedPortfolioItems()->count() . ' ' . __('home.specialists.projects')" />
       @endforeach
     @else
       @php
@@ -215,6 +215,8 @@
 </div></div>
 
 {{-- ===================== CUSTOMER REVIEWS ===================== --}}
+@if (false)
+{{-- Müştəri qiymətləndirməsi bölməsi hazırda göstərilmir. --}}
 <div class="wrap"><div class="inner section">
   <x-section-head :tag="__('product.reviews.tag')" :title="__('product.reviews.title')" />
   <div class="rev-cards" id="catalogRevCards">
@@ -246,5 +248,6 @@
     @endforelse
   </div>
 </div></div>
+@endif
 
 </x-layout>

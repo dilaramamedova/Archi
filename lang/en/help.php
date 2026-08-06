@@ -1,0 +1,41 @@
+<?php
+
+return [
+    'title' => 'Help Center — ARCHI',
+    'hero_title' => 'How can we help you?',
+    'search_placeholder' => 'Type your question — e.g. "how to cancel an order"',
+    'popular_label' => 'Popular',
+    'popular_tags' => 'order cancellation, delivery, returns, payment',
+
+    'topics_title' => 'Topics',
+    'topic_orders' => 'Orders',
+    'topic_orders_desc' => 'Placing orders, tracking, cancellation and modifications',
+    'topic_delivery' => 'Delivery',
+    'topic_delivery_desc' => 'Delivery times, zones, tracking and address changes',
+    'topic_returns' => 'Returns & refunds',
+    'topic_returns_desc' => 'Product returns, refund policies and exchanges',
+    'topic_payment' => 'Payment',
+    'topic_payment_desc' => 'Payment methods, invoicing, installments and discounts',
+    'topic_security' => 'Account & security',
+    'topic_security_desc' => 'Password reset, two-factor authentication and account settings',
+    'topic_specialists' => 'For specialists & sellers',
+    'topic_specialists_desc' => 'Registration, profile, portfolio and order management',
+
+    'faq_title' => 'Frequently asked questions',
+    'faq1_q' => 'How can I cancel my order?',
+    'faq1_a' => 'Go to Orders, open the active order details and click "Cancel". If the order has already been shipped, cancellation may not be possible.',
+    'faq2_q' => 'How long does delivery take?',
+    'faq2_a' => 'Standard delivery within Baku is 1-3 business days. Regional delivery may take 3-7 business days.',
+    'faq3_q' => 'How can I return a product?',
+    'faq3_a' => 'You can return a product within 14 days of receipt. The product must be in its original packaging.',
+    'faq4_q' => 'Which payment methods are accepted?',
+    'faq4_a' => 'We accept bank cards (Visa, Mastercard), cash payment, bank transfer and installment options.',
+    'faq5_q' => 'How can I find a specialist?',
+    'faq5_a' => 'You can search by specialization in the Specialists section, read reviews and contact them directly.',
+    'faq6_q' => 'How do I change my password?',
+    'faq6_a' => 'Go to Account Settings → Security, enter your current password and set a new one.',
+
+    'contact_title' => "Didn't find your answer?",
+    'contact_subtitle' => 'Our support line is active on weekdays from 09:00 to 18:00',
+    'contact_chat' => 'Live chat',
+];

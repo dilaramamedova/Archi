@@ -64,7 +64,7 @@
         {{-- Master only --}}
         <div class="flex gap-3.5 max-[640px]:flex-col [&[hidden]]:hidden" data-for="master" @if ($role !== 'master') hidden @endif>
           <x-ui.field class="flex-1" :label="__('register.form.specialization_label')">
-            <x-ui.select name="specialization" :placeholder="__('register.form.select_placeholder')" :options="__('register.specializations')" />
+            <x-ui.select name="specialist_specialty_id" :placeholder="__('register.form.select_placeholder')" :options="$specialties" />
           </x-ui.field>
           <x-ui.field class="flex-1" :label="__('register.form.city_label')">
             <x-ui.select name="city" :placeholder="__('register.form.select_placeholder')" :options="__('register.cities')" />
@@ -91,6 +91,11 @@
         <x-ui.checkbox name="terms" required class="gap-2.5"><span><a class="border-b border-yellow-line" href="/terms">{{ __('register.form.terms_link') }}</a> {{ __('register.form.terms_and') }} <a class="border-b border-yellow-line" href="/privacy">{{ __('register.form.privacy_link') }}</a> {{ __('register.form.terms_agree') }}</span></x-ui.checkbox>
 
         <x-ui.button variant="primary" type="submit" class="h-[54px] rounded-none text-lg font-semibold hover:brightness-[.93]">{{ __('register.form.submit') }}</x-ui.button>
+
+        <div class="rounded bg-[#f5f7f9] px-4 py-3 text-[13px] leading-[1.5] text-black/50 [&[hidden]]:hidden" data-for="seller,master" @if ($role === 'buyer') hidden @endif>
+          {{ __('register.form.info_note') }}
+        </div>
+
         <p class="text-center text-[15px] text-black/60">{{ __('register.form.have_account') }} <a class="border-b-2 border-yellow-line font-semibold text-ink" href="{{ route('login') }}">{{ __('register.form.sign_in') }}</a></p>
       </form>
     </div>

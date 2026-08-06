@@ -31,11 +31,11 @@
             $price = number_format($product->price, 2);
             $oldPrice = $product->old_price ? number_format($product->old_price, 2) : null;
           @endphp
-          <div class="wl-row flex items-center gap-5 rounded-ds border border-black/10 bg-white p-4 transition-opacity"
+          <div class="wl-row flex items-center gap-5 rounded-ds border border-black/10 bg-white p-4 transition-opacity max-[560px]:flex-wrap max-[560px]:gap-3"
                data-id="{{ $item->id }}" data-product-id="{{ $product->id }}">
             {{-- product image --}}
             <a href="{{ route('product', $product->slug ?? $product->id) }}" class="shrink-0">
-              <img src="{{ $img }}" alt="{{ $product->name }}" class="h-[100px] w-[100px] rounded-[8px] object-cover">
+              <img src="{{ $img }}" alt="{{ $product->name }}" class="h-[100px] w-[100px] rounded-[8px] object-cover max-[560px]:h-[72px] max-[560px]:w-[72px]">
             </a>
 
             {{-- info --}}
@@ -53,8 +53,8 @@
             </div>
 
             {{-- actions --}}
-            <div class="flex shrink-0 items-center gap-3">
-              <button type="button" class="wl-remove rounded-ds border border-black/10 px-4 py-2 text-sm text-black/65 transition hover:border-red-400 hover:text-red-500"
+            <div class="flex items-center gap-3 max-[560px]:w-full">
+              <button type="button" class="wl-remove rounded-ds border border-black/10 px-4 py-2 text-sm text-black/65 transition hover:border-red-400 hover:text-red-500 max-[560px]:w-full"
                       aria-label="{{ __('wishlist.remove') }}">
                 {{ __('wishlist.remove') }}
               </button>

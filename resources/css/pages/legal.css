@@ -1,0 +1,33 @@
+/* Legal page (Figma 1349:10320): content typography for the rendered HTML column. */
+@layer components {
+  .legal-content h2 {
+    @apply text-xl leading-6 font-bold text-black/90;
+    scroll-margin-top: 24px;
+  }
+
+  .legal-content h2 + p,
+  .legal-content h2 ~ p {
+    @apply mt-2.5;
+  }
+
+  .legal-content > * + h2 {
+    @apply mt-[26px];
+  }
+
+  .legal-content p {
+    @apply text-[15px] leading-[26px] text-black/50;
+  }
+
+  .legal-content p + p {
+    @apply mt-2.5;
+  }
+
+  .legal-content strong {
+    @apply font-semibold text-black/70;
+  }
+
+  .legal-content ul,
+  .legal-content ol {
+    @apply mt-2.5 flex list-disc flex-col gap-1.5 pl-5 text-[15px] leading-[26px] text-black/50;
+  }
+}

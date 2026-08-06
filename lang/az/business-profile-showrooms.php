@@ -14,7 +14,7 @@ return [
     'heading' => 'Biznes profilinin redaktəsi',
 
     'status' => [
-        'published' => 'Dərc olunub',
+        'published' => 'Təsdiqlənib',
         'view_profile' => 'Profilə bax ↗',
     ],
 
@@ -24,7 +24,7 @@ return [
         'showrooms' => 'Şourumlar',
         'showrooms_count' => '3',
         'products' => 'Məhsullar',
-        'products_count' => '1,240',
+        'products_count' => ':count',
         'notifications' => 'Bildirişlər',
         'security' => 'Təhlükəsizlik',
     ],
@@ -55,6 +55,19 @@ return [
     'state' => [
         'active' => 'Aktiv',
         'hidden' => 'Gizli',
+    ],
+
+    'empty' => 'Hələ salon yoxdur. İlk salonunuzu əlavə edin.',
+
+    'modal' => [
+        'add_title' => 'Salon əlavə et',
+        'edit_title' => 'Salonu redaktə et',
+        'name' => 'Ad',
+        'address' => 'Ünvan',
+        'city' => 'Şəhər',
+        'phone' => 'Telefon',
+        'work_hours' => 'İş saatları',
+        'status' => 'Status',
     ],
 
     'save' => [

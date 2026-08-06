@@ -112,4 +112,20 @@
   .cat-grid .pcard[hidden],
   .cat-grid .cat-empty[hidden] { @apply hidden; }
   .cat-empty { @apply col-span-full py-16 text-center text-[15px] text-black/50; }
+
+  /* ---- catalog responsive ---- */
+  @media (max-width: 980px) {
+    .cat-body  { @apply flex-col; }
+    .cat-body .fside { @apply w-full; }
+  }
+  @media (max-width: 640px) {
+    .cat-head          { @apply flex-col items-start gap-3; }
+    .cat-head-l h1     { @apply text-[28px]; }
+    .cat-grid          { @apply grid-cols-2 gap-2; }
+    main.catalog       { @apply pt-4 pb-10; }
+    .cat-head          { @apply mt-5; }
+  }
+  @media (max-width: 400px) {
+    .cat-grid          { @apply grid-cols-1; }
+  }
 }

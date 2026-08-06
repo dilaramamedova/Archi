@@ -15,6 +15,7 @@ class SellerProfile extends Model
         return [
             'tax_id_verified' => 'boolean',
             'languages' => 'array',
+            'notification_settings' => 'array',
         ];
     }
 

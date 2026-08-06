@@ -9,8 +9,6 @@
         ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count', 'count_value' => $portfolioCount],
         ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count', 'count_value' => $servicesCount],
         ['key' => 'schedule',      'route' => 'specialist.cabinet.schedule'],
-        ['key' => 'reviews',       'route' => 'specialist.cabinet.reviews',       'count' => 'reviews_count'],
-        ['key' => 'notifications', 'route' => 'specialist.cabinet.notifications'],
         ['key' => 'security',      'route' => 'specialist.cabinet.security'],
     ];
 
@@ -49,15 +47,18 @@
       :title="__('specialist-cabinet-schedule.week.heading')"
       :desc="__('specialist-cabinet-schedule.week.desc')">
 
+    <x-ui.alert tone="error" id="scheduleErr" />
+    <x-ui.alert tone="ok" id="scheduleOk" />
+
     @foreach ($days as $day => [$open, $start, $end])
       @php $label = __($ns . '.days.' . $day); @endphp
-      <x-cabinet.row class="sch-day" data-on="{{ $open ? 'true' : 'false' }}">
+      <x-cabinet.row class="sch-day" data-day="{{ $loop->iteration }}" data-on="{{ $open ? 'true' : 'false' }}">
         <x-ui.toggle size="sm" :on="$open" :aria-label="$label" />
         <p class="lbl">{{ $label }}</p>
         <div class="times">
-          <input type="text" class="sch-time" value="{{ $start }}" inputmode="numeric"
+          <input type="time" class="sch-time" value="{{ $start }}"
                  aria-label="{{ $label }} — {{ __($ns . '.week.start') }}" @disabled(! $open)>
-          <input type="text" class="sch-time" value="{{ $end }}" inputmode="numeric"
+          <input type="time" class="sch-time" value="{{ $end }}"
                  aria-label="{{ $label }} — {{ __($ns . '.week.end') }}" @disabled(! $open)>
         </div>
         <p class="off">{{ __('specialist-cabinet-schedule.week.day_off') }}</p>

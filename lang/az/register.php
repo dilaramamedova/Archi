@@ -52,6 +52,7 @@ return [
         'privacy_link' => 'Məxfilik siyasəti',
         'terms_agree' => 'ilə razıyam',
         'submit' => 'Qeydiyyatdan keç',
+        'info_note' => 'Usta və ya satıcı olaraq qeydiyyatdan sonra profil məlumatlarınızı tamamlamaq üçün əlavə addımlar olacaq.',
         'have_account' => 'Artıq hesabın var?',
         'sign_in' => 'Daxil ol',
     ],

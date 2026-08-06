@@ -12,8 +12,17 @@ return [
     'favorites' => 'Sevimlilər',
     'cart' => 'Səbət',
     'sign_in' => 'Daxil ol',
+    'register' => 'Qeydiyyat',
     'logout' => 'Çıxış',
     'post_product' => 'Məhsul yerləşdir',
+    'notifications' => 'Bildirişlər',
+    'mark_all_read' => 'Hamısını oxunmuş et',
+    'no_notifications' => 'Bildirişiniz yoxdur',
+    'all_notifications' => 'Bütün bildirişlərə bax',
+    'my_orders' => 'Sifarişlərim',
+    'messages' => 'Mesajlar',
+    'account_settings' => 'Hesab parametrləri',
+    'help_center' => 'Kömək mərkəzi',
 
     /* --- search dropdown (built in JS, labels passed through data-* attributes) --- */
     'sd_quick' => 'Sürətli axtarış',

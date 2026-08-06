@@ -17,9 +17,19 @@ return [
         'showrooms' => '3 şourum',
         'rating_value' => '4.8',
         'rating_label' => 'mağaza reytinqi',
-        'product_count' => '1,240 məhsul',
+        'product_count' => ':count məhsul',
         'go_to_products' => 'Məhsullara keç',
         'follow' => 'İzlə',
+        'send_message' => 'Mesaj göndər',
+        'member_since' => ':year-dən üzv',
+        'showroom_count' => ':count şourum',
+        'coming_soon' => 'Bu funksiya tezliklə aktiv olacaq',
+    ],
+
+    'owner' => [
+        'hint' => 'Bu sizin mağaza profilinizdir — alıcılar onu belə görür.',
+        'edit' => 'Məlumatları redaktə et',
+        'add_product' => 'Məhsul əlavə et',
     ],
 
     'about' => [
@@ -45,7 +55,10 @@ return [
     'catalog' => [
         'kicker' => 'KATALOQ',
         'title' => 'Məhsullarımız',
-        'see_all' => 'HAMISINA BAX (1,240) →',
+        'see_all' => 'HAMISINA BAX (:count) →',
+        'see_all_count' => 'HAMISINA BAX (:count) →',
+        'empty_title' => 'Hələ məhsul yoxdur',
+        'empty_owner_desc' => 'İlk məhsulunuzu əlavə edin — admin təsdiqindən sonra burada görünəcək.',
         'favourite' => 'Seçilmişlərə əlavə et',
         'rating_value' => '4.4',
         'reviews' => '(1,876 rəy)',
@@ -79,7 +92,7 @@ return [
         'response_time' => 'Cavab vaxtı',
         'response_time_value' => '~2 saat',
         'products' => 'Məhsul',
-        'products_value' => '1,240',
+        'products_value' => ':count',
         'member' => 'Üzv',
         'member_value' => '2021-dən',
     ],

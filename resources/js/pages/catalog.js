@@ -50,9 +50,12 @@ function buildFilterUrl() {
   const stock = document.getElementById('stockSwitch');
   if (stock && stock.dataset.on === 'true') params.set('in_stock', '1');
 
-  // Preserve search query if present
+  // Preserve context params the sidebar has no controls for: the search query and
+  // the homepage "Ətraflı bax" entry filters (sale / featured / free_delivery / on_sale).
   const url = new URL(window.location.href);
-  if (url.searchParams.has('q')) params.set('q', url.searchParams.get('q'));
+  for (const key of ['q', 'sale', 'featured', 'free_delivery', 'on_sale']) {
+    if (url.searchParams.has(key)) params.set(key, url.searchParams.get(key));
+  }
 
   const qs = params.toString();
   return window.location.pathname + (qs ? '?' + qs : '');

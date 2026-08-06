@@ -137,10 +137,46 @@ function initReveal() {
   document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 }
 
+function initLeadForm() {
+  const form = document.getElementById('leadForm');
+  const feedback = document.getElementById('leadFeedback');
+  if (!form || !feedback) return;
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const submit = form.querySelector('[type="submit"]');
+    submit.disabled = true;
+    feedback.classList.add('hidden');
+
+    try {
+      const response = await fetch(form.action, {
+        method: 'POST',
+        headers: { Accept: 'application/json' },
+        body: new FormData(form),
+      });
+      const data = await response.json();
+      const errors = Object.values(data.errors || {}).flat().join(' ');
+
+      feedback.textContent = response.ok ? data.message : (errors || data.message);
+      feedback.className = response.ok
+        ? 'rounded border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700'
+        : 'rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700';
+
+      if (response.ok) form.reset();
+    } catch (_error) {
+      feedback.textContent = 'Sorğu göndərilmədi. Yenidən cəhd edin.';
+      feedback.className = 'rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700';
+    } finally {
+      submit.disabled = false;
+    }
+  });
+}
+
 export default function init() {
   initUserProducts();
   initPromoCopy();
   initPromoCarousel();
   initRoleSlider();
   initReveal();
+  initLeadForm();
 }

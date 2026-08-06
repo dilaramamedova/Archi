@@ -11,7 +11,6 @@
     $activeSort = request('sort', 'rating');
     $activeSpec = request('spec', '');
     $activeCity = request('city', '');
-    $activeMinRating = request('min_rating', '');
     $activeMinYears = request('min_years', '');
     $activeMaxYears = request('max_years', '');
     $activeVerified = request()->boolean('verified');
@@ -72,10 +71,10 @@
       {{-- specialization --}}
       <div class="sp-fs" id="spSpecBlock">
         <p class="sp-fs-title">{{ __('specialists.filters.spec_title') }}</p>
-        @foreach ($crafts as $craft)
-          <div class="sp-cat" data-spec="{{ $craft }}" data-on="{{ $activeSpec === $craft ? 'true' : 'false' }}"><span class="t">{{ translate_craft($craft) }}</span></div>
+        @foreach ($specialties as $specialty)
+          <div class="sp-cat" data-spec="{{ $specialty->id }}" data-on="{{ (string) $activeSpec === (string) $specialty->id ? 'true' : 'false' }}"><span class="t">{{ $specialty->name }}</span></div>
         @endforeach
-        @if ($crafts->isEmpty())
+        @if ($specialties->isEmpty())
           <div class="sp-cat" data-spec="tile" data-on="false"><span class="t">{{ __('specialists.filters.spec.tile') }}</span></div>
         @endif
       </div>
@@ -91,16 +90,6 @@
         @if ($cities->isEmpty())
           <div class="sp-check" data-city="baku" data-on="false"><span class="fside-box sp-box"></span><span class="lbl">{{ __('specialists.filters.city.baku') }}</span></div>
         @endif
-      </div>
-
-      <div class="sp-fs-div"></div>
-
-      {{-- rating --}}
-      <div class="sp-fs" id="spRateBlock">
-        <p class="sp-fs-title">{{ __('specialists.filters.rating_title') }}</p>
-        <div class="sp-radio" data-min="4.5" data-on="{{ $activeMinRating === '4.5' ? 'true' : 'false' }}" data-chip="{{ __('specialists.filters.rating_chip', ['min' => '4.5']) }}"><span class="sp-dot"></span><span class="lbl"><img src="/assets/icon-star-yellow.svg" alt="">{{ __('specialists.filters.rating_45') }}</span></div>
-        <div class="sp-radio" data-min="4" data-on="{{ $activeMinRating === '4' ? 'true' : 'false' }}" data-chip="{{ __('specialists.filters.rating_chip', ['min' => '4']) }}"><span class="sp-dot"></span><span class="lbl"><img src="/assets/icon-star-yellow.svg" alt="">{{ __('specialists.filters.rating_40') }}</span></div>
-        <div class="sp-radio" data-min="3.5" data-on="{{ $activeMinRating === '3.5' ? 'true' : 'false' }}" data-chip="{{ __('specialists.filters.rating_chip', ['min' => '3.5']) }}"><span class="sp-dot"></span><span class="lbl"><img src="/assets/icon-star-yellow.svg" alt="">{{ __('specialists.filters.rating_35') }}</span></div>
       </div>
 
       <div class="sp-fs-div"></div>
@@ -152,7 +141,7 @@
            data-rate="{{ $avgRating }}"
            data-reviews="{{ $revCount }}"
            data-years="{{ $s->experience_years ?? 0 }}"
-           data-projects="{{ $s->portfolioItems ? $s->portfolioItems->count() : 0 }}"
+           data-projects="{{ $s->approvedPortfolioItems ? $s->approvedPortfolioItems->count() : 0 }}"
            data-price="0"
            data-city="{{ $s->city ?? '' }}"
            data-specs="{{ $skillsList }}"
@@ -165,7 +154,7 @@
             @else
               <div class="avatar">{{ $initials }}</div>
             @endif
-            <div class="role">{{ translate_craft($s->craft) ?? __('specialists.card.default_role') }}</div>
+            <div class="role">{{ $s->specialty?->name ?? translate_craft($s->craft) ?? __('specialists.card.default_role') }}</div>
             <div class="rate"><img class="st" src="/assets/icon-star-yellow.svg" alt=""><span class="v">{{ $avgRating > 0 ? number_format($avgRating, 1) : '0.0' }}</span><span class="r">{{ __('specialists.card.reviews', ['count' => $revCount]) }}</span></div>
           </div>
           <div class="name">{{ $s->user->name }}</div>

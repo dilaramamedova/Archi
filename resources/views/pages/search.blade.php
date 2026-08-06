@@ -81,15 +81,15 @@
               $expLabel = $m->experience_years
                   ? $m->experience_years . ' ' . trans_choice('search.experience_years', $m->experience_years)
                   : null;
-              $projLabel = $m->portfolioItems()->count() > 0
-                  ? $m->portfolioItems()->count() . ' ' . trans_choice('search.project_word', $m->portfolioItems()->count())
+              $projLabel = $m->approvedPortfolioItems()->count() > 0
+                  ? $m->approvedPortfolioItems()->count() . ' ' . trans_choice('search.project_word', $m->approvedPortfolioItems()->count())
                   : null;
           @endphp
           <x-scard
             :href="route('specialist.show', $m->id)"
             :bg="$masterBgs[$i % count($masterBgs)]"
             :avatar="$m->avatar_path ? storage_url($m->avatar_path) : null"
-            :role="translate_craft($m->craft)"
+            :role="$m->specialty?->name ?? translate_craft($m->craft)"
             :name="$m->user->first_name . ' ' . $m->user->last_name"
             rate=""
             reviews=""

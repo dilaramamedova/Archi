@@ -59,5 +59,20 @@
 {{-- Shared login modal — opened by the navbar "sign in" link; /login is the no-JS fallback --}}
 <x-login-modal />
 
+{{-- Global toast notification --}}
+<x-ui.toast />
+
+{{-- Session flash → toast (e.g. the /sell seller-only guard) --}}
+@if (session('flash_error'))
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  window.ARCHI?.toast?.show({ type: 'error', title: @json(session('flash_error')), duration: 7000 });
+});
+</script>
+@endif
+
+{{-- Global confirm dialog --}}
+<x-ui.confirm-dialog />
+
 </body>
 </html>

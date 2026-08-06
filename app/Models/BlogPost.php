@@ -28,6 +28,11 @@ class BlogPost extends Model
         return $this->belongsTo(User::class, 'author_id');
     }
 
+    public function blogCategory(): BelongsTo
+    {
+        return $this->belongsTo(BlogCategory::class);
+    }
+
     protected static function booted(): void
     {
         static::saving(function (self $post) {

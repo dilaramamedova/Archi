@@ -105,7 +105,10 @@ export default function init() {
     // Build FormData for multipart upload
     const fd = new FormData();
     fd.append('name', name);
-    fd.append('category_id', cat);
+    // Only send a real category id — fallback (non-DB) options have empty values.
+    if (/^\d+$/.test(cat)) {
+      fd.append('category_id', cat);
+    }
     fd.append('price', price);
     if (!isNaN(old) && old > 0) {
       fd.append('old_price', old);

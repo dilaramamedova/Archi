@@ -20,10 +20,6 @@ class EditUser extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        if (isset($data['first_name'], $data['last_name'])) {
-            $data['name'] = $data['first_name'] . ' ' . $data['last_name'];
-        }
-
-        return $data;
+        return UserResource::prepareUserData($data);
     }
 }

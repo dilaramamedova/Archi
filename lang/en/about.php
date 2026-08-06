@@ -1,57 +1,64 @@
 <?php
 
-// About page — English.
-
 return [
-    'title' => 'ARCHİ — About us',
-
-    'crumb_current' => 'About us',
+    'title' => 'About Us — ARCHİ',
+    'crumb_current' => 'About Us',
 
     'hero' => [
-        'tag' => 'About us',
-        'title' => 'Construction and renovation — on one platform',
-        'subtitle' => 'ARCHİ is the Azerbaijani platform that brings every stage of a renovation together, from materials to a trusted master. Our goal is simple: turn renovation from a stressful process into a predictable, transparent and comfortable experience.',
+        'btn1' => 'Browse Catalog',
+        'btn2' => 'Find a Specialist',
     ],
 
-    'stats' => [
-        'catalog_value' => '860+',
-        'catalog_label' => 'products in the catalog',
-        'masters_value' => '248',
-        'masters_label' => 'verified masters',
-        'orders_value' => '12,000+',
-        'orders_label' => 'completed orders',
-        'since_value' => '2021',
-        'since_label' => 'on the market since',
+    'mission' => [
+        'tag' => 'Our Mission',
+        'title' => 'You don\'t need to be an expert to start renovating',
+        'p1' => 'In Azerbaijan, renovation is often based on word of mouth: it\'s hard to know in advance who is a reliable master and what the real price of materials is. As a result, budgets are exceeded and work drags on.',
+        'p2' => 'ARCHI eliminates this uncertainty — it shows materials, masters and prices in one place, openly.',
+        'b1' => 'Every master passes document verification',
+        'b2' => 'Prices are visible upfront — no hidden costs',
+        'b3' => 'Payment is protected until the work is delivered',
     ],
 
-    'story' => [
-        'tag' => 'Our story',
-        'title' => 'Why was ARCHİ created?',
-        'paragraph_1' => 'Everyone starting a renovation runs into the same questions: where to buy materials, how to find a master, how big the budget should be? Looking for answers, people got lost between dozens of shops, phone numbers and tips from friends.',
-        'paragraph_2' => 'That is exactly why we built ARCHİ in 2021 — a catalog, rated masters, a renovation calculator and free consultation on a single platform. Today thousands of families plan their renovation with us.',
-        'author_initials' => 'AM',
-        'author_name' => 'Lala Abdullayeva',
-        'author_role' => 'Founder & CEO',
-        'image_alt' => 'An apartment under renovation with project drawings',
+    'what' => [
+        'tag' => 'What We Offer',
+        'title' => 'One platform, three solutions',
+        'f1_title' => 'Material Catalog',
+        'f1_desc' => '45,000+ products, 300+ brands. Price, stock status and delivery terms are openly shown on every product card.',
+        'f1_link' => 'Browse catalog',
+        'f2_title' => 'Verified Masters',
+        'f2_desc' => '1,200+ specialists verified by administrators. View portfolios and reviews, then contact directly.',
+        'f2_link' => 'View specialists',
+        'f3_title' => 'Renovation Calculator',
+        'f3_desc' => 'Enter room dimensions — the required material quantity and approximate budget are calculated instantly.',
+        'f3_link' => 'Open calculator',
     ],
 
-    'values' => [
-        'tag' => 'Our values',
-        'title' => 'The principles that set us apart',
-        'trust_title' => 'Trust',
-        'trust_text' => 'Every master is checked against documents and every seller is verified. Ratings and reviews are based on real orders.',
-        'quality_title' => 'Quality',
-        'quality_text' => 'Only certified materials are added to the catalog. Services with a weak rating do not stay on the platform.',
-        'transparency_title' => 'Transparency',
-        'transparency_text' => 'Prices are open and the estimate is calculated up front with the calculator. There are no hidden costs.',
-        'support_title' => 'Support',
-        'support_text' => 'Free consultation and a 24/7 help center — we are with you at every stage of the renovation.',
+    'how' => [
+        'tag' => 'How It Works',
+        'title' => 'Renovation in four steps',
     ],
 
-    'cta' => [
-        'title' => 'Join the ARCHİ family',
-        'subtitle' => 'Become a master or sell your products — reach thousands of customers in one step.',
-        'become_master' => 'Become a master',
-        'become_seller' => 'Become a seller',
+    'team' => [
+        'tag' => 'Team',
+        'title' => 'About our team',
+    ],
+
+    'join' => [
+        'tag' => 'Join Us',
+        'title' => 'Earn with ARCHI',
+        'c1_title' => 'Are you a master or specialist?',
+        'c1_desc' => 'Create a free profile, showcase your portfolio and connect directly with customers looking for you. No commission.',
+        'c1_btn' => 'Register as a master',
+        'c2_title' => 'Selling materials?',
+        'c2_desc' => 'Open your store on ARCHI, reach thousands of buyers and manage sales with the warehouse system.',
+        'c2_btn' => 'Open business account',
+    ],
+
+    'contact' => [
+        'tag' => 'Contact',
+        'title' => 'Get in touch',
+        'office_label' => 'Office',
+        'phone_label' => 'Phone',
+        'email_label' => 'Email',
     ],
 ];

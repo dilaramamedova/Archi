@@ -90,7 +90,7 @@
             <span class="spo-badge ok">{{ __('specialist-owner.id.badge_verified') }}</span>
           </div>
           <h1 class="spo-name">{{ $user->name }}</h1>
-          <p class="spo-role">{{ translate_craft($profile?->craft) ?? __('specialist-owner.id.role') }}</p>
+          <p class="spo-role">{{ $profile?->specialty?->name ?? translate_craft($profile?->craft) ?? __('specialist-owner.id.role') }}</p>
           <div class="spo-rate">
             <span class="v"><x-ui.stars :count="1" :rating="1" :icon="$starIcon" />{{ __('specialist-owner.id.rate') }}</span>
             <span class="r">{{ __('specialist-owner.id.reviews') }}</span>
@@ -123,25 +123,28 @@
     </aside>
   </div>
 
+  @if (filled($profile?->about) || count($profile?->skills ?? []))
   {{-- about --}}
   <section class="spo-sec">
     <div class="spo-sechead">
       <x-ui.eyebrow variant="flat" class="spo-eyebrow gap-3" :label="__('specialist-owner.about.eyebrow')" />
       <h2>{{ __('specialist-owner.about.title') }}</h2>
     </div>
-    <p class="spo-about-txt">{{ $profile?->about ?? __('specialist-owner.about.text') }}</p>
-    <div class="spo-tags">
-      @forelse ($profile?->skills ?? [] as $skill)
+    @if (filled($profile?->about))
+      <p class="spo-about-txt">{{ $profile->about }}</p>
+    @endif
+    @if (count($profile?->skills ?? []))
+      <div class="spo-tags">
+      @foreach ($profile->skills as $skill)
         <span class="spo-tag">{{ $skill }}</span>
-      @empty
-        @foreach (['t1', 't2', 't3', 't4', 't5', 't6'] as $tag)
-          <span class="spo-tag">{{ __('specialist-owner.about.tags.' . $tag) }}</span>
-        @endforeach
-      @endforelse
-    </div>
+      @endforeach
+      </div>
+    @endif
     <a class="spo-edit" href="{{ route('specialist.cabinet') }}">{!! $pencil !!}{{ __('specialist-owner.edit') }}</a>
   </section>
+  @endif
 
+  @if ($portfolioItems->isNotEmpty())
   {{-- portfolio --}}
   <section class="spo-sec">
     <div class="spo-sechead">
@@ -173,7 +176,9 @@
     </div>
     <a class="spo-edit" href="{{ route('specialist.cabinet.portfolio') }}">{!! $pencil !!}{{ __('specialist-owner.edit') }}</a>
   </section>
+  @endif
 
+  @if ($services->isNotEmpty())
   {{-- services --}}
   <section class="spo-sec">
     <div class="spo-sechead">
@@ -183,7 +188,7 @@
     <div class="spo-svc-list">
       @forelse ($services as $svc)
         <a class="spo-svc" href="{{ route('specialist.cabinet.services') }}">
-          <span class="l"><span class="t">{{ $svc->title }}</span><span class="s">{{ $svc->description ?? '' }}</span></span>
+          <span class="l"><span class="t">{{ $svc->name }}</span><span class="s">{{ $svc->description ?? '' }}</span></span>
           <span class="rr"><span class="pr">{{ $svc->price ? number_format($svc->price, 0) . ' ₼' : '' }}</span><span class="ar" aria-hidden="true">&rarr;</span></span>
         </a>
       @empty
@@ -197,6 +202,7 @@
     </div>
     <a class="spo-edit" href="{{ route('specialist.cabinet.services') }}">{!! $pencil !!}{{ __('specialist-owner.edit') }}</a>
   </section>
+  @endif
 
   {{-- reviews --}}
   <section class="spo-sec">

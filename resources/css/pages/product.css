@@ -194,4 +194,27 @@
   .rev-all             { @apply mt-6 flex justify-center; }
   /* not a link (there is no reviews route) — no `cursor-pointer` affordance */
   .sec-more2           { @apply inline-flex items-center border-b border-yellow-line pb-1 text-base font-medium text-ink-alt; }
+
+  /* ---- product page responsive ---- */
+  @media (max-width: 640px) {
+    .pd           { @apply pt-4 pb-8; }
+    .pd-crumb     { @apply mb-3; }
+    .pd-price .now { @apply text-[26px]; }
+    .pd-buy       { @apply flex-wrap; }
+    .pd-add       { @apply h-[48px] min-w-0 flex-[1_1_100%] text-base; }
+    .pd-qty       { @apply h-[48px] flex-1; }
+    .pd-wish      { @apply size-[48px]; }
+    .pd-specs .row { @apply grid-cols-[120px_1fr]; }
+    .pd-specs .row > div { @apply px-3 py-2.5 text-sm; }
+    .fbt-cards    { @apply flex-col gap-2; }
+    .fbt-cards .pcard { @apply w-full; }
+    .fbt-plus     { @apply h-auto w-full py-1; }
+    .fbt-panel    { @apply w-full; }
+    .rev-summary  { @apply flex-col gap-4 p-4; }
+    .rs-div       { @apply hidden; }
+    .rs-rec       { @apply w-full; }
+    .rs-rec .track { @apply w-full; }
+    .pd-section   { @apply pt-8; }
+    .pd-tabs button { @apply mr-4 text-sm; }
+  }
 }

@@ -25,4 +25,9 @@
      nav's 1.5 instead would make their line boxes 21px and push the hero down */
   #blogCrumbs.ui-crumbs a,
   #blogCrumbs.ui-crumbs .cur { @apply leading-5; }
+
+  /* ---- blog responsive ---- */
+  @media (max-width: 640px) {
+    .fchip { @apply h-[48px] px-5 text-sm; }
+  }
 }

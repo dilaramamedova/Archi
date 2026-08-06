@@ -39,6 +39,13 @@ return [
     'reviews' => 'rəy',
     'products_count' => 'məhsul',
 
+    /* --- actions --- */
+    'cancel' => 'Ləğv et',
+    'confirm' => 'Təsdiq et',
+    'delete' => 'Sil',
+    'save' => 'Yadda saxla',
+    'close' => 'Bağla',
+
     /* --- meta --- */
     'site_name' => 'ARCHİ',
     'site_title' => 'ARCHİ — Tikinti və təmir bir yerdə',

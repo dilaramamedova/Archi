@@ -24,6 +24,10 @@
   .scp-cap   { @apply absolute top-[126px] left-2.5 rounded-ds bg-white/95 px-2 py-1 text-[11px] leading-[normal] font-semibold whitespace-nowrap text-ink; }
   /* "cover photo" badge (831:11958) — only the first tile carries it */
   .scp-cover { @apply absolute top-2.5 left-2.5 rounded-ds bg-yellow px-2 py-[3px] text-[10px] leading-[normal] font-bold whitespace-nowrap text-ink; }
+  .scp-status { @apply absolute top-2.5 right-10 rounded-ds bg-white/95 px-2 py-[3px] text-[10px] leading-[normal] font-bold whitespace-nowrap text-ink; }
+  .scp-status[data-status="pending"] { @apply bg-yellow; }
+  .scp-status[data-status="approved"] { @apply bg-green-100 text-green-800; }
+  .scp-status[data-status="rejected"] { @apply bg-red-100 text-red-800; }
   /* remove button (831:11956) — Figma places it 33px in from the right edge */
   .scp-del   { @apply absolute top-2.5 right-[33px] flex size-7 items-center justify-center rounded-full bg-black/65 text-xs leading-[normal] font-semibold text-white transition-colors duration-150 hover:bg-black/80; }
 

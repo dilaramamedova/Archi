@@ -18,12 +18,15 @@ function initFavourite() {
   });
 }
 
-function initCalcButton() {
-  const btn = document.getElementById('ppCalc');
-  if (!btn || !btn.dataset.url) return;
-  btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    window.location.href = btn.dataset.url;
+function initContactPhone() {
+  const btn = document.getElementById('ppContact');
+  const link = document.getElementById('ppContactPhone');
+  if (!btn || !link) return;
+  btn.addEventListener('click', () => {
+    const phone = (btn.dataset.phone || '').trim();
+    link.textContent = phone || 'Telefon nömrəsi əlavə edilməyib';
+    link.hidden = false;
+    if (phone) link.href = `tel:${phone.replace(/[^+\d]/g, '')}`;
   });
 }
 
@@ -122,6 +125,6 @@ function initMessageModal() {
 
 export default function init() {
   initFavourite();
-  initCalcButton();
+  initContactPhone();
   initMessageModal();
 }

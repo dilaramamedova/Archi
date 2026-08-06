@@ -12,7 +12,7 @@ return [
     ],
     'heading' => 'Usta profilinin redaktəsi',
     'status' => [
-        'published' => 'Dərc olunub',
+        'published' => 'Təsdiqlənib',
         'view_profile' => 'Profilə bax ↗',
     ],
 

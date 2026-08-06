@@ -1,57 +1,64 @@
 <?php
 
-// About page. AZ values are the exact text of Figma node 831:7539.
-
 return [
-    'title' => 'ARCHİ — Haqqımızda',
-
+    'title' => 'Haqqımızda — ARCHİ',
     'crumb_current' => 'Haqqımızda',
 
     'hero' => [
-        'tag' => 'Haqqımızda',
-        'title' => 'Tikinti və təmir — bir platformada',
-        'subtitle' => 'ARCHİ — materialdan etibarlı ustaya qədər təmirin bütün mərhələlərini bir yerə toplayan Azərbaycan platformasıdır. Məqsədimiz sadədir: təmiri stresli prosesdən planlana bilən, şəffaf və rahat təcrübəyə çevirmək.',
+        'btn1' => 'Kataloqa bax',
+        'btn2' => 'Mütəxəssis tap',
     ],
 
-    'stats' => [
-        'catalog_value' => '860+',
-        'catalog_label' => 'məhsul kataloqda',
-        'masters_value' => '248',
-        'masters_label' => 'təsdiqlənmiş usta',
-        'orders_value' => '12 000+',
-        'orders_label' => 'tamamlanmış sifariş',
-        'since_value' => '2021',
-        'since_label' => 'ildən bazardayıq',
+    'mission' => [
+        'tag' => 'Missiyamız',
+        'title' => 'Təmirə başlamaq üçün ekspert olmaq lazım deyil',
+        'p1' => 'Azərbaycanda təmir çox vaxt tanışlıq üzərində qurulur: kimin etibarlı usta olduğunu, materialın real qiymətinin nə qədər olduğunu əvvəlcədən bilmək çətindir. Nəticədə büdcə pozulur, işlər uzanır.',
+        'p2' => 'ARCHİ bu qeyri-müəyyənliyi aradan qaldırır — materialı, ustanı və qiyməti bir yerdə, açıq şəkildə göstərir.',
+        'b1' => 'Hər usta sənəd yoxlamasından keçir',
+        'b2' => 'Qiymətlər əvvəlcədən görünür — gizli xərc yoxdur',
+        'b3' => 'Ödəniş iş təhvil verilənə qədər qorunur',
     ],
 
-    'story' => [
-        'tag' => 'Bizim hekayəmiz',
-        'title' => 'Niyə ARCHİ yarandı?',
-        'paragraph_1' => 'Təmirə başlayan hər kəs eyni problemlə üzləşir: material haradan alınmalı, usta necə tapılmalı, büdcə nə qədər olmalı? Bu suallara cavab axtaran insanlar onlarla mağaza, telefon nömrəsi və tanış məsləhəti arasında itirdi.',
-        'paragraph_2' => '2021-ci ildə ARCHİ-ni məhz buna görə qurduq — kataloq, reytinqli ustalar, təmir kalkulyatoru və pulsuz konsultasiya bir platformada. Bu gün minlərlə ailə təmirini bizimlə planlaşdırır.',
-        'author_initials' => 'AM',
-        'author_name' => 'Lala Abdullayeva',
-        'author_role' => 'Təsisçi & CEO',
-        'image_alt' => 'Təmir mərhələsində olan mənzil və layihə cizgiləri',
+    'what' => [
+        'tag' => 'Nə təklif edirik',
+        'title' => 'Bir platforma, üç iş',
+        'f1_title' => 'Material kataloqu',
+        'f1_desc' => '45 000+ məhsul, 300+ brend. Qiymət, stok vəziyyəti və çatdırılma şərtləri hər məhsul kartında açıq göstərilir.',
+        'f1_link' => 'Kataloqa bax',
+        'f2_title' => 'Yoxlanılmış ustalar',
+        'f2_desc' => 'Sənədləri administrator tərəfindən təsdiqlənmiş 1 200+ mütəxəssis. Portfolio və rəylərə baxıb birbaşa yaza bilərsən.',
+        'f2_link' => 'Mütəxəssislərə bax',
+        'f3_title' => 'Təmir kalkulyatoru',
+        'f3_desc' => 'Otaqların ölçüsünü daxil et — lazım olan material miqdarı və təxmini büdcə dərhal hesablanır.',
+        'f3_link' => 'Kalkulyatoru aç',
     ],
 
-    'values' => [
-        'tag' => 'Dəyərlərimiz',
-        'title' => 'Bizi fərqləndirən prinsiplər',
-        'trust_title' => 'Etibar',
-        'trust_text' => 'Hər usta sənədlə yoxlanılır, hər satıcı təsdiqlənir. Reytinq və rəylər real sifarişlərə əsaslanır.',
-        'quality_title' => 'Keyfiyyət',
-        'quality_text' => 'Kataloqa yalnız sertifikatlı materiallar əlavə olunur. Zəif reytinqli xidmətlər platformada qalmır.',
-        'transparency_title' => 'Şəffaflıq',
-        'transparency_text' => 'Qiymətlər açıqdır, smeta kalkulyatorla əvvəlcədən hesablanır. Gizli xərc yoxdur.',
-        'support_title' => 'Dəstək',
-        'support_text' => 'Pulsuz konsultasiya və 7/24 yardım mərkəzi — təmirin hər mərhələsində yanınızdayıq.',
+    'how' => [
+        'tag' => 'Necə işləyir',
+        'title' => 'Dörd addımda təmir',
     ],
 
-    'cta' => [
-        'title' => 'ARCHİ ailəsinə qoşul',
-        'subtitle' => 'İstər usta ol, istər məhsullarını sat — minlərlə müştəriyə bir addımda çat.',
-        'become_master' => 'Usta ol',
-        'become_seller' => 'Satıcı ol',
+    'team' => [
+        'tag' => 'Komanda',
+        'title' => 'Komandamız haqqında',
+    ],
+
+    'join' => [
+        'tag' => 'Bizə qoşul',
+        'title' => 'ARCHİ-də sən də qazan',
+        'c1_title' => 'Usta və ya mütəxəssissən?',
+        'c1_desc' => 'Pulsuz profil yarat, portfolionu göstər və səni axtaran müştərilərlə birbaşa əlaqə qur. Komissiya yoxdur.',
+        'c1_btn' => 'Usta kimi qeydiyyatdan keç',
+        'c2_title' => 'Material satırsan?',
+        'c2_desc' => 'Mağazanı ARCHİ-də aç, məhsullarını minlərlə alıcıya çatdır və satışını anbar sistemi ilə idarə et.',
+        'c2_btn' => 'Biznes hesabı aç',
+    ],
+
+    'contact' => [
+        'tag' => 'Əlaqə',
+        'title' => 'Bizimlə əlaqə saxla',
+        'office_label' => 'Ofis',
+        'phone_label' => 'Telefon',
+        'email_label' => 'E-poçt',
     ],
 ];

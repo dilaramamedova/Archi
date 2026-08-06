@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -28,6 +29,7 @@ class User extends Authenticatable implements FilamentUser
         'rejection_reason',
         'approved_at',
         'terms_accepted',
+        'two_factor_enabled',
     ];
 
     protected $hidden = [
@@ -44,6 +46,7 @@ class User extends Authenticatable implements FilamentUser
             'role' => UserRole::class,
             'status' => UserStatus::class,
             'terms_accepted' => 'boolean',
+            'two_factor_enabled' => 'boolean',
         ];
     }
 
@@ -111,8 +114,43 @@ class User extends Authenticatable implements FilamentUser
         return $this->role === UserRole::Master;
     }
 
+    public function isAdmin(): bool
+    {
+        return $this->role === UserRole::Admin;
+    }
+
+    public function scopeWithRole(Builder $query, UserRole $role): Builder
+    {
+        return $query->where('role', $role);
+    }
+
+    public function approve(): void
+    {
+        $this->update([
+            'status' => UserStatus::Active,
+            'approved_at' => now(),
+            'rejection_reason' => null,
+        ]);
+    }
+
+    public function reject(string $reason): void
+    {
+        $this->update([
+            'status' => UserStatus::Rejected,
+            'approved_at' => null,
+            'rejection_reason' => $reason,
+        ]);
+    }
+
+    public function block(): void
+    {
+        $this->update(['status' => UserStatus::Blocked]);
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->email === 'admin@archi.test';
+        return $panel->getId() === 'admin'
+            && $this->isAdmin()
+            && $this->status === UserStatus::Active;
     }
 }

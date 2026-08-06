@@ -67,7 +67,48 @@ export default function init() {
   if (bar) {
     const saveBtn = bar.querySelector('[data-save]');
     const cancelBtn = bar.querySelector('[data-cancel]');
-    if (saveBtn) saveBtn.addEventListener('click', () => setSaved(true));
+    if (saveBtn) saveBtn.addEventListener('click', async () => {
+      saveBtn.disabled = true;
+      const days = Array.from(document.querySelectorAll('.sch-day')).map((row) => {
+        const times = row.querySelectorAll('.sch-time');
+        const isOpen = row.dataset.on === 'true';
+        return {
+          day_of_week: Number(row.dataset.day),
+          is_day_off: !isOpen,
+          start_time: isOpen ? times[0]?.value || null : null,
+          end_time: isOpen ? times[1]?.value || null : null,
+        };
+      });
+
+      try {
+        const res = await fetch('/specialist/cabinet/schedule', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+          },
+          body: JSON.stringify({
+            days,
+            available_slots: Number(value?.textContent || 0),
+            is_on_vacation: vacation?.dataset.on === 'true',
+          }),
+        });
+        const data = await res.json();
+        const err = document.getElementById('scheduleErr');
+        const ok = document.getElementById('scheduleOk');
+        if (res.ok) {
+          if (ok) { ok.textContent = data.message; ok.dataset.on = 'true'; }
+          if (err) err.dataset.on = 'false';
+          setSaved(true);
+        } else if (err) {
+          err.textContent = data.message || Object.values(data.errors || {}).flat().join('. ');
+          err.dataset.on = 'true';
+        }
+      } finally {
+        saveBtn.disabled = false;
+      }
+    });
     if (cancelBtn) cancelBtn.addEventListener('click', () => window.location.reload());
   }
 }

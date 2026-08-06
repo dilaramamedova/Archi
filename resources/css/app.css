@@ -45,6 +45,8 @@
 @import "./pages/specialist-cabinet-security.css";
 @import "./pages/business-onboarding-step2.css";
 @import "./pages/business-onboarding-step4.css";
+@import "./pages/help.css";
+@import "./pages/legal.css";
 
 @source "../views";
 @source "../js";
@@ -892,6 +894,16 @@
     .cab-body { @apply flex-col; }
     .cab-snav { @apply static w-full; }
   }
+  @media (max-width: 640px) {
+    .cab-page       { @apply px-4 pt-5 pb-10; }
+    .cab-title      { @apply text-[26px]; }
+    .cab-card-head  { @apply gap-2; }
+    .cab-field-row  { @apply flex-col gap-3; }
+    .cab-save-bar   { @apply flex-col gap-3 px-4 py-3; }
+    .cab-save-bar .right { @apply w-full; }
+    .cab-save-bar .right .ui-btn { @apply flex-1; }
+    .cab-head       { @apply flex-col items-start gap-3; }
+  }
 
   /* ==========================================================================
      SHARED TRANSITIONS / HOVERS (from the old archi.css)
@@ -958,13 +970,73 @@
   @media (max-width: 640px) {
     .grid4, .blog-grid     { @apply flex-col; }
     .sec-title             { @apply text-[28px]; }
+    .sec-head              { @apply flex-col items-start gap-3; }
     .foot-bottom           { @apply flex-col items-start gap-5; }
+    .foot-legal .links     { @apply flex-wrap gap-2; }
+    .foot-legal .links .sep { @apply hidden; }
+    .foot-news .l          { @apply flex-col gap-3 pr-0; }
+    .foot-news h4          { @apply text-lg; }
+    .foot-news .form       { @apply h-auto flex-col gap-2; }
+    .foot-news .form .ip   { @apply py-3; }
+    .foot-news .form .sub  { @apply justify-center py-3; }
+    .foot-cols             { @apply flex-col gap-6 pt-8 pb-8; }
+    .foot-col              { @apply w-full; }
+    .foot-top              { @apply h-auto flex-col items-start gap-3; }
     .mega-cats             { @apply grid-cols-1; }
     .mega-spec, .mega-blog { @apply flex-col gap-6; }
     .mega-spec .grid       { @apply grid-cols-1 border-r-0 pr-0; }
     .mblog                 { @apply border-r-0 px-0 py-3; }
     .mega-spec .promo      { @apply flex-col items-start; }
+    footer .inner          { @apply px-4 pt-10 pb-8; }
   }
+  /* ==========================================================================
+     MOBILE NAVBAR — hamburger, drawer, overlay (≤900px)
+     ========================================================================== */
+  .mob-burger       { @apply hidden; }
+  .mob-overlay      { @apply fixed inset-0 z-[90] bg-black/50 opacity-0 invisible;
+                      transition: opacity .25s ease, visibility .25s; }
+  .mob-overlay.open { @apply visible opacity-100; }
+  .mob-drawer       { @apply fixed top-0 right-0 z-[100] flex h-full w-[320px] max-w-[85vw]
+                             translate-x-full flex-col bg-white shadow-[-4px_0_20px_rgba(0,0,0,.15)];
+                      transition: transform .3s cubic-bezier(.4,0,.2,1); }
+  .mob-drawer.open  { @apply translate-x-0; }
+  .mob-drawer-head  { @apply flex h-16 items-center justify-between border-b border-black/10 px-5; }
+  .mob-drawer-head .logo { @apply h-10 w-auto; }
+  .mob-close        { @apply flex size-9 items-center justify-center text-xl text-black/60; }
+  .mob-drawer-search { @apply border-b border-black/10 px-5 py-3; }
+  .mob-drawer-search .search { @apply flex w-full rounded-ds; }
+  .mob-drawer-body  { @apply flex-1 overflow-y-auto px-5 py-4; }
+  .mob-link         { @apply flex items-center gap-2 py-3 text-base font-medium text-ink border-b border-black/8; }
+  .mob-link img     { @apply size-5; }
+  .mob-drawer-foot  { @apply flex flex-col gap-2 border-t border-black/10 px-5 py-4; }
+  .mob-post-btn     { @apply flex items-center justify-center gap-2 bg-ink px-5 py-3 text-base text-white; }
+  .mob-post-btn img { @apply size-5; }
+  .mob-lang         { @apply flex items-center gap-3 pt-2; }
+  .mob-lang a       { @apply px-3 py-1.5 text-sm font-medium text-black/60; }
+  .mob-lang a.active { @apply bg-yellow text-ink; }
+
+  @media (max-width: 900px) {
+    .mob-burger {
+      @apply flex size-10 flex-col items-center justify-center gap-[5px];
+    }
+    .mob-burger span {
+      @apply block h-[2px] w-[22px] bg-ink transition-all duration-200;
+    }
+    .nav-row1     { @apply h-14 gap-4 px-4; }
+    .logo         { @apply h-10 w-auto; }
+    .nav-menu .signin { @apply hidden; }
+    .nav-menu .lang   { @apply hidden; }
+    .nav-row2         { @apply hidden; }
+    .mega-panel       { @apply hidden; }
+  }
+
+  @media (max-width: 640px) {
+    .nav-row1    { @apply h-14 gap-3 px-3; }
+    .nav-icons   { @apply gap-4; }
+    .wrap        { @apply px-4; }
+    .inner       { @apply px-4; }
+  }
+
   /* disable the custom cursor on touch devices */
   @media (hover: none) {
     .hascur:hover { @apply cursor-auto; }

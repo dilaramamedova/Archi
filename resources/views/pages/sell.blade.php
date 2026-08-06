@@ -61,7 +61,13 @@
           <div class="flex gap-3.5 max-[560px]:flex-col">
             <x-ui.field class="flex-1">
               <label class="ui-label" for="pCat">{{ __('sell.form.category_label') }} <span class="text-red">*</span></label>
-              <x-ui.select :class="$control" id="pCat" :placeholder="__('sell.form.category_placeholder')" :options="$categories" required />
+              {{-- Options rendered via slot: ui.select's :options treats int keys as a
+                   plain list and would submit the label instead of the category id. --}}
+              <x-ui.select :class="$control" id="pCat" :placeholder="__('sell.form.category_placeholder')" required>
+                @foreach ($categories as $cat)
+                  <option value="{{ $cat['id'] ?? '' }}">{{ $cat['name'] }}</option>
+                @endforeach
+              </x-ui.select>
             </x-ui.field>
             <x-ui.field class="flex-1">
               <span class="ui-label" id="pCondLbl">{{ __('sell.form.condition_label') }}</span>

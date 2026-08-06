@@ -2,26 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\UserRole;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class SellController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        // Posting products is a seller capability: masters/buyers are sent to the
+        // business registration page with an explanatory (localized) message.
+        if ($guard = $this->guardNonSellers($request)) {
+            return $guard;
+        }
+
         // Pull top-level product categories from the database for the category dropdown.
         // Fall back to the hardcoded translation keys if no categories exist yet.
         $dbCategories = Category::roots()->active()->ordered()->get();
 
+        // Uniform shape for the select: [['id' => int|null, 'name' => string], …].
+        // Fallback labels carry id=null so the form never submits a fake category_id.
         if ($dbCategories->isNotEmpty()) {
-            // Build id => name map for the select dropdown
-            $categories = $dbCategories->pluck('name', 'id')->toArray();
+            $categories = $dbCategories->map(fn ($c) => ['id' => $c->id, 'name' => $c->name])->all();
         } else {
-            $categories = [
+            $categories = array_map(fn ($label) => ['id' => null, 'name' => $label], [
                 __('sell.categories.tiles'),
                 __('sell.categories.paint'),
                 __('sell.categories.plumbing'),
@@ -29,7 +38,7 @@ class SellController extends Controller
                 __('sell.categories.laminate'),
                 __('sell.categories.building'),
                 __('sell.categories.decor'),
-            ];
+            ]);
         }
 
         return view('pages.sell', compact('categories'));
@@ -41,6 +50,14 @@ class SellController extends Controller
      */
     public function store(Request $request)
     {
+        if ($this->guardNonSellers($request)) {
+            return response()->json([
+                'success' => false,
+                'message' => __('sell.sellers_only'),
+                'redirect' => route('business.register'),
+            ], 403);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'nullable|exists:categories,id',
@@ -98,5 +115,23 @@ class SellController extends Controller
                 'slug' => $product->slug,
             ],
         ]);
+    }
+
+    /**
+     * Authenticated non-sellers (buyers, masters) may not post products: they are
+     * redirected to business registration with a localized flash message. Guests
+     * and sellers/admins pass through (null).
+     */
+    private function guardNonSellers(Request $request): ?RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($user && ! in_array($user->role, [UserRole::Seller, UserRole::Admin], true)) {
+            return redirect()
+                ->route('business.register')
+                ->with('flash_error', __('sell.sellers_only'));
+        }
+
+        return null;
     }
 }

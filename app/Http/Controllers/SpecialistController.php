@@ -4,13 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Enums\UserStatus;
 use App\Models\SpecialistProfile;
+use App\Models\SpecialistSpecialty;
 use Illuminate\Http\Request;
 
 class SpecialistController extends Controller
 {
     public function show(SpecialistProfile $specialist)
     {
-        $specialist->load(['user', 'services' => fn ($q) => $q->where('is_active', true), 'portfolioItems']);
+        $specialist->load(['user', 'specialty', 'services' => fn ($q) => $q->where('is_active', true), 'approvedPortfolioItems']);
 
         // Abort if the owning user account is not active.
         if (! $specialist->user || $specialist->user->status !== UserStatus::Active) {
@@ -34,7 +35,7 @@ class SpecialistController extends Controller
     {
         $query = SpecialistProfile::query()
             ->whereHas('user', fn ($q) => $q->where('status', UserStatus::Active))
-            ->with(['user', 'portfolioItems'])
+            ->with(['user', 'specialty', 'approvedPortfolioItems'])
             ->withCount(['reviews as approved_reviews_count' => fn ($q) => $q->where('status', 'approved')]);
 
         if ($request->filled('city')) {
@@ -42,13 +43,9 @@ class SpecialistController extends Controller
             $query->where('city', $city);
         }
 
-        // Filter by specialization/craft
+        // Filter by the normalized specialist specialty relation.
         if ($request->filled('spec')) {
-            $spec = $request->input('spec');
-            $query->where(function ($q) use ($spec) {
-                $q->where('craft', $spec)
-                  ->orWhereJsonContains('skills', $spec);
-            });
+            $query->where('specialist_specialty_id', (int) $request->input('spec'));
         }
 
         // Filter by featured/top
@@ -75,25 +72,17 @@ class SpecialistController extends Controller
             $query->where('is_featured', true);
         }
 
-        if ($request->filled('min_rating')) {
-            $minRating = (float) $request->input('min_rating');
-            $query->whereRaw(
-                '(SELECT AVG(r.rating) FROM reviews r WHERE r.reviewable_type = ? AND r.reviewable_id = specialist_profiles.id AND r.status = ?) >= ?',
-                [SpecialistProfile::class, 'approved', $minRating]
-            );
-        }
-
         // Sort — keys match the template sort menu data-sort values
         $sort = $request->input('sort', 'rating');
         $query->orderBy(match ($sort) {
-            'exp'        => 'experience_years',
+            'exp' => 'experience_years',
             'experience' => 'experience_years',
-            'newest'     => 'created_at',
-            'cheap'      => 'created_at', // no price column yet — fallback
-            'rating'     => 'experience_years', // no rating column yet — fallback to experience
-            'reviews'    => 'experience_years', // no review count column yet — fallback
-            'projects'   => 'experience_years', // no project count column yet — fallback
-            default      => 'experience_years',
+            'newest' => 'created_at',
+            'cheap' => 'created_at', // no price column yet — fallback
+            'rating' => 'experience_years', // no rating column yet — fallback to experience
+            'reviews' => 'experience_years', // no review count column yet — fallback
+            'projects' => 'experience_years', // no project count column yet — fallback
+            default => 'experience_years',
         }, 'desc');
 
         // Featured specialists come first
@@ -108,12 +97,11 @@ class SpecialistController extends Controller
             ->distinct()
             ->pluck('city');
 
-        $crafts = SpecialistProfile::query()
-            ->whereHas('user', fn ($q) => $q->where('status', UserStatus::Active))
-            ->whereNotNull('craft')
-            ->distinct()
-            ->pluck('craft');
+        $specialties = SpecialistSpecialty::query()
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
 
-        return view('pages.specialists', compact('specialists', 'cities', 'crafts'));
+        return view('pages.specialists', compact('specialists', 'cities', 'specialties'));
     }
 }

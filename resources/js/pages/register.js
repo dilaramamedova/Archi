@@ -45,7 +45,8 @@ export default function init() {
       data.company_name = form.querySelector('[name=company_name]')?.value ?? '';
     }
     if (role === 'master') {
-      data.specialization = form.querySelector('[name=specialization]')?.value ?? '';
+      const specialtyId = form.querySelector('[name=specialist_specialty_id]')?.value ?? '';
+      data.specialist_specialty_id = specialtyId === '' ? null : Number(specialtyId);
       data.city = form.querySelector('[name=city]')?.value ?? '';
     }
 

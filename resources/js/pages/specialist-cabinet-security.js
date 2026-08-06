@@ -118,14 +118,28 @@ export default function init() {
     });
   }
 
-  // --- 2FA toggle (visual only for now) ---
-  document.querySelectorAll('.ui-toggle').forEach((toggle) =>
-    toggle.addEventListener('click', () => {
-      const on = toggle.dataset.on !== 'true';
-      toggle.dataset.on = String(on);
-      toggle.setAttribute('aria-pressed', String(on));
-    })
-  );
+  // --- 2FA preference ---
+  const twoFactorToggle = document.querySelector('[data-two-factor]');
+  if (twoFactorToggle) {
+    twoFactorToggle.addEventListener('click', async () => {
+      const on = twoFactorToggle.dataset.on !== 'true';
+      twoFactorToggle.disabled = true;
+      const res = await fetch('/specialist/cabinet/two-factor', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrf(),
+        },
+        body: JSON.stringify({ enabled: on }),
+      });
+      if (res.ok) {
+        twoFactorToggle.dataset.on = String(on);
+        twoFactorToggle.setAttribute('aria-pressed', String(on));
+      }
+      twoFactorToggle.disabled = false;
+    });
+  }
 
   // --- Deactivate account ---
   const deactivateBtn = document.getElementById('deactivateBtn');

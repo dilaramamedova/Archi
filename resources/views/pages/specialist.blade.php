@@ -9,9 +9,15 @@
     $initials = mb_strtoupper(mb_substr($user->first_name ?? $user->name, 0, 1) . mb_substr($user->last_name ?? '', 0, 1));
     $avatarUrl = $specialist->avatar_path ? storage_url($specialist->avatar_path) : '/assets/avatar-placeholder.png';
     $skills = is_array($specialist->skills) ? $specialist->skills : [];
-    $portfolioItems = $specialist->portfolioItems;
+    $portfolioItems = $specialist->approvedPortfolioItems;
     $services = $specialist->services;
-    $craft = translate_craft($specialist->craft) ?? __('specialist.id.role');
+    $craft = $specialist->specialty?->name ?? translate_craft($specialist->craft) ?? __('specialist.id.role');
+    $contactPhone = $specialist->phone ?: ($specialist->whatsapp ?: $user->phone);
+    $metaParts = collect([
+        $specialist->experience_years ? __('specialist.meta.experience', ['years' => $specialist->experience_years]) : null,
+        $portfolioItems->isNotEmpty() ? $portfolioItems->count() . ' ' . __('specialist.meta.projects_label', ['count' => $portfolioItems->count()]) : null,
+        filled($specialist->city) ? $specialist->city : null,
+    ])->filter()->values();
 @endphp
 <x-layout page="specialist" :title="$fullName . ' — ' . $craft">
 
@@ -52,46 +58,42 @@
               <span class="r">({{ $reviewsCount }} {{ __('specialist.reviews.count_label', ['count' => $reviewsCount]) }})</span>
             </div>
           </div>
-          <p class="pp-meta">
-            @if ($specialist->experience_years)
-              {{ __('specialist.meta.experience', ['years' => $specialist->experience_years]) }}
-            @else
-              {{ __('specialist.id.meta_exp') }}
-            @endif
-            <span class="dot">&middot;</span>
-            {{ $portfolioItems->count() }} {{ __('specialist.meta.projects_label', ['count' => $portfolioItems->count()]) }}
-            <span class="dot">&middot;</span>
-            {{ $specialist->city ?? __('specialist.id.meta_city') }}
-          </p>
+          @if ($metaParts->isNotEmpty())
+            <p class="pp-meta">
+              @foreach ($metaParts as $part)
+                @if (! $loop->first)<span class="dot">&middot;</span>@endif
+                {{ $part }}
+              @endforeach
+            </p>
+          @endif
         </div>
       </div>
 
+      @if (filled($specialist->about) || count($skills))
       {{-- about --}}
       <section class="pp-about">
         <div class="pp-sechead">
           <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3" :label="__('specialist.about.eyebrow')" />
           <h2>{{ __('specialist.about.title') }}</h2>
         </div>
-        <p class="txt">{{ $specialist->about ?? __('specialist.about.text') }}</p>
+        @if (filled($specialist->about))
+          <p class="txt">{{ $specialist->about }}</p>
+        @endif
         @if (count($skills))
           <div class="pp-tags">
             @foreach ($skills as $skill)
               <span class="pp-tag">{{ $skill }}</span>
             @endforeach
           </div>
-        @else
-          <div class="pp-tags">
-            @foreach (['t1', 't2', 't3', 't4', 't5', 't6'] as $tag)
-              <span class="pp-tag">{{ __('specialist.about.tags.' . $tag) }}</span>
-            @endforeach
-          </div>
         @endif
       </section>
+      @endif
 
     </div>
 
     {{-- booking --}}
     <aside class="pp-book">
+      @if (false)
       <div class="ph">
         <span class="lbl">{{ __('specialist.book.label') }}</span>
         @if ($services->isNotEmpty())
@@ -101,14 +103,20 @@
           <div class="prow"><span class="now">{{ __('specialist.book.price') }}</span><span class="sub">{{ __('specialist.book.price_sub') }}</span></div>
         @endif
       </div>
-      <x-ui.button variant="primary" id="ppCalc" data-url="{{ route('calculator') }}"
-          class="rounded-none px-6 py-4 text-base font-medium duration-200">{{ __('specialist.book.consult') }}</x-ui.button>
+      @endif
+      <x-ui.button variant="primary" id="ppContact" data-phone="{{ $contactPhone }}"
+          class="rounded-none px-6 py-4 text-base font-medium duration-200">Əlaqə saxla</x-ui.button>
+      <a id="ppContactPhone" class="pp-contact-phone" href="#" hidden></a>
+      {{-- Mesaj göndər funksiyası hazırda göstərilmir.
       <button class="pp-btn w" id="ppMsg"
               data-specialist-id="{{ $specialist->id }}"
               data-specialist-name="{{ $fullName }}">{{ __('specialist.book.message') }}</button>
+      --}}
       <div class="div"></div>
       <div class="pp-stat"><span class="k">{{ __('specialist.book.response_k') }}</span><span class="v">{{ __('specialist.book.response_v') }}</span></div>
+      {{-- Tamamlanmış layihə sayı hazırda göstərilmir.
       <div class="pp-stat"><span class="k">{{ __('specialist.book.done_k') }}</span><span class="v">{{ $portfolioItems->count() }}</span></div>
+      --}}
       <div class="pp-stat"><span class="k">{{ __('specialist.book.member_k') }}</span><span class="v">{{ $specialist->created_at->translatedFormat('M Y') }}</span></div>
       <div class="pp-free"><span class="d"></span>{{ $specialist->is_on_vacation ? __('specialist.book.on_vacation') : __('specialist.book.free') }}</div>
     </aside>
@@ -158,25 +166,10 @@
         @endforeach
       </div>
     </section>
-  @else
-    {{-- Fallback: show static placeholder services from translations --}}
-    <section class="pp-sec">
-      <div class="pp-sechead">
-        <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3" :label="__('specialist.services.eyebrow')" />
-        <h2>{{ __('specialist.services.title') }}</h2>
-      </div>
-      <div class="pp-svc-list">
-        @foreach (['s1', 's2', 's3', 's4'] as $svc)
-          <a class="pp-svc">
-            <span class="l"><span class="t">{{ __('specialist.services.items.' . $svc . '.title') }}</span><span class="s">{{ __('specialist.services.items.' . $svc . '.sub') }}</span></span>
-            <span class="rr"><span class="pr">{{ __('specialist.services.items.' . $svc . '.price') }}</span><span class="ar">&rarr;</span></span>
-          </a>
-        @endforeach
-      </div>
-    </section>
   @endif
 
-  {{-- reviews --}}
+  @if (false)
+  {{-- Müştəri rəyləri bölməsi hazırda göstərilmir. --}}
   <section class="pp-sec">
     <div class="pp-sechead">
       <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3" :label="__('specialist.reviews.eyebrow')" />
@@ -207,9 +200,11 @@
       <a class="sec-more"><p>{{ __('specialist.reviews.more') }}</p><img src="/assets/icon-arrow-right.svg" alt=""></a>
     @endif
   </section>
+  @endif
 
 </main>
 
+@if (false)
 {{-- Message modal --}}
 <x-ui.modal id="msgModal" aria-labelledby="msgTitle" :close-label="__('specialist.book.close', [], 'Bağla')"
             dialog="w-full max-w-[520px] animate-[lmIn_0.26s_ease] bg-white px-9 py-10 shadow-[-6px_6px_28px_rgba(0,0,0,0.22)]">
@@ -258,5 +253,6 @@
     <div class="mt-4 hidden border border-red/20 bg-red/5 px-4 py-3 text-center text-sm text-red" id="msgError"></div>
   </form>
 </x-ui.modal>
+@endif
 
 </x-layout>

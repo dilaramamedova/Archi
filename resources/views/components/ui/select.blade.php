@@ -17,10 +17,15 @@
     'placeholder' => null,
     'value' => null,
 ])
+@php
+    $resolvedOptions = $options instanceof \Illuminate\Support\Collection ? $options->all() : $options;
+    $optionsAreList = array_is_list($resolvedOptions);
+@endphp
 <select {{ $attributes->merge(['class' => $variant === 'b2b' ? 'ui-control-b2b' : 'ui-control']) }}>
   @if ($placeholder !== null)<option value="">{{ $placeholder }}</option>@endif
-  @foreach ($options as $option)
-    <option @selected($value !== null && $value === $option)>{{ $option }}</option>
+  @foreach ($resolvedOptions as $optionValue => $option)
+    @php $resolvedValue = $optionsAreList ? $option : $optionValue; @endphp
+    <option value="{{ $resolvedValue }}" @selected($value !== null && (string) $value === (string) $resolvedValue)>{{ $option }}</option>
   @endforeach
   {{ $slot }}
 </select>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Models\User;
@@ -23,7 +24,7 @@ class LoginController extends Controller
         $field = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
         $user = User::where($field, $identifier)->first();
 
-        if (! $user || ! Hash::check($request->input('password'), $user->password)) {
+        if (! $user || $user->role === UserRole::Admin || ! Hash::check($request->input('password'), $user->password)) {
             throw ValidationException::withMessages([
                 'identifier' => [__('login.errors.invalid_credentials')],
             ]);
@@ -76,8 +77,8 @@ class LoginController extends Controller
     private function redirectTo(User $user): string
     {
         return match ($user->role) {
-            \App\Enums\UserRole::Seller => route('business.profile'),
-            \App\Enums\UserRole::Master => route('specialist.cabinet'),
+            UserRole::Seller => route('business.profile'),
+            UserRole::Master => route('specialist.cabinet'),
             default => route('home'),
         };
     }

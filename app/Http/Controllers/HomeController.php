@@ -24,21 +24,26 @@ class HomeController extends Controller
 
         $categories = Category::roots()->active()->showOnHome()->ordered()->get();
 
+        // Home grids show only the curated subset: flagged (sale/featured) AND
+        // explicitly picked for the homepage (show_on_homepage).
         $saleProducts = Product::visible()->approved()->sale()
+            ->where('show_on_homepage', true)
             ->with(['images', 'category'])
             ->take(4)
             ->latest()
             ->get();
 
         $featuredProducts = Product::visible()->approved()->featured()
+            ->where('show_on_homepage', true)
             ->with(['images', 'category'])
             ->take(4)
             ->latest()
             ->get();
 
         $specialists = SpecialistProfile::where('is_featured', true)
+            ->where('show_on_homepage', true)
             ->whereHas('user', fn ($q) => $q->where('status', UserStatus::Active))
-            ->with('user')
+            ->with(['user', 'specialty'])
             ->take(4)
             ->get();
 

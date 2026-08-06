@@ -25,10 +25,15 @@ function initFilters() {
 }
 
 function initReveal() {
+  const hasFeatured = !!document.getElementById('featured');
+
   document.querySelectorAll('#featured, .sec-head').forEach((el) => el.classList.add('reveal'));
-  document
-    .querySelectorAll('#blogGrid .post')
-    .forEach((el, i) => el.classList.add('reveal', 'd' + ((i % 3) + 1)));
+
+  if (hasFeatured) {
+    document
+      .querySelectorAll('#blogGrid .post')
+      .forEach((el, i) => el.classList.add('reveal', 'd' + ((i % 3) + 1)));
+  }
 
   const io = new IntersectionObserver(
     (entries) => {
@@ -39,7 +44,7 @@ function initReveal() {
         }
       });
     },
-    { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    { threshold: 0.05, rootMargin: '0px 0px -20px 0px' }
   );
   document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 }

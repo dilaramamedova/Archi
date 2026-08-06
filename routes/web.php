@@ -1,22 +1,31 @@
 <?php
 
 use App\Http\Controllers\AboutController;
+use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\Cabinet\SecurityController;
+use App\Http\Controllers\Cabinet\SpecialistCabinetController;
+use App\Http\Controllers\Cabinet\SpecialistProfileController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\ConsultationRequestController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\NewsletterController;
-use App\Http\Controllers\AccountController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SellController;
 use App\Http\Controllers\SpecialistController;
-use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\WishlistController;
+use App\Models\BlogPost;
+use App\Models\Product;
+use App\Models\Review;
+use App\Models\SpecialistProfile;
+use App\Models\SpecialistSpecialty;
 use Illuminate\Support\Facades\Route;
 
 if (! function_exists('archiView')) {
@@ -30,14 +39,18 @@ if (! function_exists('archiView')) {
 
 // --- Dynamic pages (controller-driven) ---
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::post('/consultation-requests', [ConsultationRequestController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('consultation-requests.store');
 Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog');
 Route::get('/blog/article', function () {
-    $post = \App\Models\BlogPost::published()->latest('published_at')->first();
+    $post = BlogPost::published()->latest('published_at')->first();
     if ($post) {
         return redirect()->route('blog.show', $post->slug);
     }
+
     return redirect()->route('blog');
 })->name('blog.article');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
@@ -45,10 +58,11 @@ Route::get('/about', [AboutController::class, 'index'])->name('about');
 
 // Legacy routes — keep named routes that frontend references
 Route::get('/product', function () {
-    $product = \App\Models\Product::visible()->approved()->latest()->first();
+    $product = Product::visible()->approved()->latest()->first();
     if ($product) {
         return redirect()->route('product.show', $product->slug);
     }
+
     return redirect()->route('catalog');
 })->name('product');
 
@@ -58,8 +72,17 @@ Route::get('/specialists', [SpecialistController::class, 'index'])->name('specia
 Route::get('/sell', [SellController::class, 'index'])->name('sell');
 Route::post('/sell', [SellController::class, 'store'])->middleware('auth')->name('sell.store');
 Route::get('/login', fn () => archiView('pages.login'))->middleware('guest')->name('login');
-Route::get('/register', fn () => archiView('pages.register'))->middleware('guest')->name('register');
+Route::get('/register', function () {
+    app()->setLocale(session('locale', config('app.locale')));
+
+    return view('pages.register', [
+        'specialties' => SpecialistSpecialty::query()->where('is_active', true)->orderBy('sort_order')->pluck('name', 'id'),
+    ]);
+})->middleware('guest')->name('register');
 Route::get('/forgot-password', fn () => archiView('pages.forgot-password'))->middleware('guest')->name('password.request');
+Route::get('/reset-password', fn () => archiView('pages.reset-password'))->middleware('guest')->name('password.reset');
+Route::get('/otp', fn () => archiView('pages.otp'))->middleware('guest')->name('otp.verify');
+Route::get('/help', fn () => archiView('pages.help'))->name('help');
 Route::get('/cart', [CartController::class, 'index'])->name('cart');
 
 // Specialist owner mode + onboarding + cabinet (must be before the {specialist} wildcard).
@@ -67,24 +90,20 @@ Route::get('/specialist/owner', function () {
     app()->setLocale(session('locale', config('app.locale')));
     $user = auth()->user();
     $profile = $user?->specialistProfile?->load(['services', 'portfolioItems']);
+
     return view('pages.specialist-owner', compact('user', 'profile'));
-})->middleware('auth')->name('specialist.owner');
+})->middleware(['auth', 'role:master'])->name('specialist.owner');
 
 Route::get('/specialist/onboarding', function () {
     app()->setLocale(session('locale', config('app.locale')));
     $user = auth()->user();
     $profile = $user?->specialistProfile;
+
     return view('pages.specialist-onboarding', compact('user', 'profile'));
-})->middleware('auth')->name('specialist.onboarding');
+})->middleware(['auth', 'role:master'])->name('specialist.onboarding');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/specialist/cabinet', function () {
-        app()->setLocale(session('locale', config('app.locale')));
-        $user = auth()->user();
-        $profile = $user->specialistProfile;
-
-        return view('pages.specialist-cabinet', compact('user', 'profile'));
-    })->name('specialist.cabinet');
+Route::middleware(['auth', 'role:master'])->group(function () {
+    Route::get('/specialist/cabinet', [SpecialistCabinetController::class, 'profile'])->name('specialist.cabinet');
 
     Route::get('/specialist/cabinet/security', function () {
         app()->setLocale(session('locale', config('app.locale')));
@@ -92,40 +111,25 @@ Route::middleware('auth')->group(function () {
         return view('pages.specialist-cabinet-security');
     })->name('specialist.cabinet.security');
 
-    Route::get('/specialist/cabinet/portfolio', function () {
-        app()->setLocale(session('locale', config('app.locale')));
-        $user = auth()->user();
-        $profile = $user->specialistProfile;
-        $portfolioItems = $profile ? $profile->portfolioItems()->orderBy('sort_order')->get() : collect();
-        $maxPortfolio = 30;
+    Route::get('/specialist/cabinet/portfolio', [SpecialistCabinetController::class, 'portfolio'])->name('specialist.cabinet.portfolio');
+    Route::post('/specialist/cabinet/portfolio', [SpecialistCabinetController::class, 'updatePortfolio'])->name('specialist.cabinet.portfolio.update');
 
-        return view('pages.specialist-cabinet-portfolio', compact('user', 'profile', 'portfolioItems', 'maxPortfolio'));
-    })->name('specialist.cabinet.portfolio');
+    Route::get('/specialist/cabinet/services', [SpecialistCabinetController::class, 'services'])->name('specialist.cabinet.services');
+    Route::put('/specialist/cabinet/services', [SpecialistCabinetController::class, 'updateServices'])->name('specialist.cabinet.services.update');
 
-    Route::get('/specialist/cabinet/services', function () {
-        app()->setLocale(session('locale', config('app.locale')));
-        $user = auth()->user();
-        $profile = $user->specialistProfile;
-        $services = $profile ? $profile->services()->orderBy('sort_order')->get() : collect();
+    Route::get('/specialist/cabinet/schedule', [SpecialistCabinetController::class, 'schedule'])->name('specialist.cabinet.schedule');
+    Route::put('/specialist/cabinet/schedule', [SpecialistCabinetController::class, 'updateSchedule'])->name('specialist.cabinet.schedule.update');
 
-        return view('pages.specialist-cabinet-services', compact('user', 'profile', 'services'));
-    })->name('specialist.cabinet.services');
-
-    Route::get('/specialist/cabinet/schedule', function () {
-        app()->setLocale(session('locale', config('app.locale')));
-        $user = auth()->user();
-        $profile = $user->specialistProfile;
-        $schedules = $profile ? $profile->schedules()->orderBy('day_of_week')->get() : collect();
-
-        return view('pages.specialist-cabinet-schedule', compact('user', 'profile', 'schedules'));
-    })->name('specialist.cabinet.schedule');
+    Route::put('/specialist/cabinet', [SpecialistProfileController::class, 'update'])->name('specialist.cabinet.update');
+    Route::post('/specialist/cabinet/avatar', [SpecialistProfileController::class, 'updateAvatar'])->name('specialist.cabinet.avatar.update');
+    Route::delete('/specialist/cabinet/avatar', [SpecialistProfileController::class, 'deleteAvatar'])->name('specialist.cabinet.avatar.destroy');
 
     Route::get('/specialist/cabinet/reviews', function () {
         app()->setLocale(session('locale', config('app.locale')));
         $user = auth()->user();
         $profile = $user->specialistProfile;
         $reviews = $profile
-            ? \App\Models\Review::where('reviewable_type', \App\Models\SpecialistProfile::class)
+            ? Review::where('reviewable_type', SpecialistProfile::class)
                 ->where('reviewable_id', $profile->id)
                 ->with('user')
                 ->latest()
@@ -163,14 +167,66 @@ Route::get('/business/onboarding/step-2', fn () => archiView('pages.business-onb
 Route::get('/business/onboarding/step-3', fn () => archiView('pages.business-onboarding-step3'))->name('business.onboarding.step3');
 Route::get('/business/onboarding/step-4', fn () => archiView('pages.business-onboarding-step4'))->name('business.onboarding.step4');
 
-Route::middleware('auth')->group(function () {
-    Route::get('/business/profile', fn () => archiView('pages.business-profile'))->name('business.profile');
-    Route::get('/business/profile/company', fn () => archiView('pages.business-profile-company'))->name('business.profile.company');
-    Route::get('/business/profile/contact', fn () => archiView('pages.business-profile-contact'))->name('business.profile.contact');
-    Route::get('/business/profile/products', fn () => archiView('pages.business-profile-products'))->name('business.profile.products');
-    Route::get('/business/profile/showrooms', fn () => archiView('pages.business-profile-showrooms'))->name('business.profile.showrooms');
-    Route::get('/business/profile/notifications', fn () => archiView('pages.business-profile-notifications'))->name('business.profile.notifications');
+Route::middleware(['auth', 'role:seller,admin'])->group(function () {
+    // Cabinet pages
+    Route::get('/business/profile', [\App\Http\Controllers\Cabinet\BusinessProfileController::class, 'storefront'])->name('business.profile');
+
+    Route::get('/business/profile/company', function () {
+        app()->setLocale(session('locale', config('app.locale')));
+        $profile = auth()->user()->sellerProfile;
+        return view('pages.business-profile-company', compact('profile'));
+    })->name('business.profile.company');
+
+    Route::get('/business/profile/contact', function () {
+        app()->setLocale(session('locale', config('app.locale')));
+        $profile = auth()->user()->sellerProfile;
+        return view('pages.business-profile-contact', compact('profile'));
+    })->name('business.profile.contact');
+
+    Route::get('/business/profile/showrooms', function () {
+        app()->setLocale(session('locale', config('app.locale')));
+        $profile = auth()->user()->sellerProfile;
+        $showrooms = $profile ? $profile->showrooms : collect();
+        return view('pages.business-profile-showrooms', compact('profile', 'showrooms'));
+    })->name('business.profile.showrooms');
+
+    Route::get('/business/profile/notifications', function () {
+        app()->setLocale(session('locale', config('app.locale')));
+        $profile = auth()->user()->sellerProfile;
+        return view('pages.business-profile-notifications', compact('profile'));
+    })->name('business.profile.notifications');
+
     Route::get('/business/profile/security', fn () => archiView('pages.business-profile-security'))->name('business.profile.security');
+
+    // Products & inventory
+    Route::get('/business/profile/products', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'index'])->name('business.profile.products');
+    Route::get('/business/products/create', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'create'])->name('business.products.create');
+    Route::get('/business/products/{product}/edit', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'edit'])->name('business.products.edit');
+    Route::get('/business/inventory', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'inventory'])->name('business.inventory');
+    Route::post('/business/products', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'store'])->name('business.products.store');
+    Route::put('/business/products/{product}', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'update'])->name('business.products.update');
+    Route::post('/business/products/{product}/toggle', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'toggleVisibility'])->name('business.products.toggle');
+    Route::post('/business/products/{product}/stock', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'updateStock'])->name('business.products.stock');
+    Route::delete('/business/products/{product}', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'destroy'])->name('business.products.destroy');
+
+    // Orders
+    Route::get('/business/orders', [\App\Http\Controllers\Cabinet\BusinessOrderController::class, 'index'])->name('business.orders');
+    Route::get('/business/orders/{order}', [\App\Http\Controllers\Cabinet\BusinessOrderController::class, 'show'])->name('business.orders.show');
+    Route::post('/business/orders/{order}/status', [\App\Http\Controllers\Cabinet\BusinessOrderController::class, 'updateStatus'])->name('business.orders.status');
+
+    // Profile API
+    Route::put('/business/profile/company', [\App\Http\Controllers\Cabinet\BusinessProfileController::class, 'updateCompany'])->name('business.profile.company.update');
+    Route::put('/business/profile/contact', [\App\Http\Controllers\Cabinet\BusinessProfileController::class, 'updateContact'])->name('business.profile.contact.update');
+    Route::put('/business/profile/notifications', [\App\Http\Controllers\Cabinet\BusinessProfileController::class, 'updateNotifications'])->name('business.profile.notifications.update');
+    Route::post('/business/profile/logo', [\App\Http\Controllers\Cabinet\BusinessProfileController::class, 'updateLogo'])->name('business.profile.logo');
+    Route::delete('/business/profile/logo', [\App\Http\Controllers\Cabinet\BusinessProfileController::class, 'deleteLogo'])->name('business.profile.logo.delete');
+    Route::post('/business/profile/cover', [\App\Http\Controllers\Cabinet\BusinessProfileController::class, 'updateCover'])->name('business.profile.cover');
+    Route::delete('/business/profile/cover', [\App\Http\Controllers\Cabinet\BusinessProfileController::class, 'deleteCover'])->name('business.profile.cover.delete');
+
+    // Showrooms API
+    Route::post('/business/showrooms', [\App\Http\Controllers\Cabinet\ShowroomController::class, 'store'])->name('business.showrooms.store');
+    Route::put('/business/showrooms/{showroom}', [\App\Http\Controllers\Cabinet\ShowroomController::class, 'update'])->name('business.showrooms.update');
+    Route::delete('/business/showrooms/{showroom}', [\App\Http\Controllers\Cabinet\ShowroomController::class, 'destroy'])->name('business.showrooms.destroy');
 });
 
 // Auth routes
@@ -204,13 +260,8 @@ Route::middleware('auth')->group(function () {
     Route::delete('/api/cart/{cartItem}', [CartController::class, 'destroy'])->name('api.cart.destroy');
 
     // Security (shared by all user types)
-    Route::post('/cabinet/password', [\App\Http\Controllers\Cabinet\SecurityController::class, 'changePassword'])->name('cabinet.password');
-    Route::get('/cabinet/sessions', [\App\Http\Controllers\Cabinet\SecurityController::class, 'sessions'])->name('cabinet.sessions');
-    Route::delete('/cabinet/sessions', [\App\Http\Controllers\Cabinet\SecurityController::class, 'destroySession'])->name('cabinet.sessions.destroy');
-    Route::post('/cabinet/deactivate', [\App\Http\Controllers\Cabinet\SecurityController::class, 'deactivateAccount'])->name('cabinet.deactivate');
-
-    // Specialist profile
-    Route::put('/specialist/cabinet', [\App\Http\Controllers\Cabinet\SpecialistProfileController::class, 'update'])->name('specialist.cabinet.update');
+    Route::post('/cabinet/password', [SecurityController::class, 'changePassword'])->name('cabinet.password');
+    Route::post('/cabinet/deactivate', [SecurityController::class, 'deactivateAccount'])->name('cabinet.deactivate');
 
     // Reviews
     Route::post('/api/reviews', [ReviewController::class, 'store'])->name('api.reviews.store');

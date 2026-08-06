@@ -13,8 +13,6 @@
         ['key' => 'portfolio',     'route' => 'specialist.cabinet.portfolio',     'count' => 'portfolio_count', 'count_value' => $portfolioCount],
         ['key' => 'services',      'route' => 'specialist.cabinet.services',      'count' => 'services_count', 'count_value' => $servicesCount],
         ['key' => 'schedule',      'route' => 'specialist.cabinet.schedule'],
-        ['key' => 'reviews',       'route' => 'specialist.cabinet.reviews',       'count' => 'reviews_count'],
-        ['key' => 'notifications', 'route' => 'specialist.cabinet.notifications'],
         ['key' => 'security',      'route' => 'specialist.cabinet.security'],
     ];
 @endphp
@@ -44,21 +42,6 @@
       <x-ui.button variant="primary" type="submit" id="pwdSubmit"
         class="h-11 px-[22px] text-[13px] leading-[normal] font-bold whitespace-nowrap mt-2">{{ __('specialist-cabinet-security.password.submit') }}</x-ui.button>
     </form>
-  </x-cabinet.card>
-
-  {{-- Two-factor authentication (OFF in the specialist frame) --}}
-  <x-cabinet.card gap="gap-4" :title="__('specialist-cabinet-security.twofa.title')">
-    <div class="spsec-row">
-      <p class="desc">{{ __('specialist-cabinet-security.twofa.desc') }}</p>
-      <x-ui.toggle :on="false" size="md" tone="ok" :aria-label="__('specialist-cabinet-security.twofa.title')" />
-    </div>
-  </x-cabinet.card>
-
-  {{-- Active sessions (loaded from backend) --}}
-  <x-cabinet.card gap="gap-4" :title="__('specialist-cabinet-security.sessions.title')">
-    <div id="sessionsContainer">
-      <p class="text-[14px] text-muted">{{ __('specialist-cabinet-security.sessions.loading') }}</p>
-    </div>
   </x-cabinet.card>
 
   {{-- Danger zone --}}

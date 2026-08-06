@@ -18,6 +18,16 @@ return [
         'product_count' => '1,240 products',
         'go_to_products' => 'Go to products',
         'follow' => 'Follow',
+        'send_message' => 'Send message',
+        'member_since' => 'member since :year',
+        'showroom_count' => ':count showroom|:count showrooms',
+        'coming_soon' => 'This feature is coming soon',
+    ],
+
+    'owner' => [
+        'hint' => 'This is your store profile — this is how buyers see it.',
+        'edit' => 'Edit details',
+        'add_product' => 'Add product',
     ],
 
     'about' => [
@@ -44,6 +54,9 @@ return [
         'kicker' => 'CATALOG',
         'title' => 'Our products',
         'see_all' => 'VIEW ALL (1,240) →',
+        'see_all_count' => 'VIEW ALL (:count) →',
+        'empty_title' => 'No products yet',
+        'empty_owner_desc' => 'Add your first product — it will appear here after admin approval.',
         'favourite' => 'Add to favourites',
         'rating_value' => '4.4',
         'reviews' => '(1,876 reviews)',

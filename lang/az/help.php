@@ -1,0 +1,41 @@
+<?php
+
+return [
+    'title' => 'Kömək mərkəzi — ARCHI',
+    'hero_title' => 'Sənə necə kömək edə bilərik?',
+    'search_placeholder' => 'Sualını yaz — məsələn "sifarişi necə ləğv edim"',
+    'popular_label' => 'Populyar',
+    'popular_tags' => 'sifariş ləğvi, çatdırılma, qaytarma, ödəniş',
+
+    'topics_title' => 'Mövzular',
+    'topic_orders' => 'Sifarişlər',
+    'topic_orders_desc' => 'Sifariş vermə, izləmə, ləğv etmə və dəyişdirmə haqqında',
+    'topic_delivery' => 'Çatdırılma',
+    'topic_delivery_desc' => 'Çatdırılma müddəti, zonelar, izləmə və ünvan dəyişikliyi',
+    'topic_returns' => 'Qaytarma və pul',
+    'topic_returns_desc' => 'Məhsul qaytarma, geri ödəniş və dəyişdirmə qaydaları',
+    'topic_payment' => 'Ödəniş',
+    'topic_payment_desc' => 'Ödəniş üsulları, faktura, taksit və endirimlər',
+    'topic_security' => 'Hesab və təhlükəsizlik',
+    'topic_security_desc' => 'Şifrə yeniləmə, iki mərhələli doğrulama və hesab ayarları',
+    'topic_specialists' => 'Usta və satıcılar üçün',
+    'topic_specialists_desc' => 'Qeydiyyat, profil, portfoy və sifariş idarəetməsi',
+
+    'faq_title' => 'Ən çox verilən suallar',
+    'faq1_q' => 'Sifarişimi necə ləğv edə bilərəm?',
+    'faq1_a' => 'Sifarişlər bölməsindən aktiv sifarişinizin detallarına keçib "Ləğv et" düyməsini basın. Sifariş artıq göndərilmişdirsə, ləğv etmə mümkün olmaya bilər.',
+    'faq2_q' => 'Çatdırılma müddəti nə qədərdir?',
+    'faq2_a' => 'Bakı daxilində standart çatdırılma 1-3 iş günüdür. Regionlara çatdırılma 3-7 iş günü çəkə bilər.',
+    'faq3_q' => 'Məhsulu necə qaytara bilərəm?',
+    'faq3_a' => 'Məhsulu aldığınız tarixdən 14 gün ərzində qaytara bilərsiniz. Qaytarma üçün məhsul orijinal qablaşdırmasında olmalıdır.',
+    'faq4_q' => 'Hansı ödəniş üsulları qəbul edilir?',
+    'faq4_a' => 'Bank kartı (Visa, Mastercard), nağd ödəniş, bank köçürməsi və taksit seçimləri mövcuddur.',
+    'faq5_q' => 'Usta necə tapa bilərəm?',
+    'faq5_a' => 'Mütəxəssislər bölməsindən ixtisasa görə axtarış edə, rəyləri oxuya və birbaşa əlaqə saxlaya bilərsiniz.',
+    'faq6_q' => 'Hesabımın şifrəsini necə dəyişə bilərəm?',
+    'faq6_a' => 'Hesab parametrləri → Təhlükəsizlik bölməsindən cari şifrənizi daxil edib yeni şifrə təyin edə bilərsiniz.',
+
+    'contact_title' => 'Cavabını tapmadın?',
+    'contact_subtitle' => 'B.e. — həftə içi 09:00-dan 18:00-dək dəstək xəttimiz aktivdir',
+    'contact_chat' => 'Canlı söhbət',
+];

@@ -3,27 +3,30 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
-use App\Models\Category;
 use App\Models\Product;
-use App\Models\ProductBadge;
-use App\Models\SubCategory;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Resources\Resource;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Schema;
-use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-shopping-bag';
-    protected static string | \UnitEnum | null $navigationGroup = 'Kataloq';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-shopping-bag';
+
+    protected static string|\UnitEnum|null $navigationGroup = 'Kataloq';
+
     protected static ?string $navigationLabel = 'Məhsullar';
+
     protected static ?string $modelLabel = 'Məhsul';
+
     protected static ?string $pluralModelLabel = 'Məhsullar';
+
     protected static ?int $navigationSort = 2;
 
     public static function form(Schema $form): Schema
@@ -42,7 +45,7 @@ class ProductResource extends Resource
                                 while (is_array($value)) {
                                     $value = $value['az'] ?? reset($value) ?: '';
                                 }
-                                $set('slug', \Illuminate\Support\Str::slug((string) $value));
+                                $set('slug', Str::slug((string) $value));
                             }
                         }),
 
@@ -82,7 +85,9 @@ class ProductResource extends Resource
                         ->preload()
                         ->noOptionsMessage('Aktiv alt kateqoriya tapılmadı.')
                         ->noSearchResultsMessage('Axtarışa uyğun alt kateqoriya tapılmadı.')
-                        ->required()
+                        // Nullable in the DB and never set by the seller flows — a hard
+                        // requirement here made every seeded/seller product unsavable.
+                        ->nullable()
                         ->visible(fn (callable $get) => (bool) $get('category_id')),
 
                     Forms\Components\Select::make('brand_id')
@@ -152,6 +157,9 @@ class ProductResource extends Resource
                     Forms\Components\Toggle::make('is_approved')->label('Təsdiqlənib'),
                     Forms\Components\Toggle::make('is_featured')->label('Seçilmiş məhsul'),
                     Forms\Components\Toggle::make('is_sale')->label('SALE məhsulu'),
+                    Forms\Components\Toggle::make('show_on_homepage')
+                        ->label('Ana səhifədə göstər')
+                        ->helperText('Yalnız seçilmiş/SALE statuslu məhsullar üçün keçərlidir — ana səhifə bölmələrində görünəcək.'),
                     Forms\Components\Toggle::make('free_delivery')->label('Pulsuz çatdırılma'),
                     Forms\Components\Toggle::make('return_14_days')->label('14 gün qaytarma'),
                 ]),
@@ -164,7 +172,10 @@ class ProductResource extends Resource
                                 ->label('Şəkil')
                                 ->image()
                                 ->disk('public')
-                                ->directory('products'),
+                                ->directory('products')
+                                // path is NOT NULL in DB — an empty upload state must fail
+                                // validation, not blow up with an SQL error on save.
+                                ->required(),
                             Forms\Components\Toggle::make('is_main')->label('Əsas şəkil'),
                             Forms\Components\TextInput::make('sort_order')->label('Sıra')->numeric()->default(0),
                         ])
@@ -222,9 +233,23 @@ class ProductResource extends Resource
                 Tables\Columns\TextColumn::make('user.name')->label('Satıcı'),
                 Tables\Columns\TextColumn::make('price')->label('Qiymət')->money('AZN')->sortable(),
                 Tables\Columns\TextColumn::make('stock')->label('Stok')->sortable(),
-                Tables\Columns\IconColumn::make('is_approved')->label('Təsdiqlənib')->boolean(),
+                Tables\Columns\TextColumn::make('moderation_status')
+                    ->label('Moderasiya')
+                    ->badge()
+                    ->state(fn (Product $record) => $record->moderation_status)
+                    ->formatStateUsing(fn (string $state) => match ($state) {
+                        'approved' => 'Təsdiqlənib',
+                        'rejected' => 'Rədd edilib',
+                        default => 'Gözləyir',
+                    })
+                    ->color(fn (string $state) => match ($state) {
+                        'approved' => 'success',
+                        'rejected' => 'danger',
+                        default => 'warning',
+                    }),
                 Tables\Columns\IconColumn::make('is_featured')->label('Seçilmiş')->boolean(),
                 Tables\Columns\IconColumn::make('is_sale')->label('SALE')->boolean(),
+                Tables\Columns\ToggleColumn::make('show_on_homepage')->label('Ana səhifədə'),
                 Tables\Columns\ToggleColumn::make('is_visible')->label('Görünür'),
                 Tables\Columns\TextColumn::make('created_at')->label('Yaradılıb')->dateTime('d.m.Y')->sortable(),
             ])
@@ -238,6 +263,7 @@ class ProductResource extends Resource
                 Tables\Filters\TernaryFilter::make('is_approved')->label('Təsdiqlənib'),
                 Tables\Filters\TernaryFilter::make('is_featured')->label('Seçilmiş'),
                 Tables\Filters\TernaryFilter::make('is_sale')->label('SALE'),
+                Tables\Filters\TernaryFilter::make('show_on_homepage')->label('Ana səhifədə'),
             ])
             ->actions([
                 Actions\Action::make('approve')
@@ -245,8 +271,33 @@ class ProductResource extends Resource
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->visible(fn (Product $record) => !$record->is_approved)
-                    ->action(fn (Product $record) => $record->update(['is_approved' => true])),
+                    ->modalHeading('Məhsulu təsdiqlə')
+                    ->modalDescription('Təsdiqdən sonra məhsul dərhal kataloqda və axtarışda görünəcək.')
+                    ->visible(fn (Product $record) => ! $record->is_approved)
+                    ->action(fn (Product $record) => $record->update([
+                        'is_approved' => true,
+                        'rejected_at' => null,
+                        'rejection_reason' => null,
+                    ])),
+                Actions\Action::make('reject')
+                    ->label('Rədd et')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->visible(fn (Product $record) => ! $record->is_approved && ! $record->rejected_at)
+                    ->schema([
+                        Forms\Components\Textarea::make('rejection_reason')
+                            ->label('Rədd səbəbi')
+                            ->helperText('Bu mətn satıcıya kabinetində göstəriləcək.')
+                            ->required()
+                            ->maxLength(500)
+                            ->rows(3),
+                    ])
+                    ->action(fn (Product $record, array $data) => $record->update([
+                        'is_approved' => false,
+                        'is_visible' => false,
+                        'rejected_at' => now(),
+                        'rejection_reason' => $data['rejection_reason'],
+                    ])),
                 Actions\EditAction::make(),
                 Actions\DeleteAction::make(),
             ])
@@ -256,7 +307,11 @@ class ProductResource extends Resource
                     ->label('Seçilmişləri təsdiqlə')
                     ->icon('heroicon-o-check-circle')
                     ->requiresConfirmation()
-                    ->action(fn ($records) => $records->each->update(['is_approved' => true])),
+                    ->action(fn ($records) => $records->each->update([
+                        'is_approved' => true,
+                        'rejected_at' => null,
+                        'rejection_reason' => null,
+                    ])),
             ]);
     }
 
@@ -271,6 +326,7 @@ class ProductResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('is_approved', false)->count() ?: null;
+        // Only genuinely pending items (not already-rejected ones) need admin attention.
+        return static::getModel()::pendingReview()->count() ?: null;
     }
 }

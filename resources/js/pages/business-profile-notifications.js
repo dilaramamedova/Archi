@@ -1,8 +1,9 @@
-// Page module for "business-profile-notifications" — the notification switches and the
-// channel chips flip their data-on state (the design system draws both states), and the
-// save bar confirms inline (no blocking alert) while Cancel discards the local state by
-// reloading. Shared behaviour (navbar, cursor) lives in resources/js/shared/.
+// Page module for "business-profile-notifications" — the switches and channel chips
+// flip their data-on state locally; Save PUTs the assembled notification_settings
+// object to /business/profile/notifications. Cancel reloads to discard local state.
 export default function init() {
+  const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
+
   const bar = document.querySelector('.cab-save-bar');
   const msg = bar ? bar.querySelector('.msg') : null;
   const unsavedText = msg ? msg.textContent : '';
@@ -36,7 +37,35 @@ export default function init() {
   if (bar) {
     const saveBtn = bar.querySelector('[data-save]');
     const cancelBtn = bar.querySelector('[data-cancel]');
-    if (saveBtn) saveBtn.addEventListener('click', () => setSaved(true));
+
+    if (saveBtn) {
+      saveBtn.addEventListener('click', async () => {
+        const settings = {};
+        document.querySelectorAll('.bpn-row .ui-toggle[data-setting]').forEach((toggle) => {
+          settings[toggle.dataset.setting] = toggle.dataset.on === 'true';
+        });
+        settings.channels = Array.from(
+          document.querySelectorAll('.bpn-chips .ui-chip[data-channel][data-on="true"]')
+        ).map((chip) => chip.dataset.channel);
+
+        try {
+          const res = await fetch('/business/profile/notifications', {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'X-CSRF-TOKEN': csrf,
+            },
+            body: JSON.stringify({ notification_settings: settings }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok && data.success) setSaved(true);
+          else window.alert(data.message || 'Error');
+        } catch {
+          window.alert('Network error');
+        }
+      });
+    }
     if (cancelBtn) cancelBtn.addEventListener('click', () => window.location.reload());
   }
 }

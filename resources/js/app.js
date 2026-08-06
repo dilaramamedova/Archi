@@ -29,6 +29,9 @@ import businessProfileProducts from './pages/business-profile-products.js';
 import businessProfileShowrooms from './pages/business-profile-showrooms.js';
 import businessProfileNotifications from './pages/business-profile-notifications.js';
 import businessProfileSecurity from './pages/business-profile-security.js';
+import businessOrders from './pages/business-orders.js';
+import businessProductEdit from './pages/business-product-edit.js';
+import businessInventory from './pages/business-inventory.js';
 
 import accountProfile from './pages/account-profile.js';
 import accountOrders from './pages/account-orders.js';
@@ -46,6 +49,7 @@ import specialistCabinetSecurity from './pages/specialist-cabinet-security.js';
 import businessOnboardingStep2 from './pages/business-onboarding-step2.js';
 import businessOnboardingStep4 from './pages/business-onboarding-step4.js';
 import wishlist from './pages/wishlist.js';
+import legal from './pages/legal.js';
 
 const pages = {
     'home': home,
@@ -71,6 +75,10 @@ const pages = {
     'business-profile-showrooms': businessProfileShowrooms,
     'business-profile-notifications': businessProfileNotifications,
     'business-profile-security': businessProfileSecurity,
+    'business-orders': businessOrders,
+    'business-order-detail': businessOrders,
+    'business-product-edit': businessProductEdit,
+    'business-inventory': businessInventory,
 
     'account-profile': accountProfile,
     'account-orders': accountOrders,
@@ -88,6 +96,7 @@ const pages = {
     'business-onboarding-step2': businessOnboardingStep2,
     'business-onboarding-step4': businessOnboardingStep4,
     'wishlist': wishlist,
+    'legal': legal,
 };
 
 pages[document.body.dataset.page]?.();

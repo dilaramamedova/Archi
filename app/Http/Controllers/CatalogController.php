@@ -72,6 +72,16 @@ class CatalogController extends Controller
             $query->onSale();
         }
 
+        // Home-page "Ətraflı bax" destinations: only SALE-status products…
+        if ($request->boolean('sale')) {
+            $query->sale();
+        }
+
+        // …or only featured ("seçilmiş") products.
+        if ($request->boolean('featured')) {
+            $query->featured();
+        }
+
         // Brand filter — accepts comma-separated brand slugs
         if ($request->filled('brand')) {
             $brandSlugs = array_filter(explode(',', $request->input('brand')));
@@ -127,7 +137,7 @@ class CatalogController extends Controller
         // Featured specialists (same query as product page)
         $featuredSpecialists = SpecialistProfile::where('is_featured', true)
             ->whereHas('user', fn ($q) => $q->where('status', UserStatus::Active))
-            ->with('user')
+            ->with(['user', 'specialty'])
             ->take(4)
             ->get();
 

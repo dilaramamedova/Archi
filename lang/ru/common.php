@@ -33,6 +33,12 @@ return [
     'reviews' => 'отзывов',
     'products_count' => 'товаров',
 
+    'cancel' => 'Отмена',
+    'confirm' => 'Подтвердить',
+    'delete' => 'Удалить',
+    'save' => 'Сохранить',
+    'close' => 'Закрыть',
+
     'site_name' => 'ARCHİ',
     'site_title' => 'ARCHİ — Стройка и ремонт в одном месте',
 ];

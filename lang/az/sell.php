@@ -1,6 +1,7 @@
-<?php
+﻿<?php
 
 return [
+    'sellers_only' => 'Məhsul yerləşdirmək üçün biznes (satıcı) hesabı lazımdır. Zəhmət olmasa biznes qeydiyyatından keçin.',
     'title' => 'Məhsul yerləşdir — ARCHİ',
 
     'hero' => [
@@ -61,3 +62,4 @@ return [
         'reviews_zero' => '(0 rəy)',
     ],
 ];
+

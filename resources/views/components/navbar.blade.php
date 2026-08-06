@@ -75,18 +75,110 @@
               \App\Enums\UserRole::Master => route('specialist.cabinet'),
               default => route('account'),
             };
+            $userInitials = mb_strtoupper(mb_substr(Auth::user()->first_name, 0, 1) . mb_substr(Auth::user()->last_name ?? '', 0, 1));
           @endphp
-          <a class="txt nav-user" href="{{ $profileRoute }}" data-user>{{ Auth::user()->first_name }}</a>
-          <form method="POST" action="{{ route('logout') }}" class="inline">
-            @csrf
-            <button type="submit" class="txt nav-logout">{{ __('nav.logout') }}</button>
-          </form>
+
+          {{-- Account menu --}}
+          <div class="nav-account-wrap relative" id="navAccountWrap">
+            <button type="button" class="nav-account-btn flex items-center gap-2" id="navAccountBtn" aria-haspopup="true" aria-expanded="false">
+              <span class="flex size-8 items-center justify-center rounded-full bg-[#f5f7f9] text-xs font-bold text-ink">{{ $userInitials }}</span>
+              <span class="txt nav-user max-[900px]:hidden">{{ Auth::user()->first_name }}</span>
+              <svg class="size-4 text-black/40 max-[900px]:hidden" viewBox="0 0 16 16" fill="none"><path d="M4 6l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+            <div class="nav-account-panel absolute right-0 top-full z-50 mt-2 hidden w-[280px] rounded border border-black/10 bg-white shadow-lg" id="navAccountPanel">
+              <div class="flex items-center gap-3 border-b border-black/8 p-4">
+                <span class="flex size-10 items-center justify-center rounded-full bg-[#f5f7f9] text-sm font-bold text-ink">{{ $userInitials }}</span>
+                <div class="flex flex-col gap-0.5">
+                  <p class="text-sm font-semibold text-ink">{{ Auth::user()->first_name }} {{ Auth::user()->last_name }}</p>
+                  <p class="text-xs text-black/50">{{ Auth::user()->email }}</p>
+                </div>
+              </div>
+              <div class="py-1.5">
+                <a href="{{ route('account.orders') }}" class="flex items-center justify-between px-4 py-2.5 text-sm font-medium text-ink hover:bg-[#f5f7f9]">{{ __('nav.my_orders') }}</a>
+                <a href="{{ route('wishlist') }}" class="flex items-center justify-between px-4 py-2.5 text-sm font-medium text-ink hover:bg-[#f5f7f9]">{{ __('nav.favorites') }}</a>
+                <a href="{{ $profileRoute }}" class="flex items-center justify-between px-4 py-2.5 text-sm font-medium text-ink hover:bg-[#f5f7f9]">{{ __('nav.account_settings') }}</a>
+              </div>
+              <div class="border-t border-black/8 py-1.5">
+                <a href="{{ route('help') }}" class="flex items-center px-4 py-2.5 text-sm font-medium text-ink hover:bg-[#f5f7f9]">{{ __('nav.help_center') }}</a>
+              </div>
+              <div class="border-t border-black/8 py-1.5">
+                <form method="POST" action="{{ route('logout') }}">
+                  @csrf
+                  <button type="submit" class="flex w-full items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-[#f5f7f9]">{{ __('nav.logout') }}</button>
+                </form>
+              </div>
+            </div>
+          </div>
         @else
           <a class="txt" href="{{ route('login') }}">{{ __('nav.sign_in') }}</a>
         @endauth
         <a class="btn-post" href="{{ route('sell') }}"><img src="/assets/icon-plus.svg" alt=""><span>{{ __('nav.post_product') }}</span></a>
       </div>
+
+      {{-- Mobile hamburger — visible only ≤900px --}}
+      <button class="mob-burger" id="mobBurger" type="button" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
     </div>
+
+    {{-- Mobile drawer — slides from right, holds all nav links --}}
+    <div class="mob-overlay" id="mobOverlay"></div>
+    <nav class="mob-drawer" id="mobDrawer" aria-label="Mobile navigation">
+      <div class="mob-drawer-head">
+        <a href="{{ route('home') }}"><img class="logo" src="/assets/logo-archi-black.png" alt="ARCHI"></a>
+        <button class="mob-close" id="mobClose" type="button" aria-label="Close menu">✕</button>
+      </div>
+
+      <div class="mob-drawer-search">
+        <div class="search mob-search"
+             data-url-api="/api/search"
+             data-url-search="{{ route('search') }}"
+             data-url-specialists="/specialist"
+             data-url-product="/product"
+             data-l-quick="{{ __('nav.sd_quick') }}"
+             data-l-products="{{ __('nav.sd_products') }}"
+             data-l-masters="{{ __('nav.sd_masters') }}"
+             data-l-all="{{ __('nav.sd_all_results') }}"
+             data-l-loading="{{ __('nav.sd_loading', [], app()->getLocale()) }}"
+             data-l-no-results="{{ __('nav.sd_no_results', [], app()->getLocale()) }}">
+          <img src="/assets/icon-search.svg" alt="">
+          <input type="text" aria-label="{{ __('nav.search_aria') }}" placeholder="{{ __('nav.search_placeholder') }}" autocomplete="off">
+        </div>
+      </div>
+
+      <div class="mob-drawer-body">
+        @foreach ($headerMenu as $item)
+          @php
+              $href = $item->resolved_url ?? '#';
+              $isCalc = $item->css_class === 'nav-calc';
+          @endphp
+          <a class="mob-link" href="{{ $href }}">
+            @if ($isCalc)<img src="/assets/icon-calculator.svg" alt="">@endif
+            {{ $item->label }}
+          </a>
+        @endforeach
+      </div>
+
+      <div class="mob-drawer-foot">
+        @auth
+          <a class="mob-link" href="{{ $profileRoute }}">{{ Auth::user()->first_name }}</a>
+          <form method="POST" action="{{ route('logout') }}" class="inline">
+            @csrf
+            <button type="submit" class="mob-link">{{ __('nav.logout') }}</button>
+          </form>
+        @else
+          <a class="mob-link" href="{{ route('login') }}">{{ __('nav.sign_in') }}</a>
+          <a class="mob-link" href="{{ route('register') }}">{{ __('nav.register') }}</a>
+        @endauth
+        <a class="mob-post-btn" href="{{ route('sell') }}"><img src="/assets/icon-plus.svg" alt=""><span>{{ __('nav.post_product') }}</span></a>
+
+        <div class="mob-lang">
+          @foreach ($langLabels as $code => $label)
+            <a href="{{ route('lang', $code) }}" @class(['active' => $locale === $code])>{{ $label }}</a>
+          @endforeach
+        </div>
+      </div>
+    </nav>
   </div>
 
   <div class="nav-row2">

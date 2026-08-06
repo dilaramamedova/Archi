@@ -105,9 +105,7 @@ export default function init() {
   const touched = () => setSaved(false);
 
   if (bar) {
-    const saveBtn = bar.querySelector('[data-save]');
     const cancelBtn = bar.querySelector('[data-cancel]');
-    if (saveBtn) saveBtn.addEventListener('click', () => setSaved(true));
     if (cancelBtn) cancelBtn.addEventListener('click', () => window.location.reload());
   }
 
@@ -132,19 +130,18 @@ export default function init() {
   });
 
   list.addEventListener('input', (e) => {
-    if (e.target.closest('.scs-price')) touched();
+    if (e.target.closest('.scs-price') || e.target.closest('[contenteditable="true"]')) touched();
   });
   list.addEventListener('change', (e) => {
     if (e.target.closest('.scs-unit')) touched();
   });
 
-  // A new service starts as a copy of the first row, so the row markup stays in one
-  // place (Blade); only the text, the price and the switch are reset.
+  // A dedicated template also supports specialists who do not have any service yet.
   const addBtn = card.querySelector('[data-add]');
-  const sample = list.querySelector('.cab-row');
-  if (addBtn && sample) {
+  const template = document.getElementById('specialistServiceRowTemplate');
+  if (addBtn && template) {
     addBtn.addEventListener('click', () => {
-      const row = sample.cloneNode(true);
+      const row = template.content.firstElementChild.cloneNode(true);
       row.querySelector('.scs-info .n').textContent = card.dataset.newName || '';
       row.querySelector('.scs-info .d').textContent = card.dataset.newDesc || '';
       const price = row.querySelector('.scs-price');
@@ -164,4 +161,45 @@ export default function init() {
   }
 
   initReorder(list, touched);
+
+  const saveBtn = bar ? bar.querySelector('[data-save]') : null;
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async () => {
+      saveBtn.disabled = true;
+      const services = Array.from(list.querySelectorAll('.cab-row')).map((row) => ({
+        id: row.dataset.id ? Number(row.dataset.id) : null,
+        name: row.querySelector('.scs-info .n')?.textContent.trim() || '',
+        description: row.querySelector('.scs-info .d')?.textContent.trim() || null,
+        price: row.querySelector('.scs-price')?.value || null,
+        unit: row.querySelector('.scs-unit')?.value || 'sqm',
+        is_active: row.querySelector('.ui-toggle')?.dataset.on === 'true',
+      }));
+
+      try {
+        const res = await fetch('/specialist/cabinet/services', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+          },
+          body: JSON.stringify({ services }),
+        });
+        const data = await res.json();
+        const err = document.getElementById('servicesErr');
+        const ok = document.getElementById('servicesOk');
+        if (res.ok) {
+          if (ok) { ok.textContent = data.message; ok.dataset.on = 'true'; }
+          if (err) err.dataset.on = 'false';
+          setSaved(true);
+          window.setTimeout(() => window.location.reload(), 400);
+        } else if (err) {
+          err.textContent = data.message || Object.values(data.errors || {}).flat().join('. ');
+          err.dataset.on = 'true';
+        }
+      } finally {
+        saveBtn.disabled = false;
+      }
+    });
+  }
 }

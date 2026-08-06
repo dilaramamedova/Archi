@@ -26,6 +26,20 @@ class BlogPostResource extends Resource
     {
         return $form->schema([
             Section::make('Əsas')->schema([
+                Forms\Components\Select::make('blog_category_id')
+                    ->label('Kateqoriya')
+                    ->relationship('blogCategory', 'title')
+                    ->required()
+                    ->searchable()
+                    ->preload(),
+
+                Forms\Components\Select::make('author_id')
+                    ->label('Müəllif')
+                    ->relationship('author', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->default(fn () => auth()->id()),
+
                 Forms\Components\TextInput::make('title')->label('Başlıq')->required()->translatable(),
 
                 Forms\Components\TextInput::make('slug')
@@ -74,6 +88,8 @@ class BlogPostResource extends Resource
             ->columns([
                 Tables\Columns\ImageColumn::make('cover_image')->label('Şəkil')->width(60)->height(40),
                 Tables\Columns\TextColumn::make('title')->label('Başlıq')->searchable()->sortable()->limit(50),
+                Tables\Columns\TextColumn::make('blogCategory.title')->label('Kateqoriya')->placeholder('—'),
+                Tables\Columns\TextColumn::make('author.name')->label('Müəllif')->placeholder('—'),
                 Tables\Columns\IconColumn::make('is_published')->label('Dərc')->boolean(),
                 Tables\Columns\IconColumn::make('show_on_home')->label('Ana s.')->boolean(),
                 Tables\Columns\IconColumn::make('show_in_header')->label('Header')->boolean(),

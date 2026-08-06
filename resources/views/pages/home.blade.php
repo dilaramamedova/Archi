@@ -200,6 +200,7 @@
       <button class="pb-copy" type="button" data-code="ARCHI60" data-on="false">ARCHI60</button>
     </div>
   @endif
+  {{-- "Ətraflı bax" → catalog filtered to SALE-status products only --}}
   <x-section-head :tag="__('home.sale.tag')" :title="__('home.sale.title')" :more="route('catalog', ['sale' => 1])" />
   <div class="grid4" id="campGrid">
     @forelse ($saleProducts as $product)
@@ -259,7 +260,8 @@
       <button class="pb-copy" type="button" data-code="ARCHI15" data-on="false">ARCHI15</button>
     </div>
   @endif
-  <x-section-head :tag="__('home.products.tag')" :title="__('home.products.title')" :more="route('search', ['tab' => 'prod'])" />
+  {{-- "Ətraflı bax" → catalog filtered to featured products only --}}
+  <x-section-head :tag="__('home.products.tag')" :title="__('home.products.title')" :more="route('catalog', ['featured' => 1])" />
   {{-- Products the visitor posted on /sell are stored in localStorage and prepended by home.js --}}
   <div class="grid4" id="prodGrid"
        data-url-product="{{ route('product') }}"
@@ -288,19 +290,20 @@
 
 {{-- ===================== SPECIALISTS ===================== --}}
 <div class="wrap"><div class="inner section">
-  <x-section-head :tag="__('home.specialists.tag')" :title="__('home.specialists.title')" :more="route('search', ['tab' => 'usta'])" />
+  {{-- "Ətraflı bax" → specialists page filtered to featured specialists only --}}
+  <x-section-head :tag="__('home.specialists.tag')" :title="__('home.specialists.title')" :more="route('specialists', ['featured' => 1])" />
   <div class="grid4" id="specGrid">
     @if($specialists->isNotEmpty())
       @foreach ($specialists as $s)
         <x-scard :href="route('specialist.show', $s)"
                  :bg="['#f5fbff', '#fdf5ff', '#f5fffb', '#fff5f5'][$loop->index % 4]"
                  :avatar="$s->user?->avatar ?? '/assets/icon-user.svg'"
-                 :role="translate_craft($s->craft)"
+                 :role="$s->specialty?->name ?? translate_craft($s->craft)"
                  :rate="null"
                  :reviews="null"
                  :name="$s->user?->name ?? __('home.specialists.name_1')"
                  :exp="$s->experience_years ? $s->experience_years . ' ' . __('home.specialists.years') : __('home.specialists.exp_12')"
-                 :proj="$s->portfolioItems()->count() . ' ' . __('home.specialists.projects')" />
+                 :proj="$s->approvedPortfolioItems()->count() . ' ' . __('home.specialists.projects')" />
       @endforeach
     @else
       {{-- TODO: Replace with dynamic data from controller --}}
@@ -311,6 +314,36 @@
     @endif
   </div>
 </div></div>
+
+{{-- ===================== LEAD FORM ===================== --}}
+<section class="bg-[#f5f7f9] py-[72px] max-[560px]:py-14">
+  <div class="wrap">
+    <div class="inner flex items-center gap-14 max-[900px]:flex-col">
+      <div class="flex flex-1 flex-col gap-5">
+        <x-ui.eyebrow variant="kicker" :label="__('home.lead.tag')" />
+        <h2 class="text-[34px] font-bold leading-[1.18] text-ink max-[560px]:text-[26px]">{{ __('home.lead.title') }}</h2>
+        <p class="text-[15px] leading-[1.65] text-black/50">{{ __('home.lead.subtitle') }}</p>
+      </div>
+      <div class="w-full max-w-[480px] shrink-0 rounded border border-black/10 bg-white p-8 max-[900px]:max-w-none">
+        <form class="flex flex-col gap-4" id="leadForm" action="{{ route('consultation-requests.store') }}" method="post">
+          @csrf
+          <x-ui.field :label="__('home.lead.name_label')">
+            <x-ui.input name="full_name" type="text" :placeholder="__('home.lead.name_placeholder')" required maxlength="120" />
+          </x-ui.field>
+          <x-ui.field :label="__('home.lead.phone_label')">
+            <x-ui.input name="phone" type="tel" :placeholder="__('home.lead.phone_placeholder')" required maxlength="25" />
+          </x-ui.field>
+          <x-ui.field :label="__('home.lead.message_label')">
+            <x-ui.textarea name="message" :placeholder="__('home.lead.message_placeholder')" rows="3" maxlength="2000" />
+          </x-ui.field>
+          <x-ui.button variant="primary" type="submit" class="h-[50px] w-full rounded text-[15px] font-semibold">{{ __('home.lead.submit') }}</x-ui.button>
+          <p class="hidden rounded border px-4 py-3 text-sm" id="leadFeedback" role="status"></p>
+          <p class="text-center text-xs text-black/40">{{ __('home.lead.privacy') }}</p>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
 
 {{-- ===================== BLOG ===================== --}}
 <div class="wrap"><div class="inner section">

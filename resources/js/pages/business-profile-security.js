@@ -1,3 +1,5 @@
+import { authFetch, setLoading } from '../shared/auth.js';
+
 // Page module for "business-profile-security" — the eye icon reveals the password value
 // (the .dots text swaps between data-mask and data-value, both styled the same so the
 // field does not reflow), the 2FA switch flips its data-on state, and the save bar
@@ -41,4 +43,39 @@ export default function init() {
     if (saveBtn) saveBtn.addEventListener('click', () => setSaved(true));
     if (cancelBtn) cancelBtn.addEventListener('click', () => window.location.reload());
   }
+
+  const deactivateBtn = document.getElementById('deactivateBtn');
+  const deactivateConfirm = document.getElementById('deactivateConfirm');
+  const deactivateConfirmBtn = document.getElementById('deactivateConfirmBtn');
+  const deactivateCancelBtn = document.getElementById('deactivateCancelBtn');
+  const deactivateErr = document.getElementById('deactivateErr');
+
+  deactivateBtn?.addEventListener('click', () => {
+    deactivateConfirm?.classList.remove('hidden');
+    deactivateBtn.classList.add('hidden');
+  });
+
+  deactivateCancelBtn?.addEventListener('click', () => {
+    deactivateConfirm?.classList.add('hidden');
+    deactivateBtn?.classList.remove('hidden');
+    if (deactivateErr) deactivateErr.dataset.on = 'false';
+  });
+
+  deactivateConfirmBtn?.addEventListener('click', async () => {
+    if (deactivateErr) deactivateErr.dataset.on = 'false';
+    setLoading(deactivateConfirmBtn, true);
+    const password = document.getElementById('deactivate-pwd')?.value || '';
+    const response = await authFetch('/cabinet/deactivate', { password });
+    setLoading(deactivateConfirmBtn, false);
+
+    if (response.ok) {
+      window.location.href = response.data.redirect || '/';
+      return;
+    }
+
+    if (deactivateErr) {
+      deactivateErr.textContent = response.errors?.password?.[0] || response.message || 'Error';
+      deactivateErr.dataset.on = 'true';
+    }
+  });
 }

@@ -1,0 +1,5 @@
+@layer components {
+  .help-faq-item[data-expanded="true"] {
+    background-color: #fffee0;
+  }
+}

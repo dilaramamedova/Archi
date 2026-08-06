@@ -2,7 +2,7 @@
 // on the tile grid — remove a tile, drag tiles to reorder (the first tile is always the
 // cover), add photos through either "add" affordance — plus the shared save-bar contract
 // (.cab-save-bar / .msg / [data-save] / [data-cancel]). No upload happens: new tiles are
-// object-URL previews only. Shared behaviour (navbar, cursor) lives in resources/js/shared/.
+// object-URL previews before upload. Shared behaviour lives in resources/js/shared/.
 export default function init() {
   const grid = document.querySelector('.scp-grid');
   if (!grid) return;
@@ -25,6 +25,7 @@ export default function init() {
   // The heading counts the whole portfolio (24), not the tiles on screen, so it is
   // tracked separately and only follows add/remove.
   let count = Number(grid.dataset.count) || 0;
+  const newFiles = new WeakMap();
 
   const tiles = () => Array.from(grid.querySelectorAll('.scp-tile'));
 
@@ -103,12 +104,12 @@ export default function init() {
   if (picker) {
     picker.addEventListener('change', () => {
       const slot = grid.querySelector('.scp-add');
-      const template = grid.querySelector('.scp-tile');
+      const template = document.getElementById('portfolioTileTemplate');
       if (!slot || !template) return;
 
       Array.from(picker.files || []).forEach((file) => {
         if (count >= max) return;
-        const tile = template.cloneNode(true);
+        const tile = template.content.firstElementChild.cloneNode(true);
         tile.dataset.drag = 'false';
         tile.dataset.over = 'false';
         const img = tile.querySelector('img');
@@ -118,6 +119,7 @@ export default function init() {
         }
         const cap = tile.querySelector('.scp-cap');
         if (cap) cap.textContent = file.name;
+        newFiles.set(tile, file);
         grid.insertBefore(tile, slot);
         count += 1;
       });
@@ -130,7 +132,53 @@ export default function init() {
 
   const saveBtn = bar ? bar.querySelector('[data-save]') : null;
   const cancelBtn = bar ? bar.querySelector('[data-cancel]') : null;
-  if (saveBtn) saveBtn.addEventListener('click', () => setSaved(true));
+  if (saveBtn) saveBtn.addEventListener('click', async () => {
+    saveBtn.disabled = true;
+    const formData = new FormData();
+    const items = [];
+    let fileIndex = 0;
+
+    tiles().forEach((tile) => {
+      const item = {
+        id: tile.dataset.id ? Number(tile.dataset.id) : null,
+        title: tile.querySelector('.scp-cap')?.textContent.trim() || null,
+      };
+      const file = newFiles.get(tile);
+      if (file) {
+        item.file_index = fileIndex;
+        formData.append(`images[${fileIndex}]`, file);
+        fileIndex += 1;
+      }
+      items.push(item);
+    });
+
+    formData.append('items', JSON.stringify(items));
+
+    try {
+      const res = await fetch('/specialist/cabinet/portfolio', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+        },
+        body: formData,
+      });
+      const data = await res.json();
+      const err = document.getElementById('portfolioErr');
+      const ok = document.getElementById('portfolioOk');
+      if (res.ok) {
+        if (ok) { ok.textContent = data.message; ok.dataset.on = 'true'; }
+        if (err) err.dataset.on = 'false';
+        setSaved(true);
+        window.setTimeout(() => window.location.reload(), 400);
+      } else if (err) {
+        err.textContent = data.message || Object.values(data.errors || {}).flat().join('. ');
+        err.dataset.on = 'true';
+      }
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
   if (cancelBtn) cancelBtn.addEventListener('click', () => window.location.reload());
 
   paint();

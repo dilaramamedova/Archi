@@ -1,22 +1,37 @@
 {{-- Business cabinet — showrooms (Figma 1105:23687) --}}
 <x-layout page="business-profile-showrooms" :title="__('business-profile-showrooms.title')" bodyClass="bg-gray-soft2">
 
-<x-cabinet.shell ns="business-profile-showrooms" active="showrooms" class="bpsh-page text-ink">
+@php
+  $showroomCount = $showrooms->count();
+  $businessNav = [
+    ['key' => 'orders', 'route' => 'business.orders'],
+    ['key' => 'company', 'route' => 'business.profile.company'],
+    ['key' => 'contact', 'route' => 'business.profile.contact'],
+    ['key' => 'showrooms', 'route' => 'business.profile.showrooms', 'count' => 'showrooms_count', 'count_value' => $showroomCount],
+    ['key' => 'products', 'route' => 'business.profile.products', 'count' => 'products_count', 'count_value' => auth()->user()->products()->count()],
+    ['key' => 'inventory', 'route' => 'business.inventory'],
+    ['key' => 'security', 'route' => 'business.profile.security'],
+  ];
+@endphp
+<x-cabinet.shell ns="business-profile-showrooms" active="showrooms" class="bpsh-page text-ink" :nav-items="$businessNav">
 
   <x-cabinet.card layout="row" gap="gap-4"
-      :title="__('business-profile-showrooms.list.heading')"
+      :title="__('business-profile-showrooms.nav.showrooms') . ' (' . number_format($showroomCount) . ')'"
       :desc="__('business-profile-showrooms.list.desc')">
     <x-slot:action>
       <x-ui.button variant="primary" class="cab-btn-add">{{ __('business-profile-showrooms.list.add') }}</x-ui.button>
     </x-slot:action>
 
-    {{-- TODO: Replace with dynamic data from controller --}}
-    @foreach ([
-        ['key' => 'r1', 'state' => 'active', 'tone' => 'ok'],
-        ['key' => 'r2', 'state' => 'active', 'tone' => 'ok'],
-        ['key' => 'r3', 'state' => 'hidden', 'tone' => 'muted'],
-    ] as $room)
-      <x-cabinet.row class="gap-4 p-4">
+    @forelse ($showrooms as $showroom)
+      @php($meta = implode(' · ', array_filter([$showroom->address, $showroom->city, $showroom->phone, $showroom->work_hours])))
+      <x-cabinet.row class="gap-4 p-4"
+          :data-showroom-id="$showroom->id"
+          :data-name="$showroom->name"
+          :data-address="$showroom->address"
+          :data-city="$showroom->city"
+          :data-phone="$showroom->phone"
+          :data-hours="$showroom->work_hours"
+          :data-status="$showroom->status">
         <div class="bpsh-sh-icon">
           <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
             <path d="M10 2.5c-2.9 0-5.2 2.3-5.2 5.2 0 3.7 5.2 9.8 5.2 9.8s5.2-6.1 5.2-9.8c0-2.9-2.3-5.2-5.2-5.2Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
@@ -24,17 +39,61 @@
           </svg>
         </div>
         <div class="bpsh-sh-info">
-          <b>{{ __("business-profile-showrooms.rooms.{$room['key']}_name") }}</b>
-          <p>{{ __("business-profile-showrooms.rooms.{$room['key']}_meta") }}</p>
+          <b>{{ $showroom->name }}</b>
+          <p>{{ $meta }}</p>
         </div>
-        <x-ui.badge :tone="$room['tone']" size="sm" class="px-[9px]">{{ __("business-profile-showrooms.state.{$room['state']}") }}</x-ui.badge>
+        <x-ui.badge :tone="$showroom->status === 'active' ? 'ok' : 'muted'" size="sm" class="px-[9px]">{{ __("business-profile-showrooms.state.{$showroom->status}") }}</x-ui.badge>
         <div class="bpsh-sh-actions">
-          <x-ui.button variant="outline" class="cab-btn-edit items-start">{{ __('business-profile-showrooms.list.edit') }}</x-ui.button>
-          <x-ui.button variant="ghost" class="cab-btn-del items-start">{{ __('business-profile-showrooms.list.delete') }}</x-ui.button>
+          <x-ui.button variant="outline" data-edit class="cab-btn-edit items-start">{{ __('business-profile-showrooms.list.edit') }}</x-ui.button>
+          <x-ui.button variant="ghost" data-delete class="cab-btn-del items-start">{{ __('business-profile-showrooms.list.delete') }}</x-ui.button>
         </div>
       </x-cabinet.row>
-    @endforeach
+    @empty
+      <div class="w-full py-8 text-center text-sm text-black/50">{{ __('business-profile-showrooms.empty') }}</div>
+    @endforelse
   </x-cabinet.card>
+
+  {{-- Showroom create/edit modal --}}
+  <div id="showroomModal" class="fixed inset-0 z-[9999] hidden items-center justify-center overflow-y-auto bg-black/40 p-4" hidden>
+    <div class="my-auto max-h-[calc(100vh-2rem)] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
+      <h3 class="mb-4 text-lg font-semibold" data-modal-title
+          data-add-title="{{ __('business-profile-showrooms.modal.add_title') }}"
+          data-edit-title="{{ __('business-profile-showrooms.modal.edit_title') }}">{{ __('business-profile-showrooms.modal.add_title') }}</h3>
+      <div class="flex flex-col gap-3">
+        <label class="flex flex-col gap-1 text-sm font-medium">
+          {{ __('business-profile-showrooms.modal.name') }}
+          <x-ui.input variant="b2b" name="name" id="showroomName" />
+        </label>
+        <label class="flex flex-col gap-1 text-sm font-medium">
+          {{ __('business-profile-showrooms.modal.address') }}
+          <x-ui.input variant="b2b" name="address" id="showroomAddress" />
+        </label>
+        <label class="flex flex-col gap-1 text-sm font-medium">
+          {{ __('business-profile-showrooms.modal.city') }}
+          <x-ui.input variant="b2b" name="city" id="showroomCity" />
+        </label>
+        <label class="flex flex-col gap-1 text-sm font-medium">
+          {{ __('business-profile-showrooms.modal.phone') }}
+          <x-ui.input variant="b2b" name="phone" id="showroomPhone" />
+        </label>
+        <label class="flex flex-col gap-1 text-sm font-medium">
+          {{ __('business-profile-showrooms.modal.work_hours') }}
+          <x-ui.input variant="b2b" name="work_hours" id="showroomHours" />
+        </label>
+        <label class="flex flex-col gap-1 text-sm font-medium">
+          {{ __('business-profile-showrooms.modal.status') }}
+          <select name="status" id="showroomStatus" class="ui-control-b2b h-11 px-3.5">
+            <option value="active">{{ __('business-profile-showrooms.state.active') }}</option>
+            <option value="hidden">{{ __('business-profile-showrooms.state.hidden') }}</option>
+          </select>
+        </label>
+      </div>
+      <div class="mt-5 flex justify-end gap-2">
+        <x-ui.button variant="ghost" data-modal-cancel class="cab-btn-del items-start">{{ __('business-profile-showrooms.save.cancel') }}</x-ui.button>
+        <x-ui.button variant="primary" data-modal-save class="cab-btn-add">{{ __('business-profile-showrooms.save.save') }}</x-ui.button>
+      </div>
+    </div>
+  </div>
 
   <x-cabinet.save-bar ns="business-profile-showrooms" />
 

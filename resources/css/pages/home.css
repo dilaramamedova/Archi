@@ -127,6 +127,43 @@
   .cat-row .cat-thumb.reveal.d2 { transition-delay: 0s, .16s, .16s, .16s; }
   .cat-row .cat-thumb.reveal.d3 { transition-delay: 0s, .24s, .24s, .24s; }
 
+  /* ============ HOME RESPONSIVE ============ */
+  @media (max-width: 1200px) {
+    .hero-grid     { @apply h-auto flex-col; }
+    .hero-main     { @apply w-full h-[400px]; }
+    .hero-side     { @apply w-full flex-row h-auto; }
+    .hero-promo    { @apply h-[200px] flex-1; }
+    .hero-role     { @apply h-[240px] flex-1; }
+    .hero-main .copy { @apply top-auto bottom-8 left-6 w-[calc(100%-48px)]; }
+  }
+  @media (max-width: 900px) {
+    .service-strip .inner { @apply flex-wrap gap-4 px-4 py-4; }
+    .svc { @apply w-[calc(50%-8px)]; }
+    .hero-side     { @apply flex-col; }
+    .hero-promo    { @apply h-[180px] w-full; }
+    .hero-role     { @apply h-[240px] w-full; }
+    .hero-main     { @apply h-[340px]; }
+    .hero-main h1  { @apply text-3xl; }
+    .hero-main .sub { @apply text-base; }
+    .cat-row       { @apply flex-wrap; }
+    .cat-thumb     { @apply h-[160px] min-w-[calc(50%-4px)]; }
+    .sale-marquee  { @apply mx-4; }
+  }
+  @media (max-width: 640px) {
+    .service-strip .inner { @apply flex-col gap-3 px-4; }
+    .svc           { @apply w-full; }
+    .hero-main     { @apply h-[280px]; }
+    .hero-main .copy { @apply bottom-5 left-4 w-[calc(100%-32px)] gap-4; }
+    .hero-main h1  { @apply text-2xl; }
+    .hero-main .sub { @apply text-sm mt-1; }
+    .hero-tag p    { @apply text-sm; }
+    .hero-info     { @apply text-base flex-wrap; }
+    .cat-thumb     { @apply min-w-full h-[140px]; }
+    .promo-banner  { @apply px-4 py-4; }
+    .promo-banner h3 { @apply text-lg; }
+    .sale-track span { @apply text-lg tracking-[2px]; }
+  }
+
   /* Touch devices have no hover: without this the first tile stays expanded forever and
      the other six never reveal their label. Show every tile at equal width instead. */
   @media (hover: none) {

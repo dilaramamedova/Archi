@@ -125,6 +125,21 @@ return [
         'projects' => 'projects',
     ],
 
+    'lead' => [
+        'tag' => 'Free consultation',
+        'title' => 'Get free advice for your renovation project',
+        'subtitle' => 'Our specialists will help you find the best solution. Fill out the form and we will contact you within 24 hours.',
+        'name_label' => 'Full name',
+        'name_placeholder' => 'Enter your name',
+        'phone_label' => 'Phone',
+        'phone_placeholder' => '+994 50 000 00 00',
+        'message_label' => 'Message (optional)',
+        'message_placeholder' => 'Brief info about your project...',
+        'submit' => 'Get free consultation',
+        'success' => 'Your request has been received. We will contact you shortly.',
+        'privacy' => 'By submitting, you consent to the processing of your personal data.',
+    ],
+
     'blog' => [
         'tag' => 'Blog',
         'title' => 'Useful articles',

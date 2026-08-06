@@ -41,7 +41,7 @@ class ProductController extends Controller
 
         $specialists = SpecialistProfile::where('is_featured', true)
             ->whereHas('user', fn ($q) => $q->where('status', UserStatus::Active))
-            ->with('user')
+            ->with(['user', 'specialty'])
             ->take(4)
             ->get();
 

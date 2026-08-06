@@ -254,6 +254,161 @@ function initMenus() {
   });
 }
 
+function initMobileDrawer() {
+  const burger = document.getElementById('mobBurger');
+  const drawer = document.getElementById('mobDrawer');
+  const overlay = document.getElementById('mobOverlay');
+  const close = document.getElementById('mobClose');
+  if (!burger || !drawer || !overlay) return;
+
+  function open() {
+    drawer.classList.add('open');
+    overlay.classList.add('open');
+    burger.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function shut() {
+    drawer.classList.remove('open');
+    overlay.classList.remove('open');
+    burger.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = '';
+  }
+
+  burger.addEventListener('click', open);
+  if (close) close.addEventListener('click', shut);
+  overlay.addEventListener('click', shut);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && drawer.classList.contains('open')) shut();
+  });
+}
+
+function initAccountDropdowns() {
+  const accountBtn = document.getElementById('navAccountBtn');
+  const accountPanel = document.getElementById('navAccountPanel');
+  const notifyBtn = document.getElementById('navNotifyBtn');
+  const notifyPanel = document.getElementById('navNotifyPanel');
+
+  function toggle(btn, panel) {
+    if (!btn || !panel) return;
+    const isOpen = !panel.classList.contains('hidden');
+    // close both first
+    [accountPanel, notifyPanel].forEach(p => p && p.classList.add('hidden'));
+    [accountBtn, notifyBtn].forEach(b => b && b.setAttribute('aria-expanded', 'false'));
+    if (!isOpen) {
+      panel.classList.remove('hidden');
+      btn.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  if (accountBtn && accountPanel) {
+    accountBtn.addEventListener('click', (e) => { e.stopPropagation(); toggle(accountBtn, accountPanel); });
+  }
+  if (notifyBtn && notifyPanel) {
+    notifyBtn.addEventListener('click', (e) => { e.stopPropagation(); toggle(notifyBtn, notifyPanel); });
+  }
+
+  document.addEventListener('click', (e) => {
+    if (accountPanel && !accountPanel.classList.contains('hidden') && !e.target.closest('#navAccountWrap')) {
+      accountPanel.classList.add('hidden');
+      accountBtn?.setAttribute('aria-expanded', 'false');
+    }
+    if (notifyPanel && !notifyPanel.classList.contains('hidden') && !e.target.closest('#navNotifyWrap')) {
+      notifyPanel.classList.add('hidden');
+      notifyBtn?.setAttribute('aria-expanded', 'false');
+    }
+  });
+}
+
+function initConfirmDialog() {
+  window.ARCHI = window.ARCHI || {};
+  window.ARCHI.confirm = function(opts) {
+    return new Promise((resolve) => {
+      const id = opts.id || 'confirmDialog';
+      let el = document.getElementById(id);
+      if (!el) return resolve(false);
+      if (opts.title) el.querySelector('.confirm-title').textContent = opts.title;
+      if (opts.body) el.querySelector('.confirm-body').textContent = opts.body;
+      el.style.display = 'flex';
+      const ok = el.querySelector('.confirm-ok');
+      const cancel = el.querySelector('.confirm-cancel');
+      function cleanup(result) {
+        el.style.display = 'none';
+        ok.removeEventListener('click', onOk);
+        cancel.removeEventListener('click', onCancel);
+        resolve(result);
+      }
+      function onOk() { cleanup(true); }
+      function onCancel() { cleanup(false); }
+      ok.addEventListener('click', onOk);
+      cancel.addEventListener('click', onCancel);
+    });
+  };
+}
+
+function initToast() {
+  const el = document.getElementById('globalToast');
+  if (!el) return;
+  let hideTimer = null;
+
+  window.ARCHI = window.ARCHI || {};
+  window.ARCHI.toast = {
+    show(opts) {
+      const { type = 'info', title = '', body = '', duration = 4000 } = opts;
+      const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+      el.querySelector('.toast-icon').textContent = icons[type] || icons.info;
+      el.querySelector('.toast-title').textContent = title;
+      el.querySelector('.toast-body').textContent = body;
+      el.style.transform = 'translateX(0)';
+      if (hideTimer) clearTimeout(hideTimer);
+      if (duration) hideTimer = setTimeout(() => this.hide(), duration);
+    },
+    hide() {
+      el.style.transform = 'translateX(120%)';
+      if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+    }
+  };
+}
+
+function initFaqAccordion() {
+  document.querySelectorAll('.help-faq-item').forEach(item => {
+    const content = item.querySelector('div[style]') || item.querySelector('.overflow-hidden');
+    if (!content) return;
+    const observer = new MutationObserver(() => {
+      content.style.maxHeight = item.dataset.expanded === 'true' ? content.scrollHeight + 'px' : '0';
+    });
+    observer.observe(item, { attributes: true, attributeFilter: ['data-expanded'] });
+    content.style.maxHeight = item.dataset.expanded === 'true' ? content.scrollHeight + 'px' : '0';
+  });
+}
+
+function initOtpInputs() {
+  const wrap = document.getElementById('otpInputs');
+  if (!wrap) return;
+  const inputs = wrap.querySelectorAll('input[data-otp]');
+  inputs.forEach((inp, i) => {
+    inp.addEventListener('input', () => {
+      inp.value = inp.value.replace(/\D/g, '').slice(0, 1);
+      if (inp.value && i < inputs.length - 1) inputs[i + 1].focus();
+    });
+    inp.addEventListener('keydown', (e) => {
+      if (e.key === 'Backspace' && !inp.value && i > 0) inputs[i - 1].focus();
+    });
+    inp.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const text = (e.clipboardData.getData('text') || '').replace(/\D/g, '').slice(0, 6);
+      text.split('').forEach((ch, j) => { if (inputs[j]) inputs[j].value = ch; });
+      if (inputs[text.length - 1]) inputs[text.length - 1].focus();
+    });
+  });
+}
+
 initCartBadge();
 initSearch();
 initMenus();
+initMobileDrawer();
+initAccountDropdowns();
+initConfirmDialog();
+initToast();
+initFaqAccordion();
+initOtpInputs();
