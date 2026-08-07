@@ -11,6 +11,7 @@ use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class TranslationResource extends Resource
 {
@@ -80,17 +81,20 @@ class TranslationResource extends Resource
                 Tables\Columns\TextColumn::make('az')
                     ->label('🇦🇿 AZ')
                     ->state(fn (Translation $r) => $r->getTranslation('value', 'az', false))
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->where('value->az', 'like', "%{$search}%"))
                     ->limit(50)
                     ->wrap(),
                 Tables\Columns\TextColumn::make('ru')
                     ->label('🇷🇺 RU')
                     ->state(fn (Translation $r) => $r->getTranslation('value', 'ru', false))
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->where('value->ru', 'like', "%{$search}%"))
                     ->limit(50)
                     ->wrap()
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('en')
                     ->label('🇬🇧 EN')
                     ->state(fn (Translation $r) => $r->getTranslation('value', 'en', false))
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->where('value->en', 'like', "%{$search}%"))
                     ->limit(50)
                     ->wrap()
                     ->toggleable(),

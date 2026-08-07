@@ -11,6 +11,7 @@ use App\Http\Controllers\Cabinet\SpecialistProfileController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ConsultationRequestController;
+use App\Http\Controllers\HelpController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\NewsletterController;
@@ -82,7 +83,7 @@ Route::get('/register', function () {
 Route::get('/forgot-password', fn () => archiView('pages.forgot-password'))->middleware('guest')->name('password.request');
 Route::get('/reset-password', fn () => archiView('pages.reset-password'))->middleware('guest')->name('password.reset');
 Route::get('/otp', fn () => archiView('pages.otp'))->middleware('guest')->name('otp.verify');
-Route::get('/help', fn () => archiView('pages.help'))->name('help');
+Route::get('/help', [HelpController::class, 'index'])->name('help');
 Route::get('/cart', [CartController::class, 'index'])->name('cart');
 
 // Specialist owner mode + onboarding + cabinet (must be before the {specialist} wildcard).

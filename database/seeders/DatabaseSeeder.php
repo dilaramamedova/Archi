@@ -30,6 +30,7 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             TranslationsSeeder::class,
+            FaqSeeder::class,
             SettingSeeder::class,
             MenuItemSeeder::class,
             SocialLinkSeeder::class,

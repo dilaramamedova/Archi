@@ -50,6 +50,7 @@ import businessOnboardingStep2 from './pages/business-onboarding-step2.js';
 import businessOnboardingStep4 from './pages/business-onboarding-step4.js';
 import wishlist from './pages/wishlist.js';
 import legal from './pages/legal.js';
+import help from './pages/help.js';
 
 const pages = {
     'home': home,
@@ -97,6 +98,7 @@ const pages = {
     'business-onboarding-step4': businessOnboardingStep4,
     'wishlist': wishlist,
     'legal': legal,
+    'help': help,
 };
 
 pages[document.body.dataset.page]?.();
