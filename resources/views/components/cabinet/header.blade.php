@@ -27,7 +27,7 @@
         foreach ($keys as $key) {
             $full = $ns . '.' . $key;
             if (\Illuminate\Support\Facades\Lang::has($full)) {
-                return __($full);
+                return t($full);
             }
         }
         return $ns . '.' . $keys[0];
@@ -43,7 +43,7 @@
             ['label' => $pick('crumbs.panel')],
             ['label' => $pick('crumbs.current')],
         ]" />
-    <p class="cab-title">{{ $heading ?? __($ns . '.heading') }}</p>
+    <p class="cab-title">{{ $heading ?? t($ns . '.heading') }}</p>
   </div>
   <div class="cab-head-right">
     @if ($showStatus)

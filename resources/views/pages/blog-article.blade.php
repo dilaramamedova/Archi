@@ -11,8 +11,8 @@
     {{-- ===================== ARTICLE HEAD ===================== --}}
     <header class="flex w-[760px] max-w-full flex-col gap-4">
       <x-ui.breadcrumbs :items="[
-          ['label' => __('common.home'), 'href' => route('home')],
-          ['label' => __('common.blog'), 'href' => route('blog')],
+          ['label' => t('common.home'), 'href' => route('home')],
+          ['label' => t('common.blog'), 'href' => route('blog')],
           ['label' => $post->title],
       ]" />
 
@@ -32,12 +32,12 @@
         {{-- share bar — blog-article.js reads these data-* values (no hardcoded text in JS) --}}
         <div class="flex items-center gap-2" data-share-bar
              data-share-title="{{ $post->title }}"
-             data-copied-label="{{ __('blog-article.share.copied') }}">
-          <p class="text-[13px] leading-[normal] text-black/45">{{ __('blog-article.share.label') }}</p>
-          <button class="ba-share" type="button" data-share="facebook" aria-label="{{ __('blog-article.share.facebook_aria') }}">{{ __('blog-article.share.facebook') }}</button>
-          <button class="ba-share" type="button" data-share="native" aria-label="{{ __('blog-article.share.instagram_aria') }}">{{ __('blog-article.share.instagram') }}</button>
-          <button class="ba-share" type="button" data-share="whatsapp" aria-label="{{ __('blog-article.share.whatsapp_aria') }}">{{ __('blog-article.share.whatsapp') }}</button>
-          <button class="ba-share" type="button" data-share="copy" aria-label="{{ __('blog-article.share.copy_aria') }}">{{ __('blog-article.share.copy') }}</button>
+             data-copied-label="{{ t('blog-article.share.copied') }}">
+          <p class="text-[13px] leading-[normal] text-black/45">{{ t('blog-article.share.label') }}</p>
+          <button class="ba-share" type="button" data-share="facebook" aria-label="{{ t('blog-article.share.facebook_aria') }}">{{ t('blog-article.share.facebook') }}</button>
+          <button class="ba-share" type="button" data-share="native" aria-label="{{ t('blog-article.share.instagram_aria') }}">{{ t('blog-article.share.instagram') }}</button>
+          <button class="ba-share" type="button" data-share="whatsapp" aria-label="{{ t('blog-article.share.whatsapp_aria') }}">{{ t('blog-article.share.whatsapp') }}</button>
+          <button class="ba-share" type="button" data-share="copy" aria-label="{{ t('blog-article.share.copy_aria') }}">{{ t('blog-article.share.copy') }}</button>
           <span class="sr-only" data-share-status role="status" aria-live="polite"></span>
         </div>
       </div>
@@ -54,11 +54,11 @@
 
       <div class="flex items-center justify-between gap-5 rounded-ds bg-ink p-[26px] max-[640px]:flex-col max-[640px]:items-start">
         <div class="flex flex-1 flex-col gap-1.5">
-          <p class="text-xl leading-[normal] font-bold text-white">{{ __('blog-article.cta.title') }}</p>
-          <p class="text-sm leading-[1.5] text-white/65">{{ __('blog-article.cta.desc') }}</p>
+          <p class="text-xl leading-[normal] font-bold text-white">{{ t('blog-article.cta.title') }}</p>
+          <p class="text-sm leading-[1.5] text-white/65">{{ t('blog-article.cta.desc') }}</p>
         </div>
         <x-ui.button variant="primary" :href="route('calculator')"
-                     class="h-12 shrink-0 px-6 text-sm font-bold">{{ __('blog-article.cta.button') }}</x-ui.button>
+                     class="h-12 shrink-0 px-6 text-sm font-bold">{{ t('blog-article.cta.button') }}</x-ui.button>
       </div>
     </article>
 
@@ -80,7 +80,7 @@
           <p class="text-[13px] leading-[1.55] text-black/60">{{ $post->author->bio ?? '' }}</p>
         </div>
         <x-ui.button variant="outline" :href="route('blog')"
-                     class="h-[42px] shrink-0 px-[18px] text-[13px] font-semibold">{{ __('blog-article.author.all_posts') }}</x-ui.button>
+                     class="h-[42px] shrink-0 px-[18px] text-[13px] font-semibold">{{ t('blog-article.author.all_posts') }}</x-ui.button>
       </div>
       @endif
     </section>
@@ -88,10 +88,10 @@
     {{-- ===================== RELATED ARTICLES ===================== --}}
     <section class="ba-related w-full pt-3">
       <x-section-head
-          :tag="__('blog-article.related.tag')"
-          :title="__('blog-article.related.title')"
+          :tag="t('blog-article.related.tag')"
+          :title="t('blog-article.related.title')"
           :more="route('blog')"
-          :more-label="__('blog-article.related.more')" />
+          :more-label="t('blog-article.related.more')" />
 
       <div class="blog-grid max-[1200px]:flex-wrap max-[640px]:flex-col">
         @foreach ($related as $relatedPost)

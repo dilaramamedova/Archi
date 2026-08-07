@@ -102,7 +102,7 @@ final class SpecialistCabinetController extends Controller
 
                 $fileIndex = $itemData['file_index'] ?? null;
                 $file = $fileIndex !== null ? $request->file("images.{$fileIndex}") : null;
-                abort_unless($file, 422, 'Yeni portfolio şəkli tapılmadı.');
+                abort_unless($file, 422, t('specialist-cabinet-portfolio.msg.image_missing'));
 
                 $profile->portfolioItems()->create([
                     ...$attributes,
@@ -112,7 +112,7 @@ final class SpecialistCabinetController extends Controller
             }
         });
 
-        return response()->json(['success' => true, 'message' => 'Portfolio yadda saxlanıldı.']);
+        return response()->json(['success' => true, 'message' => t('specialist-cabinet-portfolio.msg.saved')]);
     }
 
     public function updateServices(Request $request): JsonResponse
@@ -145,7 +145,7 @@ final class SpecialistCabinetController extends Controller
             }
         });
 
-        return response()->json(['success' => true, 'message' => 'Xidmətlər yadda saxlanıldı.']);
+        return response()->json(['success' => true, 'message' => t('specialist-cabinet-services.msg.saved')]);
     }
 
     public function updateSchedule(Request $request): JsonResponse
@@ -162,7 +162,7 @@ final class SpecialistCabinetController extends Controller
 
         foreach ($validated['days'] as $day) {
             if (! $day['is_day_off'] && ($day['start_time'] === null || $day['end_time'] === null || $day['end_time'] <= $day['start_time'])) {
-                return response()->json(['message' => 'İş günlərində bitmə vaxtı başlama vaxtından sonra olmalıdır.'], 422);
+                return response()->json(['message' => t('specialist-cabinet-schedule.msg.end_after_start')], 422);
             }
         }
 
@@ -183,7 +183,7 @@ final class SpecialistCabinetController extends Controller
             }
         });
 
-        return response()->json(['success' => true, 'message' => 'İş qrafiki yadda saxlanıldı.']);
+        return response()->json(['success' => true, 'message' => t('specialist-cabinet-schedule.msg.saved')]);
     }
 
     private function profileFor(Request $request): SpecialistProfile

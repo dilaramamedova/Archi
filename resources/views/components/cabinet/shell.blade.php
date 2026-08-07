@@ -4,7 +4,7 @@
   only writes its own cards.
 
   Example (business-profile-company.blade.php):
-    <x-layout page="business-profile-company" :title="__('business-profile-company.title')" bodyClass="bg-gray-soft2">
+    <x-layout page="business-profile-company" :title="t('business-profile-company.title')" bodyClass="bg-gray-soft2">
       <x-cabinet.shell ns="business-profile-company" active="company" class="text-ink">
         ...cards + <x-cabinet.save-bar />...
       </x-cabinet.shell>

@@ -44,7 +44,7 @@ class SpecialistProfileController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('specialist-cabinet.save.saved'),
+            'message' => t('specialist-cabinet.save.saved'),
         ]);
     }
 

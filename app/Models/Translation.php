@@ -14,27 +14,46 @@ class Translation extends Model
 
     public array $translatable = ['value'];
 
-    public static function trans(string $groupAndKey): string
+    protected static function booted(): void
     {
-        [$group, $key] = explode('.', $groupAndKey, 2);
-
-        $cacheKey = "translations_{$group}_" . app()->getLocale();
-
-        $translations = Cache::remember($cacheKey, 3600, function () use ($group) {
-            return static::where('group', $group)
-                ->pluck('value', 'key')
-                ->toArray();
+        // Keep the DatabaseTranslationLoader cache in sync with edits made in the
+        // Filament panel (or the seeder). Any change flushes the affected group —
+        // including the previous group when a row is moved between groups.
+        static::saved(function (self $t): void {
+            if ($t->wasChanged('group') && $t->getOriginal('group')) {
+                $t->forgetCacheFor($t->getOriginal('group'));
+            }
+            $t->forgetCache();
         });
 
-        return $translations[$key] ?? $groupAndKey;
+        static::deleted(fn (self $t) => $t->forgetCache());
+    }
+
+    public function forgetCache(): void
+    {
+        $this->forgetCacheFor($this->group);
+    }
+
+    public function forgetCacheFor(string $group): void
+    {
+        foreach (['az', 'ru', 'en'] as $locale) {
+            Cache::forget("translations.{$group}.{$locale}");
+        }
+    }
+
+    /**
+     * @deprecated Use t('group.key') / __('group.key'). Kept for backward compatibility.
+     */
+    public static function trans(string $groupAndKey): string
+    {
+        return __($groupAndKey);
     }
 
     public static function clearCache(): void
     {
-        foreach (['az', 'ru', 'en'] as $locale) {
-            $groups = static::distinct()->pluck('group');
-            foreach ($groups as $group) {
-                Cache::forget("translations_{$group}_{$locale}");
+        foreach (static::distinct()->pluck('group') as $group) {
+            foreach (['az', 'ru', 'en'] as $locale) {
+                Cache::forget("translations.{$group}.{$locale}");
             }
         }
     }

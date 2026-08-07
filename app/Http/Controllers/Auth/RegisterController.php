@@ -75,7 +75,7 @@ class RegisterController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => __('register.pending_message'),
+                'message' => t('register.pending_message'),
             ], 201);
         }
 

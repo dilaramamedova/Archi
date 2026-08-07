@@ -12,7 +12,7 @@
         ['key' => 'schedule',  'n' => '4', 'done' => false, 'href' => route('specialist.cabinet.schedule')],
     ];
 @endphp
-<x-layout page="specialist-onboarding" :title="__('specialist-onboarding.title')">
+<x-layout page="specialist-onboarding" :title="t('specialist-onboarding.title')">
 
 {{-- Completion banner — Figma 1056:9735 (1440x72, pad 16/28, r0, sel-bg + yellow-line stroke).
      Full-bleed: the frame starts at x=0, so the tint runs edge to edge and only the inner
@@ -22,17 +22,17 @@
     {{-- min-w-0 (not shrink-0): the RU string is longer than the AZ one and must wrap
          instead of pushing the CTA off the row. At 1440 nothing moves. --}}
     <div class="flex min-w-0 flex-col items-start gap-2">
-      <p class="text-[15px] font-semibold leading-[normal] text-ink">{{ __('specialist-onboarding.banner.note') }}</p>
+      <p class="text-[15px] font-semibold leading-[normal] text-ink">{{ t('specialist-onboarding.banner.note') }}</p>
       {{-- 420x6 track, 40% (168px) yellow fill. Not <x-ui.progress>: that bar is 6px with a
            rounded-ds-sm fill and no track tint. --}}
       <div class="relative h-1.5 w-[420px] max-w-full shrink-0 overflow-hidden rounded-ds bg-black/8" role="progressbar"
-           aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $progressPercent ?? 40 }}" aria-label="{{ __('specialist-onboarding.banner.progress_label') }}">
+           aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $progressPercent ?? 40 }}" aria-label="{{ t('specialist-onboarding.banner.progress_label') }}">
         <div class="absolute top-0 left-0 h-1.5 max-w-full rounded-ds bg-yellow" style="width: {{ $progressPercent ?? 40 }}%"></div>
       </div>
     </div>
     {{-- Stays on the page (§3.1): it scrolls the checklist into view and highlights the
          first unfinished row. --}}
-    <x-ui.button variant="dark" class="px-5 py-[11px] text-sm font-semibold text-off-white" data-complete>{{ __('specialist-onboarding.banner.cta') }}</x-ui.button>
+    <x-ui.button variant="dark" class="px-5 py-[11px] text-sm font-semibold text-off-white" data-complete>{{ t('specialist-onboarding.banner.cta') }}</x-ui.button>
   </div>
 </div>
 
@@ -44,8 +44,8 @@
   {{-- Checklist — Figma 1056:9743 (880 wide, r4, stroke black@0.10) --}}
   <div class="onb-checklist flex w-full max-w-[880px] flex-col items-start overflow-hidden rounded-ds border border-black/10 bg-white max-[1200px]:max-w-none">
     <div class="flex w-full shrink-0 flex-col items-start gap-1.5 px-6 pt-[22px] pb-[18px]">
-      <h1 class="shrink-0 text-xl font-bold leading-[normal] text-ink">{{ __('specialist-onboarding.checklist.title') }}</h1>
-      <p class="shrink-0 text-[13px] font-normal leading-[normal] text-black/50">{{ __('specialist-onboarding.checklist.desc') }}</p>
+      <h1 class="shrink-0 text-xl font-bold leading-[normal] text-ink">{{ t('specialist-onboarding.checklist.title') }}</h1>
+      <p class="shrink-0 text-[13px] font-normal leading-[normal] text-black/50">{{ t('specialist-onboarding.checklist.desc') }}</p>
     </div>
 
     @foreach ($steps as $step)
@@ -64,13 +64,13 @@
           ])>{{ $step['n'] }}</p>
         </div>
         <div class="flex min-w-px flex-[1_0_0] flex-col items-start gap-1 overflow-hidden">
-          <p class="shrink-0 text-[15px] font-semibold leading-[normal] text-ink">{{ __('specialist-onboarding.steps.' . $step['key'] . '.title') }}</p>
-          <p class="shrink-0 text-[13px] font-normal leading-[normal] text-black/50">{{ __('specialist-onboarding.steps.' . $step['key'] . '.desc') }}</p>
+          <p class="shrink-0 text-[15px] font-semibold leading-[normal] text-ink">{{ t('specialist-onboarding.steps.' . $step['key'] . '.title') }}</p>
+          <p class="shrink-0 text-[13px] font-normal leading-[normal] text-black/50">{{ t('specialist-onboarding.steps.' . $step['key'] . '.desc') }}</p>
         </div>
         @if ($step['done'])
-          <p class="shrink-0 whitespace-nowrap text-[13px] font-medium leading-[normal] text-green">{{ __('specialist-onboarding.steps.basics.status') }}</p>
+          <p class="shrink-0 whitespace-nowrap text-[13px] font-medium leading-[normal] text-green">{{ t('specialist-onboarding.steps.basics.status') }}</p>
         @else
-          <x-ui.button variant="primary" :href="$step['href']" class="px-4 py-[9px] text-[13px] font-semibold">{{ __('specialist-onboarding.steps.add') }}</x-ui.button>
+          <x-ui.button variant="primary" :href="$step['href']" class="px-4 py-[9px] text-[13px] font-semibold">{{ t('specialist-onboarding.steps.add') }}</x-ui.button>
         @endif
       </div>
     @endforeach
@@ -79,20 +79,20 @@
   {{-- Preview — Figma 1056:14346 (472 wide, gap 16). The card is the shared <x-scard> at
        45% opacity: the profile is not live yet. --}}
   <div class="flex min-w-px flex-[1_0_0] flex-col items-start gap-4 max-[1200px]:w-full max-[1200px]:flex-none">
-    <p class="shrink-0 text-[15px] font-semibold leading-[normal] text-ink">{{ __('specialist-onboarding.preview.title') }}</p>
+    <p class="shrink-0 text-[15px] font-semibold leading-[normal] text-ink">{{ t('specialist-onboarding.preview.title') }}</p>
     <x-scard
         class="w-[340px] max-w-full flex-none opacity-45"
         aria-hidden="true"
-        :role="__('specialist-onboarding.preview.card.role')"
-        :rate="__('specialist-onboarding.preview.card.rate')"
-        :reviews="__('specialist-onboarding.preview.card.reviews')"
-        :name="__('specialist-onboarding.preview.card.name')"
-        :exp="__('specialist-onboarding.preview.card.exp')"
-        :proj="__('specialist-onboarding.preview.card.proj')" />
+        :role="t('specialist-onboarding.preview.card.role')"
+        :rate="t('specialist-onboarding.preview.card.rate')"
+        :reviews="t('specialist-onboarding.preview.card.reviews')"
+        :name="t('specialist-onboarding.preview.card.name')"
+        :exp="t('specialist-onboarding.preview.card.exp')"
+        :proj="t('specialist-onboarding.preview.card.proj')" />
     {{-- Lock note — Figma 1056:14378 (40 tall: pad 12/14, gap 10, gray-soft2, r4) --}}
     <div class="flex w-full shrink-0 items-center gap-2.5 overflow-hidden rounded-ds bg-gray-soft2 px-3.5 py-3">
       <p class="shrink-0 whitespace-nowrap text-sm font-normal leading-[normal] text-black" aria-hidden="true">🔒</p>
-      <p class="min-w-px flex-[1_0_0] text-[13px] font-normal leading-[normal] text-black/70">{{ __('specialist-onboarding.preview.lock') }}</p>
+      <p class="min-w-px flex-[1_0_0] text-[13px] font-normal leading-[normal] text-black/70">{{ t('specialist-onboarding.preview.lock') }}</p>
     </div>
   </div>
 

@@ -17,6 +17,22 @@ if (! function_exists('trans_db')) {
     }
 }
 
+if (! function_exists('t')) {
+    /**
+     * Translate a UI string from the database-backed translations
+     * (Filament "Tərcümələr" module). Signature-compatible with __():
+     *   t('common.site_name')
+     *   t('business-profile.identity.member_since', ['year' => 2026])
+     *   t('cart.total', [], 'ru')
+     * Returns a string for scalar keys, an array for grouped/list keys
+     * (e.g. t('register.cities')), or the key itself when nothing matches.
+     */
+    function t(string $key, array $replace = [], ?string $locale = null): array|string
+    {
+        return __($key, $replace, $locale);
+    }
+}
+
 if (! function_exists('translate_craft')) {
     /**
      * Translate a specialist craft name from its stored (Azerbaijani) value

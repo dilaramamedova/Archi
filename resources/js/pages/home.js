@@ -164,7 +164,7 @@ function initLeadForm() {
 
       if (response.ok) form.reset();
     } catch (_error) {
-      feedback.textContent = 'Sorğu göndərilmədi. Yenidən cəhd edin.';
+      feedback.textContent = form.dataset.lError || document.body.dataset.errGeneric;
       feedback.className = 'rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700';
     } finally {
       submit.disabled = false;

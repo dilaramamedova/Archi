@@ -3,24 +3,24 @@
   the ability to remove items or add them to cart. Follows the same layout
   and patterns as cart.blade.php.
 --}}
-<x-layout page="wishlist" :title="__('wishlist.title')">
+<x-layout page="wishlist" :title="t('wishlist.title')">
 
 <section class="min-h-[60vh] bg-gray-soft2 pt-10 pb-20" id="wlPage">
   <div class="wrap-narrow flex flex-col gap-6">
     <x-ui.breadcrumbs class="gap-1.5 text-sm leading-5" :items="[
-        ['label' => __('common.home'), 'href' => route('home')],
-        ['label' => __('wishlist.breadcrumb')],
+        ['label' => t('common.home'), 'href' => route('home')],
+        ['label' => t('wishlist.breadcrumb')],
     ]" />
-    <h1 class="text-[30px] font-bold tracking-[-0.4px] text-ink">{{ __('wishlist.heading') }}</h1>
+    <h1 class="text-[30px] font-bold tracking-[-0.4px] text-ink">{{ t('wishlist.heading') }}</h1>
 
     @if ($items->isEmpty())
       {{-- empty state --}}
       <div class="rounded-ds border border-black/10 bg-white px-6 py-[60px] text-center">
-        <p class="mb-5 text-base text-black/55">{{ __('wishlist.empty.text') }}</p>
-        <x-ui.button variant="primary" :hover="false" :href="route('catalog')" class="inline-flex overflow-visible px-7 py-[13px] font-semibold">{{ __('wishlist.empty.cta') }}</x-ui.button>
+        <p class="mb-5 text-base text-black/55">{{ t('wishlist.empty.text') }}</p>
+        <x-ui.button variant="primary" :hover="false" :href="route('catalog')" class="inline-flex overflow-visible px-7 py-[13px] font-semibold">{{ t('wishlist.empty.cta') }}</x-ui.button>
       </div>
     @else
-      <p class="text-sm text-black/55">{{ __('wishlist.count', ['count' => $items->count()]) }}</p>
+      <p class="text-sm text-black/55">{{ t('wishlist.count', ['count' => $items->count()]) }}</p>
 
       <div class="flex flex-col gap-3" id="wlRows">
         @foreach ($items as $item)
@@ -55,8 +55,8 @@
             {{-- actions --}}
             <div class="flex items-center gap-3 max-[560px]:w-full">
               <button type="button" class="wl-remove rounded-ds border border-black/10 px-4 py-2 text-sm text-black/65 transition hover:border-red-400 hover:text-red-500 max-[560px]:w-full"
-                      aria-label="{{ __('wishlist.remove') }}">
-                {{ __('wishlist.remove') }}
+                      aria-label="{{ t('wishlist.remove') }}">
+                {{ t('wishlist.remove') }}
               </button>
             </div>
           </div>

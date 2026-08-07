@@ -4,18 +4,18 @@
   card copy is translated — resources/js/pages/catalog.js only reorders the cards
   when the sort option changes (numeric data comes from the data-* attributes).
 --}}
-<x-layout page="catalog" :title="$selectedCategory ? $selectedCategory->name . ' — ' . __('catalog.head.eyebrow') . ' — ARCHİ' : __('catalog.title')">
+<x-layout page="catalog" :title="$selectedCategory ? $selectedCategory->name . ' — ' . t('catalog.head.eyebrow') . ' — ARCHİ' : t('catalog.title')">
 @php
     // Ghost labels that reserve the widest sort option, so picking one cannot resize
     // the control (the widths differ per locale, hence the rendered list).
     $sizes = ['30×30', '60×60', '60×120', '80×80', '20×20'];
 
     $sortOptions = [
-        'pop' => __('catalog.sort.popular'),
-        'cheap' => __('catalog.sort.cheap'),
-        'exp' => __('catalog.sort.expensive'),
-        'rating' => __('catalog.sort.rating'),
-        'new' => __('catalog.sort.newest'),
+        'pop' => t('catalog.sort.popular'),
+        'cheap' => t('catalog.sort.cheap'),
+        'exp' => t('catalog.sort.expensive'),
+        'rating' => t('catalog.sort.rating'),
+        'new' => t('catalog.sort.newest'),
     ];
 
     // Active filter values from the request (used to preserve state after reload)
@@ -32,10 +32,10 @@
 <main class="wrap catalog">
 
   <x-ui.breadcrumbs class="cat-crumbs" :items="array_filter([
-      ['label' => __('common.home'), 'href' => route('home')],
+      ['label' => t('common.home'), 'href' => route('home')],
       $selectedCategory
-          ? ['label' => __('common.catalog'), 'href' => route('catalog')]
-          : ['label' => __('common.catalog')],
+          ? ['label' => t('common.catalog'), 'href' => route('catalog')]
+          : ['label' => t('common.catalog')],
       $selectedCategory
           ? ['label' => $selectedCategory->name]
           : null,
@@ -43,16 +43,16 @@
 
   <div class="cat-head">
     <div class="cat-head-l">
-      <x-ui.eyebrow variant="flat" class="mb-3.5" :label="$selectedCategory ? $selectedCategory->name : __('catalog.head.eyebrow')" />
+      <x-ui.eyebrow variant="flat" class="mb-3.5" :label="$selectedCategory ? $selectedCategory->name : t('catalog.head.eyebrow')" />
       <div class="title-row">
-        <h1>{{ $selectedCategory ? $selectedCategory->name : __('catalog.head.title') }}</h1>
+        <h1>{{ $selectedCategory ? $selectedCategory->name : t('catalog.head.title') }}</h1>
         <span class="count">{{ $products->total() }}</span>
       </div>
     </div>
     <div class="fsort cat-sort" id="catSort" data-open="false">
-      <span class="lbl">{{ __('catalog.sort.label') }}</span>
+      <span class="lbl">{{ t('catalog.sort.label') }}</span>
       <span class="val-wrap">
-        <span class="val" id="sortVal">{{ $sortOptions[$activeSort] ?? __('catalog.sort.popular') }}</span>
+        <span class="val" id="sortVal">{{ $sortOptions[$activeSort] ?? t('catalog.sort.popular') }}</span>
         <span class="val-ghost" aria-hidden="true">@foreach ($sortOptions as $label)<i>{{ $label }}</i>@endforeach</span>
       </span>
       <span class="car">⌄</span>
@@ -66,11 +66,11 @@
 
   {{-- active filter chips — built by catalog.js from the sidebar state --}}
   <div class="cat-chips" id="catChips"
-       data-l-size="{{ __('catalog.chips.size') }}"
-       data-l-surface="{{ __('catalog.chips.surface') }}"
-       data-l-price="{{ __('catalog.chips.price') }}"
-       data-l-remove="{{ __('catalog.chips.remove') }}">
-    <button class="cat-clear" id="catClear">{{ __('catalog.chips.clear') }}</button>
+       data-l-size="{{ t('catalog.chips.size') }}"
+       data-l-surface="{{ t('catalog.chips.surface') }}"
+       data-l-price="{{ t('catalog.chips.price') }}"
+       data-l-remove="{{ t('catalog.chips.remove') }}">
+    <button class="cat-clear" id="catClear">{{ t('catalog.chips.clear') }}</button>
   </div>
 
   <div class="cat-body">
@@ -79,7 +79,7 @@
      <div class="fside-scroll">
 
       <div class="fs-block">
-        <p class="fs-title">{{ __('catalog.filters.categories') }}</p>
+        <p class="fs-title">{{ t('catalog.filters.categories') }}</p>
         @foreach ($categories as $category)
           <div class="fs-cat" data-cat="{{ $category->slug }}" data-on="{{ request('category') === $category->slug ? 'true' : 'false' }}"><span>{{ $category->name }}</span><span class="n">{{ $category->products_count }}</span></div>
         @endforeach
@@ -88,11 +88,11 @@
       <div class="fs-div"></div>
 
       <div class="fs-block">
-        <p class="fs-title">{{ __('catalog.filters.price') }}</p>
+        <p class="fs-title">{{ t('catalog.filters.price') }}</p>
         <div class="fs-price-inputs">
-          <input class="in" id="fsMin" type="text" inputmode="numeric" value="{{ $activeMinPrice !== '' ? $activeMinPrice : $priceRange['min'] }}" aria-label="{{ __('catalog.filters.price_min_aria') }}">
+          <input class="in" id="fsMin" type="text" inputmode="numeric" value="{{ $activeMinPrice !== '' ? $activeMinPrice : $priceRange['min'] }}" aria-label="{{ t('catalog.filters.price_min_aria') }}">
           <span class="dash">—</span>
-          <input class="in" id="fsMax" type="text" inputmode="numeric" value="{{ $activeMaxPrice !== '' ? $activeMaxPrice : $priceRange['max'] }}" aria-label="{{ __('catalog.filters.price_max_aria') }}">
+          <input class="in" id="fsMax" type="text" inputmode="numeric" value="{{ $activeMaxPrice !== '' ? $activeMaxPrice : $priceRange['max'] }}" aria-label="{{ t('catalog.filters.price_max_aria') }}">
         </div>
         <div class="fs-slider" id="fsSlider"
              data-price-min="{{ $priceRange['min'] }}"
@@ -107,7 +107,7 @@
       <div class="fs-div"></div>
 
       <div class="fs-block" id="brandBlock">
-        <p class="fs-title">{{ __('catalog.filters.brand') }}</p>
+        <p class="fs-title">{{ t('catalog.filters.brand') }}</p>
         @forelse ($filterBrands as $brandItem)
           <div class="fs-check" data-brand="{{ $brandItem->slug }}" data-on="{{ in_array($brandItem->slug, $activeBrands) ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ $brandItem->name }}</span><span class="n">{{ $brandItem->products_count }}</span></div>
         @empty
@@ -119,16 +119,16 @@
 
       {{-- TODO: Surface filters need a surface column on products or a product_attributes table --}}
       <div class="fs-block" id="surfBlock">
-        <p class="fs-title">{{ __('catalog.filters.surface') }}</p>
-        <div class="fs-check" data-surface="matte" data-on="{{ in_array('matte', $activeSurfaces) ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ __('catalog.filters.surface_matte') }}</span></div>
-        <div class="fs-check" data-surface="glossy" data-on="{{ in_array('glossy', $activeSurfaces) ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ __('catalog.filters.surface_glossy') }}</span></div>
-        <div class="fs-check" data-surface="structured" data-on="{{ in_array('structured', $activeSurfaces) ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ __('catalog.filters.surface_structured') }}</span></div>
+        <p class="fs-title">{{ t('catalog.filters.surface') }}</p>
+        <div class="fs-check" data-surface="matte" data-on="{{ in_array('matte', $activeSurfaces) ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ t('catalog.filters.surface_matte') }}</span></div>
+        <div class="fs-check" data-surface="glossy" data-on="{{ in_array('glossy', $activeSurfaces) ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ t('catalog.filters.surface_glossy') }}</span></div>
+        <div class="fs-check" data-surface="structured" data-on="{{ in_array('structured', $activeSurfaces) ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ t('catalog.filters.surface_structured') }}</span></div>
       </div>
 
       <div class="fs-div"></div>
 
       <div class="fs-block">
-        <p class="fs-title">{{ __('catalog.filters.size') }}</p>
+        <p class="fs-title">{{ t('catalog.filters.size') }}</p>
         <div class="fs-sizes">
           @foreach ($sizes as $size)
             {{-- data-size doubles as the bold ghost label (catalog.css) so selecting a
@@ -141,13 +141,13 @@
       <div class="fs-div"></div>
 
       <div class="fs-stock">
-        <span class="lbl">{{ __('catalog.filters.stock_only') }}</span>
+        <span class="lbl">{{ t('catalog.filters.stock_only') }}</span>
         <div class="cat-switch" id="stockSwitch" data-on="{{ $activeInStock ? 'true' : 'false' }}"><span class="knob"></span></div>
       </div>
      </div>{{-- /.fside-scroll --}}
 
       <div class="fside-apply-sep"></div>
-      <button type="button" class="fside-apply" id="catApply">{{ __('catalog.filters.apply') }}</button>
+      <button type="button" class="fside-apply" id="catApply">{{ t('catalog.filters.apply') }}</button>
     </aside>
 
     <div class="cat-grid" id="catGrid">
@@ -166,7 +166,7 @@
             data-rate="{{ $product->averageRating }}"
             data-cat="{{ $product->category?->slug }}" />
       @empty
-        <p class="cat-empty">{{ __('catalog.empty') }}</p>
+        <p class="cat-empty">{{ t('catalog.empty') }}</p>
       @endforelse
     </div>
 
@@ -182,7 +182,7 @@
 
 {{-- ===================== FEATURED SPECIALISTS ===================== --}}
 <div class="wrap"><div class="inner section">
-  <x-section-head :tag="__('product.specialists.tag')" :title="__('product.specialists.title')"
+  <x-section-head :tag="t('product.specialists.tag')" :title="t('product.specialists.title')"
                   :more="route('specialists', ['featured' => 1])" />
   <div class="grid4" id="specGrid">
     @if($featuredSpecialists->isNotEmpty())
@@ -192,23 +192,23 @@
                  :avatar="$s->user?->avatar ?? '/assets/icon-user.svg'"
                  :role="$s->specialty?->name ?? translate_craft($s->craft)"
                  :rate="null"
-                 :reviews="__('product.specialists.reviews_416')"
-                 :name="$s->user?->name ?? __('product.specialists.name_1')"
-                 :exp="$s->experience_years ? $s->experience_years . ' ' . __('home.specialists.years') : __('product.specialists.exp_12')"
-                 :proj="$s->approvedPortfolioItems()->count() . ' ' . __('home.specialists.projects')" />
+                 :reviews="t('product.specialists.reviews_416')"
+                 :name="$s->user?->name ?? t('product.specialists.name_1')"
+                 :exp="$s->experience_years ? $s->experience_years . ' ' . t('home.specialists.years') : t('product.specialists.exp_12')"
+                 :proj="$s->approvedPortfolioItems()->count() . ' ' . t('home.specialists.projects')" />
       @endforeach
     @else
       @php
           $fallbackSpecialists = [
-              ['bg' => '#f5fbff', 'role' => __('product.specialists.role_tiler'), 'name' => __('product.specialists.name_1')],
-              ['bg' => '#fdf5ff', 'role' => __('product.specialists.role_tiler'), 'name' => __('product.specialists.name_1')],
-              ['bg' => '#f5fffb', 'role' => __('product.specialists.role_interior'), 'name' => __('product.specialists.name_2')],
-              ['bg' => '#fff5f5', 'role' => __('product.specialists.role_tiler'), 'name' => __('product.specialists.name_1')],
+              ['bg' => '#f5fbff', 'role' => t('product.specialists.role_tiler'), 'name' => t('product.specialists.name_1')],
+              ['bg' => '#fdf5ff', 'role' => t('product.specialists.role_tiler'), 'name' => t('product.specialists.name_1')],
+              ['bg' => '#f5fffb', 'role' => t('product.specialists.role_interior'), 'name' => t('product.specialists.name_2')],
+              ['bg' => '#fff5f5', 'role' => t('product.specialists.role_tiler'), 'name' => t('product.specialists.name_1')],
           ];
       @endphp
       @foreach ($fallbackSpecialists as $s)
-        <x-scard :bg="$s['bg']" :role="$s['role']" :reviews="__('product.specialists.reviews_416')"
-                 :name="$s['name']" :exp="__('product.specialists.exp_12')" :proj="'0 ' . __('home.specialists.projects')" />
+        <x-scard :bg="$s['bg']" :role="$s['role']" :reviews="t('product.specialists.reviews_416')"
+                 :name="$s['name']" :exp="t('product.specialists.exp_12')" :proj="'0 ' . t('home.specialists.projects')" />
       @endforeach
     @endif
   </div>
@@ -218,7 +218,7 @@
 @if (false)
 {{-- Müştəri qiymətləndirməsi bölməsi hazırda göstərilmir. --}}
 <div class="wrap"><div class="inner section">
-  <x-section-head :tag="__('product.reviews.tag')" :title="__('product.reviews.title')" />
+  <x-section-head :tag="t('product.reviews.tag')" :title="t('product.reviews.title')" />
   <div class="rev-cards" id="catalogRevCards">
     @php
         $avatarColors = [
@@ -234,9 +234,9 @@
         <div class="h">
           <div class="av" style="background:{{ $color['bg'] }};color:{{ $color['fg'] }}">{{ mb_strtoupper(mb_substr($review->user->name ?? 'U', 0, 1)) }}</div>
           <div>
-            <div class="nm">{{ $review->user->name ?? __('product.reviews.anonymous') }}</div>
+            <div class="nm">{{ $review->user->name ?? t('product.reviews.anonymous') }}</div>
             @if ($review->is_verified_purchase)
-              <div class="vf"><img src="/assets/icon-check-green.svg" alt="">{{ __('product.reviews.verified') }}</div>
+              <div class="vf"><img src="/assets/icon-check-green.svg" alt="">{{ t('product.reviews.verified') }}</div>
             @endif
           </div>
         </div>
@@ -244,7 +244,7 @@
         <div class="txt">{{ $review->comment }}</div>
       </div>
     @empty
-      <p class="text-center text-gray-500 py-8">{{ __('product.reviews.empty') }}</p>
+      <p class="text-center text-gray-500 py-8">{{ t('product.reviews.empty') }}</p>
     @endforelse
   </div>
 </div></div>

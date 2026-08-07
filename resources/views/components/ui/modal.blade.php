@@ -6,7 +6,7 @@
   animation differ between the two.
 
   Example:
-    <x-ui.modal id="okOv" :close-label="__('sell.success.close')"
+    <x-ui.modal id="okOv" :close-label="t('sell.success.close')"
                 dialog="w-full max-w-[480px] animate-[lmIn_0.26s_ease] bg-white px-9 py-10 text-center shadow-[-6px_6px_28px_rgba(0,0,0,0.22)]">
       …dialog content…
     </x-ui.modal>

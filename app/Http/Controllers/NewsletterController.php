@@ -19,7 +19,7 @@ class NewsletterController extends Controller
         if ($existing && $existing->is_active) {
             return response()->json([
                 'success' => false,
-                'message' => __('newsletter.already_subscribed'),
+                'message' => t('newsletter.already_subscribed'),
             ]);
         }
 
@@ -34,7 +34,7 @@ class NewsletterController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('newsletter.subscribed'),
+            'message' => t('newsletter.subscribed'),
         ]);
     }
 }

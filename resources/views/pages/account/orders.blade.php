@@ -2,7 +2,7 @@
 @php
     $initials = mb_strtoupper(mb_substr($user->first_name ?? $user->name ?? '', 0, 1) . mb_substr($user->last_name ?? '', 0, 1));
 @endphp
-<x-layout page="account-orders" :title="__('account.orders_title', [], 'Sifarişlərim')">
+<x-layout page="account-orders" :title="t('account.orders_title')">
 
 <section class="bg-gray-soft2 min-h-[60vh] py-12">
   <div class="mx-auto max-w-[800px] px-7">
@@ -18,14 +18,14 @@
 
     {{-- nav tabs --}}
     <div class="mb-8 flex gap-4 border-b border-black/10">
-      <a href="{{ route('account') }}" class="border-b-2 border-transparent px-4 pb-3 text-sm font-medium text-black/50 hover:text-ink">{{ __('account.nav.profile', [], 'Profil') }}</a>
-      <a href="{{ route('account.orders') }}" class="border-b-2 border-yellow px-4 pb-3 text-sm font-semibold text-ink">{{ __('account.nav.orders', [], 'Sifarişlər') }}</a>
-      <a href="{{ route('wishlist') }}" class="border-b-2 border-transparent px-4 pb-3 text-sm font-medium text-black/50 hover:text-ink">{{ __('account.nav.wishlist', [], 'Seçilmişlər') }}</a>
+      <a href="{{ route('account') }}" class="border-b-2 border-transparent px-4 pb-3 text-sm font-medium text-black/50 hover:text-ink">{{ t('account.nav.profile') }}</a>
+      <a href="{{ route('account.orders') }}" class="border-b-2 border-yellow px-4 pb-3 text-sm font-semibold text-ink">{{ t('account.nav.orders') }}</a>
+      <a href="{{ route('wishlist') }}" class="border-b-2 border-transparent px-4 pb-3 text-sm font-medium text-black/50 hover:text-ink">{{ t('account.nav.wishlist') }}</a>
     </div>
 
     {{-- orders list --}}
     <div class="border border-black/12 bg-white p-8 shadow-[-4px_4px_4px_rgba(0,0,0,0.05)]">
-      <h2 class="mb-6 text-lg font-semibold text-ink">{{ __('account.orders_heading', [], 'Sifarişlər') }}</h2>
+      <h2 class="mb-6 text-lg font-semibold text-ink">{{ t('account.orders_heading') }}</h2>
 
       @forelse ($orders as $order)
         <div class="flex items-center justify-between border-b border-black/8 py-4 last:border-b-0">
@@ -34,8 +34,8 @@
             <p class="text-xs text-black/50">{{ $order->created_at->format('d.m.Y H:i') }}</p>
           </div>
           <div class="text-right">
-            <p class="text-sm font-semibold text-ink">{{ number_format($order->total, 2) }} {{ __('sell.form.currency', [], 'AZN') }}</p>
-            <p class="text-xs text-black/50">{{ $order->status ?? __('account.order_processing', [], 'Hazırlanır') }}</p>
+            <p class="text-sm font-semibold text-ink">{{ number_format($order->total, 2) }} {{ t('sell.form.currency') }}</p>
+            <p class="text-xs text-black/50">{{ $order->status ?? t('account.order_processing') }}</p>
           </div>
         </div>
       @empty
@@ -45,8 +45,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
             </svg>
           </div>
-          <p class="text-base text-black/50">{{ __('account.no_orders', [], 'Hələ sifariş yoxdur') }}</p>
-          <a href="{{ route('catalog') }}" class="bg-yellow px-6 py-2.5 text-sm font-semibold text-ink transition hover:brightness-[.93]">{{ __('account.browse_catalog', [], 'Kataloqa bax') }}</a>
+          <p class="text-base text-black/50">{{ t('account.no_orders') }}</p>
+          <a href="{{ route('catalog') }}" class="bg-yellow px-6 py-2.5 text-sm font-semibold text-ink transition hover:brightness-[.93]">{{ t('account.browse_catalog') }}</a>
         </div>
       @endforelse
 

@@ -4,17 +4,17 @@
 
   Example:
     <x-pcard
-        :cat="__('home.sale.cat_tiles')"
-        :name="__('home.sale.name_tile_matte')"
+        :cat="t('home.sale.cat_tiles')"
+        :name="t('home.sale.name_tile_matte')"
         now="23.90 ₼"
         old="45.99 ₼"
         off="-48%"
         rate="4.6"
-        :reviews="__('home.sale.reviews_1876')"
+        :reviews="t('home.sale.reviews_1876')"
         img="/assets/product-marble-tile.png" />
 
     // user's own listing (yellow badge)
-    <x-pcard :badges="[['label' => __('common.your_listing'), 'mine' => true], ['label' => '4.6']]" />
+    <x-pcard :badges="[['label' => t('common.your_listing'), 'mine' => true], ['label' => '4.6']]" />
 
   Props:
     href     — card link (default: route('product'))
@@ -33,7 +33,7 @@
                null → defaults to common.badge_new + common.badge_in_stock
     dots     — number of carousel dots (0 → hidden, default 3)
     dot      — index of the active dot (default 0)
-    cursor   — text inside the round hover cursor (default __('common.go_to_product'))
+    cursor   — text inside the round hover cursor (default t('common.go_to_product'))
 --}}
 @props([
     'href' => null,
@@ -53,12 +53,12 @@
 ])
 @php
     $badgeList = $badges ?? [
-        ['label' => __('common.badge_new')],
-        ['label' => __('common.badge_in_stock')],
+        ['label' => t('common.badge_new')],
+        ['label' => t('common.badge_in_stock')],
     ];
 @endphp
 <a {{ $attributes->merge(['class' => 'pcard', 'href' => $href ?? route('product'), 'data-product-id' => $productId]) }}>
-  <div class="prod-cursor"><span>{{ $cursor ?? __('common.go_to_product') }}</span></div>
+  <div class="prod-cursor"><span>{{ $cursor ?? t('common.go_to_product') }}</span></div>
   <div class="ph">
     <img class="prod" src="{{ $img }}" alt="">
     @if (! empty($badgeList))

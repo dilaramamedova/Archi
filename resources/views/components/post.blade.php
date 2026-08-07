@@ -4,9 +4,9 @@
 
   Example:
     <x-post
-        :time="__('blog.posts.time_1')"
-        :title="__('blog.posts.title_1')"
-        :excerpt="__('blog.posts.excerpt_1')"
+        :time="t('blog.posts.time_1')"
+        :title="t('blog.posts.title_1')"
+        :excerpt="t('blog.posts.excerpt_1')"
         :href="route('blog')" />
 
     // blog.html variant with extra utilities
@@ -18,7 +18,7 @@
     time    — reading-time text
     title   — <h3> heading
     excerpt — <p class="ex"> short text
-    read    — bottom link text (default __('common.read_arrow'))
+    read    — bottom link text (default t('common.read_arrow'))
 
   Extra classes can be passed through $attributes->merge — `class="rounded-ds"`
   is merged onto `.post`.
@@ -38,6 +38,6 @@
     @if ($title !== null)<h3>{{ $title }}</h3>@endif
     @if ($excerpt !== null)<p class="ex">{{ $excerpt }}</p>@endif
     {{ $slot }}
-    <span class="read">{{ $read ?? __('common.read_arrow') }}</span>
+    <span class="read">{{ $read ?? t('common.read_arrow') }}</span>
   </div>
 </a>

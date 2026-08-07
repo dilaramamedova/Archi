@@ -21,24 +21,24 @@
     $portfolioItems = $profile?->portfolioItems ?? collect();
     $services = $profile?->services ?? collect();
 @endphp
-<x-layout page="specialist-owner" :title="__('specialist-owner.title')">
+<x-layout page="specialist-owner" :title="t('specialist-owner.title')">
 
 {{-- owner banner (831:11530) — full-bleed yellow strip, 64px --}}
 <div class="spo-banner">
   <div class="in">
     <div class="spo-note">
       <span class="ic" aria-hidden="true">&#128065;</span>
-      <p>{{ __('specialist-owner.banner.notice') }}</p>
+      <p>{{ t('specialist-owner.banner.notice') }}</p>
     </div>
     <div class="spo-banner-r">
       <div class="spo-avail">
-        <span class="l">{{ __('specialist-owner.banner.available') }}</span>
+        <span class="l">{{ t('specialist-owner.banner.available') }}</span>
         <x-ui.toggle size="sm" :on="!($profile?->is_on_vacation)" data-sel="availability"
-            :aria-label="__('specialist-owner.banner.available')" />
+            :aria-label="t('specialist-owner.banner.available')" />
       </div>
       <x-ui.button variant="dark" :href="route('specialist.cabinet')"
           class="h-10 gap-1.5 px-[18px] text-[13px] leading-[normal] font-bold text-yellow">
-        {!! $pencil !!}{{ __('specialist-owner.banner.edit') }}
+        {!! $pencil !!}{{ t('specialist-owner.banner.edit') }}
       </x-ui.button>
     </div>
   </div>
@@ -51,12 +51,12 @@
       <div class="spo-stat">
         <div class="b">
           <div class="v">
-            <span class="n">{{ __('specialist-owner.stats.' . $stat['key'] . '.value') }}</span>
+            <span class="n">{{ t('specialist-owner.stats.' . $stat['key'] . '.value') }}</span>
             @if ($stat['delta'])
-              <span class="d">{{ __('specialist-owner.stats.' . $stat['key'] . '.delta') }}</span>
+              <span class="d">{{ t('specialist-owner.stats.' . $stat['key'] . '.delta') }}</span>
             @endif
           </div>
-          <p class="k">{{ __('specialist-owner.stats.' . $stat['key'] . '.label') }}</p>
+          <p class="k">{{ t('specialist-owner.stats.' . $stat['key'] . '.label') }}</p>
         </div>
       </div>
     @endforeach
@@ -67,8 +67,8 @@
 
   {{-- breadcrumb --}}
   <x-ui.breadcrumbs class="spo-crumbs" :items="[
-      ['label' => __('common.home'), 'href' => route('home')],
-      ['label' => __('specialist-owner.crumb_specialists'), 'href' => route('specialists')],
+      ['label' => t('common.home'), 'href' => route('home')],
+      ['label' => t('specialist-owner.crumb_specialists'), 'href' => route('specialists')],
       ['label' => $user->name],
   ]" />
 
@@ -80,30 +80,30 @@
         @if($profile?->avatar_path)
           <img class="spo-ava" src="{{ storage_url($profile->avatar_path) }}" alt="{{ $user->name }}">
         @else
-          <div class="spo-ava" aria-hidden="true">{{ $initials ?: __('specialist-owner.id.initials_fallback') }}</div>
+          <div class="spo-ava" aria-hidden="true">{{ $initials ?: t('specialist-owner.id.initials_fallback') }}</div>
         @endif
         <div class="spo-idt">
           <div class="spo-badges">
             @if($profile?->is_featured)
-              <span class="spo-badge">{{ __('specialist-owner.id.badge_top') }}</span>
+              <span class="spo-badge">{{ t('specialist-owner.id.badge_top') }}</span>
             @endif
-            <span class="spo-badge ok">{{ __('specialist-owner.id.badge_verified') }}</span>
+            <span class="spo-badge ok">{{ t('specialist-owner.id.badge_verified') }}</span>
           </div>
           <h1 class="spo-name">{{ $user->name }}</h1>
-          <p class="spo-role">{{ $profile?->specialty?->name ?? translate_craft($profile?->craft) ?? __('specialist-owner.id.role') }}</p>
+          <p class="spo-role">{{ $profile?->specialty?->name ?? translate_craft($profile?->craft) ?? t('specialist-owner.id.role') }}</p>
           <div class="spo-rate">
-            <span class="v"><x-ui.stars :count="1" :rating="1" :icon="$starIcon" />{{ __('specialist-owner.id.rate') }}</span>
-            <span class="r">{{ __('specialist-owner.id.reviews') }}</span>
+            <span class="v"><x-ui.stars :count="1" :rating="1" :icon="$starIcon" />{{ t('specialist-owner.id.rate') }}</span>
+            <span class="r">{{ t('specialist-owner.id.reviews') }}</span>
           </div>
         </div>
       </div>
 
       <p class="spo-meta">
-        {{ $profile?->experience_years ?? 0 }} {{ __('specialist-owner.id.years') }}
+        {{ $profile?->experience_years ?? 0 }} {{ t('specialist-owner.id.years') }}
         <span class="dot">·</span>
-        {{ $portfolioItems->count() }} {{ __('specialist-owner.id.projects') }}
+        {{ $portfolioItems->count() }} {{ t('specialist-owner.id.projects') }}
         <span class="dot">·</span>
-        {{ $profile?->city ?? __('specialist-owner.id.meta_city') }}
+        {{ $profile?->city ?? t('specialist-owner.id.meta_city') }}
       </p>
 
     </div>
@@ -111,15 +111,14 @@
     {{-- booking card --}}
     <aside class="spo-book">
       <div class="ph">
-        <span class="lbl">{{ __('specialist-owner.book.label') }}</span>
-        <div class="prow"><span class="now">{{ __('specialist-owner.book.price') }}</span><span class="sub">{{ __('specialist-owner.book.price_sub') }}</span></div>
+        <span class="lbl">{{ t('specialist-owner.book.label') }}</span>
+        <div class="prow"><span class="now">{{ t('specialist-owner.book.price') }}</span><span class="sub">{{ t('specialist-owner.book.price_sub') }}</span></div>
       </div>
-      <x-ui.button variant="primary" class="w-full rounded-none px-6 py-4 text-base leading-[normal] font-medium duration-200">{{ __('specialist-owner.book.consult') }}</x-ui.button>
-      <button type="button" class="spo-btn w">{{ __('specialist-owner.book.message') }}</button>
+      <x-ui.button variant="primary" class="w-full rounded-none px-6 py-4 text-base leading-[normal] font-medium duration-200">{{ t('specialist-owner.book.consult') }}</x-ui.button>
       <div class="div"></div>
-      <div class="spo-stat-row"><span class="k">{{ __('specialist-owner.book.response_k') }}</span><span class="v">{{ __('specialist-owner.book.response_v') }}</span></div>
-      <div class="spo-stat-row"><span class="k">{{ __('specialist-owner.book.done_k') }}</span><span class="v">{{ $portfolioItems->count() }}</span></div>
-      <div class="spo-stat-row"><span class="k">{{ __('specialist-owner.book.member_k') }}</span><span class="v">{{ $profile?->created_at?->format('M Y') ?? '-' }}</span></div>
+      <div class="spo-stat-row"><span class="k">{{ t('specialist-owner.book.response_k') }}</span><span class="v">{{ t('specialist-owner.book.response_v') }}</span></div>
+      <div class="spo-stat-row"><span class="k">{{ t('specialist-owner.book.done_k') }}</span><span class="v">{{ $portfolioItems->count() }}</span></div>
+      <div class="spo-stat-row"><span class="k">{{ t('specialist-owner.book.member_k') }}</span><span class="v">{{ $profile?->created_at?->format('M Y') ?? '-' }}</span></div>
     </aside>
   </div>
 
@@ -127,8 +126,8 @@
   {{-- about --}}
   <section class="spo-sec">
     <div class="spo-sechead">
-      <x-ui.eyebrow variant="flat" class="spo-eyebrow gap-3" :label="__('specialist-owner.about.eyebrow')" />
-      <h2>{{ __('specialist-owner.about.title') }}</h2>
+      <x-ui.eyebrow variant="flat" class="spo-eyebrow gap-3" :label="t('specialist-owner.about.eyebrow')" />
+      <h2>{{ t('specialist-owner.about.title') }}</h2>
     </div>
     @if (filled($profile?->about))
       <p class="spo-about-txt">{{ $profile->about }}</p>
@@ -140,7 +139,7 @@
       @endforeach
       </div>
     @endif
-    <a class="spo-edit" href="{{ route('specialist.cabinet') }}">{!! $pencil !!}{{ __('specialist-owner.edit') }}</a>
+    <a class="spo-edit" href="{{ route('specialist.cabinet') }}">{!! $pencil !!}{{ t('specialist-owner.edit') }}</a>
   </section>
   @endif
 
@@ -148,8 +147,8 @@
   {{-- portfolio --}}
   <section class="spo-sec">
     <div class="spo-sechead">
-      <x-ui.eyebrow variant="flat" class="spo-eyebrow gap-3" :label="__('specialist-owner.portfolio.eyebrow')" />
-      <h2>{{ __('specialist-owner.portfolio.title') }}</h2>
+      <x-ui.eyebrow variant="flat" class="spo-eyebrow gap-3" :label="t('specialist-owner.portfolio.eyebrow')" />
+      <h2>{{ t('specialist-owner.portfolio.title') }}</h2>
     </div>
     <div class="spo-grid">
       @if($portfolioItems->isNotEmpty())
@@ -174,7 +173,7 @@
         @endforeach
       @endif
     </div>
-    <a class="spo-edit" href="{{ route('specialist.cabinet.portfolio') }}">{!! $pencil !!}{{ __('specialist-owner.edit') }}</a>
+    <a class="spo-edit" href="{{ route('specialist.cabinet.portfolio') }}">{!! $pencil !!}{{ t('specialist-owner.edit') }}</a>
   </section>
   @endif
 
@@ -182,8 +181,8 @@
   {{-- services --}}
   <section class="spo-sec">
     <div class="spo-sechead">
-      <x-ui.eyebrow variant="flat" class="spo-eyebrow gap-3" :label="__('specialist-owner.services.eyebrow')" />
-      <h2>{{ __('specialist-owner.services.title') }}</h2>
+      <x-ui.eyebrow variant="flat" class="spo-eyebrow gap-3" :label="t('specialist-owner.services.eyebrow')" />
+      <h2>{{ t('specialist-owner.services.title') }}</h2>
     </div>
     <div class="spo-svc-list">
       @forelse ($services as $svc)
@@ -194,42 +193,42 @@
       @empty
         @foreach (['s1', 's2', 's3', 's4'] as $key)
           <a class="spo-svc" href="{{ route('specialist.cabinet.services') }}">
-            <span class="l"><span class="t">{{ __('specialist-owner.services.items.' . $key . '.title') }}</span><span class="s">{{ __('specialist-owner.services.items.' . $key . '.sub') }}</span></span>
-            <span class="rr"><span class="pr">{{ __('specialist-owner.services.items.' . $key . '.price') }}</span><span class="ar" aria-hidden="true">&rarr;</span></span>
+            <span class="l"><span class="t">{{ t('specialist-owner.services.items.' . $key . '.title') }}</span><span class="s">{{ t('specialist-owner.services.items.' . $key . '.sub') }}</span></span>
+            <span class="rr"><span class="pr">{{ t('specialist-owner.services.items.' . $key . '.price') }}</span><span class="ar" aria-hidden="true">&rarr;</span></span>
           </a>
         @endforeach
       @endforelse
     </div>
-    <a class="spo-edit" href="{{ route('specialist.cabinet.services') }}">{!! $pencil !!}{{ __('specialist-owner.edit') }}</a>
+    <a class="spo-edit" href="{{ route('specialist.cabinet.services') }}">{!! $pencil !!}{{ t('specialist-owner.edit') }}</a>
   </section>
   @endif
 
   {{-- reviews --}}
   <section class="spo-sec">
     <div class="spo-sechead">
-      <x-ui.eyebrow variant="flat" class="spo-eyebrow gap-3" :label="__('specialist-owner.reviews.eyebrow')" />
-      <h2>{{ __('specialist-owner.reviews.title') }}</h2>
+      <x-ui.eyebrow variant="flat" class="spo-eyebrow gap-3" :label="t('specialist-owner.reviews.eyebrow')" />
+      <h2>{{ t('specialist-owner.reviews.title') }}</h2>
     </div>
     <div class="spo-summ">
-      <span class="n">{{ __('specialist-owner.reviews.score') }}</span>
+      <span class="n">{{ t('specialist-owner.reviews.score') }}</span>
       <span class="c">
         <span class="ss"><x-ui.stars :rating="5" :icon="$starIcon" /></span>
-        <span class="cnt">{{ __('specialist-owner.reviews.count') }}</span>
+        <span class="cnt">{{ t('specialist-owner.reviews.count') }}</span>
       </span>
     </div>
     <div class="spo-revs">
       @foreach (['r1', 'r2'] as $rev)
         <article class="spo-rev">
           <div class="hd">
-            <span class="av" aria-hidden="true">{{ __('specialist-owner.reviews.items.' . $rev . '.initial') }}</span>
-            <span class="nm"><span class="n">{{ __('specialist-owner.reviews.items.' . $rev . '.name') }}</span><span class="d">{{ __('specialist-owner.reviews.items.' . $rev . '.date') }}</span></span>
+            <span class="av" aria-hidden="true">{{ t('specialist-owner.reviews.items.' . $rev . '.initial') }}</span>
+            <span class="nm"><span class="n">{{ t('specialist-owner.reviews.items.' . $rev . '.name') }}</span><span class="d">{{ t('specialist-owner.reviews.items.' . $rev . '.date') }}</span></span>
           </div>
           <div class="st"><x-ui.stars :rating="5" :icon="$starIcon" /></div>
-          <p class="tx">{{ __('specialist-owner.reviews.items.' . $rev . '.text') }}</p>
+          <p class="tx">{{ t('specialist-owner.reviews.items.' . $rev . '.text') }}</p>
         </article>
       @endforeach
     </div>
-    <a class="spo-edit" href="{{ route('specialist.cabinet.reviews') }}">{!! $pencil !!}{{ __('specialist-owner.edit') }}</a>
+    <a class="spo-edit" href="{{ route('specialist.cabinet.reviews') }}">{!! $pencil !!}{{ t('specialist-owner.edit') }}</a>
   </section>
 
 </main>

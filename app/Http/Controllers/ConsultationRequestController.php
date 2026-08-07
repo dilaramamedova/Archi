@@ -20,6 +20,6 @@ final class ConsultationRequestController extends Controller
             'user_agent' => str($request->userAgent())->limit(500)->toString(),
         ]);
 
-        return response()->json(['message' => __('home.lead.success')], 201);
+        return response()->json(['message' => t('home.lead.success')], 201);
     }
 }

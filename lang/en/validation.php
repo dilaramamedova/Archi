@@ -14,11 +14,13 @@ return [
         'numeric' => 'The :attribute must not be greater than :max.',
         'file' => 'The :attribute must not be greater than :max kilobytes.',
         'string' => 'The :attribute must not be greater than :max characters.',
+        'array' => 'The :attribute must not have more than :max items.',
     ],
     'mimes' => 'The :attribute must be a file of type: :values.',
     'min' => [
         'numeric' => 'The :attribute must be at least :min.',
         'string' => 'The :attribute must be at least :min characters.',
+        'array' => 'The :attribute must have at least :min items.',
     ],
     'numeric' => 'The :attribute must be a number.',
     'uploaded' => 'The :attribute failed to upload.',

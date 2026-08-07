@@ -26,25 +26,25 @@ class LoginController extends Controller
 
         if (! $user || $user->role === UserRole::Admin || ! Hash::check($request->input('password'), $user->password)) {
             throw ValidationException::withMessages([
-                'identifier' => [__('login.errors.invalid_credentials')],
+                'identifier' => [t('login.errors.invalid_credentials')],
             ]);
         }
 
         if ($user->status === UserStatus::Pending) {
             throw ValidationException::withMessages([
-                'identifier' => [__('login.errors.pending_approval')],
+                'identifier' => [t('login.errors.pending_approval')],
             ]);
         }
 
         if ($user->status === UserStatus::Rejected) {
             throw ValidationException::withMessages([
-                'identifier' => [__('login.errors.rejected')],
+                'identifier' => [t('login.errors.rejected')],
             ]);
         }
 
         if ($user->status === UserStatus::Blocked) {
             throw ValidationException::withMessages([
-                'identifier' => [__('login.errors.blocked')],
+                'identifier' => [t('login.errors.blocked')],
             ]);
         }
 

@@ -1,14 +1,14 @@
 @php
     $strings = [
-        'title' => __('cart.order_success.title', ['number' => $order->order_number]),
-        'heading' => __('cart.order_success.heading'),
-        'message' => __('cart.order_success.message'),
-        'order_number' => __('cart.order_success.order_number'),
-        'total' => __('cart.order_success.total'),
-        'status' => __('cart.order_success.status'),
-        'status_pending' => __('cart.order_success.status_pending'),
-        'back_home' => __('cart.order_success.back_home'),
-        'back_catalog' => __('cart.order_success.back_catalog'),
+        'title' => t('cart.order_success.title', ['number' => $order->order_number]),
+        'heading' => t('cart.order_success.heading'),
+        'message' => t('cart.order_success.message'),
+        'order_number' => t('cart.order_success.order_number'),
+        'total' => t('cart.order_success.total'),
+        'status' => t('cart.order_success.status'),
+        'status_pending' => t('cart.order_success.status_pending'),
+        'back_home' => t('cart.order_success.back_home'),
+        'back_catalog' => t('cart.order_success.back_catalog'),
     ];
 @endphp
 <x-layout page="order-success" :title="$strings['title']">
@@ -16,8 +16,8 @@
 <section class="min-h-[60vh] bg-gray-soft2 pt-10 pb-20">
   <div class="wrap-narrow flex flex-col gap-6">
     <x-ui.breadcrumbs class="gap-1.5 text-sm leading-5" :items="[
-        ['label' => __('common.home'), 'href' => route('home')],
-        ['label' => __('cart.breadcrumb'), 'href' => route('cart')],
+        ['label' => t('common.home'), 'href' => route('home')],
+        ['label' => t('cart.breadcrumb'), 'href' => route('cart')],
         ['label' => $strings['heading']],
     ]" />
 

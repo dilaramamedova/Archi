@@ -4,14 +4,14 @@
 
   Example:
     <div class="cab-field-row">
-      <x-cabinet.field :label="__('...person_label')" for="contact-person">
-        <x-ui.input variant="b2b" id="contact-person" :value="__('...person_value')" />
+      <x-cabinet.field :label="t('...person_label')" for="contact-person">
+        <x-ui.input variant="b2b" id="contact-person" :value="t('...person_value')" />
       </x-cabinet.field>
-      <x-cabinet.field :label="__('...role_label')" for="contact-role">…</x-cabinet.field>
+      <x-cabinet.field :label="t('...role_label')" for="contact-role">…</x-cabinet.field>
     </div>
 
   Full-width row:
-    <x-cabinet.field full :label="__('...address')">…</x-cabinet.field>
+    <x-cabinet.field full :label="t('...address')">…</x-cabinet.field>
 
   Props:
     label — label text

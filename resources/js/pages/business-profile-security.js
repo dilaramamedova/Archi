@@ -1,49 +1,43 @@
-import { authFetch, setLoading } from '../shared/auth.js';
+import { authFetch, clearErrors, showErrors, setLoading } from '../shared/auth.js';
 
-// Page module for "business-profile-security" — the eye icon reveals the password value
-// (the .dots text swaps between data-mask and data-value, both styled the same so the
-// field does not reflow), the 2FA switch flips its data-on state, and the save bar
-// confirms inline (no blocking alert) while Cancel discards the local state by reloading.
-// Selectors follow the shared cabinet contract: .cab-save-bar / .msg / [data-save] /
-// [data-cancel] (see components/cabinet/save-bar.blade.php) and .ui-toggle.
+// Page module for "business-profile-security": real password change (POST /cabinet/password)
+// and the danger-zone account deactivation (POST /cabinet/deactivate).
 export default function init() {
-  const bar = document.querySelector('.cab-save-bar');
-  const msg = bar ? bar.querySelector('.msg') : null;
-  const unsavedText = msg ? msg.textContent : '';
-  const savedText = bar ? (bar.dataset.savedMessage || '').trim() : '';
+  // --- Change password ---
+  const pwdForm = document.getElementById('passwordForm');
+  const pwdErr = document.getElementById('pwdErr');
+  const pwdOk = document.getElementById('pwdOk');
+  const pwdBtn = document.getElementById('pwdSubmit');
 
-  // `saved` only swaps the message text and the dot color — the box keeps its size.
-  const setSaved = (on) => {
-    if (!bar) return;
-    bar.dataset.saved = on ? 'true' : 'false';
-    if (msg) msg.textContent = on && savedText ? savedText : unsavedText;
-  };
+  if (pwdForm) {
+    pwdForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (pwdErr) pwdErr.dataset.on = 'false';
+      if (pwdOk) pwdOk.dataset.on = 'false';
+      clearErrors(pwdForm);
+      setLoading(pwdBtn, true);
 
-  document.querySelectorAll('.bpsec-input .eye').forEach((eye) =>
-    eye.addEventListener('click', () => {
-      const on = eye.dataset.on !== 'true';
-      eye.dataset.on = String(on);
-      const dots = eye.parentElement.querySelector('.dots');
-      if (dots) dots.textContent = on ? dots.dataset.value : dots.dataset.mask;
-    })
-  );
+      const res = await authFetch('/cabinet/password', {
+        current_password: pwdForm.querySelector('[name="current_password"]').value,
+        password: pwdForm.querySelector('[name="password"]').value,
+        password_confirmation: pwdForm.querySelector('[name="password_confirmation"]').value,
+      });
 
-  document.querySelectorAll('.ui-toggle').forEach((toggle) =>
-    toggle.addEventListener('click', () => {
-      const on = toggle.dataset.on !== 'true';
-      toggle.dataset.on = String(on);
-      toggle.setAttribute('aria-pressed', String(on));
-      setSaved(false);
-    })
-  );
+      setLoading(pwdBtn, false);
 
-  if (bar) {
-    const saveBtn = bar.querySelector('[data-save]');
-    const cancelBtn = bar.querySelector('[data-cancel]');
-    if (saveBtn) saveBtn.addEventListener('click', () => setSaved(true));
-    if (cancelBtn) cancelBtn.addEventListener('click', () => window.location.reload());
+      if (res.ok) {
+        if (pwdOk) {
+          pwdOk.textContent = res.data.message;
+          pwdOk.dataset.on = 'true';
+        }
+        pwdForm.reset();
+      } else {
+        showErrors(pwdForm, res.errors, 'pwdErr');
+      }
+    });
   }
 
+  // --- Deactivate account ---
   const deactivateBtn = document.getElementById('deactivateBtn');
   const deactivateConfirm = document.getElementById('deactivateConfirm');
   const deactivateConfirmBtn = document.getElementById('deactivateConfirmBtn');

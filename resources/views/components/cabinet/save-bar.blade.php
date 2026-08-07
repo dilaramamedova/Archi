@@ -26,7 +26,7 @@
         foreach ($keys as $key) {
             $full = $ns . '.' . $key;
             if (\Illuminate\Support\Facades\Lang::has($full)) {
-                return __($full);
+                return t($full);
             }
         }
         return $ns . '.' . $keys[0];

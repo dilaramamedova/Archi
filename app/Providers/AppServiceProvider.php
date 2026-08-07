@@ -7,6 +7,7 @@ use App\Models\CartItem;
 use App\Models\MenuItem;
 use App\Models\SocialLink;
 use App\Support\WindowsSafeFilesystem;
+use App\Translation\DatabaseTranslationLoader;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -18,6 +19,12 @@ class AppServiceProvider extends ServiceProvider
             $this->app->forgetInstance('files');
             $this->app->singleton('files', fn (): WindowsSafeFilesystem => new WindowsSafeFilesystem);
         }
+
+        // Serve UI translations from the database (Filament "Tərcümələr" module),
+        // falling back to lang/*/validation.php and other framework files on disk.
+        $this->app->extend('translation.loader', function ($loader, $app): DatabaseTranslationLoader {
+            return new DatabaseTranslationLoader($app['files'], $app['path.lang']);
+        });
     }
 
     public function boot(): void

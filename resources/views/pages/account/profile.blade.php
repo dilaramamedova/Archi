@@ -2,7 +2,7 @@
 @php
     $initials = mb_strtoupper(mb_substr($user->first_name ?? $user->name ?? '', 0, 1) . mb_substr($user->last_name ?? '', 0, 1));
 @endphp
-<x-layout page="account-profile" :title="__('account.title', [], 'Hesabım')">
+<x-layout page="account-profile" :title="t('account.title')">
 
 <section class="bg-gray-soft2 min-h-[60vh] py-12">
   <div class="mx-auto max-w-[800px] px-7">
@@ -18,9 +18,9 @@
 
     {{-- nav tabs --}}
     <div class="mb-8 flex gap-4 border-b border-black/10">
-      <a href="{{ route('account') }}" class="border-b-2 border-yellow px-4 pb-3 text-sm font-semibold text-ink">{{ __('account.nav.profile', [], 'Profil') }}</a>
-      <a href="{{ route('account.orders') }}" class="border-b-2 border-transparent px-4 pb-3 text-sm font-medium text-black/50 hover:text-ink">{{ __('account.nav.orders', [], 'Sifarişlər') }}</a>
-      <a href="{{ route('wishlist') }}" class="border-b-2 border-transparent px-4 pb-3 text-sm font-medium text-black/50 hover:text-ink">{{ __('account.nav.wishlist', [], 'Seçilmişlər') }}</a>
+      <a href="{{ route('account') }}" class="border-b-2 border-yellow px-4 pb-3 text-sm font-semibold text-ink">{{ t('account.nav.profile') }}</a>
+      <a href="{{ route('account.orders') }}" class="border-b-2 border-transparent px-4 pb-3 text-sm font-medium text-black/50 hover:text-ink">{{ t('account.nav.orders') }}</a>
+      <a href="{{ route('wishlist') }}" class="border-b-2 border-transparent px-4 pb-3 text-sm font-medium text-black/50 hover:text-ink">{{ t('account.nav.wishlist') }}</a>
     </div>
 
     @if (session('success'))
@@ -32,18 +32,18 @@
       @csrf
       @method('PUT')
 
-      <h2 class="mb-6 text-lg font-semibold text-ink">{{ __('account.personal_info', [], 'Şəxsi məlumatlar') }}</h2>
+      <h2 class="mb-6 text-lg font-semibold text-ink">{{ t('account.personal_info') }}</h2>
 
       <div class="flex flex-col gap-5">
         <div class="flex gap-4 max-[560px]:flex-col">
           <div class="flex flex-1 flex-col gap-1.5">
-            <label class="text-sm font-medium text-black/70" for="first_name">{{ __('account.first_name', [], 'Ad') }}</label>
+            <label class="text-sm font-medium text-black/70" for="first_name">{{ t('account.first_name') }}</label>
             <input type="text" id="first_name" name="first_name" value="{{ old('first_name', $user->first_name) }}"
                    class="border border-black/15 px-4 py-3 text-[15px] outline-none transition focus:border-black/40" required>
             @error('first_name') <p class="text-xs text-red">{{ $message }}</p> @enderror
           </div>
           <div class="flex flex-1 flex-col gap-1.5">
-            <label class="text-sm font-medium text-black/70" for="last_name">{{ __('account.last_name', [], 'Soyad') }}</label>
+            <label class="text-sm font-medium text-black/70" for="last_name">{{ t('account.last_name') }}</label>
             <input type="text" id="last_name" name="last_name" value="{{ old('last_name', $user->last_name) }}"
                    class="border border-black/15 px-4 py-3 text-[15px] outline-none transition focus:border-black/40">
             @error('last_name') <p class="text-xs text-red">{{ $message }}</p> @enderror
@@ -51,14 +51,14 @@
         </div>
 
         <div class="flex flex-col gap-1.5">
-          <label class="text-sm font-medium text-black/70" for="email">{{ __('account.email', [], 'E-poçt') }}</label>
+          <label class="text-sm font-medium text-black/70" for="email">{{ t('account.email') }}</label>
           <input type="email" id="email" value="{{ $user->email }}" disabled
                  class="border border-black/15 bg-gray-soft px-4 py-3 text-[15px] text-black/50 outline-none">
-          <p class="text-xs text-black/40">{{ __('account.email_hint', [], 'E-poçt dəyişdirilə bilməz') }}</p>
+          <p class="text-xs text-black/40">{{ t('account.email_hint') }}</p>
         </div>
 
         <div class="flex flex-col gap-1.5">
-          <label class="text-sm font-medium text-black/70" for="phone">{{ __('account.phone', [], 'Telefon') }}</label>
+          <label class="text-sm font-medium text-black/70" for="phone">{{ t('account.phone') }}</label>
           <input type="tel" id="phone" name="phone" value="{{ old('phone', $user->phone) }}"
                  class="border border-black/15 px-4 py-3 text-[15px] outline-none transition focus:border-black/40"
                  placeholder="+994 XX XXX XX XX">
@@ -67,7 +67,39 @@
       </div>
 
       <div class="mt-7 flex items-center justify-end border-t border-black/10 pt-6">
-        <button type="submit" class="bg-yellow px-8 py-3 text-base font-semibold text-ink transition hover:brightness-[.93]">{{ __('account.save', [], 'Yadda saxla') }}</button>
+        <button type="submit" class="bg-yellow px-8 py-3 text-base font-semibold text-ink transition hover:brightness-[.93]">{{ t('account.save') }}</button>
+      </div>
+    </form>
+
+    {{-- security: change password (POST /cabinet/password, shared by all roles) --}}
+    <form id="passwordForm" autocomplete="off" class="mt-8 border border-black/12 bg-white p-8 shadow-[-4px_4px_4px_rgba(0,0,0,0.05)]">
+      <h2 class="mb-6 text-lg font-semibold text-ink">{{ t('account.security.title') }}</h2>
+
+      <x-ui.alert tone="error" id="pwdErr" class="mb-4" />
+      <x-ui.alert tone="ok" id="pwdOk" class="mb-4" />
+
+      <div class="flex flex-col gap-5">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-sm font-medium text-black/70" for="current_password">{{ t('account.security.current') }}</label>
+          <input type="password" id="current_password" name="current_password" autocomplete="current-password"
+                 class="border border-black/15 px-4 py-3 text-[15px] outline-none transition focus:border-black/40">
+        </div>
+        <div class="flex gap-4 max-[560px]:flex-col">
+          <div class="flex flex-1 flex-col gap-1.5">
+            <label class="text-sm font-medium text-black/70" for="password">{{ t('account.security.new') }}</label>
+            <input type="password" id="password" name="password" autocomplete="new-password"
+                   class="border border-black/15 px-4 py-3 text-[15px] outline-none transition focus:border-black/40">
+          </div>
+          <div class="flex flex-1 flex-col gap-1.5">
+            <label class="text-sm font-medium text-black/70" for="password_confirmation">{{ t('account.security.repeat') }}</label>
+            <input type="password" id="password_confirmation" name="password_confirmation" autocomplete="new-password"
+                   class="border border-black/15 px-4 py-3 text-[15px] outline-none transition focus:border-black/40">
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-7 flex items-center justify-end border-t border-black/10 pt-6">
+        <button type="submit" id="pwdSubmit" class="bg-yellow px-8 py-3 text-base font-semibold text-ink transition hover:brightness-[.93]">{{ t('account.security.save') }}</button>
       </div>
     </form>
 

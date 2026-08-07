@@ -3,7 +3,7 @@
   the data-archi="nav" injection system is gone — this component replaces it.
 
   Class names match the old CSS (styles live in resources/css/app.css), internal
-  links go through route(...), all text through __('nav.*'), images use /assets/...,
+  links go through route(...), all text through t('nav.*'), images use /assets/...,
   and the active nav item is computed server-side rather than in JS.
 
   The navbar must render at the same width on every page: page CSS must never set a
@@ -29,28 +29,28 @@
 
 <header class="topbar">
   <div class="nav-row1">
-    <a href="{{ route('home') }}" aria-label="{{ __('nav.logo_aria') }}"><img class="logo" src="/assets/logo-archi-black.png" alt="ARCHI"></a>
+    <a href="{{ route('home') }}" aria-label="{{ t('nav.logo_aria') }}"><img class="logo" src="/assets/logo-archi-black.png" alt="ARCHI"></a>
 
     <div class="search"
          data-url-api="/api/search"
          data-url-search="{{ route('search') }}"
          data-url-specialists="/specialist"
          data-url-product="/product"
-         data-l-quick="{{ __('nav.sd_quick') }}"
-         data-l-products="{{ __('nav.sd_products') }}"
-         data-l-masters="{{ __('nav.sd_masters') }}"
-         data-l-all="{{ __('nav.sd_all_results') }}"
-         data-l-loading="{{ __('nav.sd_loading', [], app()->getLocale()) }}"
-         data-l-no-results="{{ __('nav.sd_no_results', [], app()->getLocale()) }}">
+         data-l-quick="{{ t('nav.sd_quick') }}"
+         data-l-products="{{ t('nav.sd_products') }}"
+         data-l-masters="{{ t('nav.sd_masters') }}"
+         data-l-all="{{ t('nav.sd_all_results') }}"
+         data-l-loading="{{ t('nav.sd_loading', [], app()->getLocale()) }}"
+         data-l-no-results="{{ t('nav.sd_no_results', [], app()->getLocale()) }}">
       <img src="/assets/icon-search.svg" alt="">
-      <input type="text" id="navSearch" aria-label="{{ __('nav.search_aria') }}" placeholder="{{ __('nav.search_placeholder') }}" autocomplete="off">
+      <input type="text" id="navSearch" aria-label="{{ t('nav.search_aria') }}" placeholder="{{ t('nav.search_placeholder') }}" autocomplete="off">
       <div class="search-dropdown" id="searchDrop"></div>
     </div>
 
     <div class="nav-menu">
       <div class="nav-icons">
         {{-- Language switcher — server-side: /lang/{locale} stores the session and redirects back --}}
-        <div class="lang" id="langBtn" role="button" tabindex="0" aria-label="{{ __('nav.lang_aria') }}"
+        <div class="lang" id="langBtn" role="button" tabindex="0" aria-label="{{ t('nav.lang_aria') }}"
              aria-haspopup="true" aria-controls="langMenu" aria-expanded="false">
           <span id="langLabel">{{ $langLabels[$locale] ?? 'AZ' }}</span> <img src="/assets/icon-chevron-down.svg" alt="">
           <ul class="lang-menu" id="langMenu">
@@ -62,8 +62,8 @@
           </ul>
         </div>
 
-        <a href="{{ route('wishlist') }}" class="nav-wish" aria-label="{{ __('nav.favorites') }}"><img src="/assets/icon-heart-rounded.svg" alt=""></a>
-        <a href="{{ route('cart') }}" class="nav-cart" aria-label="{{ __('nav.cart') }}"><img src="/assets/icon-cart.svg" alt=""><span class="cart-badge" id="navCartCount"></span></a>
+        <a href="{{ route('wishlist') }}" class="nav-wish" aria-label="{{ t('nav.favorites') }}"><img src="/assets/icon-heart-rounded.svg" alt=""></a>
+        <a href="{{ route('cart') }}" class="nav-cart" aria-label="{{ t('nav.cart') }}"><img src="/assets/icon-cart.svg" alt=""><span class="cart-badge" id="navCartCount"></span></a>
       </div>
 
       <div class="signin">
@@ -94,39 +94,39 @@
                 </div>
               </div>
               <div class="py-1.5">
-                <a href="{{ route('account.orders') }}" class="flex items-center justify-between px-4 py-2.5 text-sm font-medium text-ink hover:bg-[#f5f7f9]">{{ __('nav.my_orders') }}</a>
-                <a href="{{ route('wishlist') }}" class="flex items-center justify-between px-4 py-2.5 text-sm font-medium text-ink hover:bg-[#f5f7f9]">{{ __('nav.favorites') }}</a>
-                <a href="{{ $profileRoute }}" class="flex items-center justify-between px-4 py-2.5 text-sm font-medium text-ink hover:bg-[#f5f7f9]">{{ __('nav.account_settings') }}</a>
+                <a href="{{ route('account.orders') }}" class="flex items-center justify-between px-4 py-2.5 text-sm font-medium text-ink hover:bg-[#f5f7f9]">{{ t('nav.my_orders') }}</a>
+                <a href="{{ route('wishlist') }}" class="flex items-center justify-between px-4 py-2.5 text-sm font-medium text-ink hover:bg-[#f5f7f9]">{{ t('nav.favorites') }}</a>
+                <a href="{{ $profileRoute }}" class="flex items-center justify-between px-4 py-2.5 text-sm font-medium text-ink hover:bg-[#f5f7f9]">{{ t('nav.account_settings') }}</a>
               </div>
               <div class="border-t border-black/8 py-1.5">
-                <a href="{{ route('help') }}" class="flex items-center px-4 py-2.5 text-sm font-medium text-ink hover:bg-[#f5f7f9]">{{ __('nav.help_center') }}</a>
+                <a href="{{ route('help') }}" class="flex items-center px-4 py-2.5 text-sm font-medium text-ink hover:bg-[#f5f7f9]">{{ t('nav.help_center') }}</a>
               </div>
               <div class="border-t border-black/8 py-1.5">
                 <form method="POST" action="{{ route('logout') }}">
                   @csrf
-                  <button type="submit" class="flex w-full items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-[#f5f7f9]">{{ __('nav.logout') }}</button>
+                  <button type="submit" class="flex w-full items-center px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-[#f5f7f9]">{{ t('nav.logout') }}</button>
                 </form>
               </div>
             </div>
           </div>
         @else
-          <a class="txt" href="{{ route('login') }}">{{ __('nav.sign_in') }}</a>
+          <a class="txt" href="{{ route('login') }}">{{ t('nav.sign_in') }}</a>
         @endauth
-        <a class="btn-post" href="{{ route('sell') }}"><img src="/assets/icon-plus.svg" alt=""><span>{{ __('nav.post_product') }}</span></a>
+        <a class="btn-post" href="{{ route('sell') }}"><img src="/assets/icon-plus.svg" alt=""><span>{{ t('nav.post_product') }}</span></a>
       </div>
 
       {{-- Mobile hamburger — visible only ≤900px --}}
-      <button class="mob-burger" id="mobBurger" type="button" aria-label="Menu" aria-expanded="false">
+      <button class="mob-burger" id="mobBurger" type="button" aria-label="{{ t('nav.menu_aria') }}" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
     </div>
 
     {{-- Mobile drawer — slides from right, holds all nav links --}}
     <div class="mob-overlay" id="mobOverlay"></div>
-    <nav class="mob-drawer" id="mobDrawer" aria-label="Mobile navigation">
+    <nav class="mob-drawer" id="mobDrawer" aria-label="{{ t('nav.mobile_nav_aria') }}">
       <div class="mob-drawer-head">
         <a href="{{ route('home') }}"><img class="logo" src="/assets/logo-archi-black.png" alt="ARCHI"></a>
-        <button class="mob-close" id="mobClose" type="button" aria-label="Close menu">✕</button>
+        <button class="mob-close" id="mobClose" type="button" aria-label="{{ t('nav.close_menu_aria') }}">✕</button>
       </div>
 
       <div class="mob-drawer-search">
@@ -135,14 +135,14 @@
              data-url-search="{{ route('search') }}"
              data-url-specialists="/specialist"
              data-url-product="/product"
-             data-l-quick="{{ __('nav.sd_quick') }}"
-             data-l-products="{{ __('nav.sd_products') }}"
-             data-l-masters="{{ __('nav.sd_masters') }}"
-             data-l-all="{{ __('nav.sd_all_results') }}"
-             data-l-loading="{{ __('nav.sd_loading', [], app()->getLocale()) }}"
-             data-l-no-results="{{ __('nav.sd_no_results', [], app()->getLocale()) }}">
+             data-l-quick="{{ t('nav.sd_quick') }}"
+             data-l-products="{{ t('nav.sd_products') }}"
+             data-l-masters="{{ t('nav.sd_masters') }}"
+             data-l-all="{{ t('nav.sd_all_results') }}"
+             data-l-loading="{{ t('nav.sd_loading', [], app()->getLocale()) }}"
+             data-l-no-results="{{ t('nav.sd_no_results', [], app()->getLocale()) }}">
           <img src="/assets/icon-search.svg" alt="">
-          <input type="text" aria-label="{{ __('nav.search_aria') }}" placeholder="{{ __('nav.search_placeholder') }}" autocomplete="off">
+          <input type="text" aria-label="{{ t('nav.search_aria') }}" placeholder="{{ t('nav.search_placeholder') }}" autocomplete="off">
         </div>
       </div>
 
@@ -164,13 +164,13 @@
           <a class="mob-link" href="{{ $profileRoute }}">{{ Auth::user()->first_name }}</a>
           <form method="POST" action="{{ route('logout') }}" class="inline">
             @csrf
-            <button type="submit" class="mob-link">{{ __('nav.logout') }}</button>
+            <button type="submit" class="mob-link">{{ t('nav.logout') }}</button>
           </form>
         @else
-          <a class="mob-link" href="{{ route('login') }}">{{ __('nav.sign_in') }}</a>
-          <a class="mob-link" href="{{ route('register') }}">{{ __('nav.register') }}</a>
+          <a class="mob-link" href="{{ route('login') }}">{{ t('nav.sign_in') }}</a>
+          <a class="mob-link" href="{{ route('register') }}">{{ t('nav.register') }}</a>
         @endauth
-        <a class="mob-post-btn" href="{{ route('sell') }}"><img src="/assets/icon-plus.svg" alt=""><span>{{ __('nav.post_product') }}</span></a>
+        <a class="mob-post-btn" href="{{ route('sell') }}"><img src="/assets/icon-plus.svg" alt=""><span>{{ t('nav.post_product') }}</span></a>
 
         <div class="mob-lang">
           @foreach ($langLabels as $code => $label)
@@ -248,8 +248,8 @@
         <div class="promo">
           <img class="ph" src="/assets/architecture-house-sketch.jpg" alt="">
           <div class="card">
-            <p>{{ __('nav.mega_promo_text') }}</p>
-            <a class="pill" href="{{ route('specialists') }}">{{ __('nav.mega_promo_cta') }}</a>
+            <p>{{ t('nav.mega_promo_text') }}</p>
+            <a class="pill" href="{{ route('specialists') }}">{{ t('nav.mega_promo_cta') }}</a>
           </div>
         </div>
       </div>
@@ -281,9 +281,9 @@
                 <h4>{{ $post->title }}</h4>
                 <div class="d">{{ $post->excerpt }}</div>
                 @if ($loop->last)
-                  <span class="pill">{{ __('common.more') }}</span>
+                  <span class="pill">{{ t('common.more') }}</span>
                 @else
-                  <span class="read">{{ __('common.read_more') }} <img src="/assets/icon-arrow-right.svg" alt=""></span>
+                  <span class="read">{{ t('common.read_more') }} <img src="/assets/icon-arrow-right.svg" alt=""></span>
                 @endif
               </div>
             </a>

@@ -6,7 +6,7 @@
   page fully translatable without touching the template strings.
 --}}
 @php
-    $tr = __('calculator-detailed');
+    $tr = t('calculator-detailed');
 
     $cats = $tr['cats'];
     $floors = $tr['rooms']['floors'];
@@ -100,7 +100,7 @@
         'cats' => $cats,
     ];
 @endphp
-<x-layout page="calculator-detailed" :title="__('calculator-detailed.title')">
+<x-layout page="calculator-detailed" :title="t('calculator-detailed.title')">
 
 <section class="dc-page" id="dcPage"
          data-url-catalog="{{ route('catalog') }}"
@@ -108,9 +108,9 @@
          data-defaults="{{ json_encode($defaults) }}">
   <div class="wrap-narrow dc-inner">
     <div class="dc-head">
-      <div class="tag"><span class="line"></span><p>{{ __('calculator-detailed.head.tag') }}</p></div>
-      <h1>{{ __('calculator-detailed.head.title') }}</h1>
-      <div class="sub">{{ __('calculator-detailed.head.sub') }}</div>
+      <div class="tag"><span class="line"></span><p>{{ t('calculator-detailed.head.tag') }}</p></div>
+      <h1>{{ t('calculator-detailed.head.title') }}</h1>
+      <div class="sub">{{ t('calculator-detailed.head.sub') }}</div>
     </div>
 
     {{-- stepper, current step and side panel are all rendered by calculator-detailed.js --}}

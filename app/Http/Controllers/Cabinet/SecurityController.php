@@ -22,7 +22,7 @@ class SecurityController extends Controller
 
         if (! Hash::check($request->input('current_password'), $user->password)) {
             return response()->json([
-                'errors' => ['current_password' => [__('security.errors.wrong_password')]],
+                'errors' => ['current_password' => [t('security.errors.wrong_password')]],
             ], 422);
         }
 
@@ -30,7 +30,7 @@ class SecurityController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => __('security.password_changed'),
+            'message' => t('security.password_changed'),
         ]);
     }
 
@@ -44,7 +44,7 @@ class SecurityController extends Controller
 
         if (! Hash::check($request->input('password'), $user->password)) {
             return response()->json([
-                'errors' => ['password' => [__('security.errors.wrong_password')]],
+                'errors' => ['password' => [t('security.errors.wrong_password')]],
             ], 422);
         }
 

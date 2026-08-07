@@ -5,7 +5,7 @@
   (.cab-btn-view, .cab-btn-add, .cab-btn-save, ...).
 
   Example:
-    <x-ui.button variant="primary" class="cab-btn-save">{{ __('...save') }}</x-ui.button>
+    <x-ui.button variant="primary" class="cab-btn-save">{{ t('...save') }}</x-ui.button>
     <x-ui.button variant="outline" class="cab-btn-view" :href="route('business.profile')">…</x-ui.button>
     <x-ui.button variant="primary" class="h-[54px] text-lg font-semibold" type="submit">…</x-ui.button>
 

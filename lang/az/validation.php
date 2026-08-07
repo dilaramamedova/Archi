@@ -14,11 +14,13 @@ return [
         'numeric' => ':attribute :max-dan çox olmamalıdır.',
         'file' => ':attribute :max kilobaytdan böyük olmamalıdır.',
         'string' => ':attribute :max simvoldan çox olmamalıdır.',
+        'array' => ':attribute :max elementdən çox olmamalıdır.',
     ],
     'mimes' => ':attribute bu formatlardan biri olmalıdır: :values.',
     'min' => [
         'numeric' => ':attribute ən azı :min olmalıdır.',
         'string' => ':attribute ən azı :min simvol olmalıdır.',
+        'array' => ':attribute ən azı :min element olmalıdır.',
     ],
     'numeric' => ':attribute ədəd olmalıdır.',
     'uploaded' => ':attribute yüklənmədi.',

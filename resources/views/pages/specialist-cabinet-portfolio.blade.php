@@ -22,7 +22,7 @@
     $count = $portfolioItems->count();
     $max = $maxPortfolio;
 @endphp
-<x-layout page="specialist-cabinet-portfolio" :title="__('specialist-cabinet-portfolio.title')" bodyClass="bg-gray-soft2">
+<x-layout page="specialist-cabinet-portfolio" :title="t('specialist-cabinet-portfolio.title')" bodyClass="bg-gray-soft2">
 
 <x-cabinet.shell
     ns="specialist-cabinet-portfolio"
@@ -37,11 +37,11 @@
   <x-cabinet.card
       layout="row"
       gap="gap-4"
-      :title="__('specialist-cabinet-portfolio.list.title', ['count' => $count, 'max' => $max])"
-      :desc="__('specialist-cabinet-portfolio.list.summary')"
-      data-title-tpl="{{ __('specialist-cabinet-portfolio.list.title', ['count' => '{count}', 'max' => '{max}']) }}">
+      :title="t('specialist-cabinet-portfolio.list.title', ['count' => $count, 'max' => $max])"
+      :desc="t('specialist-cabinet-portfolio.list.summary')"
+      data-title-tpl="{{ t('specialist-cabinet-portfolio.list.title', ['count' => '{count}', 'max' => '{max}']) }}">
     <x-slot:action>
-      <x-ui.button variant="primary" class="cab-btn-add" data-add>{{ __('specialist-cabinet-portfolio.list.add') }}</x-ui.button>
+      <x-ui.button variant="primary" class="cab-btn-add" data-add>{{ t('specialist-cabinet-portfolio.list.add') }}</x-ui.button>
     </x-slot:action>
 
     <x-ui.alert tone="error" id="portfolioErr" />
@@ -50,29 +50,29 @@
     <div class="scp-grid" data-count="{{ $count }}" data-max="{{ $max }}">
       @foreach ($portfolioItems as $item)
         <div class="scp-tile" draggable="true" data-drag="false" data-over="false" data-id="{{ $item->id }}">
-          <img src="{{ storage_url($item->image_path) }}" alt="{{ $item->title ?? __('specialist-cabinet-portfolio.tile.untitled') }}">
+          <img src="{{ storage_url($item->image_path) }}" alt="{{ $item->title ?? t('specialist-cabinet-portfolio.tile.untitled') }}">
           <p class="scp-status" data-status="{{ $item->status->value }}">{{ $item->status->label() }}</p>
-          <p class="scp-cover" @if (! $item->is_cover) hidden @endif>{{ __('specialist-cabinet-portfolio.tile.cover') }}</p>
+          <p class="scp-cover" @if (! $item->is_cover) hidden @endif>{{ t('specialist-cabinet-portfolio.tile.cover') }}</p>
           <button type="button" class="scp-del" data-del
-                  aria-label="{{ __('specialist-cabinet-portfolio.tile.remove_label') }}">{{ __('specialist-cabinet-portfolio.tile.remove') }}</button>
+                  aria-label="{{ t('specialist-cabinet-portfolio.tile.remove_label') }}">{{ t('specialist-cabinet-portfolio.tile.remove') }}</button>
           <p class="scp-cap" contenteditable="true">{{ $item->title ?? '' }}</p>
         </div>
       @endforeach
 
       {{-- dashed uploader slot (831:11986) --}}
       <button type="button" class="scp-add" data-add>
-        <span class="ic" aria-hidden="true">{{ __('specialist-cabinet-portfolio.uploader.icon') }}</span>
-        <span class="l">{{ __('specialist-cabinet-portfolio.uploader.label') }}</span>
+        <span class="ic" aria-hidden="true">{{ t('specialist-cabinet-portfolio.uploader.icon') }}</span>
+        <span class="l">{{ t('specialist-cabinet-portfolio.uploader.label') }}</span>
       </button>
     </div>
 
     <template id="portfolioTileTemplate">
       <div class="scp-tile" draggable="true" data-drag="false" data-over="false">
         <img src="" alt="">
-        <p class="scp-status" data-status="pending">Yoxlanılır</p>
-        <p class="scp-cover" hidden>{{ __('specialist-cabinet-portfolio.tile.cover') }}</p>
+        <p class="scp-status" data-status="pending">{{ t('specialist-cabinet-portfolio.tile.status_pending') }}</p>
+        <p class="scp-cover" hidden>{{ t('specialist-cabinet-portfolio.tile.cover') }}</p>
         <button type="button" class="scp-del" data-del
-                aria-label="{{ __('specialist-cabinet-portfolio.tile.remove_label') }}">{{ __('specialist-cabinet-portfolio.tile.remove') }}</button>
+                aria-label="{{ t('specialist-cabinet-portfolio.tile.remove_label') }}">{{ t('specialist-cabinet-portfolio.tile.remove') }}</button>
         <p class="scp-cap" contenteditable="true"></p>
       </div>
     </template>
@@ -87,12 +87,12 @@
         <path d="M5 2.53V15.47M1.5 6.03 5 2.53 8.5 6.03M1.5 11.97 5 15.47 8.5 11.97"
               stroke="currentColor" stroke-width="1.05" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <span class="t">{{ __('specialist-cabinet-portfolio.hint.text') }}</span>
+      <span class="t">{{ t('specialist-cabinet-portfolio.hint.text') }}</span>
     </p>
 
     {{-- both "add" affordances open this picker; new tiles are previewed client-side --}}
     <input type="file" class="sr-only" data-picker multiple accept="image/jpeg,image/png,image/webp"
-           aria-label="{{ __('specialist-cabinet-portfolio.uploader.picker_label') }}">
+           aria-label="{{ t('specialist-cabinet-portfolio.uploader.picker_label') }}">
   </x-cabinet.card>
 
   <x-cabinet.save-bar ns="specialist-cabinet-portfolio" />

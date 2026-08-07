@@ -27,7 +27,7 @@ class AccountController extends Controller
         $user = $request->user();
         $user->update($validated);
 
-        return back()->with('success', __('account.profile_updated'));
+        return back()->with('success', t('account.profile_updated'));
     }
 
     public function orders()

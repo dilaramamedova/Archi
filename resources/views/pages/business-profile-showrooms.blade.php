@@ -1,5 +1,5 @@
 {{-- Business cabinet — showrooms (Figma 1105:23687) --}}
-<x-layout page="business-profile-showrooms" :title="__('business-profile-showrooms.title')" bodyClass="bg-gray-soft2">
+<x-layout page="business-profile-showrooms" :title="t('business-profile-showrooms.title')" bodyClass="bg-gray-soft2">
 
 @php
   $showroomCount = $showrooms->count();
@@ -16,10 +16,10 @@
 <x-cabinet.shell ns="business-profile-showrooms" active="showrooms" class="bpsh-page text-ink" :nav-items="$businessNav">
 
   <x-cabinet.card layout="row" gap="gap-4"
-      :title="__('business-profile-showrooms.nav.showrooms') . ' (' . number_format($showroomCount) . ')'"
-      :desc="__('business-profile-showrooms.list.desc')">
+      :title="t('business-profile-showrooms.nav.showrooms') . ' (' . number_format($showroomCount) . ')'"
+      :desc="t('business-profile-showrooms.list.desc')">
     <x-slot:action>
-      <x-ui.button variant="primary" class="cab-btn-add">{{ __('business-profile-showrooms.list.add') }}</x-ui.button>
+      <x-ui.button variant="primary" class="cab-btn-add">{{ t('business-profile-showrooms.list.add') }}</x-ui.button>
     </x-slot:action>
 
     @forelse ($showrooms as $showroom)
@@ -42,14 +42,14 @@
           <b>{{ $showroom->name }}</b>
           <p>{{ $meta }}</p>
         </div>
-        <x-ui.badge :tone="$showroom->status === 'active' ? 'ok' : 'muted'" size="sm" class="px-[9px]">{{ __("business-profile-showrooms.state.{$showroom->status}") }}</x-ui.badge>
+        <x-ui.badge :tone="$showroom->status === 'active' ? 'ok' : 'muted'" size="sm" class="px-[9px]">{{ t("business-profile-showrooms.state.{$showroom->status}") }}</x-ui.badge>
         <div class="bpsh-sh-actions">
-          <x-ui.button variant="outline" data-edit class="cab-btn-edit items-start">{{ __('business-profile-showrooms.list.edit') }}</x-ui.button>
-          <x-ui.button variant="ghost" data-delete class="cab-btn-del items-start">{{ __('business-profile-showrooms.list.delete') }}</x-ui.button>
+          <x-ui.button variant="outline" data-edit class="cab-btn-edit items-start">{{ t('business-profile-showrooms.list.edit') }}</x-ui.button>
+          <x-ui.button variant="ghost" data-delete class="cab-btn-del items-start">{{ t('business-profile-showrooms.list.delete') }}</x-ui.button>
         </div>
       </x-cabinet.row>
     @empty
-      <div class="w-full py-8 text-center text-sm text-black/50">{{ __('business-profile-showrooms.empty') }}</div>
+      <div class="w-full py-8 text-center text-sm text-black/50">{{ t('business-profile-showrooms.empty') }}</div>
     @endforelse
   </x-cabinet.card>
 
@@ -57,40 +57,40 @@
   <div id="showroomModal" class="fixed inset-0 z-[9999] hidden items-center justify-center overflow-y-auto bg-black/40 p-4" hidden>
     <div class="my-auto max-h-[calc(100vh-2rem)] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6 shadow-xl">
       <h3 class="mb-4 text-lg font-semibold" data-modal-title
-          data-add-title="{{ __('business-profile-showrooms.modal.add_title') }}"
-          data-edit-title="{{ __('business-profile-showrooms.modal.edit_title') }}">{{ __('business-profile-showrooms.modal.add_title') }}</h3>
+          data-add-title="{{ t('business-profile-showrooms.modal.add_title') }}"
+          data-edit-title="{{ t('business-profile-showrooms.modal.edit_title') }}">{{ t('business-profile-showrooms.modal.add_title') }}</h3>
       <div class="flex flex-col gap-3">
         <label class="flex flex-col gap-1 text-sm font-medium">
-          {{ __('business-profile-showrooms.modal.name') }}
+          {{ t('business-profile-showrooms.modal.name') }}
           <x-ui.input variant="b2b" name="name" id="showroomName" />
         </label>
         <label class="flex flex-col gap-1 text-sm font-medium">
-          {{ __('business-profile-showrooms.modal.address') }}
+          {{ t('business-profile-showrooms.modal.address') }}
           <x-ui.input variant="b2b" name="address" id="showroomAddress" />
         </label>
         <label class="flex flex-col gap-1 text-sm font-medium">
-          {{ __('business-profile-showrooms.modal.city') }}
+          {{ t('business-profile-showrooms.modal.city') }}
           <x-ui.input variant="b2b" name="city" id="showroomCity" />
         </label>
         <label class="flex flex-col gap-1 text-sm font-medium">
-          {{ __('business-profile-showrooms.modal.phone') }}
+          {{ t('business-profile-showrooms.modal.phone') }}
           <x-ui.input variant="b2b" name="phone" id="showroomPhone" />
         </label>
         <label class="flex flex-col gap-1 text-sm font-medium">
-          {{ __('business-profile-showrooms.modal.work_hours') }}
+          {{ t('business-profile-showrooms.modal.work_hours') }}
           <x-ui.input variant="b2b" name="work_hours" id="showroomHours" />
         </label>
         <label class="flex flex-col gap-1 text-sm font-medium">
-          {{ __('business-profile-showrooms.modal.status') }}
+          {{ t('business-profile-showrooms.modal.status') }}
           <select name="status" id="showroomStatus" class="ui-control-b2b h-11 px-3.5">
-            <option value="active">{{ __('business-profile-showrooms.state.active') }}</option>
-            <option value="hidden">{{ __('business-profile-showrooms.state.hidden') }}</option>
+            <option value="active">{{ t('business-profile-showrooms.state.active') }}</option>
+            <option value="hidden">{{ t('business-profile-showrooms.state.hidden') }}</option>
           </select>
         </label>
       </div>
       <div class="mt-5 flex justify-end gap-2">
-        <x-ui.button variant="ghost" data-modal-cancel class="cab-btn-del items-start">{{ __('business-profile-showrooms.save.cancel') }}</x-ui.button>
-        <x-ui.button variant="primary" data-modal-save class="cab-btn-add">{{ __('business-profile-showrooms.save.save') }}</x-ui.button>
+        <x-ui.button variant="ghost" data-modal-cancel class="cab-btn-del items-start">{{ t('business-profile-showrooms.save.cancel') }}</x-ui.button>
+        <x-ui.button variant="primary" data-modal-save class="cab-btn-add">{{ t('business-profile-showrooms.save.save') }}</x-ui.button>
       </div>
     </div>
   </div>

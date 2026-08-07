@@ -93,7 +93,7 @@ export default function () {
         window.ARCHI?.toast?.show({ type: 'success', title: data.message });
         if (data.redirect) setTimeout(() => (location.href = data.redirect), 600);
       } else {
-        const firstError = data.errors ? Object.values(data.errors)[0][0] : (data.message || 'Xəta baş verdi');
+        const firstError = data.errors ? Object.values(data.errors)[0][0] : (data.message || document.body.dataset.errGeneric);
         if (msg) msg.textContent = firstError;
         window.ARCHI?.toast?.show({ type: 'error', title: firstError });
         buttons.forEach((b) => (b.disabled = false));

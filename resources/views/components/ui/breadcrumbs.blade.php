@@ -4,15 +4,15 @@
 
   Example:
     <x-ui.breadcrumbs :items="[
-        ['label' => __('common.home'), 'href' => route('home')],
-        ['label' => __('common.catalog'), 'href' => '#'],
-        ['label' => __('catalog.crumb_current')],
+        ['label' => t('common.home'), 'href' => route('home')],
+        ['label' => t('common.catalog'), 'href' => '#'],
+        ['label' => t('catalog.crumb_current')],
     ]" />
 
   Cabinet form (no links, a written separator):
-    <x-ui.breadcrumbs :sep="__('business-profile-company.crumbs.sep')" :items="[
-        ['label' => __('business-profile-company.crumbs.panel')],
-        ['label' => __('business-profile-company.crumbs.current')],
+    <x-ui.breadcrumbs :sep="t('business-profile-company.crumbs.sep')" :items="[
+        ['label' => t('business-profile-company.crumbs.panel')],
+        ['label' => t('business-profile-company.crumbs.current')],
     ]" />
 
   Props:

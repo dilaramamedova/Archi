@@ -36,7 +36,7 @@
 
     $ns = 'specialist-cabinet-notifications';
 @endphp
-<x-layout page="specialist-cabinet-notifications" :title="__('specialist-cabinet-notifications.title')" bodyClass="bg-gray-soft2">
+<x-layout page="specialist-cabinet-notifications" :title="t('specialist-cabinet-notifications.title')" bodyClass="bg-gray-soft2">
 
 {{-- Header, settings sidebar and the two-column body come from the cabinet shell. --}}
 <x-cabinet.shell ns="specialist-cabinet-notifications" active="notifications" :nav-items="$specNav"
@@ -45,15 +45,15 @@
 
   {{-- notification types --}}
   <x-cabinet.card class="scn-card" tag="h3"
-      :title="__('specialist-cabinet-notifications.types.heading')"
-      :desc="__('specialist-cabinet-notifications.types.desc')">
+      :title="t('specialist-cabinet-notifications.types.heading')"
+      :desc="t('specialist-cabinet-notifications.types.desc')">
 
     @foreach ($types as $type => $on)
-      @php $label = __($ns . '.types.' . $type . '_title'); @endphp
+      @php $label = t($ns . '.types.' . $type . '_title'); @endphp
       <div class="scn-row">
         <div class="txt">
           <p class="t">{{ $label }}</p>
-          <p class="s">{{ __($ns . '.types.' . $type . '_desc') }}</p>
+          <p class="s">{{ t($ns . '.types.' . $type . '_desc') }}</p>
         </div>
         <x-ui.toggle size="md" :on="$on" :aria-label="$label" />
       </div>
@@ -63,10 +63,10 @@
 
   {{-- notification channels — the frame has no description under this heading --}}
   <x-cabinet.card class="scn-card" tag="h3"
-      :title="__('specialist-cabinet-notifications.channels.heading')">
+      :title="t('specialist-cabinet-notifications.channels.heading')">
     <div class="scn-chips">
       @foreach ($channels as $channel => $on)
-        <x-ui.chip size="md" :on="$on" :label="__($ns . '.channels.' . $channel)" />
+        <x-ui.chip size="md" :on="$on" :label="t($ns . '.channels.' . $channel)" />
       @endforeach
     </div>
   </x-cabinet.card>

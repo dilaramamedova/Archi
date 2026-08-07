@@ -18,7 +18,7 @@ async function changeStatus(orderId, next) {
   if (res.ok && data.success) {
     location.reload();
   } else {
-    window.ARCHI?.toast?.show({ type: 'error', title: data.message || 'Xəta baş verdi' });
+    window.ARCHI?.toast?.show({ type: 'error', title: data.message || document.body.dataset.errGeneric });
   }
 }
 

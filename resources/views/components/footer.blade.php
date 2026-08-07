@@ -14,8 +14,8 @@
 <footer>
   <div class="inner">
     <div class="foot-top">
-      <a href="{{ route('home') }}" aria-label="{{ __('common.site_name') }}"><img class="foot-logo" src="/assets/logo-archi-white.png" alt="ARCHI"></a>
-      <a class="foot-products" href="{{ route('catalog') }}"><p>{{ __('footer.go_products') }}</p><img src="/assets/icon-arrow-right-white.svg" alt=""></a>
+      <a href="{{ route('home') }}" aria-label="{{ t('common.site_name') }}"><img class="foot-logo" src="/assets/logo-archi-white.png" alt="ARCHI"></a>
+      <a class="foot-products" href="{{ route('catalog') }}"><p>{{ t('footer.go_products') }}</p><img src="/assets/icon-arrow-right-white.svg" alt=""></a>
     </div>
 
     <div class="foot-line"></div>
@@ -37,15 +37,15 @@
       <div class="l">
         <img src="/assets/icon-mail-white.svg" alt="">
         <div>
-          <h4>{{ __('footer.news_title') }}</h4>
-          <p>{{ __('footer.news_sub') }}</p>
+          <h4>{{ t('footer.news_title') }}</h4>
+          <p>{{ t('footer.news_sub') }}</p>
         </div>
       </div>
       <form class="form" id="footer-newsletter-form"
-            data-error-fallback="{{ __('footer.newsletter_error') }}"
-            data-network-error="{{ __('footer.newsletter_network_error') }}">
-        <input class="ip" type="email" name="email" required aria-label="{{ __('footer.news_email') }}" placeholder="{{ __('footer.news_email') }}">
-        <button class="sub" type="submit">{{ __('footer.news_submit') }}</button>
+            data-error-fallback="{{ t('footer.newsletter_error') }}"
+            data-network-error="{{ t('footer.newsletter_network_error') }}">
+        <input class="ip" type="email" name="email" required aria-label="{{ t('footer.news_email') }}" placeholder="{{ t('footer.news_email') }}">
+        <button class="sub" type="submit">{{ t('footer.news_submit') }}</button>
       </form>
     </div>
 
@@ -59,7 +59,7 @@
           <a href="{{ $legalItem->resolvedUrl ?? '#' }}"@if($legalItem->open_in_new_tab) target="_blank" rel="noopener"@endif>{{ $legalItem->label }}</a>
           @endforeach
         </div>
-        <div class="copy">{{ __('footer.copy', ['year' => date('Y')]) }}</div>
+        <div class="copy">{{ t('footer.copy', ['year' => date('Y')]) }}</div>
       </div>
       <div class="foot-social">
         @foreach ($socialLinks as $social)

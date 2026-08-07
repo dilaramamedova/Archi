@@ -3,7 +3,7 @@
   tone exists for the catalog "in stock only" filter family.
 
   Example:
-    <x-ui.toggle :on="true" size="md" :aria-label="__('...types.order_title')" />
+    <x-ui.toggle :on="true" size="md" :aria-label="t('...types.order_title')" />
     <x-ui.toggle :on="$row['on']" size="sm" />
 
   Props:

@@ -81,7 +81,7 @@ class BusinessOrderController extends Controller
         if (! $allowed) {
             return response()->json([
                 'success' => false,
-                'message' => __('business-cabinet.invalid_status_transition'),
+                'message' => t('business-cabinet.invalid_status_transition'),
             ], 422);
         }
 

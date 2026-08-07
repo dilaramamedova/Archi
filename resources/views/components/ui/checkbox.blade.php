@@ -3,7 +3,7 @@
   The tick is the browser's, tinted with accent-color: --color-yellow.
 
   Example:
-    <x-ui.checkbox>{{ __('login.form.remember') }}</x-ui.checkbox>
+    <x-ui.checkbox>{{ t('login.form.remember') }}</x-ui.checkbox>
     <x-ui.checkbox required class="gap-2.5">…terms…</x-ui.checkbox>
 
   Attributes are merged onto the <label>; input-only attributes go through `input`.

@@ -4,8 +4,8 @@
   badge, the "this device" badge and the verified tax-id badge.
 
   Example:
-    <x-ui.badge tone="ok" size="md" dot>{{ __('...status.published') }}</x-ui.badge>
-    <x-ui.badge tone="warn" size="sm">{{ __('...stock_low') }}</x-ui.badge>
+    <x-ui.badge tone="ok" size="md" dot>{{ t('...status.published') }}</x-ui.badge>
+    <x-ui.badge tone="warn" size="sm">{{ t('...stock_low') }}</x-ui.badge>
 
   Props:
     tone — ok (green #229653 on #e9f6ed) · warn · muted · green (--color-green tint)

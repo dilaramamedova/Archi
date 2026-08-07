@@ -133,8 +133,8 @@ class BusinessProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => ($validated['publish'] ?? false)
-                ? __('business-cabinet.product_submitted')
-                : __('business-cabinet.draft_saved'),
+                ? t('business-cabinet.product_submitted')
+                : t('business-cabinet.draft_saved'),
             'redirect' => route('business.profile.products'),
         ]);
     }
@@ -160,8 +160,8 @@ class BusinessProductController extends Controller
         return response()->json([
             'success' => true,
             'message' => $wasApproved
-                ? __('business-cabinet.product_resubmitted')
-                : __('business-cabinet.saved'),
+                ? t('business-cabinet.product_resubmitted')
+                : t('business-cabinet.saved'),
             'redirect' => route('business.profile.products'),
         ]);
     }

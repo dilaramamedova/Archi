@@ -40,8 +40,8 @@
     // Per-page namespaces own their labels; keys a page doesn't define (e.g. the
     // orders/inventory rows on the six legacy pages) fall back to business-cabinet.nav.*.
     $navLabel = fn (string $key) => \Illuminate\Support\Facades\Lang::has($ns . '.nav.' . $key)
-        ? __($ns . '.nav.' . $key)
-        : __('business-cabinet.nav.' . $key);
+        ? t($ns . '.nav.' . $key)
+        : t('business-cabinet.nav.' . $key);
 
     $noteKey = \Illuminate\Support\Facades\Lang::has($ns . '.progress.note')
         ? $ns . '.progress.note'
@@ -57,7 +57,7 @@
       @isset($item['count'])
         @php $countKey = $ns . '.nav.' . $item['count']; @endphp
         @if (isset($item['count_value']) || \Illuminate\Support\Facades\Lang::has($countKey))
-          <p class="cnt">{{ $item['count_value'] ?? __($countKey) }}</p>
+          <p class="cnt">{{ $item['count_value'] ?? t($countKey) }}</p>
         @endif
       @endisset
     </a>
@@ -65,10 +65,10 @@
 
   <div class="cab-snav-prog">
     <div class="row">
-      <p class="l">{{ __($ns . '.progress.label') }}</p>
-      <p class="v">{{ __($ns . '.progress.value') }}</p>
+      <p class="l">{{ t($ns . '.progress.label') }}</p>
+      <p class="v">{{ t($ns . '.progress.value') }}</p>
     </div>
     <x-ui.progress :fill="$fill" />
-    <p class="hint">{{ __($noteKey) }}</p>
+    <p class="hint">{{ t($noteKey) }}</p>
   </div>
 </div>

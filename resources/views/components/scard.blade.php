@@ -5,12 +5,12 @@
   Example:
     <x-scard
         bg="#f5fbff"
-        :role="__('home.specialists.role_tiler')"
+        :role="t('home.specialists.role_tiler')"
         rate="4.9"
-        :reviews="__('home.specialists.reviews_416')"
-        :name="__('home.specialists.name_1')"
-        :exp="__('home.specialists.exp_12')"
-        :proj="__('home.specialists.proj_320')" />
+        :reviews="t('home.specialists.reviews_416')"
+        :name="t('home.specialists.name_1')"
+        :exp="t('home.specialists.exp_12')"
+        :proj="t('home.specialists.proj_320')" />
 
   Props:
     href    — when given the card renders as <a>, otherwise <div> (old behaviour)
@@ -45,8 +45,8 @@
 @php
     $tag = $href ? 'a' : 'div';
     $badgeList = $badges ?? [
-        ['label' => __('common.badge_top_master'), 'icon' => '/assets/icon-crown-gold.svg'],
-        ['label' => __('common.badge_verified'), 'icon' => '/assets/icon-check-green.svg', 'ok' => true],
+        ['label' => t('common.badge_top_master'), 'icon' => '/assets/icon-crown-gold.svg'],
+        ['label' => t('common.badge_verified'), 'icon' => '/assets/icon-check-green.svg', 'ok' => true],
     ];
 @endphp
 <{{ $tag }} {{ $attributes->merge(['class' => 'scard']) }} @if ($href) href="{{ $href }}" @endif>

@@ -2,8 +2,8 @@
   Text input.
 
   Example:
-    <x-ui.input type="email" :placeholder="__('register.form.email_placeholder')" required />
-    <x-ui.input variant="b2b" :value="__('business-profile-company.company.city_value')" />
+    <x-ui.input type="email" :placeholder="t('register.form.email_placeholder')" required />
+    <x-ui.input variant="b2b" :value="t('business-profile-company.company.city_value')" />
 
   Props:
     variant — null (consumer: 1px black/20, 16px text, square) ·

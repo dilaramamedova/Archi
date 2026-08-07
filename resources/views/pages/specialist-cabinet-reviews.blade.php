@@ -28,9 +28,9 @@
     // Reviews are passed from the route closure ($reviews collection).
     // When a Review model is implemented, each review will have: id, rating, text,
     // reviewer_name, reviewer_avatar, created_at, reply_text, replied_at.
-    $star = __('specialist-cabinet-reviews.rating.star');
+    $star = t('specialist-cabinet-reviews.rating.star');
 @endphp
-<x-layout page="specialist-cabinet-reviews" :title="__('specialist-cabinet-reviews.title')" bodyClass="bg-gray-soft2">
+<x-layout page="specialist-cabinet-reviews" :title="t('specialist-cabinet-reviews.title')" bodyClass="bg-gray-soft2">
 
 <x-cabinet.shell
     ns="specialist-cabinet-reviews"
@@ -44,19 +44,19 @@
   <x-cabinet.card
       layout="row"
       gap="gap-3.5"
-      :title="__('specialist-cabinet-reviews.list.title')"
-      :desc="__('specialist-cabinet-reviews.list.summary')">
+      :title="t('specialist-cabinet-reviews.list.title')"
+      :desc="t('specialist-cabinet-reviews.list.summary')">
     <x-slot:action>
       <p class="scr-summary">
         <span class="st" aria-hidden="true">{{ $star }}</span>
-        <span class="v">{{ __('specialist-cabinet-reviews.rating.value') }}</span>
-        <span class="n">{{ __('specialist-cabinet-reviews.rating.note') }}</span>
+        <span class="v">{{ t('specialist-cabinet-reviews.rating.value') }}</span>
+        <span class="n">{{ t('specialist-cabinet-reviews.rating.note') }}</span>
       </p>
     </x-slot:action>
 
-    <div class="scr-tabs" role="group" aria-label="{{ __('specialist-cabinet-reviews.tabs.label') }}">
+    <div class="scr-tabs" role="group" aria-label="{{ t('specialist-cabinet-reviews.tabs.label') }}">
       @foreach ($tabs as $tab)
-        @php $label = __('specialist-cabinet-reviews.tabs.' . $tab); @endphp
+        @php $label = t('specialist-cabinet-reviews.tabs.' . $tab); @endphp
         <button type="button" class="scr-tab" data-filter="{{ $tab }}"
                 data-on="{{ $loop->first ? 'true' : 'false' }}"
                 aria-pressed="{{ $loop->first ? 'true' : 'false' }}">
@@ -68,7 +68,7 @@
 
     @forelse ($reviews as $review)
       @php
-        $reviewerName = $review->reviewer_name ?? __('specialist-cabinet-reviews.list.anonymous');
+        $reviewerName = $review->reviewer_name ?? t('specialist-cabinet-reviews.list.anonymous');
         $hasReply = ! empty($review->reply_text);
       @endphp
       <article class="scr-rev" data-id="{{ $review->id }}" data-rating="{{ $review->rating }}" data-replied="{{ $hasReply ? 'true' : 'false' }}">
@@ -78,34 +78,34 @@
             <p class="n">{{ $reviewerName }}</p>
             <p class="d">{{ $review->created_at?->diffForHumans() ?? '' }}</p>
           </div>
-          <p class="st" aria-label="{{ __('specialist-cabinet-reviews.list.stars_label', ['count' => $review->rating]) }}">{{ str_repeat($star, $review->rating) }}</p>
+          <p class="st" aria-label="{{ t('specialist-cabinet-reviews.list.stars_label', ['count' => $review->rating]) }}">{{ str_repeat($star, $review->rating) }}</p>
         </div>
 
         <p class="tx">{{ $review->text ?? '' }}</p>
 
         <div class="scr-reply" @unless ($hasReply) hidden @endunless>
-          <p class="lb">{{ __('specialist-cabinet-reviews.reply.label') }}</p>
+          <p class="lb">{{ t('specialist-cabinet-reviews.reply.label') }}</p>
           <p class="tx">{{ $review->reply_text ?? '' }}</p>
         </div>
 
-        <x-ui.button variant="primary" class="scr-btn" data-reply :hidden="$hasReply">{{ __('specialist-cabinet-reviews.reply.action') }}</x-ui.button>
+        <x-ui.button variant="primary" class="scr-btn" data-reply :hidden="$hasReply">{{ t('specialist-cabinet-reviews.reply.action') }}</x-ui.button>
 
         <div class="scr-compose" hidden>
           <x-ui.textarea variant="b2b" class="scr-ta" rows="3"
-              :placeholder="__('specialist-cabinet-reviews.compose.placeholder')"
-              :aria-label="__('specialist-cabinet-reviews.compose.label')"></x-ui.textarea>
+              :placeholder="t('specialist-cabinet-reviews.compose.placeholder')"
+              :aria-label="t('specialist-cabinet-reviews.compose.label')"></x-ui.textarea>
           <div class="ac">
-            <x-ui.button variant="primary" class="scr-btn" data-send>{{ __('specialist-cabinet-reviews.compose.send') }}</x-ui.button>
-            <x-ui.button variant="outline" class="scr-btn" data-cancel>{{ __('specialist-cabinet-reviews.compose.cancel') }}</x-ui.button>
+            <x-ui.button variant="primary" class="scr-btn" data-send>{{ t('specialist-cabinet-reviews.compose.send') }}</x-ui.button>
+            <x-ui.button variant="outline" class="scr-btn" data-cancel>{{ t('specialist-cabinet-reviews.compose.cancel') }}</x-ui.button>
           </div>
         </div>
       </article>
     @empty
-      <p class="scr-empty">{{ __('specialist-cabinet-reviews.list.empty') }}</p>
+      <p class="scr-empty">{{ t('specialist-cabinet-reviews.list.empty') }}</p>
     @endforelse
 
     {{-- load more (831:12857) --}}
-    <x-ui.button variant="outline" class="scr-more" data-more>{{ __('specialist-cabinet-reviews.list.more') }}</x-ui.button>
+    <x-ui.button variant="outline" class="scr-more" data-more>{{ t('specialist-cabinet-reviews.list.more') }}</x-ui.button>
   </x-cabinet.card>
 
 </x-cabinet.shell>

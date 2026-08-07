@@ -4,8 +4,8 @@
   business-register · business-profile · product · the login modal).
 
   Example:
-    <x-ui.eyebrow :label="__('login.head.tag')" />
-    <x-ui.eyebrow variant="b2b" :label="__('business-register.head.tag')" />
+    <x-ui.eyebrow :label="t('login.head.tag')" />
+    <x-ui.eyebrow variant="b2b" :label="t('business-register.head.tag')" />
 
   Props:
     label   — the uppercase text (CSS applies the transform; never pass CAPS)

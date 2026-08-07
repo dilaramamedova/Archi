@@ -1,5 +1,5 @@
 @use('App\Models\Setting')
-<x-layout page="about" :title="__('about.title')">
+<x-layout page="about" :title="t('about.title')">
 
 {{-- ===================== HERO ===================== --}}
 <section class="about-hero relative flex items-end overflow-hidden" style="height:460px">
@@ -8,17 +8,17 @@
   <div class="wrap relative z-10 pb-14 max-[900px]:pb-10 max-[560px]:pb-8">
     <div class="inner flex flex-col gap-[18px]">
       <x-ui.breadcrumbs class="[&_a]:text-white/65 [&_.sep]:text-white/45 [&_.cur]:text-white/95" :items="[
-          ['label' => __('common.home'), 'href' => route('home')],
-          ['label' => __('about.crumb_current')],
+          ['label' => t('common.home'), 'href' => route('home')],
+          ['label' => t('about.crumb_current')],
       ]" />
-      <x-ui.eyebrow variant="kicker" class="about-kicker-white" :label="__('about.crumb_current')" />
+      <x-ui.eyebrow variant="kicker" class="about-kicker-white" :label="t('about.crumb_current')" />
       <h1 class="max-w-[620px] text-[46px] leading-[1.18] font-bold text-white max-[900px]:text-[36px] max-[560px]:text-[28px]">{{ Setting::get('about_hero_title') }}</h1>
       <p class="max-w-[560px] text-[17px] leading-[1.55] text-white/70">{{ Setting::get('about_hero_subtitle') }}</p>
       <div class="flex gap-3 pt-2">
         <x-ui.button variant="primary" :href="Setting::get('about_cta1_url', '/catalog')"
-                     class="h-12 rounded px-7 text-[15px] font-semibold">{{ Setting::get('about_cta1_text', __('about.hero.btn1')) }}</x-ui.button>
+                     class="h-12 rounded px-7 text-[15px] font-semibold">{{ Setting::get('about_cta1_text', t('about.hero.btn1')) }}</x-ui.button>
         <x-ui.button variant="outline" :href="Setting::get('about_cta2_url', '/specialists')"
-                     class="h-12 rounded border-white/45 px-7 text-[15px] font-semibold text-white">{{ Setting::get('about_cta2_text', __('about.hero.btn2')) }}</x-ui.button>
+                     class="h-12 rounded border-white/45 px-7 text-[15px] font-semibold text-white">{{ Setting::get('about_cta2_text', t('about.hero.btn2')) }}</x-ui.button>
       </div>
     </div>
   </div>
@@ -48,15 +48,15 @@
   <div class="inner">
     <div class="flex items-center gap-14 max-[1100px]:flex-col max-[1100px]:items-start max-[1100px]:gap-8">
       <div class="flex min-w-0 flex-1 flex-col gap-5 max-[1100px]:max-w-none" style="max-width:640px">
-        <x-ui.eyebrow variant="kicker" :label="Setting::get('about_mission_tag', __('about.mission.tag'))" />
-        <h2 class="text-[34px] leading-[1.18] font-bold text-ink max-[560px]:text-[26px]">{{ Setting::get('about_mission_title', __('about.mission.title')) }}</h2>
-        <p class="text-[15px] leading-[1.65] text-black/50">{{ Setting::get('about_mission_p1', __('about.mission.p1')) }}</p>
-        <p class="text-[15px] leading-[1.65] text-black/50">{{ Setting::get('about_mission_p2', __('about.mission.p2')) }}</p>
+        <x-ui.eyebrow variant="kicker" :label="Setting::get('about_mission_tag', t('about.mission.tag'))" />
+        <h2 class="text-[34px] leading-[1.18] font-bold text-ink max-[560px]:text-[26px]">{{ Setting::get('about_mission_title', t('about.mission.title')) }}</h2>
+        <p class="text-[15px] leading-[1.65] text-black/50">{{ Setting::get('about_mission_p1', t('about.mission.p1')) }}</p>
+        <p class="text-[15px] leading-[1.65] text-black/50">{{ Setting::get('about_mission_p2', t('about.mission.p2')) }}</p>
         <div class="flex flex-col gap-2.5 pt-1">
           @foreach ([
-            Setting::get('about_mission_b1', __('about.mission.b1')),
-            Setting::get('about_mission_b2', __('about.mission.b2')),
-            Setting::get('about_mission_b3', __('about.mission.b3')),
+            Setting::get('about_mission_b1', t('about.mission.b1')),
+            Setting::get('about_mission_b2', t('about.mission.b2')),
+            Setting::get('about_mission_b3', t('about.mission.b3')),
           ] as $bullet)
             @if ($bullet)
             <div class="flex items-center gap-2.5">
@@ -81,8 +81,8 @@
 <section class="wrap py-[72px] max-[560px]:py-14">
   <div class="inner flex flex-col gap-10">
     <div class="sec-head-simple flex flex-col gap-3.5">
-      <x-ui.eyebrow variant="kicker" :label="Setting::get('about_what_tag', __('about.what.tag'))" />
-      <h2 class="text-[34px] leading-[normal] font-bold text-ink max-[560px]:text-[26px]">{{ Setting::get('about_what_title', __('about.what.title')) }}</h2>
+      <x-ui.eyebrow variant="kicker" :label="Setting::get('about_what_tag', t('about.what.tag'))" />
+      <h2 class="text-[34px] leading-[normal] font-bold text-ink max-[560px]:text-[26px]">{{ Setting::get('about_what_title', t('about.what.title')) }}</h2>
     </div>
 
     <div class="grid grid-cols-3 gap-6 max-[900px]:grid-cols-1">
@@ -103,8 +103,8 @@
   <div class="wrap">
     <div class="inner flex flex-col gap-10">
       <div class="flex flex-col gap-3.5">
-        <x-ui.eyebrow variant="kicker" :label="Setting::get('about_how_tag', __('about.how.tag'))" />
-        <h2 class="text-[34px] leading-[normal] font-bold text-ink max-[560px]:text-[26px]">{{ Setting::get('about_how_title', __('about.how.title')) }}</h2>
+        <x-ui.eyebrow variant="kicker" :label="Setting::get('about_how_tag', t('about.how.tag'))" />
+        <h2 class="text-[34px] leading-[normal] font-bold text-ink max-[560px]:text-[26px]">{{ Setting::get('about_how_title', t('about.how.title')) }}</h2>
       </div>
 
       <div class="flex items-start max-[900px]:grid max-[900px]:grid-cols-2 max-[900px]:gap-6 max-[560px]:grid-cols-1">
@@ -129,8 +129,8 @@
 <section class="wrap py-[72px] max-[560px]:py-14">
   <div class="inner flex flex-col gap-9">
     <div class="flex flex-col gap-5">
-      <x-ui.eyebrow variant="kicker" :label="Setting::get('about_team_tag', __('about.team.tag'))" />
-      <h2 class="text-[34px] leading-[normal] font-bold text-ink max-[560px]:text-[26px]">{{ Setting::get('about_team_title', __('about.team.title')) }}</h2>
+      <x-ui.eyebrow variant="kicker" :label="Setting::get('about_team_tag', t('about.team.tag'))" />
+      <h2 class="text-[34px] leading-[normal] font-bold text-ink max-[560px]:text-[26px]">{{ Setting::get('about_team_title', t('about.team.title')) }}</h2>
     </div>
 
     <div class="grid grid-cols-4 gap-6 max-[900px]:grid-cols-2 max-[560px]:grid-cols-2">
@@ -152,8 +152,8 @@
   <div class="wrap">
     <div class="inner flex flex-col gap-10">
       <div class="flex flex-col gap-3.5">
-        <x-ui.eyebrow variant="kicker" class="about-kicker-white" :label="Setting::get('about_join_tag', __('about.join.tag'))" />
-        <h2 class="text-[34px] leading-[normal] font-bold text-white max-[560px]:text-[26px]">{{ Setting::get('about_join_title', __('about.join.title')) }}</h2>
+        <x-ui.eyebrow variant="kicker" class="about-kicker-white" :label="Setting::get('about_join_tag', t('about.join.tag'))" />
+        <h2 class="text-[34px] leading-[normal] font-bold text-white max-[560px]:text-[26px]">{{ Setting::get('about_join_title', t('about.join.title')) }}</h2>
       </div>
 
       <div class="grid grid-cols-2 gap-6 max-[900px]:grid-cols-1">
@@ -176,23 +176,23 @@
 <section class="wrap py-16 max-[560px]:py-14">
   <div class="inner flex flex-col gap-10">
     <div class="flex flex-col gap-3.5">
-      <x-ui.eyebrow variant="kicker" :label="Setting::get('about_contact_tag', __('about.contact.tag'))" />
-      <h2 class="text-[34px] leading-[normal] font-bold text-ink max-[560px]:text-[26px]">{{ Setting::get('about_contact_title', __('about.contact.title')) }}</h2>
+      <x-ui.eyebrow variant="kicker" :label="Setting::get('about_contact_tag', t('about.contact.tag'))" />
+      <h2 class="text-[34px] leading-[normal] font-bold text-ink max-[560px]:text-[26px]">{{ Setting::get('about_contact_title', t('about.contact.title')) }}</h2>
     </div>
 
     <div class="grid grid-cols-3 gap-6 max-[900px]:grid-cols-1">
       <div class="flex flex-col gap-2">
-        <p class="text-[13px] font-semibold tracking-wide text-black/50 uppercase">{{ __('about.contact.office_label') }}</p>
+        <p class="text-[13px] font-semibold tracking-wide text-black/50 uppercase">{{ t('about.contact.office_label') }}</p>
         <p class="text-[17px] font-semibold text-ink">{{ Setting::get('about_contact_address_line1') }}</p>
         <p class="text-sm text-black/50">{{ Setting::get('about_contact_address_line2') }}</p>
       </div>
       <div class="flex flex-col gap-2">
-        <p class="text-[13px] font-semibold tracking-wide text-black/50 uppercase">{{ __('about.contact.phone_label') }}</p>
+        <p class="text-[13px] font-semibold tracking-wide text-black/50 uppercase">{{ t('about.contact.phone_label') }}</p>
         <a href="tel:{{ Setting::get('about_contact_phone') }}" class="text-[17px] font-semibold text-ink hover:underline">{{ Setting::get('about_contact_phone') }}</a>
         <p class="text-sm text-black/50">{{ Setting::get('about_contact_hours') }}</p>
       </div>
       <div class="flex flex-col gap-2">
-        <p class="text-[13px] font-semibold tracking-wide text-black/50 uppercase">{{ __('about.contact.email_label') }}</p>
+        <p class="text-[13px] font-semibold tracking-wide text-black/50 uppercase">{{ t('about.contact.email_label') }}</p>
         <a href="mailto:{{ Setting::get('about_contact_email') }}" class="text-[17px] font-semibold text-ink hover:underline">{{ Setting::get('about_contact_email') }}</a>
         <p class="text-sm text-black/50">{{ Setting::get('about_contact_email_b2b') }}</p>
       </div>

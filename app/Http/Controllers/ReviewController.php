@@ -36,7 +36,7 @@ class ReviewController extends Controller
 
         if ($existing) {
             return response()->json([
-                'message' => 'Bu məhsul üçün artıq rəy yazmısınız.',
+                'message' => t('product.review_exists'),
             ], 422);
         }
 
@@ -50,7 +50,7 @@ class ReviewController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Rəyiniz göndərildi və təsdiq gözləyir.',
+            'message' => t('product.review_submitted'),
             'review' => $review,
         ], 201);
     }

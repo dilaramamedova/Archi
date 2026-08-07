@@ -14,11 +14,13 @@ return [
         'numeric' => ':attribute не должен быть больше :max.',
         'file' => ':attribute не должен превышать :max килобайт.',
         'string' => ':attribute не должен превышать :max символов.',
+        'array' => ':attribute не может содержать более :max элементов.',
     ],
     'mimes' => ':attribute должен быть файлом одного из типов: :values.',
     'min' => [
         'numeric' => ':attribute должен быть не менее :min.',
         'string' => ':attribute должен быть не менее :min символов.',
+        'array' => ':attribute должен содержать не менее :min элементов.',
     ],
     'numeric' => ':attribute должен быть числом.',
     'uploaded' => 'Не удалось загрузить :attribute.',

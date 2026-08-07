@@ -31,13 +31,13 @@ class SellController extends Controller
             $categories = $dbCategories->map(fn ($c) => ['id' => $c->id, 'name' => $c->name])->all();
         } else {
             $categories = array_map(fn ($label) => ['id' => null, 'name' => $label], [
-                __('sell.categories.tiles'),
-                __('sell.categories.paint'),
-                __('sell.categories.plumbing'),
-                __('sell.categories.electric'),
-                __('sell.categories.laminate'),
-                __('sell.categories.building'),
-                __('sell.categories.decor'),
+                t('sell.categories.tiles'),
+                t('sell.categories.paint'),
+                t('sell.categories.plumbing'),
+                t('sell.categories.electric'),
+                t('sell.categories.laminate'),
+                t('sell.categories.building'),
+                t('sell.categories.decor'),
             ]);
         }
 
@@ -53,7 +53,7 @@ class SellController extends Controller
         if ($this->guardNonSellers($request)) {
             return response()->json([
                 'success' => false,
-                'message' => __('sell.sellers_only'),
+                'message' => t('sell.sellers_only'),
                 'redirect' => route('business.register'),
             ], 403);
         }
@@ -129,7 +129,7 @@ class SellController extends Controller
         if ($user && ! in_array($user->role, [UserRole::Seller, UserRole::Admin], true)) {
             return redirect()
                 ->route('business.register')
-                ->with('flash_error', __('sell.sellers_only'));
+                ->with('flash_error', t('sell.sellers_only'));
         }
 
         return null;

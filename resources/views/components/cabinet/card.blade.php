@@ -7,13 +7,13 @@
                                right (the "add product" / "add showroom" cards)
 
   Example:
-    <x-cabinet.card :title="__('...contact.title')" :desc="__('...contact.desc')" gap="gap-[18px]">
+    <x-cabinet.card :title="t('...contact.title')" :desc="t('...contact.desc')" gap="gap-[18px]">
       …fields…
     </x-cabinet.card>
 
-    <x-cabinet.card layout="row" :title="__('...list.title')" :desc="__('...list.summary')" gap="gap-3.5">
+    <x-cabinet.card layout="row" :title="t('...list.title')" :desc="t('...list.summary')" gap="gap-3.5">
       <x-slot:action>
-        <x-ui.button variant="primary" class="cab-btn-add">{{ __('...list.add') }}</x-ui.button>
+        <x-ui.button variant="primary" class="cab-btn-add">{{ t('...list.add') }}</x-ui.button>
       </x-slot:action>
       …rows…
     </x-cabinet.card>

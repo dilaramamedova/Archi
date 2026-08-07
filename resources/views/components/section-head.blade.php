@@ -12,8 +12,8 @@
 
   Example:
     <x-section-head
-        :tag="__('home.products.tag')"
-        :title="__('home.products.title')"
+        :tag="t('home.products.tag')"
+        :title="t('home.products.title')"
         :more="route('search')" />
 
     // "view more" link without an href (the old index.html has such cases)
@@ -26,7 +26,7 @@
     tag       — small label with the yellow rule (rendered uppercase)
     title     — large heading
     more      — URL of the right-hand link · null → <a> without href · false → no link
-    moreLabel — link text (default __('common.view_more'))
+    moreLabel — link text (default t('common.view_more'))
     icon      — link icon (default /assets/icon-arrow-right.svg)
 --}}
 @props([
@@ -47,7 +47,7 @@
   </div>
   @if ($more !== false)
     <a class="sec-more" @if ($more) href="{{ $more }}" @endif>
-      <p>{{ $moreLabel ?? __('common.view_more') }}</p><img src="{{ $icon }}" alt="">
+      <p>{{ $moreLabel ?? t('common.view_more') }}</p><img src="{{ $icon }}" alt="">
     </a>
   @endif
   {{ $slot }}

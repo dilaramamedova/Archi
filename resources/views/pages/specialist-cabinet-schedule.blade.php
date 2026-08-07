@@ -35,7 +35,7 @@
 
     $ns = 'specialist-cabinet-schedule';
 @endphp
-<x-layout page="specialist-cabinet-schedule" :title="__('specialist-cabinet-schedule.title')" bodyClass="bg-gray-soft2">
+<x-layout page="specialist-cabinet-schedule" :title="t('specialist-cabinet-schedule.title')" bodyClass="bg-gray-soft2">
 
 {{-- Header, settings sidebar and the two-column body come from the cabinet shell. --}}
 <x-cabinet.shell ns="specialist-cabinet-schedule" active="schedule" :nav-items="$specNav"
@@ -44,24 +44,24 @@
 
   {{-- weekly schedule --}}
   <x-cabinet.card gap="gap-[14px]"
-      :title="__('specialist-cabinet-schedule.week.heading')"
-      :desc="__('specialist-cabinet-schedule.week.desc')">
+      :title="t('specialist-cabinet-schedule.week.heading')"
+      :desc="t('specialist-cabinet-schedule.week.desc')">
 
     <x-ui.alert tone="error" id="scheduleErr" />
     <x-ui.alert tone="ok" id="scheduleOk" />
 
     @foreach ($days as $day => [$open, $start, $end])
-      @php $label = __($ns . '.days.' . $day); @endphp
+      @php $label = t($ns . '.days.' . $day); @endphp
       <x-cabinet.row class="sch-day" data-day="{{ $loop->iteration }}" data-on="{{ $open ? 'true' : 'false' }}">
         <x-ui.toggle size="sm" :on="$open" :aria-label="$label" />
         <p class="lbl">{{ $label }}</p>
         <div class="times">
           <input type="time" class="sch-time" value="{{ $start }}"
-                 aria-label="{{ $label }} — {{ __($ns . '.week.start') }}" @disabled(! $open)>
+                 aria-label="{{ $label }} — {{ t($ns . '.week.start') }}" @disabled(! $open)>
           <input type="time" class="sch-time" value="{{ $end }}"
-                 aria-label="{{ $label }} — {{ __($ns . '.week.end') }}" @disabled(! $open)>
+                 aria-label="{{ $label }} — {{ t($ns . '.week.end') }}" @disabled(! $open)>
         </div>
-        <p class="off">{{ __('specialist-cabinet-schedule.week.day_off') }}</p>
+        <p class="off">{{ t('specialist-cabinet-schedule.week.day_off') }}</p>
       </x-cabinet.row>
     @endforeach
 
@@ -69,24 +69,24 @@
 
   {{-- free slots left this week --}}
   <x-cabinet.card gap="gap-[14px]"
-      :title="__('specialist-cabinet-schedule.slots.heading')"
-      :desc="__('specialist-cabinet-schedule.slots.desc')">
+      :title="t('specialist-cabinet-schedule.slots.heading')"
+      :desc="t('specialist-cabinet-schedule.slots.desc')">
     <div class="sch-slots">
       <button type="button" class="sch-step" data-step="-1"
-              aria-label="{{ __('specialist-cabinet-schedule.slots.decrease') }}">&minus;</button>
+              aria-label="{{ t('specialist-cabinet-schedule.slots.decrease') }}">&minus;</button>
       <p class="sch-slots-val" data-slots aria-live="polite">{{ $availableSlots }}</p>
       <button type="button" class="sch-step" data-step="1"
-              aria-label="{{ __('specialist-cabinet-schedule.slots.increase') }}">+</button>
-      <p class="sch-slots-unit">{{ __('specialist-cabinet-schedule.slots.unit') }}</p>
+              aria-label="{{ t('specialist-cabinet-schedule.slots.increase') }}">+</button>
+      <p class="sch-slots-unit">{{ t('specialist-cabinet-schedule.slots.unit') }}</p>
     </div>
   </x-cabinet.card>
 
   {{-- vacation mode --}}
-  <x-cabinet.card gap="gap-[14px]" :title="__('specialist-cabinet-schedule.vacation.heading')">
+  <x-cabinet.card gap="gap-[14px]" :title="t('specialist-cabinet-schedule.vacation.heading')">
     <div class="sch-vacation">
-      <p class="txt">{{ __('specialist-cabinet-schedule.vacation.desc') }}</p>
+      <p class="txt">{{ t('specialist-cabinet-schedule.vacation.desc') }}</p>
       <x-ui.toggle size="md" :on="$isOnVacation"
-                   :aria-label="__('specialist-cabinet-schedule.vacation.heading')" />
+                   :aria-label="t('specialist-cabinet-schedule.vacation.heading')" />
     </div>
   </x-cabinet.card>
 

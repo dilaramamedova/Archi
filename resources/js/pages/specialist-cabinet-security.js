@@ -49,7 +49,8 @@ export default function init() {
       const sessions = await res.json();
       renderSessions(sessions);
     } catch {
-      sessionsContainer.innerHTML = '<p class="text-[14px] text-error">Failed to load sessions.</p>';
+      const loadErr = document.querySelector('[data-load-error]')?.textContent || '';
+      sessionsContainer.innerHTML = `<p class="text-[14px] text-error">${loadErr}</p>`;
     }
   }
 
@@ -72,9 +73,7 @@ export default function init() {
       if (s.is_current) {
         const badge = document.createElement('span');
         badge.className = 'ui-badge xs ok';
-        badge.textContent = document.querySelector('[data-this-device]')?.textContent
-          || (document.documentElement.lang === 'ru' ? 'Это устройство'
-            : document.documentElement.lang === 'en' ? 'This device' : 'Bu cihaz');
+        badge.textContent = document.querySelector('[data-this-device]')?.textContent || '';
         titleDiv.appendChild(badge);
       }
 
@@ -91,9 +90,7 @@ export default function init() {
         const logoutBtn = document.createElement('button');
         logoutBtn.type = 'button';
         logoutBtn.className = 'spsec-logout';
-        logoutBtn.textContent = document.querySelector('[data-logout-text]')?.textContent
-          || (document.documentElement.lang === 'ru' ? 'Выйти'
-            : document.documentElement.lang === 'en' ? 'Sign out' : 'Çıxış et');
+        logoutBtn.textContent = document.querySelector('[data-logout-text]')?.textContent || '';
         logoutBtn.addEventListener('click', async () => {
           logoutBtn.disabled = true;
           const res = await fetch('/cabinet/sessions', {

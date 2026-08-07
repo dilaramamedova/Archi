@@ -30,7 +30,7 @@ class SearchController extends Controller
         $masterCount = 0;
         $postCount = 0;
 
-        $searchTerm = $query !== '' ? $query : __('search.default_query');
+        $searchTerm = $query !== '' ? $query : t('search.default_query');
         $terms = SearchService::expandQuery($searchTerm);
 
         // Products -- fetch when showing "all" or "prod" tab

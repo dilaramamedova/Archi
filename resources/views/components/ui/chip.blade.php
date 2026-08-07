@@ -6,8 +6,8 @@
   (data-label), so toggling a chip never resizes it and never reflows the row.
 
   Example:
-    <x-ui.chip :label="__('...languages.az')" :on="true" size="sm" tick="svg" />
-    <x-ui.chip :label="__('...channels.email')" :on="$on" size="md" />
+    <x-ui.chip :label="t('...languages.az')" :on="true" size="sm" tick="svg" />
+    <x-ui.chip :label="t('...channels.email')" :on="$on" size="md" />
 
   Props:
     label — chip text (also written to data-label for the ghost width)

@@ -10,22 +10,22 @@
     $masterBgs = ['#f5fbff', '#fdf5ff', '#f5fffb', '#fff5f5'];
 
     $tabs = [
-        ['key' => 'all',  'label' => __('search.tabs.all_n',      ['count' => $totalCount])],
-        ['key' => 'prod', 'label' => __('search.tabs.products_n',  ['count' => $productCount])],
-        ['key' => 'usta', 'label' => __('search.tabs.masters_n',   ['count' => $masterCount])],
-        ['key' => 'blog', 'label' => __('search.tabs.articles_n',  ['count' => $postCount])],
+        ['key' => 'all',  'label' => t('search.tabs.all_n',      ['count' => $totalCount])],
+        ['key' => 'prod', 'label' => t('search.tabs.products_n',  ['count' => $productCount])],
+        ['key' => 'usta', 'label' => t('search.tabs.masters_n',   ['count' => $masterCount])],
+        ['key' => 'blog', 'label' => t('search.tabs.articles_n',  ['count' => $postCount])],
     ];
 @endphp
-<x-layout page="search" :title="__('search.title', ['query' => $displayQuery])">
+<x-layout page="search" :title="t('search.title', ['query' => $displayQuery])">
 
 <section class="sr wrap">
   <div class="sr-inner">
 
     {{-- heading --}}
     <div class="flex flex-col gap-3">
-      <x-ui.eyebrow variant="flat" :label="__('search.tag')" />
+      <x-ui.eyebrow variant="flat" :label="t('search.tag')" />
       <div class="flex items-end gap-3.5">
-        <h1 class="sr-h1">{{ __('search.heading', ['query' => $displayQuery]) }}</h1>
+        <h1 class="sr-h1">{{ t('search.heading', ['query' => $displayQuery]) }}</h1>
         <span class="pb-[7px] text-[15px] text-black">{{ trans_choice('search.total_count', $totalCount, ['count' => $totalCount]) }}</span>
       </div>
     </div>
@@ -41,8 +41,8 @@
     @if ($products->isNotEmpty())
     <div class="flex flex-col gap-6 [&[hidden]]:hidden" data-sec="prod" @if ($tab !== 'all' && $tab !== 'prod') hidden @endif>
       <div class="flex items-end justify-between pt-2">
-        <div class="flex items-end gap-2.5"><h2 class="sr-h2">{{ __('search.sections.products') }}</h2><span class="pb-1 text-sm text-black">{{ trans_choice('search.result_count', $productCount, ['count' => $productCount]) }}</span></div>
-        <a class="sr-more" href="{{ route('catalog') }}?q={{ urlencode($displayQuery) }}">{{ __('search.sections.view_all') }}</a>
+        <div class="flex items-end gap-2.5"><h2 class="sr-h2">{{ t('search.sections.products') }}</h2><span class="pb-1 text-sm text-black">{{ trans_choice('search.result_count', $productCount, ['count' => $productCount]) }}</span></div>
+        <a class="sr-more" href="{{ route('catalog') }}?q={{ urlencode($displayQuery) }}">{{ t('search.sections.view_all') }}</a>
       </div>
       <div class="grid4">
         @foreach ($products as $p)
@@ -72,8 +72,8 @@
     @if ($masters->isNotEmpty())
     <div class="flex flex-col gap-6 [&[hidden]]:hidden" data-sec="usta" @if ($tab !== 'all' && $tab !== 'usta') hidden @endif>
       <div class="flex items-end justify-between pt-2">
-        <div class="flex items-end gap-2.5"><h2 class="sr-h2">{{ __('search.sections.masters') }}</h2><span class="pb-1 text-sm text-black">{{ trans_choice('search.result_count', $masterCount, ['count' => $masterCount]) }}</span></div>
-        <a class="sr-more" href="{{ route('specialists') }}?q={{ urlencode($displayQuery) }}">{{ __('search.sections.view_all') }}</a>
+        <div class="flex items-end gap-2.5"><h2 class="sr-h2">{{ t('search.sections.masters') }}</h2><span class="pb-1 text-sm text-black">{{ trans_choice('search.result_count', $masterCount, ['count' => $masterCount]) }}</span></div>
+        <a class="sr-more" href="{{ route('specialists') }}?q={{ urlencode($displayQuery) }}">{{ t('search.sections.view_all') }}</a>
       </div>
       <div class="grid4">
         @foreach ($masters as $i => $m)
@@ -104,8 +104,8 @@
     @if ($posts->isNotEmpty())
     <div class="flex flex-col gap-6 [&[hidden]]:hidden" data-sec="blog" @if ($tab !== 'all' && $tab !== 'blog') hidden @endif>
       <div class="flex items-end justify-between pt-2">
-        <div class="flex items-end gap-2.5"><h2 class="sr-h2">{{ __('search.sections.articles') }}</h2><span class="pb-1 text-sm text-black">{{ trans_choice('search.result_count', $postCount, ['count' => $postCount]) }}</span></div>
-        <a class="sr-more" href="{{ route('blog') }}">{{ __('search.sections.view_all') }}</a>
+        <div class="flex items-end gap-2.5"><h2 class="sr-h2">{{ t('search.sections.articles') }}</h2><span class="pb-1 text-sm text-black">{{ trans_choice('search.result_count', $postCount, ['count' => $postCount]) }}</span></div>
+        <a class="sr-more" href="{{ route('blog') }}">{{ t('search.sections.view_all') }}</a>
       </div>
       <div class="grid4">
         @foreach ($posts as $post)
@@ -114,7 +114,7 @@
               $readingMinutes = max(1, (int) ceil($wordCount / 200));
           @endphp
           <x-post
-            :time="$readingMinutes . ' ' . __('search.min_read')"
+            :time="$readingMinutes . ' ' . t('search.min_read')"
             :title="$post->title"
             :excerpt="$post->excerpt"
             :img="$post->cover_image_url"

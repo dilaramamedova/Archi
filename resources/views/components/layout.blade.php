@@ -2,14 +2,14 @@
   Main layout (anonymous Blade component).
 
   Usage:
-    <x-layout page="catalog" :title="__('catalog.title')">
+    <x-layout page="catalog" :title="t('catalog.title')">
         ... page markup ...
     </x-layout>
 
   Props:
     page      — data-page value; resources/js/app.js uses it to pick the page JS
                 module, so it must equal the page slug
-    title     — <title> text (defaults to __('common.site_name'))
+    title     — <title> text (defaults to t('common.site_name'))
     bodyClass — extra class on <body> (rarely needed)
     footer    — render <x-footer/>? Default true. Only business-register passes false:
                 its Figma frame (Navbar 140 + auth-page 1160) has no footer, and the
@@ -30,7 +30,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
-<title>{{ $title ?? __('common.site_name') }}</title>
+<title>{{ $title ?? t('common.site_name') }}</title>
 <link rel="icon" href="/assets/logo-archi-black.png" type="image/png">
 
 {{-- Fonts: Inter (whole site) + Manrope (business pages, --font-b2b) --}}
@@ -44,8 +44,11 @@
 <body
     class="{{ $bodyClass }}"
     data-page="{{ $page }}"
-    data-cur-product="{{ __('common.go_to_product') }}"
-    data-cur-details="{{ __('common.view_details') }}"
+    @auth data-user="{{ auth()->id() }}" @endauth
+    data-cur-product="{{ t('common.go_to_product') }}"
+    data-cur-details="{{ t('common.view_details') }}"
+    data-err-generic="{{ t('common.error_generic') }}"
+    data-err-network="{{ t('common.error_network') }}"
 >
 
 <x-navbar :headerMenu="$headerMenu" :megaCatalog="$megaCatalog" :megaSpecialists="$megaSpecialists" :megaBlog="$megaBlog" />

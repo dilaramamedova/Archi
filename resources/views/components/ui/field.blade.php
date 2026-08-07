@@ -3,12 +3,12 @@
   wrapper serves input / textarea / select / a custom combobox.
 
   Example:
-    <x-ui.field :label="__('login.form.identifier_label')" for="loginIdentifier">
-      <x-ui.input id="loginIdentifier" type="text" :placeholder="__('...')" required />
+    <x-ui.field :label="t('login.form.identifier_label')" for="loginIdentifier">
+      <x-ui.input id="loginIdentifier" type="text" :placeholder="t('...')" required />
     </x-ui.field>
 
-    <x-ui.field variant="b2b" :label="__('business-register.form.name_label')">
-      <x-ui.input variant="b2b" :placeholder="__('...')" />
+    <x-ui.field variant="b2b" :label="t('business-register.form.name_label')">
+      <x-ui.input variant="b2b" :placeholder="t('...')" />
     </x-ui.field>
 
   Props:

@@ -24,7 +24,7 @@ function initContactPhone() {
   if (!btn || !link) return;
   btn.addEventListener('click', () => {
     const phone = (btn.dataset.phone || '').trim();
-    link.textContent = phone || 'Telefon nömrəsi əlavə edilməyib';
+    link.textContent = phone || btn.dataset.noPhone || '';
     link.hidden = false;
     if (phone) link.href = `tel:${phone.replace(/[^+\d]/g, '')}`;
   });
@@ -95,13 +95,15 @@ function initMessageModal() {
     const senderName = nameInput?.value?.trim() || '';
     const senderPhone = phoneInput?.value?.trim() || '';
 
-    // Build mailto link as a pragmatic fallback
-    const subject = encodeURIComponent('ARCHI: Mesaj - ' + specialistName);
+    // Build mailto link as a pragmatic fallback. Labels come from the form's
+    // data-l-* attributes, rendered via t() in the Blade.
+    const L = form.dataset;
+    const subject = encodeURIComponent((L.lSubject || '') + ' ' + specialistName);
     const body = encodeURIComponent(
       messageText +
-      (senderName ? '\n\nAd: ' + senderName : '') +
-      (senderPhone ? '\nTelefon: ' + senderPhone : '') +
-      '\n\nMütəxəssis ID: ' + specialistId
+      (senderName ? '\n\n' + (L.lName || '') + ' ' + senderName : '') +
+      (senderPhone ? '\n' + (L.lPhone || '') + ' ' + senderPhone : '') +
+      '\n\n' + (L.lSpecId || '') + ' ' + specialistId
     );
 
     // Try to open mailto (works on desktop, may not on all mobile)

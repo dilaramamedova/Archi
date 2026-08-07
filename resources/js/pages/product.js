@@ -237,12 +237,12 @@ function initReviewForm() {
       } else {
         if (btn) btn.disabled = false;
         const errEl = document.getElementById('revError');
-        if (errEl) { errEl.textContent = data.message || 'Xəta baş verdi.'; errEl.style.display = 'block'; }
+        if (errEl) { errEl.textContent = data.message || document.body.dataset.errGeneric; errEl.style.display = 'block'; }
       }
     } catch {
       if (btn) btn.disabled = false;
       const errEl = document.getElementById('revError');
-      if (errEl) { errEl.textContent = 'Şəbəkə xətası.'; errEl.style.display = 'block'; }
+      if (errEl) { errEl.textContent = document.body.dataset.errNetwork; errEl.style.display = 'block'; }
     }
   });
 }

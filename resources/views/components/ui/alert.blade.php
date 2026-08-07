@@ -5,8 +5,8 @@
   Hidden by default; JS flips data-on (ARCHITECTURE.md §7.1).
 
   Example:
-    <x-ui.alert tone="ok" id="loginOk">{{ __('login.success') }}</x-ui.alert>
-    <x-ui.alert tone="error" id="slErr" class="mb-[18px]">{{ __('sell.form.error') }}</x-ui.alert>
+    <x-ui.alert tone="ok" id="loginOk">{{ t('login.success') }}</x-ui.alert>
+    <x-ui.alert tone="error" id="slErr" class="mb-[18px]">{{ t('sell.form.error') }}</x-ui.alert>
 
   Props:
     tone — ok (green border, --color-success text) · error (red border, --color-error text)

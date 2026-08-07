@@ -3,8 +3,8 @@
   the onboarding city combobox) are NOT this component — they are listbox widgets.
 
   Example:
-    <x-ui.select :placeholder="__('register.form.select_placeholder')"
-                 :options="__('register.cities')" />
+    <x-ui.select :placeholder="t('register.form.select_placeholder')"
+                 :options="t('register.cities')" />
 
   Props:
     variant     — null (consumer) · b2b

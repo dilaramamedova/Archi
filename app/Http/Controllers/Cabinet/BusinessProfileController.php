@@ -61,7 +61,7 @@ class BusinessProfileController extends Controller
 
         $request->user()->sellerProfile()->updateOrCreate([], $validated);
 
-        return response()->json(['success' => true, 'message' => __('business-cabinet.saved')]);
+        return response()->json(['success' => true, 'message' => t('business-cabinet.saved')]);
     }
 
     public function updateContact(Request $request): JsonResponse
@@ -84,7 +84,7 @@ class BusinessProfileController extends Controller
 
         $request->user()->sellerProfile()->updateOrCreate([], $validated);
 
-        return response()->json(['success' => true, 'message' => __('business-cabinet.saved')]);
+        return response()->json(['success' => true, 'message' => t('business-cabinet.saved')]);
     }
 
     public function updateNotifications(Request $request): JsonResponse
@@ -101,7 +101,7 @@ class BusinessProfileController extends Controller
 
         $request->user()->sellerProfile()->updateOrCreate([], $validated);
 
-        return response()->json(['success' => true, 'message' => __('business-cabinet.saved')]);
+        return response()->json(['success' => true, 'message' => t('business-cabinet.saved')]);
     }
 
     public function updateLogo(Request $request): JsonResponse
