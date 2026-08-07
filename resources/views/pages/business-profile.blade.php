@@ -148,7 +148,6 @@
                     @endphp
                     <div class="card">
                         <div class="card-img">
-                            <button type="button" class="card-heart" aria-label="{{ t('business-profile.catalog.favourite') }}"><span class="ic20"><img src="/assets/icon-heart-pointed.svg" alt=""></span></button>
                             <div class="card-badges">
                                 @if ($product->created_at->gt(now()->subDays(30)))
                                     <div class="card-badge"><p>{{ t('common.badge_new') }}</p></div>

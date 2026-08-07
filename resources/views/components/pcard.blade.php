@@ -75,7 +75,6 @@
         @endforeach
       </div>
     @endif
-    <div class="heart"><img src="/assets/icon-heart-pointed.svg" alt=""></div>
     @if ($dots > 0)
       <div class="dots">
         @for ($i = 0; $i < $dots; $i++)
