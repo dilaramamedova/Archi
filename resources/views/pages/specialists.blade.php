@@ -84,12 +84,11 @@
       {{-- city --}}
       <div class="sp-fs" id="spCityBlock">
         <p class="sp-fs-title">{{ t('specialists.filters.city_title') }}</p>
+        {{-- Canonical list from App\Enums\City — the label is both the stored value and
+             the filter value, so no legacy slug can appear as an extra row. --}}
         @foreach ($cities as $city)
-          <div class="sp-check" data-city="{{ $city }}" data-on="{{ $activeCity === $city ? 'true' : 'false' }}"><span class="fside-box sp-box"></span><span class="lbl">{{ $city }}</span></div>
+          <div class="sp-check" data-city="{{ $city }}" data-on="{{ \App\Enums\City::canonical($activeCity) === $city ? 'true' : 'false' }}"><span class="fside-box sp-box"></span><span class="lbl">{{ $city }}</span></div>
         @endforeach
-        @if ($cities->isEmpty())
-          <div class="sp-check" data-city="baku" data-on="false"><span class="fside-box sp-box"></span><span class="lbl">{{ t('specialists.filters.city.baku') }}</span></div>
-        @endif
       </div>
 
       <div class="sp-fs-div"></div>
@@ -129,9 +128,11 @@
     <div class="sp-grid" id="spGrid">
       @forelse ($specialists as $i => $s)
         @php
+            // Only the admin-set feature flag earns a badge. "Təsdiqlənmiş" is off until
+            // a real verification column exists — the index already filters to active
+            // users, so isActive() marked every single card.
             $badges = [];
             if ($s->is_featured) { $badges[] = ['class' => 'top-master', 'label' => t('specialists.card.badge_top')]; }
-            if ($s->user->isActive()) { $badges[] = ['class' => 'ok', 'label' => t('specialists.card.badge_verified')]; }
             $initials = mb_strtoupper(mb_substr($s->user->first_name ?? $s->user->name, 0, 1) . mb_substr($s->user->last_name ?? '', 0, 1));
             $skillsList = is_array($s->skills) ? implode(',', $s->skills) : '';
             $avgRating = $s->average_rating;
@@ -143,9 +144,9 @@
            data-years="{{ $s->experience_years ?? 0 }}"
            data-projects="{{ $s->approvedPortfolioItems ? $s->approvedPortfolioItems->count() : 0 }}"
            data-price="0"
-           data-city="{{ $s->city ?? '' }}"
+           data-city="{{ \App\Enums\City::display($s->city) ?? '' }}"
            data-specs="{{ $skillsList }}"
-           data-verified="{{ $s->user->isActive() ? 'true' : 'false' }}"
+           data-verified="{{ $s->is_featured ? 'true' : 'false' }}"
            data-free="{{ $s->is_on_vacation ? 'false' : 'true' }}">
           <div class="top" style="background:{{ $tints[$i % 4] }}">
             <div class="badges">@foreach ($badges as $b)<span class="b {{ $b['class'] }}">{{ $b['label'] }}</span>@endforeach</div>
@@ -154,11 +155,11 @@
             @else
               <div class="avatar">{{ $initials }}</div>
             @endif
-            <div class="role">{{ $s->specialty?->name ?? translate_craft($s->craft) ?? t('specialists.card.default_role') }}</div>
+            <div class="role">{{ $s->craft_label ?: t('specialists.card.default_role') }}</div>
             <div class="rate"><img class="st" src="/assets/icon-star-yellow.svg" alt=""><span class="v">{{ $avgRating > 0 ? number_format($avgRating, 1) : '0.0' }}</span><span class="r">{{ t('specialists.card.reviews', ['count' => $revCount]) }}</span></div>
           </div>
           <div class="name">{{ $s->user->name }}</div>
-          <div class="meta"><span class="m">{{ t('specialists.card.exp', ['years' => $s->experience_years ?? 0]) }}</span><span class="d">·</span><span class="m">{{ $s->city ?? '' }}</span></div>
+          <div class="meta"><span class="m">{{ t('specialists.card.exp', ['years' => $s->experience_years ?? 0]) }}</span><span class="d">·</span><span class="m">{{ \App\Enums\City::display($s->city) ?? '' }}</span></div>
           <div class="foot">
             <span class="price"></span>
             <span class="ui-btn ui-btn-primary h-[38px] px-4 text-[13px] font-semibold whitespace-nowrap duration-200"

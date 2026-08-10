@@ -90,7 +90,7 @@
             <span class="spo-badge ok">{{ t('specialist-owner.id.badge_verified') }}</span>
           </div>
           <h1 class="spo-name">{{ $user->name }}</h1>
-          <p class="spo-role">{{ $profile?->specialty?->name ?? translate_craft($profile?->craft) ?? t('specialist-owner.id.role') }}</p>
+          <p class="spo-role">{{ $profile?->craft_label ?: t('specialist-owner.id.role') }}</p>
           <div class="spo-rate">
             <span class="v"><x-ui.stars :count="1" :rating="1" :icon="$starIcon" />{{ t('specialist-owner.id.rate') }}</span>
             <span class="r">{{ t('specialist-owner.id.reviews') }}</span>

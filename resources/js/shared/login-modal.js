@@ -2,8 +2,13 @@ import { authFetch, setLoading } from './auth.js';
 
 const overlay = document.getElementById('lmOverlay');
 
-function open() {
+// Where to land after a successful sign-in. Null → wherever the server sends us.
+// The cart sets it so checkout resumes on the cart instead of bouncing to the cabinet.
+let redirectOverride = null;
+
+function open(options = {}) {
   if (!overlay) return;
+  redirectOverride = options.redirectTo ?? null;
   overlay.dataset.on = 'true';
   document.body.dataset.lmLock = 'true';
   const first = overlay.querySelector('input');
@@ -59,7 +64,8 @@ if (overlay) {
 
     if (res.ok) {
       if (ok) ok.dataset.on = 'true';
-      setTimeout(() => { window.location.href = res.data.redirect; }, 600);
+      const target = redirectOverride ?? res.data.redirect;
+      setTimeout(() => { window.location.href = target; }, 600);
     } else {
       const msg = res.errors?.identifier?.[0] ?? res.message ?? 'Error';
       if (err) {

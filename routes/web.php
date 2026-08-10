@@ -3,6 +3,8 @@
 use App\Http\Controllers\AboutController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\NewPasswordController;
+use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BlogController;
 use App\Http\Controllers\Cabinet\SecurityController;
@@ -149,6 +151,12 @@ Route::middleware(['auth', 'role:master'])->group(function () {
     })->name('specialist.cabinet.notifications');
 });
 
+// The phone number is kept out of the public HTML and revealed only to signed-in
+// visitors, so it cannot be scraped straight off the profile page.
+Route::get('/api/specialist/{specialist}/phone', [SpecialistController::class, 'phone'])
+    ->middleware(['auth', 'throttle:20,1'])
+    ->name('api.specialist.phone');
+
 // Specialist detail page — placed after all /specialist/* fixed routes so {specialist}
 // does not swallow "owner", "onboarding", or "cabinet" segments.
 Route::get('/specialist/{specialist}', [SpecialistController::class, 'show'])->name('specialist.show');
@@ -235,13 +243,24 @@ Route::post('/register', [RegisterController::class, 'store'])->name('register.s
 Route::post('/login', [LoginController::class, 'store'])->name('login.store');
 Route::post('/logout', [LoginController::class, 'destroy'])->name('logout');
 
+// Password reset — throttled, and deliberately neutral about whether an address exists.
+Route::post('/forgot-password', [PasswordResetLinkController::class, 'store'])
+    ->middleware(['guest', 'throttle:6,1'])
+    ->name('password.email');
+Route::post('/reset-password', [NewPasswordController::class, 'store'])
+    ->middleware(['guest', 'throttle:6,1'])
+    ->name('password.update');
+
 // API-style routes
 Route::get('/api/search', [SearchController::class, 'autocomplete'])->name('api.search');
 Route::post('/api/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('api.newsletter.subscribe');
 Route::get('/api/cart/count', [CartController::class, 'count'])->name('api.cart.count');
 
-// Orders (guests + auth)
-Route::post('/api/orders', [OrderController::class, 'store'])->name('api.orders.store');
+// Placing an order requires an account: the cart opens the login modal for guests, and
+// this guard is what actually enforces it.
+Route::post('/api/orders', [OrderController::class, 'store'])->middleware('auth')->name('api.orders.store');
+// Still reachable without auth so a buyer following the link in a new tab is not bounced;
+// OrderController::success authorises the viewer itself.
 Route::get('/order/{order}/success', [OrderController::class, 'success'])->name('order.success');
 
 // Cabinet routes (authenticated)

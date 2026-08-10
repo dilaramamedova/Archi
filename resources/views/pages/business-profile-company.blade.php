@@ -63,7 +63,11 @@
         <x-ui.input variant="b2b" id="bpc-tax-id" name="tax_id" :value="$profile->tax_id ?? ''" />
       </x-cabinet.field>
       <x-cabinet.field :label="t('business-profile-company.company.city')" for="bpc-city">
-        <x-ui.input variant="b2b" id="bpc-city" name="city" :value="$profile->city ?? ''" />
+        <x-ui.select variant="b2b" id="bpc-city" name="city"
+                     :placeholder="t('register.form.select_placeholder')"
+                     :options="\App\Enums\City::options()"
+                     {{-- options are keyed by slug, so the selected value must be a slug too --}}
+                     :value="\App\Enums\City::resolve($profile->city ?? '')?->value" />
       </x-cabinet.field>
     </div>
 

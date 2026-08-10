@@ -65,7 +65,12 @@ final class SpecialistSpecialtyTest extends TestCase
         $this->actingAs($admin, 'admin');
 
         Livewire::test(CreateSpecialistSpecialty::class)
-            ->fillForm(['name' => 'Yeni ixtisas', 'slug' => 'yeni-ixtisas', 'is_active' => true, 'sort_order' => 1])
+            ->fillForm([
+                'name' => ['az' => 'Yeni ixtisas', 'ru' => 'Новая специальность', 'en' => 'New specialty'],
+                'slug' => 'yeni-ixtisas',
+                'is_active' => true,
+                'sort_order' => 1,
+            ])
             ->call('create')
             ->assertHasNoFormErrors();
 

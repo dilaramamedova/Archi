@@ -22,8 +22,8 @@
     name    — full name
     exp     — experience text
     proj    — project count text
-    badges  — badge array; null → common.badge_top_master (crown) +
-              common.badge_verified (green). Custom item format:
+    badges  — badge array; empty/null → no badges. A badge must be earned, so the
+              caller passes only the ones the data supports. Item format:
               ['label' => '...', 'icon' => '/assets/icon-crown-gold.svg', 'ok' => false]
 
   `.name` is unstyled — do not add CSS for it, pixel parity depends on it.
@@ -44,10 +44,7 @@
 ])
 @php
     $tag = $href ? 'a' : 'div';
-    $badgeList = $badges ?? [
-        ['label' => t('common.badge_top_master'), 'icon' => '/assets/icon-crown-gold.svg'],
-        ['label' => t('common.badge_verified'), 'icon' => '/assets/icon-check-green.svg', 'ok' => true],
-    ];
+    $badgeList = (array) ($badges ?? []);
 @endphp
 <{{ $tag }} {{ $attributes->merge(['class' => 'scard']) }} @if ($href) href="{{ $href }}" @endif>
   <div class="top" style="background:{{ $bg }}">

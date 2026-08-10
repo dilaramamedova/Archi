@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\City;
 use App\Enums\UserStatus;
 use App\Models\SpecialistProfile;
 use App\Models\SpecialistSpecialty;
+use App\Services\SearchService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class SpecialistController extends Controller
@@ -31,6 +34,26 @@ class SpecialistController extends Controller
         return view('pages.specialist', compact('specialist', 'reviews', 'avgRating', 'reviewsCount'));
     }
 
+    /**
+     * Reveal a specialist's phone number. The number is never rendered into the
+     * public profile HTML; it is fetched from here so only signed-in users
+     * (and only on an explicit click) can read it.
+     */
+    public function phone(SpecialistProfile $specialist): JsonResponse
+    {
+        if (! $specialist->user || $specialist->user->status !== UserStatus::Active) {
+            abort(404);
+        }
+
+        $phone = $specialist->phone ?: ($specialist->whatsapp ?: $specialist->user->phone);
+
+        return response()->json([
+            'phone' => $phone ?: null,
+            // Digits + leading "+" only, for the tel: href.
+            'tel' => $phone ? preg_replace('/[^+\d]/', '', $phone) : null,
+        ]);
+    }
+
     public function index(Request $request)
     {
         $query = SpecialistProfile::query()
@@ -38,8 +61,13 @@ class SpecialistController extends Controller
             ->with(['user', 'specialty', 'approvedPortfolioItems'])
             ->withCount(['reviews as approved_reviews_count' => fn ($q) => $q->where('status', 'approved')]);
 
-        if ($request->filled('city')) {
-            $city = $request->input('city');
+        // Free-text search over craft/skills/specialty/user name.
+        if ($request->filled('q')) {
+            $query = SearchService::buildSpecialistQuery($query, (string) $request->input('q'));
+        }
+
+        // Accept either the slug ("baku") or the label ("Bakı") — rows store the label.
+        if ($request->filled('city') && ($city = City::canonical($request->input('city')))) {
             $query->where('city', $city);
         }
 
@@ -90,12 +118,9 @@ class SpecialistController extends Controller
 
         $specialists = $query->paginate(20)->withQueryString();
 
-        // Gather filter options from all active specialist profiles
-        $cities = SpecialistProfile::query()
-            ->whereHas('user', fn ($q) => $q->where('status', UserStatus::Active))
-            ->whereNotNull('city')
-            ->distinct()
-            ->pluck('city');
+        // The canonical list, not a DISTINCT over the column — the distinct is what let a
+        // stale raw slug show up as its own filter row next to the proper city.
+        $cities = collect(City::labels());
 
         $specialties = SpecialistSpecialty::query()
             ->where('is_active', true)

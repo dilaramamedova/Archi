@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
+use App\Enums\City;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\User;
+use App\Notifications\AccountApprovedNotification;
+use App\Notifications\AccountRejectedNotification;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Infolists;
@@ -176,7 +179,7 @@ abstract class BaseUserResource extends Resource
                 Infolists\Components\TextEntry::make('sellerProfile.brand_name')->label('Brend adı')->placeholder('—'),
                 Infolists\Components\TextEntry::make('sellerProfile.legal_name')->label('Hüquqi ad')->placeholder('—'),
                 Infolists\Components\TextEntry::make('sellerProfile.tax_id')->label('VÖEN')->placeholder('—'),
-                Infolists\Components\TextEntry::make('sellerProfile.city')->label('Şəhər')->placeholder('—'),
+                Infolists\Components\TextEntry::make('sellerProfile.city')->label('Şəhər')->formatStateUsing(fn (?string $state): ?string => City::display($state))->placeholder('—'),
                 Infolists\Components\TextEntry::make('sellerProfile.address')->label('Ünvan')->placeholder('—'),
                 Infolists\Components\TextEntry::make('sellerProfile.about')->label('Haqqında')->placeholder('—')->columnSpanFull(),
             ])->columns(2);
@@ -185,7 +188,7 @@ abstract class BaseUserResource extends Resource
         if (static::getManagedRole() === UserRole::Master) {
             $components[] = Schemas\Components\Section::make('Usta / mütəxəssis profili')->schema([
                 Infolists\Components\TextEntry::make('specialistProfile.specialty.name')->label('İxtisas')->placeholder('—'),
-                Infolists\Components\TextEntry::make('specialistProfile.city')->label('Şəhər')->placeholder('—'),
+                Infolists\Components\TextEntry::make('specialistProfile.city')->label('Şəhər')->formatStateUsing(fn (?string $state): ?string => City::display($state))->placeholder('—'),
                 Infolists\Components\TextEntry::make('specialistProfile.experience_years')->label('Təcrübə (il)')->placeholder('—'),
                 Infolists\Components\TextEntry::make('specialistProfile.phone')->label('Əlaqə telefonu')->placeholder('—'),
                 Infolists\Components\TextEntry::make('specialistProfile.whatsapp')->label('WhatsApp')->placeholder('—'),
@@ -262,7 +265,7 @@ abstract class BaseUserResource extends Resource
                 Forms\Components\TextInput::make('legal_name')->label('Hüquqi ad')->maxLength(255),
                 Forms\Components\TextInput::make('tax_id')->label('VÖEN')->maxLength(50),
                 Forms\Components\Toggle::make('tax_id_verified')->label('VÖEN təsdiqlənib'),
-                Forms\Components\TextInput::make('city')->label('Şəhər')->maxLength(100),
+                Forms\Components\Select::make('city')->label('Şəhər')->options(self::cityOptions())->native(false),
                 Forms\Components\TextInput::make('address')->label('Ünvan')->maxLength(255),
                 Forms\Components\TextInput::make('contact_person')->label('Əlaqələndirici şəxs')->maxLength(255),
                 Forms\Components\TextInput::make('contact_phone')->label('Əlaqə telefonu')->tel()->maxLength(30),
@@ -279,7 +282,7 @@ abstract class BaseUserResource extends Resource
                     ->relationship('specialty', 'name', fn (Builder $query): Builder => $query->where('is_active', true)->orderBy('sort_order'))
                     ->searchable()->preload()->required(),
                 Forms\Components\TextInput::make('experience_years')->label('Təcrübə (il)')->numeric()->minValue(0)->maxValue(80),
-                Forms\Components\TextInput::make('city')->label('Şəhər')->required()->maxLength(100),
+                Forms\Components\Select::make('city')->label('Şəhər')->options(self::cityOptions())->native(false)->required(),
                 Forms\Components\TextInput::make('phone')->label('Əlaqə telefonu')->tel()->maxLength(30),
                 Forms\Components\TextInput::make('whatsapp')->label('WhatsApp')->tel()->maxLength(30),
                 Forms\Components\TextInput::make('avatar_path')->label('Avatar yolu')->maxLength(255),
@@ -305,6 +308,7 @@ abstract class BaseUserResource extends Resource
             ->requiresConfirmation()
             ->action(function (User $record): void {
                 $record->approve();
+                $record->notify(new AccountApprovedNotification);
                 Notification::make()->title('Hesab təsdiqləndi')->success()->send();
             });
     }
@@ -321,6 +325,7 @@ abstract class BaseUserResource extends Resource
             ])
             ->action(function (User $record, array $data): void {
                 $record->reject($data['rejection_reason']);
+                $record->notify(new AccountRejectedNotification($data['rejection_reason']));
                 Notification::make()->title('Hesab rədd edildi')->danger()->send();
             });
     }
@@ -366,6 +371,16 @@ abstract class BaseUserResource extends Resource
     protected static function activeAdminCount(): int
     {
         return User::query()->withRole(UserRole::Admin)->where('status', UserStatus::Active)->count();
+    }
+
+    /**
+     * Label => label: profile `city` columns store the Azerbaijani name itself.
+     *
+     * @return array<string, string>
+     */
+    private static function cityOptions(): array
+    {
+        return array_combine(City::labels(), City::labels());
     }
 
     private static function statusOptions(): array

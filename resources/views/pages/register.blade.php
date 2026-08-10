@@ -67,7 +67,7 @@
             <x-ui.select name="specialist_specialty_id" :placeholder="t('register.form.select_placeholder')" :options="$specialties" />
           </x-ui.field>
           <x-ui.field class="flex-1" :label="t('register.form.city_label')">
-            <x-ui.select name="city" :placeholder="t('register.form.select_placeholder')" :options="t('register.cities')" />
+            <x-ui.select name="city" :placeholder="t('register.form.select_placeholder')" :options="\App\Enums\City::options()" />
           </x-ui.field>
         </div>
 

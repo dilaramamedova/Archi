@@ -28,15 +28,54 @@
       <h2 class="mb-6 text-lg font-semibold text-ink">{{ t('account.orders_heading') }}</h2>
 
       @forelse ($orders as $order)
-        <div class="flex items-center justify-between border-b border-black/8 py-4 last:border-b-0">
-          <div>
-            <p class="text-sm font-semibold text-ink">{{ $order->order_number }}</p>
-            <p class="text-xs text-black/50">{{ $order->created_at->format('d.m.Y H:i') }}</p>
+        @php
+            // Buyers were shown the raw English enum value. Prefer a buyer-facing label,
+            // fall back to the seller cabinet's badge wording, never to the raw status.
+            $statusKey = 'account.order_status.' . $order->status;
+            $sellerStatusKey = 'business-orders.badge.' . $order->status;
+            $statusLabel = \Illuminate\Support\Facades\Lang::has($statusKey)
+                ? t($statusKey)
+                : (\Illuminate\Support\Facades\Lang::has($sellerStatusKey) ? t($sellerStatusKey) : t('account.order_processing'));
+            $statusClasses = match ($order->status) {
+                'pending' => 'bg-[#fffde0] text-black/90',
+                'processing' => 'bg-gray-soft2 text-black/60',
+                'shipped' => 'bg-[#e8f1fd] text-[#2f6fd0]',
+                'delivered' => 'bg-[#e9f6ed] text-[#00a613]',
+                default => 'bg-[#fdecec] text-[#e5484d]',
+            };
+        @endphp
+        <div class="border-b border-black/8 py-5 last:border-b-0">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="text-sm font-semibold text-ink">{{ $order->order_number }}</p>
+              <p class="text-xs text-black/50">{{ $order->created_at->format('d.m.Y H:i') }}</p>
+            </div>
+            <div class="flex flex-col items-end gap-1.5">
+              <p class="text-sm font-semibold text-ink">{{ number_format($order->total, 2) }} {{ t('sell.form.currency') }}</p>
+              <span class="rounded px-2.5 py-1 text-xs font-semibold {{ $statusClasses }}">{{ $statusLabel }}</span>
+            </div>
           </div>
-          <div class="text-right">
-            <p class="text-sm font-semibold text-ink">{{ number_format($order->total, 2) }} {{ t('sell.form.currency') }}</p>
-            <p class="text-xs text-black/50">{{ $order->status ?? t('account.order_processing') }}</p>
-          </div>
+
+          @if ($order->items->isNotEmpty())
+            <div class="mt-3 flex flex-col gap-1.5 border-t border-black/8 pt-3">
+              @foreach ($order->items as $item)
+                <div class="flex items-baseline justify-between gap-4 text-xs">
+                  <p class="min-w-0 text-black/70">
+                    {{ $item->product_snapshot['name'] ?? $item->product?->name ?? '—' }}
+                    <span class="text-black/40">&times; {{ $item->quantity }}</span>
+                  </p>
+                  <p class="shrink-0 text-black/50">{{ number_format($item->unit_price, 2) }} {{ t('sell.form.currency') }}</p>
+                </div>
+              @endforeach
+            </div>
+          @endif
+
+          @if (filled($order->delivery_address) || filled($order->delivery_city))
+            <p class="mt-3 text-xs text-black/50">
+              {{ t('business-order-detail.delivery.address') }}:
+              {{ collect([$order->delivery_city, $order->delivery_address])->filter()->implode(', ') }}
+            </p>
+          @endif
         </div>
       @empty
         <div class="flex flex-col items-center gap-4 py-12 text-center">

@@ -7,15 +7,22 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\User;
+use App\Services\SearchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class BusinessProductController extends Controller
 {
     /** Stock quantity at or below which a product counts as "running low". */
     public const LOW_STOCK_THRESHOLD = 10;
+
+    /** Maximum number of products a single seller may own. Admins are exempt. */
+    public const MAX_PRODUCTS_PER_SELLER = 5;
 
     // ---------------------------------------------------------------- pages
 
@@ -23,12 +30,12 @@ class BusinessProductController extends Controller
     {
         app()->setLocale(session('locale', config('app.locale')));
 
-        $query = $request->user()->products()->with(['images', 'category']);
+        // Eloquent builder (not the HasMany relation) so SearchService can decorate it.
+        $query = Product::query()->where('user_id', $request->user()->id)->with(['images', 'category']);
 
+        // `name` is a JSON column, so a plain LIKE would be case-sensitive.
         if ($search = trim((string) $request->query('q'))) {
-            $query->where(fn ($q) => $q
-                ->where('name', 'like', "%{$search}%")
-                ->orWhere('sku', 'like', "%{$search}%"));
+            $query = SearchService::buildSellerProductQuery($query, $search);
         }
 
         if ($category = $request->query('category')) {
@@ -53,10 +60,12 @@ class BusinessProductController extends Controller
             'rejected' => $request->user()->products()->rejected()->count(),
         ];
 
-        return view('pages.business-profile-products', compact('products', 'categories', 'counts'));
+        $quota = $this->productQuota($request->user());
+
+        return view('pages.business-profile-products', compact('products', 'categories', 'counts', 'quota'));
     }
 
-    public function create()
+    public function create(Request $request)
     {
         app()->setLocale(session('locale', config('app.locale')));
 
@@ -64,6 +73,7 @@ class BusinessProductController extends Controller
             'product' => null,
             'categories' => Category::roots()->active()->ordered()->get(),
             'brands' => Brand::orderBy('name')->get(),
+            'quota' => $this->productQuota($request->user()),
         ]);
     }
 
@@ -76,6 +86,8 @@ class BusinessProductController extends Controller
             'product' => $product->load('images'),
             'categories' => Category::roots()->active()->ordered()->get(),
             'brands' => Brand::orderBy('name')->get(),
+            // Editing an existing product never consumes quota.
+            'quota' => ['limit' => null, 'used' => 0, 'remaining' => null, 'reached' => false],
         ]);
     }
 
@@ -91,12 +103,11 @@ class BusinessProductController extends Controller
             'out' => (clone $base)->where('stock', '<=', 0)->count(),
         ];
 
-        $query = $request->user()->products()->with(['images']);
+        $query = Product::query()->where('user_id', $request->user()->id)->with(['images']);
 
+        // `name` is a JSON column, so a plain LIKE would be case-sensitive.
         if ($search = trim((string) $request->query('q'))) {
-            $query->where(fn ($q) => $q
-                ->where('name', 'like', "%{$search}%")
-                ->orWhere('sku', 'like', "%{$search}%"));
+            $query = SearchService::buildSellerProductQuery($query, $search);
         }
 
         $query = match ($request->query('filter')) {
@@ -115,18 +126,34 @@ class BusinessProductController extends Controller
 
     public function store(Request $request): JsonResponse
     {
+        $this->guardProductQuota($request->user());
+
         $validated = $this->validateProduct($request);
 
-        $product = Product::create([
-            ...$this->productAttributes($validated),
-            'user_id' => $request->user()->id,
-            'slug' => $this->uniqueSlug($validated['name']),
-            // Publish → pending admin review; draft → hidden, no review needed yet.
-            'is_visible' => ($validated['publish'] ?? false) ? true : false,
-            'is_approved' => false,
-            'rejected_at' => null,
-            'rejection_reason' => null,
-        ]);
+        // Publishing requires at least one image; drafts may be saved without.
+        if (($validated['publish'] ?? false) && count($request->file('images') ?? []) === 0) {
+            throw ValidationException::withMessages([
+                'images' => $this->msg('business-product-edit.save.error_image', 'Ən azı 1 şəkil əlavə edin'),
+            ]);
+        }
+
+        // Re-check the quota under a row lock: the check above is a plain count(), so two
+        // concurrent submissions could both pass it and push the seller over the cap.
+        $product = DB::transaction(function () use ($request, $validated): Product {
+            User::whereKey($request->user()->id)->lockForUpdate()->first();
+            $this->guardProductQuota($request->user()->fresh());
+
+            return Product::create([
+                ...$this->productAttributes($validated),
+                'user_id' => $request->user()->id,
+                'slug' => $this->uniqueSlug($validated['name']),
+                // Publish → pending admin review; draft → hidden, no review needed yet.
+                'is_visible' => ($validated['publish'] ?? false) ? true : false,
+                'is_approved' => false,
+                'rejected_at' => null,
+                'rejection_reason' => null,
+            ]);
+        });
 
         $this->syncImages($request, $product);
 
@@ -143,6 +170,18 @@ class BusinessProductController extends Controller
     {
         $this->authorizeProduct($request, $product);
         $validated = $this->validateProduct($request);
+
+        // A published product must keep at least one image: survivors + new uploads.
+        $willBeVisible = ($validated['publish'] ?? false) || $product->is_visible;
+        $keptCount = $product->images()
+            ->whereIn('id', array_map('intval', (array) $request->input('kept_image_ids', [])))
+            ->count();
+
+        if ($willBeVisible && $keptCount + count($request->file('images') ?? []) === 0) {
+            throw ValidationException::withMessages([
+                'images' => $this->msg('business-product-edit.save.error_image', 'Ən azı 1 şəkil əlavə edin'),
+            ]);
+        }
 
         $wasApproved = $product->is_approved;
 
@@ -169,6 +208,16 @@ class BusinessProductController extends Controller
     public function toggleVisibility(Request $request, Product $product): JsonResponse
     {
         $this->authorizeProduct($request, $product);
+
+        // Making a product visible is a publish action, so it has to honour the same
+        // "at least 1 image" rule as store()/update() — otherwise an imageless draft
+        // could be flipped straight into the catalog.
+        if (! $product->is_visible && $product->images()->doesntExist()) {
+            throw ValidationException::withMessages([
+                'images' => $this->msg('business-product-edit.save.error_image', 'Ən azı 1 şəkil əlavə edin'),
+            ]);
+        }
+
         $product->update(['is_visible' => ! $product->is_visible]);
 
         return response()->json(['success' => true, 'is_visible' => $product->is_visible]);
@@ -203,6 +252,54 @@ class BusinessProductController extends Controller
     }
 
     // ---------------------------------------------------------------- internals
+
+    /**
+     * Translate a UI string, falling back to `$fallback` while the key is still
+     * missing from the translations table (t() echoes the key back otherwise).
+     */
+    private function msg(string $key, string $fallback, array $replace = []): string
+    {
+        $value = t($key, $replace);
+
+        return is_string($value) && $value !== $key ? $value : strtr($fallback, [':limit' => (string) ($replace['limit'] ?? '')]);
+    }
+
+    /**
+     * Remaining product allowance for a seller. Admins are never capped, and get
+     * a null limit/remaining so the UI can render an "unlimited" state.
+     *
+     * @return array{limit: int|null, used: int, remaining: int|null, reached: bool}
+     */
+    private function productQuota(User $user): array
+    {
+        $used = $user->products()->count();
+
+        if ($user->isAdmin()) {
+            return ['limit' => null, 'used' => $used, 'remaining' => null, 'reached' => false];
+        }
+
+        $remaining = max(0, self::MAX_PRODUCTS_PER_SELLER - $used);
+
+        return [
+            'limit' => self::MAX_PRODUCTS_PER_SELLER,
+            'used' => $used,
+            'remaining' => $remaining,
+            'reached' => $remaining === 0,
+        ];
+    }
+
+    private function guardProductQuota(User $user): void
+    {
+        if ($this->productQuota($user)['reached']) {
+            throw ValidationException::withMessages([
+                'name' => $this->msg(
+                    'business-product-edit.limit.reached',
+                    'Maksimum :limit məhsul əlavə edə bilərsiniz.',
+                    ['limit' => self::MAX_PRODUCTS_PER_SELLER],
+                ),
+            ]);
+        }
+    }
 
     private function validateProduct(Request $request): array
     {

@@ -31,13 +31,13 @@ class SearchController extends Controller
         $postCount = 0;
 
         $searchTerm = $query !== '' ? $query : t('search.default_query');
-        $terms = SearchService::expandQuery($searchTerm);
 
         // Products -- fetch when showing "all" or "prod" tab
         if ($tab === 'all' || $tab === 'prod') {
             $productQuery = Product::visible()->approved();
-            $productQuery = SearchService::buildProductQuery($productQuery, $terms);
+            $productQuery = SearchService::buildProductQuery($productQuery, $searchTerm);
             $productQuery->with(['images', 'category', 'reviews']);
+            SearchService::orderProductsByRelevance($productQuery, $searchTerm);
 
             $productCount = $productQuery->count();
             $products = $productQuery->take(4)->get();
@@ -46,7 +46,7 @@ class SearchController extends Controller
         // Masters -- fetch when showing "all" or "usta" tab
         if ($tab === 'all' || $tab === 'usta') {
             $masterQuery = SpecialistProfile::whereHas('user', fn ($q) => $q->where('status', UserStatus::Active));
-            $masterQuery = SearchService::buildSpecialistQuery($masterQuery, $terms);
+            $masterQuery = SearchService::buildSpecialistQuery($masterQuery, $searchTerm);
             $masterQuery->with('user');
 
             $masterCount = $masterQuery->count();
@@ -56,7 +56,7 @@ class SearchController extends Controller
         // Blog posts -- fetch when showing "all" or "blog" tab
         if ($tab === 'all' || $tab === 'blog') {
             $postQuery = BlogPost::published();
-            $postQuery = SearchService::buildBlogQuery($postQuery, $terms);
+            $postQuery = SearchService::buildBlogQuery($postQuery, $searchTerm);
 
             $postCount = $postQuery->count();
             $posts = $postQuery->latest('published_at')->take(4)->get();
@@ -95,34 +95,16 @@ class SearchController extends Controller
             return response()->json(['suggests' => [], 'products' => [], 'masters' => [], 'total' => 0]);
         }
 
-        $terms = SearchService::expandQuery($query);
         $suggestions = SearchService::getSuggestions($query);
 
-        // Find categories matching any term, to boost product results
-        $matchingCategoryIds = SearchService::findMatchingCategoryIds($terms);
+        // buildProductQuery already matches on the category name, so the
+        // autocomplete list uses exactly the same predicate as the counters.
+        $productQuery = Product::visible()->approved();
+        $productQuery = SearchService::buildProductQuery($productQuery, $query);
 
-        $products = Product::visible()->approved()
-            ->where(function ($q) use ($terms, $matchingCategoryIds) {
-                foreach ($terms as $term) {
-                    $q->orWhere('name', 'like', "%{$term}%")
-                        ->orWhereHas('brand', fn ($bq) => $bq->where('name', 'like', "%{$term}%"))
-                        ->orWhere('description', 'like', "%{$term}%");
-                }
+        SearchService::orderProductsByRelevance($productQuery, $query);
 
-                // Include products from matching categories
-                if (! empty($matchingCategoryIds)) {
-                    $q->orWhereIn('category_id', $matchingCategoryIds);
-                }
-
-                // Also check category name directly
-                $q->orWhereHas('category', function ($cq) use ($terms) {
-                    $cq->where(function ($inner) use ($terms) {
-                        foreach ($terms as $term) {
-                            $inner->orWhere('name', 'like', "%{$term}%");
-                        }
-                    });
-                });
-            })
+        $products = $productQuery
             ->with(['images', 'category'])
             ->take(3)
             ->get()
@@ -135,30 +117,10 @@ class SearchController extends Controller
                 'img' => $p->main_image_url,
             ]);
 
-        $masters = SpecialistProfile::whereHas('user', fn ($q) => $q->where('status', UserStatus::Active))
-            ->where(function ($q) use ($terms) {
-                foreach ($terms as $term) {
-                    $q->orWhere('craft', 'like', "%{$term}%")
-                        ->orWhere('skills', 'like', "%{$term}%");
-                }
+        $masterQuery = SpecialistProfile::whereHas('user', fn ($q) => $q->where('status', UserStatus::Active));
+        $masterQuery = SearchService::buildSpecialistQuery($masterQuery, $query);
 
-                $q->orWhereHas('specialty', function ($specialtyQuery) use ($terms) {
-                    $specialtyQuery->where(function ($inner) use ($terms) {
-                        foreach ($terms as $term) {
-                            $inner->orWhere('name', 'like', "%{$term}%");
-                        }
-                    });
-                });
-
-                $q->orWhereHas('user', function ($uq) use ($terms) {
-                    $uq->where(function ($inner) use ($terms) {
-                        foreach ($terms as $term) {
-                            $inner->orWhere('first_name', 'like', "%{$term}%")
-                                ->orWhere('last_name', 'like', "%{$term}%");
-                        }
-                    });
-                });
-            })
+        $masters = $masterQuery
             ->with(['user', 'specialty'])
             ->take(2)
             ->get()
@@ -166,15 +128,15 @@ class SearchController extends Controller
                 'id' => $s->id,
                 'initials' => mb_substr($s->user->first_name, 0, 1).mb_substr($s->user->last_name, 0, 1),
                 'name' => $s->user->first_name.' '.mb_substr($s->user->last_name, 0, 1).'.',
-                'role' => $s->specialty?->name ?? $s->craft,
+                'role' => $s->craft_label,
                 'rate' => '4.9',
             ]);
 
         $totalProducts = Product::visible()->approved();
-        $totalProducts = SearchService::buildProductQuery($totalProducts, $terms)->count();
+        $totalProducts = SearchService::buildProductQuery($totalProducts, $query)->count();
 
         $totalMasters = SpecialistProfile::whereHas('user', fn ($q) => $q->where('status', UserStatus::Active));
-        $totalMasters = SearchService::buildSpecialistQuery($totalMasters, $terms)->count();
+        $totalMasters = SearchService::buildSpecialistQuery($totalMasters, $query)->count();
 
         return response()->json([
             'suggests' => array_slice($suggestions, 0, 5),

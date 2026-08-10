@@ -65,6 +65,16 @@ export default function () {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    // Publishing needs at least one image (kept + newly picked) — inline error
+    // instead of a bare 422 from the server. Drafts may be saved without one.
+    if (publish === '1' && slotCount() === 0) {
+      const err = form.dataset.lImageRequired;
+      if (msg) msg.textContent = err;
+      window.ARCHI?.toast?.show({ type: 'error', title: err });
+      addSlot?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
     const fd = new FormData(form);
     fd.set('publish', publish);
     if (form.dataset.method === 'PUT') fd.set('_method', 'PUT');

@@ -154,6 +154,7 @@
       @forelse ($products as $product)
         <x-pcard
             :href="route('product.show', $product->slug)"
+            :product="$product"
             :img="$product->mainImageUrl"
             :cat="$product->category?->name"
             :name="$product->name"
@@ -190,7 +191,7 @@
         <x-scard :href="route('specialist.show', $s)"
                  :bg="['#f5fbff', '#fdf5ff', '#f5fffb', '#fff5f5'][$loop->index % 4]"
                  :avatar="$s->user?->avatar ?? '/assets/icon-user.svg'"
-                 :role="$s->specialty?->name ?? translate_craft($s->craft)"
+                 :role="$s->craft_label"
                  :rate="null"
                  :reviews="t('product.specialists.reviews_416')"
                  :name="$s->user?->name ?? t('product.specialists.name_1')"

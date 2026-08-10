@@ -82,15 +82,19 @@ function initAddToCart() {
       const price = parseFloat(now.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
       const qtyInput = document.getElementById('qtyVal');
       const qty = qtyInput ? Math.max(1, +qtyInput.value || 1) : 1;
+      const id = +d.productId || null;
       const cart = JSON.parse(localStorage.getItem('archi-cart') || '[]');
-      const existing = cart.find((c) => c.name === name.trim());
+      // The id is what checkout posts; fall back to the name for carts saved before it existed.
+      const existing = cart.find((c) => (id && +c.id === id) || c.name === name.trim());
       if (existing) {
         // Update quantity instead of silently ignoring
         existing.qty = (existing.qty || 1) + qty;
+        if (id) existing.id = id;
         localStorage.setItem('archi-cart', JSON.stringify(cart));
         return false;
       }
       cart.push({
+        id,
         name: name.trim(),
         brand: d.cartBrand || '',
         cat: cat.trim(),

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
+use App\Http\Controllers\Cabinet\BusinessProductController;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
@@ -58,14 +59,26 @@ class SellController extends Controller
             ], 403);
         }
 
+        // /sell is a second, lighter entry point onto the same catalog, so it has to
+        // honour the same seller quota as the cabinet form.
+        if ($request->user()->role === UserRole::Seller
+            && $request->user()->products()->count() >= BusinessProductController::MAX_PRODUCTS_PER_SELLER) {
+            throw ValidationException::withMessages([
+                'name' => t('business-product-edit.limit.reached', ['limit' => BusinessProductController::MAX_PRODUCTS_PER_SELLER]),
+            ]);
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'category_id' => 'nullable|exists:categories,id',
+            'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric|min:0',
             'old_price' => 'nullable|numeric|min:0',
             'condition' => 'nullable|string|in:new,used',
             'description' => 'nullable|string|max:5000',
-            'image' => 'nullable|image|max:5120', // 5MB max
+            // /sell creates the listing already visible (pending review), so it is a
+            // publish action and must carry at least one image, exactly like the
+            // cabinet form. Leaving this nullable let sellers publish imageless products.
+            'image' => 'required|image|max:5120', // 5MB max
         ]);
 
         $locale = app()->getLocale();

@@ -21,10 +21,19 @@ final class SpecialistCabinetController extends Controller
 {
     public function profile(Request $request): View
     {
+        $profile = $request->user()->specialistProfile;
+
         return view('pages.specialist-cabinet', [
             'user' => $request->user(),
-            'profile' => $request->user()->specialistProfile,
-            'specialties' => SpecialistSpecialty::query()->where('is_active', true)->orderBy('sort_order')->pluck('name', 'id'),
+            'profile' => $profile,
+            // Deactivated specialties are hidden from everyone EXCEPT the master
+            // already assigned to one — otherwise the select would silently fall
+            // back to its first option and rewrite their trade on the next save.
+            'specialties' => SpecialistSpecialty::query()
+                ->where(fn ($q) => $q->where('is_active', true)
+                    ->orWhere('id', $profile?->specialist_specialty_id))
+                ->orderBy('sort_order')
+                ->pluck('name', 'id'),
         ]);
     }
 

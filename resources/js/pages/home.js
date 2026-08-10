@@ -42,23 +42,8 @@ function initUserProducts() {
   while (grid.children.length > 4) grid.removeChild(grid.lastElementChild);
 }
 
-// The two labels are both in the markup (see .pb-swap); only the state flips, so a
-// double click can never leave the button stuck on the confirmation.
-function initPromoCopy() {
-  document.querySelectorAll('.pb-copy').forEach((b) => {
-    let timer;
-    b.addEventListener('click', () => {
-      try {
-        if (navigator.clipboard) navigator.clipboard.writeText(b.dataset.code || '');
-      } catch (e) {
-        // clipboard blocked — the code stays readable on screen
-      }
-      b.dataset.on = 'true';
-      clearTimeout(timer);
-      timer = setTimeout(() => { b.dataset.on = 'false'; }, 1500);
-    });
-  });
-}
+// Promo codes were removed from checkout, so .pb-copy is now a plain link to the
+// discounted products and there is nothing left to copy to the clipboard.
 
 // Shared carousel driver: `apply(i)` renders slide i, the dots are also the controls.
 function carousel(dotsEl, count, apply, delay) {
@@ -174,7 +159,6 @@ function initLeadForm() {
 
 export default function init() {
   initUserProducts();
-  initPromoCopy();
   initPromoCarousel();
   initRoleSlider();
   initReveal();

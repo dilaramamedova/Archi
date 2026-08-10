@@ -3,6 +3,19 @@
   $isEdit = $product !== null;
   $spec = $isEdit ? ($product->specifications ?? []) : [];
   $statusKey = ! $isEdit ? 'draft' : ($product->is_visible ? $product->moderation_status : 'draft');
+
+  // Translate, falling back to a literal while a key is still missing from the
+  // translations table (t() echoes the key back otherwise).
+  $tOr = function (string $key, string $fallback, array $replace = []) {
+      $v = t($key, $replace);
+      return is_string($v) && $v !== $key ? $v : strtr($fallback, array_combine(
+          array_map(fn ($k) => ':'.$k, array_keys($replace)),
+          array_map('strval', array_values($replace)),
+      ));
+  };
+
+  $quota ??= ['limit' => null, 'used' => 0, 'remaining' => null, 'reached' => false];
+  $atLimit = ! $isEdit && $quota['reached'];
 @endphp
 <x-layout page="business-product-edit" :title="t('business-product-edit.title')" bodyClass="bg-gray-soft2">
 
@@ -17,9 +30,27 @@
     </div>
   @endif
 
+  {{-- Product allowance. Admins have no limit, so nothing is shown for them. --}}
+  @if (! $isEdit && $quota['limit'] !== null)
+    <div @class([
+        'rounded border px-5 py-4 text-sm',
+        'border-[#e5484d]/40 bg-[#fdecec] text-[#e5484d] font-semibold' => $atLimit,
+        'border-black/10 bg-white text-black/70' => ! $atLimit,
+    ])>
+      @if ($atLimit)
+        {{ $tOr('business-product-edit.limit.reached', 'Maksimum :limit məhsul əlavə edə bilərsiniz.', ['limit' => $quota['limit']]) }}
+      @else
+        {{ $tOr('business-product-edit.limit.remaining', 'Daha :remaining məhsul əlavə edə bilərsiniz (:used/:limit).', [
+            'remaining' => $quota['remaining'], 'used' => $quota['used'], 'limit' => $quota['limit'],
+        ]) }}
+      @endif
+    </div>
+  @endif
+
   <form id="productForm"
         data-action="{{ $isEdit ? route('business.products.update', $product) : route('business.products.store') }}"
         data-method="{{ $isEdit ? 'PUT' : 'POST' }}"
+        data-l-image-required="{{ $tOr('business-product-edit.save.error_image', 'Ən azı 1 şəkil əlavə edin') }}"
         class="flex flex-col gap-5">
 
     {{-- Images --}}
@@ -143,10 +174,10 @@
     <div class="flex items-center justify-between gap-4 rounded bg-black/90 px-6 py-5 max-[900px]:flex-col max-[900px]:items-stretch">
       <p class="text-[13px] font-medium text-white/85" id="productFormMsg">{{ t('business-product-edit.save.note') }}</p>
       <div class="flex gap-2.5 max-[640px]:flex-col">
-        <button type="submit" data-publish="0"
-                class="h-[41px] rounded border border-white/60 px-5 text-sm font-semibold text-white transition hover:bg-white/10">{{ t('business-product-edit.save.draft') }}</button>
-        <button type="submit" data-publish="1"
-                class="h-[41px] rounded bg-yellow px-5 text-sm font-semibold text-ink transition hover:brightness-95">{{ t('business-product-edit.save.publish') }}</button>
+        <button type="submit" data-publish="0" @disabled($atLimit)
+                class="h-[41px] rounded border border-white/60 px-5 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40">{{ t('business-product-edit.save.draft') }}</button>
+        <button type="submit" data-publish="1" @disabled($atLimit)
+                class="h-[41px] rounded bg-yellow px-5 text-sm font-semibold text-ink transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-40">{{ t('business-product-edit.save.publish') }}</button>
       </div>
     </div>
   </form>

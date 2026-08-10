@@ -13,6 +13,8 @@ export default function init() {
     const savedText = (bar.dataset.savedMessage || '').trim();
     const setSaved = (on) => {
       bar.dataset.saved = on ? 'true' : 'false';
+      // setSaved is only ever called in response to a real edit, so a false here means dirty.
+      bar.dataset.dirty = on ? 'false' : 'true';
       if (msg) msg.textContent = on && savedText ? savedText : unsavedText;
     };
     const saveBtn = bar.querySelector('[data-save]');

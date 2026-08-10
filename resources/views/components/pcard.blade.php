@@ -30,14 +30,18 @@
                ['label' => '...', 'mine' => true] (yellow background).
                An item may also carry 'icon' => '/assets/....svg' (rendered before the
                label, like <x-scard>) and 'class' => '...' for an extra span class.
-               null → defaults to common.badge_new + common.badge_in_stock
+               null → derived from :product when given, otherwise no badges at all.
+               Never invent badges: stock state and "new" must come from real data.
+    product  — optional Product model used to derive the badges (stock state + the
+               product's own ProductBadge rows, or a recent created_at).
     dots     — number of carousel dots (0 → hidden, default 3)
     dot      — index of the active dot (default 0)
     cursor   — text inside the round hover cursor (default t('common.go_to_product'))
 --}}
 @props([
     'href' => null,
-    'img' => '/assets/product-marble-tile.png',
+    'img' => null,
+    'product' => null,
     'cat' => null,
     'name' => null,
     'now' => null,
@@ -52,15 +56,42 @@
     'productId' => null,
 ])
 @php
-    $badgeList = $badges ?? [
-        ['label' => t('common.badge_new')],
-        ['label' => t('common.badge_in_stock')],
-    ];
+    // Badges are derived from the product's own data — never defaulted, so a card
+    // can no longer claim "in stock" / "new" for a product that is neither.
+    $badgeList = $badges;
+
+    if ($badgeList === null && $product) {
+        $badgeList = [];
+
+        // Curated badges (admin-assigned) win over the derived "new" badge.
+        $own = $product->relationLoaded('badges') ? $product->badges : collect();
+
+        foreach ($own as $b) {
+            $badgeList[] = ['label' => $b->name];
+        }
+
+        if ($own->isEmpty() && $product->created_at?->gt(now()->subDays(30))) {
+            $badgeList[] = ['label' => t('common.badge_new')];
+        }
+
+        $badgeList[] = ['label' => (int) $product->stock > 0
+            ? t('common.badge_in_stock')
+            : t('common.badge_out_of_stock')];
+    }
+
+    $badgeList ??= [];
 @endphp
 <a {{ $attributes->merge(['class' => 'pcard', 'href' => $href ?? route('product'), 'data-product-id' => $productId]) }}>
   <div class="prod-cursor"><span>{{ $cursor ?? t('common.go_to_product') }}</span></div>
   <div class="ph">
-    <img class="prod" src="{{ $img }}" alt="">
+    @if ($img)
+      <img class="prod" src="{{ $img }}" alt="">
+    @else
+      {{-- No image of its own: neutral placeholder, never another product's photo. --}}
+      <span class="absolute left-1/2 top-1/2 flex size-16 -translate-x-1/2 -translate-y-1/2 opacity-15" aria-hidden="true">
+        <img src="/assets/icon-tower-crane.svg" alt="" class="size-full">
+      </span>
+    @endif
     @if (! empty($badgeList))
       <div class="badges">
         @foreach ($badgeList as $b)

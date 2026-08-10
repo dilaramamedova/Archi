@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
+use App\Services\SearchService;
 use Illuminate\Http\Request;
 
 class BlogController extends Controller
@@ -23,12 +24,9 @@ class BlogController extends Controller
         }
 
         if ($request->filled('q')) {
-            $term = $request->input('q');
-            $query->where(function ($q) use ($term) {
-                $q->where('title', 'like', "%{$term}%")
-                  ->orWhere('excerpt', 'like', "%{$term}%")
-                  ->orWhere('body', 'like', "%{$term}%");
-            });
+            // Title/excerpt/body are translatable JSON columns — go through
+            // SearchService so the comparison stays case-insensitive.
+            $query = SearchService::buildBlogQuery($query, (string) $request->input('q'));
         }
 
         $featured = collect();

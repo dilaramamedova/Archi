@@ -6,17 +6,35 @@
   shared resources/js/shared/cursor.js.
 --}}
 @php
-    // Build thumbnail list from product images, fall back to hardcoded if none
-    $thumbs = $product->images->count()
-        ? $product->images->map(fn ($img) => storage_url($img->path))->toArray()
-        : [
-            '/assets/product-marble-tile-square.jpg',
-            '/assets/interior-marble-corridor.jpg',
-            '/assets/interior-marble-corridor.jpg',
-            '/assets/interior-marble-corridor.jpg',
-        ];
+    use Illuminate\Support\Str;
 
-    $mainImg = $product->mainImageUrl ?? '/assets/product-marble-tile-square.jpg';
+    // Translate, falling back to a literal while a key is still missing from the
+    // translations table (t() echoes the key back otherwise).
+    $tOr = fn (string $key, string $fallback) => is_string($v = t($key)) && $v !== $key ? $v : $fallback;
+
+    // Gallery: only this product's own images. No images → neutral placeholder,
+    // never another product's photos.
+    $thumbs = $product->images->map(fn ($img) => storage_url($img->path))->all();
+    $mainImg = $product->mainImageUrl;
+
+    $inStock = (int) $product->stock > 0;
+    $unitLabel = $product->unit ? $tOr('business-product-edit.pricing.units.'.$product->unit, $product->unit) : '';
+
+    // Only the specs the seller actually filled in; rows without data are omitted.
+    $specLabelKeys = [
+        'dimensions' => 'product.specs.size_k',
+        'material' => 'product.specs.material_k',
+        'color' => 'product.specs.color_k',
+        'country' => 'product.specs.country_k',
+        'barcode' => 'product.specs.barcode_k',
+        'shelf' => 'product.specs.shelf_k',
+    ];
+    $specLabel = fn (string $key) => isset($specLabelKeys[$key])
+        ? $tOr($specLabelKeys[$key], Str::headline($key))
+        : Str::headline($key);
+
+    $specs = collect($product->specifications ?? [])
+        ->reject(fn ($v) => $v === null || $v === '' || $v === []);
 
     // Rating distribution from reviews
     $ratingCounts = $product->reviews->groupBy('rating')->map->count();
@@ -36,41 +54,51 @@
   <div class="wrap"><div class="inner">
 
     {{-- breadcrumb --}}
-    <x-ui.breadcrumbs class="pd-crumb" :items="[
+    <x-ui.breadcrumbs class="pd-crumb" :items="array_values(array_filter([
         ['label' => t('common.home'), 'href' => route('home')],
-        ['label' => $product->category?->name ?? t('product.crumb.flooring'), 'href' => $product->category ? route('catalog', ['category' => $product->category->slug ?? $product->category->id]) : '#'],
+        $product->category
+            ? ['label' => $product->category->name, 'href' => route('catalog', ['category' => $product->category->slug ?? $product->category->id])]
+            : null,
         ['label' => $product->name],
-    ]" />
+    ]))" />
 
     {{-- ===================== TOP: gallery + info ===================== --}}
     <div class="pd-top">
       {{-- gallery --}}
       <div class="pd-gallery">
-        <div class="pd-thumbs" id="pdThumbs">
-          @foreach ($thumbs as $i => $t)
-            <div class="pd-thumb" data-on="{{ $i === 0 ? 'true' : 'false' }}"><img src="{{ $t }}" alt="{{ $product->name }}"></div>
-          @endforeach
-        </div>
+        @if ($thumbs)
+          <div class="pd-thumbs" id="pdThumbs">
+            @foreach ($thumbs as $i => $t)
+              <div class="pd-thumb" data-on="{{ $i === 0 ? 'true' : 'false' }}"><img src="{{ $t }}" alt="{{ $product->name }}"></div>
+            @endforeach
+          </div>
+        @endif
         <div class="pd-main">
           <div class="badges">
             @foreach ($product->badges as $badge)
               <span class="b" style="background:{{ $badge->bg_color }};color:{{ $badge->color }}">{{ $badge->name }}</span>
             @endforeach
             @if ($product->badges->isEmpty())
-              @if ($product->is_sale)<span class="b new">{{ t('common.badge_new') }}</span>@endif
-              <span class="b">{{ $product->stock > 0 ? t('common.badge_in_stock') : t('common.badge_out_of_stock') }}</span>
+              <span class="b">{{ $inStock ? t('common.badge_in_stock') : t('common.badge_out_of_stock') }}</span>
             @endif
           </div>
           <div class="heart" id="pdHeartTop" data-liked="false"><img src="/assets/icon-heart-pointed.svg" alt="{{ t('product.gallery.favorite') }}"></div>
-          <img id="pdMainImg" src="{{ $mainImg }}" alt="{{ $product->name }}">
+          @if ($mainImg)
+            <img id="pdMainImg" src="{{ $mainImg }}" alt="{{ $product->name }}">
+          @else
+            <span class="absolute left-1/2 top-1/2 flex size-28 -translate-x-1/2 -translate-y-1/2 opacity-15" aria-hidden="true">
+              <img src="/assets/icon-tower-crane.svg" alt="" class="size-full">
+            </span>
+          @endif
         </div>
       </div>
 
       {{-- info --}}
       <div class="pd-info">
-        <div class="cat">{{ $product->category?->name ?? t('product.info.cat') }}</div>
+        @if ($product->category?->name)<div class="cat">{{ $product->category->name }}</div>@endif
         <h1>{{ $product->name }}</h1>
 
+        @if ($reviewsCount > 0 || $product->sold_count)
         <div class="pd-meta">
           @if($reviewsCount > 0)
           <div class="pd-stars">
@@ -78,10 +106,14 @@
             <b>{{ number_format($avgRating, 1) }}</b>
           </div>
           <span class="rev" data-goto="reviews">{{ $reviewsCount }} {{ t('product.info.reviews') }}</span>
-          <span class="dot"></span>
+          @if ($product->sold_count)<span class="dot"></span>@endif
           @endif
-          <span class="sold">{{ $product->sold_count ? number_format($product->sold_count) . '+ ' . t('product.info.sold') : t('product.info.sold') }}</span>
+          {{-- Real sold count only; nothing is shown when the product never sold. --}}
+          @if ($product->sold_count)
+            <span class="sold">{{ number_format($product->sold_count) }} {{ $tOr('product.info.sold_suffix', 'satıldı') }}</span>
+          @endif
         </div>
+        @endif
 
         <div class="pd-price">
           <span class="now">{{ number_format($product->price, 2) }} ₼</span>
@@ -94,25 +126,31 @@
             <span class="off">-{{ round((1 - $product->price / $product->old_price) * 100) }}%</span>
           @endif
         </div>
-        <div class="pd-unit">{{ $product->unit ?? t('product.info.unit') }}</div>
+        @if ($unitLabel)<div class="pd-unit">{{ $unitLabel }}</div>@endif
 
         <div class="pd-line"></div>
 
+        {{-- Feature bullets come from the seller's own data; no demo bullets. --}}
+        @if ($product->features_text || $product->features)
         <div class="pd-feats">
           @if ($product->features_text)
             <div class="f-rich">{!! $product->features_text !!}</div>
-          @elseif ($product->features)
+          @else
             @foreach ($product->features as $key => $feat)
               <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ is_string($key) ? $key . ': ' . $feat : $feat }}</div>
             @endforeach
-          @else
-            <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ t('product.info.feat_1') }}</div>
-            <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ t('product.info.feat_2') }}</div>
-            <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ t('product.info.feat_3') }}</div>
           @endif
         </div>
+        @endif
 
-        <div class="pd-stock"><i></i> {{ $product->stock > 0 ? t('product.info.stock') : t('product.info.out_of_stock') }}</div>
+        {{-- Single source of truth for stock, built from the real quantity. --}}
+        <div class="pd-stock" data-in-stock="{{ $inStock ? 'true' : 'false' }}"><i></i>
+          @if ($inStock)
+            {{ t('common.badge_in_stock') }} — {{ number_format($product->stock) }}@if ($unitLabel) {{ $unitLabel }}@endif
+          @else
+            {{ t('product.info.out_of_stock') }}
+          @endif
+        </div>
 
         <div class="pd-buy">
           <div class="pd-qty">
@@ -126,9 +164,10 @@
                   data-label-add="{{ t('product.info.add_cart') }}"
                   data-label-added="{{ t('product.info.added') }}"
                   data-label-in-cart="{{ t('product.info.in_cart') }}"
-                  data-cart-unit="{{ $product->unit ?? t('product.info.cart_unit') }}"
-                  data-cart-brand="{{ $product->brand ?? t('common.site_name') }}"
-                  data-cart-stock="{{ $product->stock > 0 ? t('common.badge_in_stock') : '' }}"><img src="/assets/icon-cart.svg" alt="">{{ t('product.info.add_cart') }}</button>
+                  data-cart-unit="{{ $unitLabel ?: t('product.info.cart_unit') }}"
+                  {{-- brand?->name, not the model itself (which stringifies to JSON) --}}
+                  data-cart-brand="{{ $product->brand?->name ?? $product->category?->name ?? t('common.site_name') }}"
+                  data-cart-stock="{{ $inStock ? t('common.badge_in_stock') : t('common.badge_out_of_stock') }}"><img src="/assets/icon-cart.svg" alt="">{{ t('product.info.add_cart') }}</button>
           <button class="pd-wish" id="pdWish" data-liked="false" aria-label="{{ t('product.info.wish') }}"><img src="/assets/icon-heart-pointed.svg" alt=""></button>
         </div>
 
@@ -146,35 +185,45 @@
         </div>
 
         {{-- seller / store --}}
+        @php
+            $seller = $product->user;
+            $sellerProfile = $seller?->sellerProfile;
+            $sellerSub = $sellerProfile?->brand_name ?: $sellerProfile?->legal_name;
+
+            $sellerProductIds = $seller?->products()->pluck('id') ?? collect();
+            $sellerAvgRating = $sellerProductIds->isNotEmpty()
+                ? \App\Models\Review::whereIn('reviewable_id', $sellerProductIds)
+                    ->where('reviewable_type', \App\Models\Product::class)
+                    ->where('status', 'approved')
+                    ->avg('rating')
+                : null;
+            $sellerProductCount = $sellerProductIds->count();
+        @endphp
+        @if ($seller)
         <div class="pd-seller">
           <div class="ps-top">
-            <div class="ps-logo"><img src="/assets/icon-tower-crane.svg" alt=""></div>
+            <div class="ps-logo"><img src="{{ $sellerProfile?->logo_path ? storage_url($sellerProfile->logo_path) : '/assets/icon-tower-crane.svg' }}" alt=""></div>
             <div class="ps-id">
-              <div class="ps-name">{{ $product->user->name ?? t('product.seller.name') }}</div>
-              <div class="ps-sub">{{ $product->user->sellerProfile->company_name ?? t('product.seller.sub') }}</div>
+              <div class="ps-name">{{ $seller->name }}</div>
+              @if ($sellerSub)<div class="ps-sub">{{ $sellerSub }}</div>@endif
             </div>
-            <span class="ps-vf"><img src="/assets/icon-check-green.svg" alt="">{{ t('common.badge_verified') }}</span>
+            {{-- "Verified" is earned: it tracks the real tax_id_verified flag. --}}
+            @if ($sellerProfile?->tax_id_verified)
+              <span class="ps-vf"><img src="/assets/icon-check-green.svg" alt="">{{ t('common.badge_verified') }}</span>
+            @endif
           </div>
           <div class="ps-stats">
-            @php
-                $sellerProductIds = $product->user?->products()->pluck('id') ?? collect();
-                $sellerAvgRating = $sellerProductIds->isNotEmpty()
-                    ? \App\Models\Review::whereIn('reviewable_id', $sellerProductIds)
-                        ->where('reviewable_type', \App\Models\Product::class)
-                        ->where('status', 'approved')
-                        ->avg('rating')
-                    : null;
-                $sellerProductCount = $product->user?->products()->count() ?? 0;
-            @endphp
-            <div class="ps-stat"><b><img src="/assets/icon-star-yellow.svg" alt="">{{ $sellerAvgRating ? number_format($sellerAvgRating, 1) : '—' }}</b><span>{{ t('product.seller.rating_label') }}</span></div>
+            @if ($sellerAvgRating)
+              <div class="ps-stat"><b><img src="/assets/icon-star-yellow.svg" alt="">{{ number_format($sellerAvgRating, 1) }}</b><span>{{ t('product.seller.rating_label') }}</span></div>
+            @endif
             <div class="ps-stat"><b>{{ number_format($sellerProductCount) }}</b><span>{{ t('product.seller.products_label') }}</span></div>
-            <div class="ps-stat"><b>{{ t('product.seller.response') }}</b><span>{{ t('product.seller.response_label') }}</span></div>
           </div>
           <div class="ps-actions">
             <x-ui.button variant="primary" href="#"
                 class="h-[46px] flex-1 rounded-none text-sm font-semibold duration-200 hover:brightness-[.93]">{{ t('product.seller.visit') }}</x-ui.button>
           </div>
         </div>
+        @endif
       </div>
     </div>
 
@@ -193,23 +242,18 @@
           @if ($product->description)
             {!! $product->description !!}
           @else
-            <p>{{ t('product.about.p1') }}</p>
-            <p>{{ t('product.about.p2') }}</p>
-            <h4>{{ t('product.about.h4') }}</h4>
-            <p>{{ t('product.about.p3') }}</p>
+            <p class="text-sm text-black/45">{{ $tOr('product.about.empty', 'Bu məhsul üçün təsvir əlavə edilməyib.') }}</p>
           @endif
         </div>
       </div>
 
       <div class="pd-pane" data-on="false" data-pane="specs">
         <div class="pd-specs">
-          @forelse ($product->specifications ?? [] as $key => $val)
-            <div class="row"><div class="k">{{ $key }}</div><div class="v">{{ $val }}</div></div>
+          {{-- Only the specifications the seller filled in; no demo rows. --}}
+          @forelse ($specs as $key => $val)
+            <div class="row"><div class="k">{{ $specLabel((string) $key) }}</div><div class="v">{{ is_array($val) ? implode(', ', $val) : $val }}</div></div>
           @empty
-            @php $defaultSpecs = ['size', 'thickness', 'surface', 'material', 'color', 'box', 'slip', 'usage', 'warranty', 'country']; @endphp
-            @foreach ($defaultSpecs as $s)
-              <div class="row"><div class="k">{{ t('product.specs.' . $s . '_k') }}</div><div class="v">{{ t('product.specs.' . $s . '_v') }}</div></div>
-            @endforeach
+            <p class="text-sm text-black/45">{{ $tOr('product.specs.empty', 'Bu məhsul üçün texniki xüsusiyyət əlavə edilməyib.') }}</p>
           @endforelse
         </div>
       </div>
@@ -234,7 +278,7 @@
         <x-pcard :product-id="$product->id" :img="$mainImg" :badges="$mainBadges"
                  :rate="$reviewsCount > 0 ? number_format($avgRating, 1) : null"
                  :reviews="$reviewsCount > 0 ? $reviewsCount . ' ' . t('product.fbt.card_reviews') : null"
-                 :cat="$product->category?->name ?? t('product.fbt.card_cat')"
+                 :cat="$product->category?->name"
                  :name="$product->name"
                  :now="number_format($product->price, 2) . ' ₼'"
                  :old="$product->old_price && $product->old_price > $product->price ? number_format($product->old_price, 2) . ' ₼' : null"
@@ -247,11 +291,11 @@
               $fbtBadges = [['label' => $fbt->stock > 0 ? t('common.badge_in_stock') : t('common.badge_out_of_stock')]];
           @endphp
           <x-pcard :product-id="$fbt->id" :href="route('product.show', $fbt->slug)"
-                   :img="$fbt->mainImageUrl ?? '/assets/product-marble-tile-wide.jpg'"
+                   :img="$fbt->mainImageUrl"
                    :badges="$fbtBadges"
                    :rate="$fbt->reviewsCount > 0 ? number_format($fbt->averageRating, 1) : null"
                    :reviews="$fbt->reviewsCount > 0 ? $fbt->reviewsCount . ' ' . t('product.fbt.card_reviews') : null"
-                   :cat="$fbt->category?->name ?? t('product.fbt.card_cat')"
+                   :cat="$fbt->category?->name"
                    :name="$fbt->name"
                    :now="number_format($fbt->price, 2) . ' ₼'"
                    :old="$fbt->old_price && $fbt->old_price > $fbt->price ? number_format($fbt->old_price, 2) . ' ₼' : null"
@@ -259,13 +303,15 @@
         @endforeach
 
         @php
+            // No bundle pricing exists at checkout, so the panel shows the plain sum.
+            // It used to render `total * 0.90` plus a fixed "28.69 ₼ saved" line, which
+            // promised a discount the order would never apply.
+            $fbtCount = $fbtProducts->count() + 1;
             $fbtTotal = $product->price + $fbtProducts->sum('price');
-            $fbtDiscounted = $fbtTotal * 0.90;
         @endphp
         <div class="fbt-panel">
-          <span class="lbl">{{ t('product.fbt.selected') }}</span>
-          <div class="tot"><b>{{ number_format($fbtDiscounted, 2) }} ₼</b><span class="old">{{ number_format($fbtTotal, 2) }} ₼</span></div>
-          <div class="fbt-save"><span class="ic"><img src="/assets/icon-check-green.svg" alt=""></span><p>{{ t('product.fbt.save_1') }}<br>{{ t('product.fbt.save_2') }}</p></div>
+          <span class="lbl">{{ t('product.fbt.selected_count', ['count' => $fbtCount]) }}</span>
+          <div class="tot"><b>{{ number_format($fbtTotal, 2) }} ₼</b></div>
           <button class="fbt-addall" type="button"><img src="/assets/icon-cart.svg" alt="">{{ t('product.fbt.add_all') }}</button>
           <div class="fbt-hint">{{ t('product.fbt.hint') }}</div>
         </div>
@@ -337,7 +383,8 @@
     @forelse ($related as $rel)
       <x-pcard
           :href="route('product.show', $rel->slug)"
-          :img="$rel->mainImageUrl ?? '/assets/product-marble-tile.png'"
+          :product="$rel"
+          :img="$rel->mainImageUrl"
           :cat="$rel->category?->name"
           :name="$rel->name"
           :now="number_format($rel->price, 2) . ' ₼'"
@@ -345,21 +392,8 @@
           :off="$rel->old_price && $rel->old_price > $rel->price ? '-' . round((1 - $rel->price / $rel->old_price) * 100) . '%' : null"
           :rate="$rel->reviewsCount > 0 ? number_format($rel->averageRating, 1) : null"
           :reviews="$rel->reviewsCount > 0 ? $rel->reviewsCount . ' ' . t('product.similar.reviews') : null" />
-    {{-- TODO: Replace with dynamic data from controller --}}
     @empty
-      @php
-          $similar = [
-              ['img' => '/assets/product-facade-paint-bucket.jpg', 'cat' => t('product.similar.cat_paint'), 'name' => t('product.similar.name_paint')],
-              ['img' => '/assets/product-mineral-wool-roll.jpg', 'cat' => t('product.similar.cat_insulation'), 'name' => t('product.similar.name_insulation')],
-              ['img' => '/assets/product-facade-paint-bucket.jpg', 'cat' => t('product.similar.cat_paint'), 'name' => t('product.similar.name_paint')],
-              ['img' => '/assets/product-marble-tile-wide.jpg', 'cat' => t('product.similar.cat_tiles'), 'name' => t('product.similar.name_tiles')],
-          ];
-      @endphp
-      @foreach ($similar as $p)
-        <x-pcard :img="$p['img']" :cat="$p['cat']" :name="$p['name']"
-                 :now="t('product.similar.fallback_price_now')" :old="t('product.similar.fallback_price_old')" :off="t('product.similar.fallback_discount')"
-                 :rate="t('product.similar.fallback_rate')" :reviews="t('product.similar.reviews')" />
-      @endforeach
+      <p class="w-full py-8 text-sm text-black/45">{{ $tOr('product.similar.empty', 'Bu kateqoriyada başqa məhsul yoxdur.') }}</p>
     @endforelse
   </div>
 </div></div>
@@ -370,32 +404,19 @@
   <x-section-head :tag="t('product.specialists.tag')" :title="t('product.specialists.title')"
                   :more="route('specialists')" />
   <div class="grid4" id="specGrid">
-    @if($specialists->isNotEmpty())
-      @foreach ($specialists as $s)
-        <x-scard :href="route('specialist.show', $s)"
-                 :bg="['#f5fbff', '#fdf5ff', '#f5fffb', '#fff5f5'][$loop->index % 4]"
-                 :avatar="$s->user?->avatar ?? '/assets/icon-user.svg'"
-                 :role="$s->specialty?->name ?? translate_craft($s->craft)"
-                 :rate="null"
-                 :reviews="t('product.specialists.reviews_416')"
-                 :name="$s->user?->name ?? t('product.specialists.name_1')"
-                 :exp="$s->experience_years ? $s->experience_years . ' ' . t('home.specialists.years') : t('product.specialists.exp_12')"
-                 :proj="$s->approvedPortfolioItems()->count() . ' ' . t('home.specialists.projects')" />
-      @endforeach
-    @else
-      @php
-          $fallbackSpecialists = [
-              ['bg' => '#f5fbff', 'role' => t('product.specialists.role_tiler'), 'name' => t('product.specialists.name_1')],
-              ['bg' => '#fdf5ff', 'role' => t('product.specialists.role_tiler'), 'name' => t('product.specialists.name_1')],
-              ['bg' => '#f5fffb', 'role' => t('product.specialists.role_interior'), 'name' => t('product.specialists.name_2')],
-              ['bg' => '#fff5f5', 'role' => t('product.specialists.role_tiler'), 'name' => t('product.specialists.name_1')],
-          ];
-      @endphp
-      @foreach ($fallbackSpecialists as $s)
-        <x-scard :bg="$s['bg']" :role="$s['role']" :reviews="t('product.specialists.reviews_416')"
-                 :name="$s['name']" :exp="t('product.specialists.exp_12')" :proj="'0 ' . t('home.specialists.projects')" />
-      @endforeach
-    @endif
+    @forelse ($specialists as $s)
+      <x-scard :href="route('specialist.show', $s)"
+               :bg="['#f5fbff', '#fdf5ff', '#f5fffb', '#fff5f5'][$loop->index % 4]"
+               :avatar="$s->user?->avatar ?? '/assets/icon-user.svg'"
+               :role="$s->craft_label"
+               :rate="null"
+               :reviews="null"
+               :name="$s->user?->name"
+               :exp="$s->experience_years ? $s->experience_years . ' ' . t('home.specialists.years') : null"
+               :proj="$s->approvedPortfolioItems()->count() . ' ' . t('home.specialists.projects')" />
+    @empty
+      <p class="w-full py-8 text-sm text-black/45">{{ $tOr('home.specialists.empty', 'Hələ seçilmiş mütəxəssis yoxdur.') }}</p>
+    @endforelse
   </div>
 </div></div>
 

@@ -89,7 +89,7 @@
             :href="route('specialist.show', $m->id)"
             :bg="$masterBgs[$i % count($masterBgs)]"
             :avatar="$m->avatar_path ? storage_url($m->avatar_path) : null"
-            :role="$m->specialty?->name ?? translate_craft($m->craft)"
+            :role="$m->craft_label"
             :name="$m->user->first_name . ' ' . $m->user->last_name"
             rate=""
             reviews=""

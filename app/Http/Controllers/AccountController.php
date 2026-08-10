@@ -35,7 +35,9 @@ class AccountController extends Controller
         app()->setLocale(session('locale', config('app.locale')));
 
         $user = auth()->user();
-        $orders = $user->orders()->latest()->paginate(20);
+
+        // The list shows what was ordered, so the line items come with it.
+        $orders = $user->orders()->with('items.product')->latest()->paginate(20);
 
         return view('pages.account.orders', compact('user', 'orders'));
     }

@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Cabinet;
 
+use App\Enums\City;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class BusinessProfileController extends Controller
 {
@@ -54,10 +56,13 @@ class BusinessProfileController extends Controller
             'legal_name' => ['required', 'string', 'max:255'],
             'brand_name' => ['nullable', 'string', 'max:255'],
             'tax_id' => ['nullable', 'string', 'max:20'],
-            'city' => ['nullable', 'string', 'max:100'],
+            'city' => ['nullable', Rule::in(City::acceptedValues())],
             'address' => ['nullable', 'string', 'max:255'],
             'about' => ['nullable', 'string', 'max:2000'],
         ]);
+
+        // Store the canonical Azerbaijani label whatever form was submitted.
+        $validated['city'] = City::canonical($validated['city'] ?? null);
 
         $request->user()->sellerProfile()->updateOrCreate([], $validated);
 
