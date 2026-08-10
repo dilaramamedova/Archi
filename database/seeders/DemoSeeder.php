@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\Banner;
 use App\Models\BlogPost;
+use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
@@ -15,6 +16,7 @@ use App\Models\SpecialistService;
 use App\Models\SpecialistSpecialty;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class DemoSeeder extends Seeder
@@ -28,7 +30,56 @@ class DemoSeeder extends Seeder
         $this->seedBlogPosts($author);
         $this->seedBanners();
         $this->seedPromoBanners();
+        $this->seedSpecialties();
         $this->seedSpecialists();
+    }
+
+    // ─── Specialist specialties ───────────────────────────────
+
+    /**
+     * The canonical trade list. Keyed on slug and only filling attributes that
+     * are missing, so re-running never duplicates rows nor overwrites names the
+     * admin edited in the panel.
+     */
+    private function seedSpecialties(): void
+    {
+        $specialties = [
+            ['slug' => 'kafelci', 'name' => ['az' => 'Kafelçi', 'ru' => 'Плиточник', 'en' => 'Tiler']],
+            ['slug' => 'santexnik', 'name' => ['az' => 'Santexnik', 'ru' => 'Сантехник', 'en' => 'Plumber']],
+            ['slug' => 'elektrik-ustasi', 'name' => ['az' => 'Elektrik ustası', 'ru' => 'Электрик', 'en' => 'Electrician']],
+            ['slug' => 'dam-ustasi', 'name' => ['az' => 'Dam ustası', 'ru' => 'Кровельщик', 'en' => 'Roofer']],
+            ['slug' => 'boyaci', 'name' => ['az' => 'Boyaçı', 'ru' => 'Маляр', 'en' => 'Painter']],
+            ['slug' => 'suvaqci', 'name' => ['az' => 'Suvaqçı', 'ru' => 'Штукатур', 'en' => 'Plasterer']],
+            ['slug' => 'gips-karton-ustasi', 'name' => ['az' => 'Gips-karton ustası', 'ru' => 'Мастер по гипсокартону', 'en' => 'Drywall installer']],
+            ['slug' => 'laminat-parket-ustasi', 'name' => ['az' => 'Laminat/parket ustası', 'ru' => 'Укладчик ламината и паркета', 'en' => 'Laminate & parquet fitter']],
+            ['slug' => 'pencere-qapi-ustasi', 'name' => ['az' => 'Pəncərə & qapı ustası', 'ru' => 'Мастер по окнам и дверям', 'en' => 'Window & door fitter']],
+            ['slug' => 'mebel-ustasi', 'name' => ['az' => 'Mebel ustası', 'ru' => 'Мебельщик', 'en' => 'Carpenter']],
+            ['slug' => 'qaynaqci', 'name' => ['az' => 'Qaynaqçı', 'ru' => 'Сварщик', 'en' => 'Welder']],
+            ['slug' => 'interyer-dizayner', 'name' => ['az' => 'İnteryer dizayner', 'ru' => 'Дизайнер интерьера', 'en' => 'Interior designer']],
+            ['slug' => 'kondisioner-ventilyasiya-ustasi', 'name' => ['az' => 'Kondisioner & ventilyasiya ustası', 'ru' => 'Мастер по кондиционерам и вентиляции', 'en' => 'HVAC technician']],
+            ['slug' => 'hovuz-ustasi', 'name' => ['az' => 'Hovuz ustası', 'ru' => 'Мастер по бассейнам', 'en' => 'Pool installer']],
+            ['slug' => 'landsaft-ustasi', 'name' => ['az' => 'Landşaft ustası', 'ru' => 'Ландшафтный мастер', 'en' => 'Landscaper']],
+        ];
+
+        foreach ($specialties as $index => $data) {
+            $specialty = SpecialistSpecialty::firstOrNew(['slug' => $data['slug']]);
+
+            if (! $specialty->exists) {
+                $specialty->fill(['name' => $data['name'], 'is_active' => true, 'sort_order' => $index]);
+                $specialty->save();
+
+                continue;
+            }
+
+            // Existing row: only fill locales the admin has not provided yet.
+            foreach ($data['name'] as $locale => $value) {
+                if ($specialty->getTranslation('name', $locale, false) === '') {
+                    $specialty->setTranslation('name', $locale, $value);
+                }
+            }
+
+            $specialty->save();
+        }
     }
 
     // ─── Categories ───────────────────────────────────────────
@@ -42,6 +93,7 @@ class DemoSeeder extends Seeder
                 'image' => 'assets/category-tile-showroom.png',
                 'sort_order' => 1,
                 'is_active' => true,
+                'show_on_home' => true,
             ],
             [
                 'name' => ['az' => 'Dam örtükləri', 'ru' => 'Кровля', 'en' => 'Roofing'],
@@ -49,6 +101,7 @@ class DemoSeeder extends Seeder
                 'image' => 'assets/category-roofing.png',
                 'sort_order' => 2,
                 'is_active' => true,
+                'show_on_home' => true,
             ],
             [
                 'name' => ['az' => 'Laminat', 'ru' => 'Ламинат', 'en' => 'Laminate'],
@@ -56,6 +109,7 @@ class DemoSeeder extends Seeder
                 'image' => 'assets/category-laminate-flooring.png',
                 'sort_order' => 3,
                 'is_active' => true,
+                'show_on_home' => true,
             ],
             [
                 'name' => ['az' => 'Elektrik', 'ru' => 'Электрика', 'en' => 'Electrical'],
@@ -63,6 +117,7 @@ class DemoSeeder extends Seeder
                 'image' => 'assets/category-electrical.png',
                 'sort_order' => 4,
                 'is_active' => true,
+                'show_on_home' => true,
             ],
             [
                 'name' => ['az' => 'Santexnika', 'ru' => 'Сантехника', 'en' => 'Plumbing'],
@@ -70,6 +125,7 @@ class DemoSeeder extends Seeder
                 'image' => 'assets/category-plumbing.png',
                 'sort_order' => 5,
                 'is_active' => true,
+                'show_on_home' => true,
             ],
             [
                 'name' => ['az' => 'Kərpic', 'ru' => 'Кирпич', 'en' => 'Brick'],
@@ -77,6 +133,7 @@ class DemoSeeder extends Seeder
                 'image' => 'assets/category-brick-and-block.png',
                 'sort_order' => 6,
                 'is_active' => true,
+                'show_on_home' => true,
             ],
             [
                 'name' => ['az' => 'Sement', 'ru' => 'Цемент', 'en' => 'Cement'],
@@ -84,6 +141,7 @@ class DemoSeeder extends Seeder
                 'image' => 'assets/category-cement-bags.png',
                 'sort_order' => 7,
                 'is_active' => true,
+                'show_on_home' => true,
             ],
         ];
 
@@ -102,7 +160,7 @@ class DemoSeeder extends Seeder
                 'name' => 'ARCHI Seller',
                 'first_name' => 'Elvin',
                 'last_name' => 'Mammadov',
-                'phone' => '+994501234567',
+                'phone' => '+994501234561',
                 'password' => 'password',
                 'role' => UserRole::Seller,
                 'status' => UserStatus::Active,
@@ -316,17 +374,23 @@ class DemoSeeder extends Seeder
         foreach ($products as $data) {
             $categorySlug = $data['category'];
             $imagePath = $data['image'];
-            unset($data['category'], $data['image']);
+            $brandName = $data['brand'] ?? null;
+            unset($data['category'], $data['image'], $data['brand']);
 
             $category = Category::where('slug', $categorySlug)->first();
+            $brand = $brandName ? $this->ensureBrand($brandName) : null;
 
             $product = Product::firstOrCreate(
                 ['slug' => $data['slug']],
                 array_merge($data, [
                     'user_id' => $seller->id,
                     'category_id' => $category?->id,
+                    'brand_id' => $brand?->id,
                     'is_visible' => true,
                     'is_approved' => true,
+                    // The homepage grids need BOTH the flag and the curation bit; without
+                    // this the "featured"/"sale" rows render empty on a fresh seed.
+                    'show_on_homepage' => ($data['is_featured'] ?? false) || ($data['is_sale'] ?? false),
                     'condition' => 'new',
                     'views_count' => rand(50, 800),
                     'free_delivery' => (bool) rand(0, 1),
@@ -342,7 +406,7 @@ class DemoSeeder extends Seeder
                 $storedPath = 'products/seed-'.$product->id.'-'.basename($imagePath);
 
                 if (is_file($source)) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->put($storedPath, file_get_contents($source));
+                    Storage::disk('public')->put($storedPath, file_get_contents($source));
                 } else {
                     $storedPath = $imagePath; // asset missing locally — keep the legacy path
                 }
@@ -356,6 +420,18 @@ class DemoSeeder extends Seeder
                 ]);
             }
         }
+    }
+
+    private function ensureBrand(string $name): Brand
+    {
+        return Brand::firstOrCreate(
+            ['slug' => Str::slug($name)],
+            [
+                'name' => ['az' => $name, 'ru' => $name, 'en' => $name],
+                'is_active' => true,
+                'show_in_filters' => true,
+            ],
+        );
     }
 
     // ─── Blog posts ───────────────────────────────────────────
@@ -482,8 +558,8 @@ class DemoSeeder extends Seeder
             [
                 'badge_text' => ['az' => 'Endirim', 'ru' => 'Скидка', 'en' => 'Discount'],
                 'title' => ['az' => '60%-dək endirim', 'ru' => 'Скидки до 60%', 'en' => 'Up to 60% off'],
-                'description' => ['az' => 'ARCHI60 promo kodu ilə seçilmiş tikinti materiallarında böyük endirimlər əldə edin.', 'ru' => 'Получите большие скидки на избранные строительные материалы с промокодом ARCHI60.', 'en' => 'Get big discounts on selected construction materials with promo code ARCHI60.'],
-                'code' => 'ARCHI60',
+                'description' => ['az' => 'Seçilmiş tikinti materiallarında böyük endirimlər əldə edin.', 'ru' => 'Получите большие скидки на избранные строительные материалы.', 'en' => 'Get big discounts on selected construction materials.'],
+                'code' => null,
                 'button_text' => ['az' => 'Indi al', 'ru' => 'Купить сейчас', 'en' => 'Buy now'],
                 'button_url' => '/products?sale=1',
                 'background_color' => '#1E3A5F',
@@ -493,9 +569,9 @@ class DemoSeeder extends Seeder
             [
                 'badge_text' => ['az' => 'Xüsusi təklif', 'ru' => 'Спецпредложение', 'en' => 'Special offer'],
                 'title' => ['az' => '15% endirim ilk sifarişə', 'ru' => '15% скидка на первый заказ', 'en' => '15% off first order'],
-                'description' => ['az' => 'İlk sifarişinizdə ARCHI15 promo kodundan istifadə edin və 15% endirim əldə edin.', 'ru' => 'Используйте промокод ARCHI15 при первом заказе и получите скидку 15%.', 'en' => 'Use promo code ARCHI15 on your first order and get 15% off.'],
-                'code' => 'ARCHI15',
-                'button_text' => ['az' => 'Kodu istifadə et', 'ru' => 'Использовать код', 'en' => 'Use code'],
+                'description' => ['az' => 'Seçilmiş məhsullarda xüsusi təkliflərdən yararlanın.', 'ru' => 'Воспользуйтесь специальными предложениями на избранные товары.', 'en' => 'Take advantage of special offers on selected products.'],
+                'code' => null,
+                'button_text' => ['az' => 'Məhsullara bax', 'ru' => 'Смотреть товары', 'en' => 'View products'],
                 'button_url' => '/products',
                 'background_color' => '#2D6A4F',
                 'sort_order' => 2,
@@ -503,9 +579,11 @@ class DemoSeeder extends Seeder
             ],
         ];
 
+        // Keyed on sort_order, not on `code`: promo codes were retired and are now null,
+        // which would collapse every banner onto a single row.
         foreach ($promos as $data) {
-            PromoBanner::firstOrCreate(
-                ['code' => $data['code']],
+            PromoBanner::updateOrCreate(
+                ['sort_order' => $data['sort_order']],
                 $data,
             );
         }
@@ -581,8 +659,8 @@ class DemoSeeder extends Seeder
             );
 
             $specialty = SpecialistSpecialty::firstOrCreate(
-                ['name' => $data['craft']],
-                ['slug' => Str::slug($data['craft']), 'is_active' => true],
+                ['slug' => Str::slug($data['craft'])],
+                ['name' => ['az' => $data['craft']], 'is_active' => true],
             );
 
             SpecialistProfile::firstOrCreate(
@@ -597,6 +675,7 @@ class DemoSeeder extends Seeder
                     'skills' => $data['skills'],
                     'avatar_path' => $data['avatar'],
                     'is_featured' => true,
+                    'show_on_homepage' => true,
                     'show_in_header' => true,
                     'is_on_vacation' => false,
                     'available_slots' => rand(3, 8),

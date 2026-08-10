@@ -21,8 +21,28 @@
       gap="gap-3.5"
       :title="t('business-profile-products.nav.products')">
     <x-slot:action>
-      <x-ui.button variant="primary" class="cab-btn-add" :href="route('business.products.create')">{{ t('business-profile-products.list.add') }}</x-ui.button>
+      {{-- A seller may own at most MAX_PRODUCTS_PER_SELLER products, so the entry point
+           has to disappear at the cap rather than lead to a form that 422s. --}}
+      @if (($quota['reached'] ?? false))
+        <span class="text-[13px] font-medium text-black/45">
+          {{ t('business-product-edit.limit.reached', ['limit' => $quota['limit']]) }}
+        </span>
+      @else
+        <x-ui.button variant="primary" class="cab-btn-add" :href="route('business.products.create')">{{ t('business-profile-products.list.add') }}</x-ui.button>
+      @endif
     </x-slot:action>
+
+    @isset($quota)
+      @unless ($quota['reached'])
+        <p class="text-[13px] leading-[normal] text-black/50">
+          {{ t('business-product-edit.limit.remaining', [
+              'remaining' => $quota['remaining'],
+              'used' => $quota['used'],
+              'limit' => $quota['limit'],
+          ]) }}
+        </p>
+      @endunless
+    @endisset
 
     {{-- Filters: server-side via GET. Status chips + search. --}}
     @php $curStatus = request('status'); @endphp

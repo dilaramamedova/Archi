@@ -35,6 +35,7 @@ class SearchService
         'mütəxəssis' => ['usta', 'master', 'specialist', 'мастер'],
 
         // Plumbing
+        'santexnik' => ['santexnika', 'plumbing', 'сантехника', 'su sistemi'],
         'santexnika' => ['plumbing', 'сантехника', 'su sistemi'],
         'plumbing' => ['santexnika', 'сантехника', 'su sistemi'],
         'сантехника' => ['santexnika', 'plumbing', 'su sistemi'],
@@ -95,12 +96,35 @@ class SearchService
     ];
 
     /**
+     * Collation forced on every text comparison. The translatable columns are
+     * MySQL `json`, and JSON is compared with a binary collation, which makes
+     * `like` case-sensitive. Casting to CHAR and applying the database's own
+     * case-insensitive collation restores expected behaviour; general_ci also
+     * folds the Azerbaijani dotless "ı" onto "i".
+     */
+    private const CI_COLLATION = 'utf8mb4_general_ci';
+
+    /**
+     * Azerbaijani letters folded to their ASCII counterpart, mirroring
+     * normalizeAzeri() so the stored value can be folded in SQL too.
+     */
+    private const AZERI_FOLD = [
+        'ə' => 'e', 'ö' => 'o', 'ü' => 'u', 'ç' => 'c',
+        'ş' => 's', 'ğ' => 'g', 'ı' => 'i',
+    ];
+
+    /**
+     * Minimum length of a word considered for all-words (token) matching.
+     */
+    private const MIN_TOKEN_LENGTH = 2;
+
+    /**
      * Expand a search query into an array of terms including synonyms
      * and diacritics-stripped variants.
      */
     public static function expandQuery(string $query): array
     {
-        $original = mb_strtolower(trim($query));
+        $original = self::lower(trim($query));
         if ($original === '') {
             return [];
         }
@@ -113,10 +137,12 @@ class SearchService
 
         // Check every synonym key against both original and normalized input
         foreach (self::$synonyms as $key => $values) {
-            $lowerKey = mb_strtolower($key);
+            $lowerKey = self::lower($key);
             if (mb_strpos($original, $lowerKey) !== false || mb_strpos($normalized, self::normalizeAzeri($lowerKey)) !== false) {
+                // The key itself is a term too: "santexnika" should also find "Santexnik".
+                $terms[] = $lowerKey;
                 foreach ($values as $v) {
-                    $terms[] = mb_strtolower($v);
+                    $terms[] = self::lower($v);
                 }
             }
         }
@@ -125,74 +151,264 @@ class SearchService
     }
 
     /**
+     * Lowercase for search. mb_strtolower() turns the Azerbaijani "İ" into
+     * "i" + U+0307, which never matches stored text, so fold it first.
+     */
+    private static function lower(string $text): string
+    {
+        return mb_strtolower(str_replace('İ', 'i', $text));
+    }
+
+    /**
+     * Split a query into words, each expanded with its own synonyms and
+     * diacritics-stripped variant. Returns one variant list per word.
+     *
+     * @return array<int, array<int, string>>
+     */
+    public static function tokenGroups(string $query): array
+    {
+        $words = preg_split('/[^\p{L}\p{N}]+/u', self::lower(trim($query)), -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        $groups = [];
+        foreach ($words as $word) {
+            if (mb_strlen($word) < self::MIN_TOKEN_LENGTH) {
+                continue;
+            }
+            $groups[] = self::expandQuery($word);
+        }
+
+        return $groups;
+    }
+
+    /**
      * Build a product search query that checks translatable JSON columns
      * across all locales and uses synonym expansion.
      */
-    public static function buildProductQuery(Builder $baseQuery, array $terms): Builder
+    public static function buildProductQuery(Builder $baseQuery, string $query): Builder
     {
-        return $baseQuery->where(function (Builder $q) use ($terms) {
-            foreach ($terms as $term) {
-                // Search the raw JSON column so all locale values are checked.
-                // Brand is a relation (brand_id) — the string column was dropped.
-                $q->orWhere('name', 'like', "%{$term}%")
-                    ->orWhere('description', 'like', "%{$term}%")
-                    ->orWhereHas('brand', fn (Builder $bq) => $bq->where('name', 'like', "%{$term}%"));
-            }
-
-            // Also match by category name (translatable JSON) for any term
-            $q->orWhereHas('category', function (Builder $cq) use ($terms) {
-                $cq->where(function (Builder $inner) use ($terms) {
-                    foreach ($terms as $term) {
-                        $inner->orWhere('name', 'like', "%{$term}%");
-                    }
-                });
-            });
-        });
+        return self::applyMatcher($baseQuery, $query, self::productTermMatcher());
     }
 
     /**
      * Build a specialist/master search query that checks craft, skills,
-     * and user name against all expanded terms.
+     * specialty and user name.
      */
-    public static function buildSpecialistQuery(Builder $baseQuery, array $terms): Builder
+    public static function buildSpecialistQuery(Builder $baseQuery, string $query): Builder
     {
-        return $baseQuery->where(function (Builder $q) use ($terms) {
-            foreach ($terms as $term) {
-                $q->orWhere('craft', 'like', "%{$term}%")
-                    ->orWhere('skills', 'like', "%{$term}%");
-            }
-
-            $q->orWhereHas('specialty', function (Builder $specialtyQuery) use ($terms) {
-                $specialtyQuery->where(function (Builder $inner) use ($terms) {
-                    foreach ($terms as $term) {
-                        $inner->orWhere('name', 'like', "%{$term}%");
-                    }
-                });
-            });
-
-            $q->orWhereHas('user', function (Builder $uq) use ($terms) {
-                $uq->where(function (Builder $inner) use ($terms) {
-                    foreach ($terms as $term) {
-                        $inner->orWhere('first_name', 'like', "%{$term}%")
-                            ->orWhere('last_name', 'like', "%{$term}%");
-                    }
-                });
-            });
-        });
+        return self::applyMatcher($baseQuery, $query, self::specialistTermMatcher());
     }
 
     /**
      * Build a blog post search query across translatable title/excerpt/body.
      */
-    public static function buildBlogQuery(Builder $baseQuery, array $terms): Builder
+    public static function buildBlogQuery(Builder $baseQuery, string $query): Builder
     {
-        return $baseQuery->where(function (Builder $q) use ($terms) {
-            foreach ($terms as $term) {
-                $q->orWhere('title', 'like', "%{$term}%")
-                    ->orWhere('excerpt', 'like', "%{$term}%")
-                    ->orWhere('body', 'like', "%{$term}%");
+        return self::applyMatcher($baseQuery, $query, function (Builder $q, string $term): void {
+            self::orLike($q, 'blog_posts.title', $term);
+            self::orLike($q, 'blog_posts.excerpt', $term);
+            self::orLike($q, 'blog_posts.body', $term);
+        });
+    }
+
+    /**
+     * Seller-cabinet product filter (name is a translatable json column, sku
+     * is a plain varchar). Kept here so the cabinet gets the same
+     * case-insensitive comparison as the public catalog.
+     */
+    public static function buildSellerProductQuery(Builder $baseQuery, string $search): Builder
+    {
+        $term = self::lower(trim($search));
+
+        if ($term === '') {
+            return $baseQuery;
+        }
+
+        return $baseQuery->where(function (Builder $q) use ($term) {
+            self::orLike($q, 'products.name', $term);
+            self::orLike($q, 'products.sku', $term);
+        });
+    }
+
+    /**
+     * Push products whose name contains the whole typed phrase to the top.
+     * Applied before any other ordering so it acts as the primary sort.
+     */
+    public static function orderProductsByRelevance(Builder $query, string $search): Builder
+    {
+        $phrase = self::lower(trim($search));
+
+        if ($phrase === '') {
+            return $query;
+        }
+
+        return $query->orderByRaw(
+            self::columnExpression('products.name', $phrase).' like ? desc',
+            ['%'.$phrase.'%']
+        );
+    }
+
+    /**
+     * ORs a single term across every searchable product field.
+     */
+    private static function productTermMatcher(): callable
+    {
+        return function (Builder $q, string $term): void {
+            // Search the raw JSON column so all locale values are checked.
+            // Brand is a relation (brand_id) — the string column was dropped.
+            self::orLike($q, 'products.name', $term);
+            self::orLike($q, 'products.description', $term);
+            // The relation callbacks must nest, otherwise the OR would escape
+            // the closure and cancel the foreign-key constraint of the EXISTS.
+            $q->orWhereHas('brand', fn (Builder $bq) => $bq->where(fn (Builder $i) => self::orLike($i, 'brands.name', $term)));
+            $q->orWhereHas('category', fn (Builder $cq) => $cq->where(fn (Builder $i) => self::orLike($i, 'categories.name', $term)));
+        };
+    }
+
+    /**
+     * ORs a single term across every searchable specialist field.
+     */
+    private static function specialistTermMatcher(): callable
+    {
+        return function (Builder $q, string $term): void {
+            self::orLike($q, 'specialist_profiles.craft', $term);
+            self::orLike($q, 'specialist_profiles.skills', $term);
+            $q->orWhereHas('specialty', fn (Builder $sq) => $sq->where(fn (Builder $i) => self::orLike($i, 'specialist_specialties.name', $term)));
+            $q->orWhereHas('user', function (Builder $uq) use ($term) {
+                $uq->where(function (Builder $inner) use ($term) {
+                    self::orLike($inner, 'users.first_name', $term);
+                    self::orLike($inner, 'users.last_name', $term);
+                });
+            });
+        };
+    }
+
+    /**
+     * Wrap the base query in "whole phrase matches OR every word matches".
+     * The phrase branch keeps the original synonym-expansion behaviour; the
+     * token branch makes multi-word queries match when the words are spread
+     * across a name (e.g. "Keramik kafel 30" -> "Keramik kafel 30x60 ağ mat").
+     */
+    private static function applyMatcher(Builder $baseQuery, string $query, callable $orTerm): Builder
+    {
+        $phraseTerms = self::phraseTerms($query);
+
+        if ($phraseTerms === []) {
+            return $baseQuery;
+        }
+
+        $tokenGroups = self::tokenGroups($query);
+
+        return $baseQuery->where(function (Builder $q) use ($phraseTerms, $tokenGroups, $orTerm) {
+            $q->where(function (Builder $phrase) use ($phraseTerms, $orTerm) {
+                foreach ($phraseTerms as $term) {
+                    $orTerm($phrase, $term);
+                }
+            });
+
+            if ($tokenGroups !== []) {
+                $q->orWhere(function (Builder $all) use ($tokenGroups, $orTerm) {
+                    foreach ($tokenGroups as $variants) {
+                        $all->where(function (Builder $word) use ($variants, $orTerm) {
+                            foreach ($variants as $term) {
+                                $orTerm($word, $term);
+                            }
+                        });
+                    }
+                });
             }
         });
+    }
+
+    /**
+     * Terms for the "whole phrase" branch of the matcher.
+     *
+     * A single word keeps the full synonym expansion — there the synonyms *are*
+     * the whole query. For a multi-word phrase the synonyms are substituted
+     * INSIDE the phrase instead of being emitted as bare terms: otherwise
+     * "Keramik kafel 30" would OR a lone "kafel" (and "tile", "plitka", ...)
+     * and match every tile in the catalog even though "Keramik" matches
+     * nothing. Word-level matching is the token branch's job, and it ANDs the
+     * words instead of ORing them.
+     *
+     * @return array<int, string>
+     */
+    private static function phraseTerms(string $query): array
+    {
+        $original = self::lower(trim($query));
+
+        if ($original === '') {
+            return [];
+        }
+
+        $words = preg_split('/[^\p{L}\p{N}]+/u', $original, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        if (count($words) <= 1) {
+            return self::expandQuery($query);
+        }
+
+        $normalized = self::normalizeAzeri($original);
+        $terms = [$original];
+
+        if ($normalized !== $original) {
+            $terms[] = $normalized;
+        }
+
+        foreach (self::$synonyms as $key => $values) {
+            $lowerKey = self::lower($key);
+
+            foreach (array_unique([$original, $normalized]) as $subject) {
+                if (mb_strpos($subject, $lowerKey) === false) {
+                    continue;
+                }
+
+                foreach ($values as $value) {
+                    $terms[] = str_replace($lowerKey, self::lower($value), $subject);
+                }
+            }
+        }
+
+        return array_values(array_unique($terms));
+    }
+
+    /**
+     * Case-insensitive `like` on a (possibly JSON) column, OR-ed into $q.
+     * When the term is a diacritics-stripped variant the column is folded the
+     * same way, so "doseme" can still find "döşəmə".
+     */
+    private static function orLike(Builder $q, string $column, string $term): void
+    {
+        $q->orWhereRaw(self::columnExpression($column, $term).' like ?', ['%'.$term.'%']);
+    }
+
+    /**
+     * SQL expression for a searchable column, case-insensitive and — when the
+     * term itself carries no Azerbaijani diacritics — accent-folded.
+     */
+    private static function columnExpression(string $column, string $term): string
+    {
+        $expression = 'lower(cast('.self::wrapColumn($column).' as char) collate '.self::CI_COLLATION.')';
+
+        if ($term !== self::normalizeAzeri($term)) {
+            return $expression;
+        }
+
+        foreach (self::AZERI_FOLD as $from => $to) {
+            $expression = "replace({$expression}, '{$from}', '{$to}')";
+        }
+
+        return $expression;
+    }
+
+    /**
+     * Quote a (optionally table-qualified) column identifier.
+     */
+    private static function wrapColumn(string $column): string
+    {
+        if (! preg_match('/^[A-Za-z0-9_]+(\.[A-Za-z0-9_]+)?$/', $column)) {
+            throw new \InvalidArgumentException("Invalid search column [{$column}].");
+        }
+
+        return implode('.', array_map(fn (string $part) => '`'.$part.'`', explode('.', $column)));
     }
 
     /**
@@ -201,15 +417,15 @@ class SearchService
      */
     public static function getSuggestions(string $query): array
     {
-        $original = mb_strtolower(trim($query));
+        $original = self::lower(trim($query));
         $normalized = self::normalizeAzeri($original);
         $suggestions = [];
 
         foreach (self::$synonyms as $key => $values) {
-            $lowerKey = mb_strtolower($key);
+            $lowerKey = self::lower($key);
             if (mb_strpos($original, $lowerKey) !== false || mb_strpos($normalized, self::normalizeAzeri($lowerKey)) !== false) {
                 foreach ($values as $v) {
-                    $lower = mb_strtolower($v);
+                    $lower = self::lower($v);
                     // Only suggest terms that differ from what the user typed
                     if ($lower !== $original && $lower !== $normalized) {
                         $suggestions[] = $lower;
@@ -224,12 +440,18 @@ class SearchService
     /**
      * Find category IDs whose name (any locale) matches any of the terms.
      */
-    public static function findMatchingCategoryIds(array $terms): array
+    public static function findMatchingCategoryIds(string $query): array
     {
+        $terms = self::expandQuery($query);
+
+        if ($terms === []) {
+            return [];
+        }
+
         return Category::active()
             ->where(function (Builder $q) use ($terms) {
                 foreach ($terms as $term) {
-                    $q->orWhere('name', 'like', "%{$term}%");
+                    self::orLike($q, 'categories.name', $term);
                 }
             })
             ->pluck('id')

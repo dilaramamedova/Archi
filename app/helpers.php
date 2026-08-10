@@ -35,8 +35,11 @@ if (! function_exists('t')) {
 
 if (! function_exists('translate_craft')) {
     /**
-     * Translate a specialist craft name from its stored (Azerbaijani) value
-     * to the current locale. If no mapping exists, returns the original string.
+     * Fallback only. Specialty names are translatable in the database
+     * (SpecialistSpecialty::$translatable) and win everywhere — this map is the
+     * last resort for legacy specialist_profiles.craft strings on profiles that
+     * never got a specialist_specialty_id. Returns the original string when no
+     * mapping exists.
      */
     function translate_craft(?string $craft): ?string
     {

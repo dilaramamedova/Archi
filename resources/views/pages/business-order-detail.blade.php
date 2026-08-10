@@ -54,7 +54,7 @@
         </div>
         <div class="flex items-center justify-between gap-4">
           <p class="text-sm text-black/50">{{ t('business-order-detail.customer.phone') }}</p>
-          <p class="text-sm font-semibold text-black/90">{{ $order->delivery_phone ?? '—' }}</p>
+          <p class="text-sm font-semibold text-black/90">{{ filled($order->delivery_phone) ? $order->delivery_phone : '—' }}</p>
         </div>
         <div class="flex items-center justify-between gap-4">
           <p class="text-sm text-black/50">{{ t('business-order-detail.customer.email') }}</p>
@@ -72,20 +72,19 @@
       <div class="flex flex-col gap-3">
         <div class="flex items-center justify-between gap-4">
           <p class="text-sm text-black/50">{{ t('business-order-detail.delivery.address') }}</p>
-          <p class="text-right text-sm font-semibold text-black/90">{{ $order->delivery_address ?? '—' }}</p>
+          <p class="text-right text-sm font-semibold text-black/90">{{ filled($order->delivery_address) ? $order->delivery_address : '—' }}</p>
         </div>
         <div class="flex items-center justify-between gap-4">
           <p class="text-sm text-black/50">{{ t('business-order-detail.delivery.city') }}</p>
-          <p class="text-sm font-semibold text-black/90">{{ $order->delivery_city ?? '—' }}</p>
+          {{-- An empty string is as empty as null — "?? '—'" left this row blank. --}}
+          <p class="text-sm font-semibold text-black/90">{{ filled($order->delivery_city) ? $order->delivery_city : '—' }}</p>
         </div>
         <div class="flex items-center justify-between gap-4">
           <p class="text-sm text-black/50">{{ t('business-order-detail.delivery.note') }}</p>
-          <p class="text-right text-sm font-semibold text-black/90">{{ $order->notes ?? '—' }}</p>
+          <p class="text-right text-sm font-semibold text-black/90">{{ filled($order->notes) ? $order->notes : '—' }}</p>
         </div>
-        <div class="flex items-center justify-between gap-4">
-          <p class="text-sm text-black/50">{{ t('business-order-detail.delivery.method') }}</p>
-          <p class="text-sm font-semibold text-black/90">{{ t('business-order-detail.delivery.method_value') }}</p>
-        </div>
+        {{-- No delivery method is ever chosen at checkout, so the "Standart · 3–5 iş günü"
+             row was pure invention. Restore it when checkout captures a method. --}}
       </div>
     </div>
   </div>

@@ -8,10 +8,11 @@
         <p class="text-base leading-[1.5] text-black/55">{{ t('login.forgot_subtitle') }}</p>
       </div>
 
-      <x-ui.alert tone="ok" id="forgotOk" style="display:none">{{ t('login.forgot_success') }}</x-ui.alert>
+      <x-ui.alert tone="ok" id="forgotOk" style="display:none">{{ t('login.forgot_neutral') }}</x-ui.alert>
       <x-ui.alert tone="error" id="forgotErr" style="display:none"></x-ui.alert>
 
-      <form class="flex flex-col gap-[18px]" id="forgotForm">
+      <form class="flex flex-col gap-[18px]" id="forgotForm" method="post" action="{{ route('password.email') }}">
+        @csrf
         <x-ui.field :label="t('login.form.identifier_label')" for="forgotEmail">
           <x-ui.input id="forgotEmail" name="email" type="email" placeholder="email@example.com" required />
         </x-ui.field>

@@ -885,6 +885,9 @@
   /* saved: only the dot color and the message change, the bar keeps its size */
   .cab-save-bar[data-saved="true"] .dot { @apply bg-green; }
   .cab-save-bar .msg   { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-white/85; }
+  /* idle (nothing edited yet, nothing saved yet): neutral dot, no "unsaved" warning */
+  .cab-save-bar[data-dirty="false"][data-saved="false"] .dot { @apply bg-white/30; }
+  .cab-save-bar[data-dirty="false"][data-saved="false"] .msg { @apply invisible; }
   /* the shared :focus-visible ring is ink-colored — invisible on the dark bar */
   .cab-save-bar .ui-btn:focus-visible { @apply outline-2 outline-offset-2 outline-white; }
 
@@ -893,6 +896,10 @@
   @media (max-width: 1100px) {
     .cab-body { @apply flex-col; }
     .cab-snav { @apply static w-full; }
+    /* Once .cab-body is a column, `flex-[1_0_0]` resolves to a 0 height basis with no
+       free space to grow into, so .cab-main collapsed to 0px and its `overflow-hidden`
+       clipped every card — the whole cabinet rendered as just the nav. */
+    .cab-main { @apply w-full flex-none; }
   }
   @media (max-width: 640px) {
     .cab-page       { @apply px-4 pt-5 pb-10; }

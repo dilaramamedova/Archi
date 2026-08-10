@@ -12,7 +12,8 @@
       <x-ui.alert tone="ok" id="resetOk" style="display:none"></x-ui.alert>
       <x-ui.alert tone="error" id="resetErr" style="display:none"></x-ui.alert>
 
-      <form class="flex flex-col gap-[18px]" id="resetForm">
+      <form class="flex flex-col gap-[18px]" id="resetForm" method="post" action="{{ route('password.update') }}">
+        @csrf
         <input type="hidden" name="token" value="{{ request('token') }}">
         <input type="hidden" name="email" value="{{ request('email') }}">
 
@@ -25,17 +26,17 @@
 
         <div class="rounded bg-[#f5f7f9] px-[18px] py-4">
           <div class="flex flex-col gap-2">
-            <div class="flex items-center gap-2 text-sm" id="ruleLen">
-              <span class="rule-icon size-4 rounded-full border border-black/20"></span>
-              <span class="text-black/50">{{ t('auth.rule_min_8') }}</span>
+            <div class="group flex items-center gap-2 text-sm" data-on="false" id="ruleLen">
+              <span class="rule-icon size-4 rounded-full border border-black/20 group-data-[on=true]:border-yellow group-data-[on=true]:bg-yellow"></span>
+              <span class="text-black/50 group-data-[on=true]:text-ink">{{ t('auth.rule_min_8') }}</span>
             </div>
-            <div class="flex items-center gap-2 text-sm" id="ruleNum">
-              <span class="rule-icon size-4 rounded-full border border-black/20"></span>
-              <span class="text-black/50">{{ t('auth.rule_digit') }}</span>
+            <div class="group flex items-center gap-2 text-sm" data-on="false" id="ruleNum">
+              <span class="rule-icon size-4 rounded-full border border-black/20 group-data-[on=true]:border-yellow group-data-[on=true]:bg-yellow"></span>
+              <span class="text-black/50 group-data-[on=true]:text-ink">{{ t('auth.rule_digit') }}</span>
             </div>
-            <div class="flex items-center gap-2 text-sm" id="ruleUpper">
-              <span class="rule-icon size-4 rounded-full border border-black/20"></span>
-              <span class="text-black/50">{{ t('auth.rule_upper') }}</span>
+            <div class="group flex items-center gap-2 text-sm" data-on="false" id="ruleUpper">
+              <span class="rule-icon size-4 rounded-full border border-black/20 group-data-[on=true]:border-yellow group-data-[on=true]:bg-yellow"></span>
+              <span class="text-black/50 group-data-[on=true]:text-ink">{{ t('auth.rule_upper') }}</span>
             </div>
           </div>
         </div>

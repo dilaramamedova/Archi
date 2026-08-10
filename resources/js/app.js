@@ -5,6 +5,7 @@
 import './shared/navbar.js';
 import './shared/cursor.js';
 import './shared/login-modal.js';
+import initCabinetDirty from './shared/cabinet-dirty.js';
 
 import home from './pages/home.js';
 import catalog from './pages/catalog.js';
@@ -51,6 +52,8 @@ import businessOnboardingStep4 from './pages/business-onboarding-step4.js';
 import wishlist from './pages/wishlist.js';
 import legal from './pages/legal.js';
 import help from './pages/help.js';
+import forgotPassword from './pages/forgot-password.js';
+import resetPassword from './pages/reset-password.js';
 
 const pages = {
     'home': home,
@@ -99,6 +102,11 @@ const pages = {
     'wishlist': wishlist,
     'legal': legal,
     'help': help,
+    'forgot-password': forgotPassword,
+    'reset-password': resetPassword,
 };
 
 pages[document.body.dataset.page]?.();
+
+// After the page module has bound its own handlers, so its setSaved() stays authoritative.
+initCabinetDirty();

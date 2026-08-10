@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Cabinet;
 
+use App\Enums\City;
 use App\Http\Controllers\Controller;
 use App\Models\Showroom;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ShowroomController extends Controller
 {
@@ -38,14 +40,20 @@ class ShowroomController extends Controller
 
     private function validated(Request $request): array
     {
-        return $request->validate([
+        $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'address' => ['nullable', 'string', 'max:255'],
-            'city' => ['nullable', 'string', 'max:100'],
+            'city' => ['nullable', 'string', Rule::in(City::acceptedValues())],
             'phone' => ['nullable', 'string', 'max:30'],
             'work_hours' => ['nullable', 'string', 'max:100'],
             'status' => ['nullable', 'string', 'in:active,hidden'],
         ]);
+
+        if (filled($validated['city'] ?? null)) {
+            $validated['city'] = City::canonical($validated['city']);
+        }
+
+        return $validated;
     }
 
     private function authorizeShowroom(Request $request, Showroom $showroom): void

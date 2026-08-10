@@ -13,23 +13,9 @@
             ['img' => '/assets/category-laminate-flooring.png', 'href' => route('calculator'), 'btn' => t('common.view_details')],
         ];
 
-    // Fallback arrays used when dynamic collections are empty
-    $fallbackCategories = [
-        ['img' => '/assets/category-tile-showroom.png', 'name' => t('home.categories.tiles'), 'count' => t('home.categories.count_860'), 'open' => true],
-        ['img' => '/assets/category-roofing.png', 'name' => t('home.categories.roofing'), 'count' => t('home.categories.count_340')],
-        ['img' => '/assets/category-laminate-flooring.png', 'name' => t('home.categories.laminate'), 'count' => t('home.categories.count_340')],
-        ['img' => '/assets/category-electrical.png', 'name' => t('home.categories.electrical'), 'count' => t('home.categories.count_340')],
-        ['img' => '/assets/category-plumbing.png', 'name' => t('home.categories.plumbing'), 'count' => t('home.categories.count_340')],
-        ['img' => '/assets/category-brick-and-block.png', 'name' => t('home.categories.brick'), 'count' => t('home.categories.count_340')],
-        ['img' => '/assets/category-cement-bags.png', 'name' => t('home.categories.cement'), 'count' => t('home.categories.count_340')],
-    ];
-
-    $fallbackSpecialists = [
-        ['bg' => '#f5fbff', 'role' => t('home.specialists.role_tiler'), 'name' => t('home.specialists.name_1')],
-        ['bg' => '#fdf5ff', 'role' => t('home.specialists.role_tiler'), 'name' => t('home.specialists.name_1')],
-        ['bg' => '#f5fffb', 'role' => t('home.specialists.role_interior'), 'name' => t('home.specialists.name_2')],
-        ['bg' => '#fff5f5', 'role' => t('home.specialists.role_tiler'), 'name' => t('home.specialists.name_1')],
-    ];
+    // Translate, falling back to a literal while a key is still missing from the
+    // translations table (t() echoes the key back otherwise).
+    $tOr = fn (string $key, string $fallback) => is_string($v = t($key)) && $v !== $key ? $v : $fallback;
 @endphp
 <x-layout page="home" :title="t('home.title')">
 
@@ -144,15 +130,12 @@
 <div class="wrap"><div class="inner section">
   <x-section-head :tag="t('home.categories.tag')" :title="t('home.categories.title')" :more="route('catalog')" />
   <div class="cat-row">
-    @if($categories->isNotEmpty())
-      @foreach ($categories as $c)
-        <a @class(['cat-thumb', 'open' => $loop->first]) href="{{ route('catalog', ['category' => $c->slug]) }}"><img src="{{ storage_url($c->image, '/assets/category-tile-showroom.png') }}" alt=""><div class="ov"></div><div class="info"><div><h4>{{ $c->name }}</h4><p>{{ $c->products()->count() }} {{ t('common.products_count') }}</p></div><img src="/assets/icon-arrow-right.svg" alt=""></div></a>
-      @endforeach
-    @else
-      @foreach ($fallbackCategories as $c)
-        <a @class(['cat-thumb', 'open' => ! empty($c['open'])]) href="{{ route('catalog') }}"><img src="{{ $c['img'] }}" alt=""><div class="ov"></div><div class="info"><div><h4>{{ $c['name'] }}</h4><p>{{ $c['count'] }}</p></div><img src="/assets/icon-arrow-right.svg" alt=""></div></a>
-      @endforeach
-    @endif
+    {{-- products_count is a real count of live products (see HomeController). --}}
+    @forelse ($categories as $c)
+      <a @class(['cat-thumb', 'open' => $loop->first]) href="{{ route('catalog', ['category' => $c->slug]) }}"><img src="{{ storage_url($c->image, '/assets/category-tile-showroom.png') }}" alt=""><div class="ov"></div><div class="info"><div><h4>{{ $c->name }}</h4><p>{{ $c->products_count }} {{ t('common.products_count') }}</p></div><img src="/assets/icon-arrow-right.svg" alt=""></div></a>
+    @empty
+      <p class="py-8 text-sm text-black/45">{{ $tOr('home.categories.empty', 'Hələ kateqoriya yoxdur.') }}</p>
+    @endforelse
   </div>
 </div></div>
 
@@ -182,51 +165,29 @@
           <p>{{ $promo->description }}</p>
         </div>
       </div>
-      @if($promo->code)
-        <button class="pb-copy" type="button" data-code="{{ $promo->code }}" data-on="false">{{ $promo->code }}</button>
-      @elseif($promo->button_url)
+      {{-- Promo codes are not honoured at checkout, so the copy-code chip is gone and the
+           banner links to the discounted products instead. --}}
+      @if($promo->button_url)
         <a class="pb-copy" href="{{ $promo->button_url }}">{{ $promo->button_text ?? t('common.view_details') }}</a>
       @endif
     </div>
-  @else
-    <div class="promo-banner">
-      <div class="pb-l">
-        <span class="pb-badge">{{ t('home.promo.badge') }}</span>
-        <div>
-          <h3>{{ t('home.promo.title_60') }}</h3>
-          <p>{{ t('home.promo.text_before') }} <b>ARCHI60</b> {{ t('home.promo.text_after') }}</p>
-        </div>
-      </div>
-      <button class="pb-copy" type="button" data-code="ARCHI60" data-on="false">ARCHI60</button>
-    </div>
-  @endif
+  @endif{{-- no configured banner → render nothing, rather than advertising a dead promo code --}}
   {{-- "Ətraflı bax" → catalog filtered to SALE-status products only --}}
   <x-section-head :tag="t('home.sale.tag')" :title="t('home.sale.title')" :more="route('catalog', ['sale' => 1])" />
   <div class="grid4" id="campGrid">
     @forelse ($saleProducts as $product)
       <x-pcard :href="route('product.show', $product->slug)"
-               :img="$product->mainImageUrl ?? '/assets/product-marble-tile.png'"
-               :cat="$product->category?->name ?? t('home.sale.cat_tiles')"
+               :product="$product"
+               :img="$product->mainImageUrl"
+               :cat="$product->category?->name"
                :name="$product->name"
                :now="number_format($product->price, 2) . ' ₼'"
                :old="$product->old_price && $product->old_price > $product->price ? number_format($product->old_price, 2) . ' ₼' : null"
                :off="$product->old_price && $product->old_price > $product->price && $product->discount_percent ? '-' . $product->discount_percent . '%' : null"
                :rate="$product->reviewsCount > 0 ? number_format($product->averageRating, 1) : null"
                :reviews="$product->reviewsCount > 0 ? '(' . $product->reviewsCount . ' ' . t('common.reviews') . ')' : null" />
-    {{-- TODO: Replace with dynamic data from controller --}}
     @empty
-      <x-pcard :cat="t('home.sale.cat_tiles')" :name="t('home.sale.name_tile_matte')"
-               :now="t('home.sale.price_now_1')" :old="t('home.sale.price_old_1')" :off="t('home.sale.discount_1')" :rate="t('home.sale.rate_1')" :reviews="t('home.sale.reviews_1876')"
-               img="/assets/product-marble-tile.png" />
-      <x-pcard :cat="t('home.sale.cat_laminate')" :name="t('home.sale.name_laminate')"
-               :now="t('home.sale.price_now_2')" :old="t('home.sale.price_old_2')" :off="t('home.sale.discount_2')" :rate="t('home.sale.rate_2')" :reviews="t('home.sale.reviews_640')"
-               img="/assets/category-laminate-flooring.png" />
-      <x-pcard :cat="t('home.sale.cat_paint')" :name="t('home.sale.name_paint')"
-               :now="t('home.sale.price_now_3')" :old="t('home.sale.price_old_3')" :off="t('home.sale.discount_3')" :rate="t('home.sale.rate_3')" :reviews="t('home.sale.reviews_932')"
-               img="/assets/hero-modern-house.jpg" />
-      <x-pcard :cat="t('home.sale.cat_plumbing')" :name="t('home.sale.name_mixer')"
-               :now="t('home.sale.price_now_4')" :old="t('home.sale.price_old_4')" :off="t('home.sale.discount_4')" :rate="t('home.sale.rate_4')" :reviews="t('home.sale.reviews_210')"
-               img="/assets/category-plumbing.png" />
+      <p class="w-full py-8 text-sm text-black/45">{{ $tOr('home.sale.empty', 'Hazırda endirimli məhsul yoxdur.') }}</p>
     @endforelse
   </div>
 </div></div>
@@ -242,24 +203,11 @@
           <p>{{ $promo2->description }}</p>
         </div>
       </div>
-      @if($promo2->code)
-        <button class="pb-copy" type="button" data-code="{{ $promo2->code }}" data-on="false">{{ $promo2->code }}</button>
-      @elseif($promo2->button_url)
+      @if($promo2->button_url)
         <a class="pb-copy" href="{{ $promo2->button_url }}">{{ $promo2->button_text ?? t('common.view_details') }}</a>
       @endif
     </div>
-  @else
-    <div class="promo-banner">
-      <div class="pb-l">
-        <span class="pb-badge">{{ t('home.promo.badge') }}</span>
-        <div>
-          <h3>{{ t('home.promo.title_15') }}</h3>
-          <p>{{ t('home.promo.text_before') }} <b>ARCHI15</b> {{ t('home.promo.text_after') }}</p>
-        </div>
-      </div>
-      <button class="pb-copy" type="button" data-code="ARCHI15" data-on="false">ARCHI15</button>
-    </div>
-  @endif
+  @endif{{-- no configured banner → render nothing --}}
   {{-- "Ətraflı bax" → catalog filtered to featured products only --}}
   <x-section-head :tag="t('home.products.tag')" :title="t('home.products.title')" :more="route('catalog', ['featured' => 1])" />
   {{-- Products the visitor posted on /sell are stored in localStorage and prepended by home.js --}}
@@ -270,20 +218,17 @@
        data-l-new="{{ t('home.products.condition_new') }}">
     @forelse ($featuredProducts as $product)
       <x-pcard :href="route('product.show', $product->slug)"
-               :img="$product->mainImageUrl ?? '/assets/product-marble-tile.png'"
-               :cat="$product->category?->name ?? t('home.products.cat_tiles')"
+               :product="$product"
+               :img="$product->mainImageUrl"
+               :cat="$product->category?->name"
                :name="$product->name"
                :now="number_format($product->price, 2) . ' ₼'"
                :old="$product->old_price && $product->old_price > $product->price ? number_format($product->old_price, 2) . ' ₼' : null"
                :off="$product->old_price && $product->old_price > $product->price && $product->discount_percent ? '-' . $product->discount_percent . '%' : null"
                :rate="$product->reviewsCount > 0 ? number_format($product->averageRating, 1) : null"
                :reviews="$product->reviewsCount > 0 ? '(' . $product->reviewsCount . ' ' . t('common.reviews') . ')' : null" />
-    {{-- TODO: Replace with dynamic data from controller --}}
     @empty
-      @for ($i = 0; $i < 4; $i++)
-        <x-pcard :cat="t('home.products.cat_tiles')" :name="t('home.products.name_tile_matte')"
-                 :now="t('home.products.fallback_price_now')" :old="t('home.products.fallback_price_old')" :off="t('home.products.fallback_discount')" :rate="t('home.products.fallback_rate')" :reviews="t('home.products.reviews_1876')" />
-      @endfor
+      <p class="w-full py-8 text-sm text-black/45">{{ $tOr('home.products.empty', 'Hazırda seçilmiş məhsul yoxdur.') }}</p>
     @endforelse
   </div>
 </div></div>
@@ -293,25 +238,19 @@
   {{-- "Ətraflı bax" → specialists page filtered to featured specialists only --}}
   <x-section-head :tag="t('home.specialists.tag')" :title="t('home.specialists.title')" :more="route('specialists', ['featured' => 1])" />
   <div class="grid4" id="specGrid">
-    @if($specialists->isNotEmpty())
-      @foreach ($specialists as $s)
-        <x-scard :href="route('specialist.show', $s)"
-                 :bg="['#f5fbff', '#fdf5ff', '#f5fffb', '#fff5f5'][$loop->index % 4]"
-                 :avatar="$s->user?->avatar ?? '/assets/icon-user.svg'"
-                 :role="$s->specialty?->name ?? translate_craft($s->craft)"
-                 :rate="null"
-                 :reviews="null"
-                 :name="$s->user?->name ?? t('home.specialists.name_1')"
-                 :exp="$s->experience_years ? $s->experience_years . ' ' . t('home.specialists.years') : t('home.specialists.exp_12')"
-                 :proj="$s->approvedPortfolioItems()->count() . ' ' . t('home.specialists.projects')" />
-      @endforeach
-    @else
-      {{-- TODO: Replace with dynamic data from controller --}}
-      @foreach ($fallbackSpecialists as $s)
-        <x-scard :bg="$s['bg']" :role="$s['role']" :rate="t('home.specialists.fallback_rate')" :reviews="t('home.specialists.reviews_416')"
-                 :name="$s['name']" :exp="t('home.specialists.exp_12')" :proj="'0 ' . t('home.specialists.projects')" />
-      @endforeach
-    @endif
+    @forelse ($specialists as $s)
+      <x-scard :href="route('specialist.show', $s)"
+               :bg="['#f5fbff', '#fdf5ff', '#f5fffb', '#fff5f5'][$loop->index % 4]"
+               :avatar="$s->user?->avatar ?? '/assets/icon-user.svg'"
+               :role="$s->craft_label"
+               :rate="null"
+               :reviews="null"
+               :name="$s->user?->name"
+               :exp="$s->experience_years ? $s->experience_years . ' ' . t('home.specialists.years') : null"
+               :proj="$s->approvedPortfolioItems()->count() . ' ' . t('home.specialists.projects')" />
+    @empty
+      <p class="w-full py-8 text-sm text-black/45">{{ $tOr('home.specialists.empty', 'Hələ seçilmiş mütəxəssis yoxdur.') }}</p>
+    @endforelse
   </div>
 </div></div>
 
@@ -356,9 +295,9 @@
               :title="$post->title"
               :excerpt="$post->excerpt" />
     @empty
-      @for ($i = 1; $i <= 4; $i++)
-        <x-post :href="route('blog.article')" :time="t('home.blog.time_' . $i)" :title="t('home.blog.title_' . $i)" :excerpt="t('home.blog.excerpt_' . $i)" />
-      @endfor
+      {{-- Never synthesise posts here: the old @for loop invented four articles with
+           fake reading times that all linked to the same generic route. --}}
+      <p class="w-full py-8 text-sm text-black/45">{{ $tOr('home.blog.empty', 'Hələ dərc olunmuş məqalə yoxdur.') }}</p>
     @endforelse
   </div>
 </div></div>

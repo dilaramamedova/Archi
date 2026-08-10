@@ -118,29 +118,31 @@ class Product extends Model
     }
 
     /**
+     * A product may only be bought when it is published in the catalog.
+     */
+    public function isOrderable(): bool
+    {
+        return (bool) $this->is_approved && (bool) $this->is_visible;
+    }
+
+    /**
+     * Books a sold quantity against the stock. The caller is expected to hold a
+     * lockForUpdate() row inside a transaction, otherwise concurrent orders may oversell.
+     */
+    public function applySale(int $quantity): void
+    {
+        $this->stock = max(0, (int) $this->stock - $quantity);
+        $this->sold_count = (int) $this->sold_count + $quantity;
+        $this->save();
+    }
+
+    /**
      * Search products using synonym expansion and multi-locale matching.
      * Searches the raw JSON columns so all locale values (az, ru, en) are checked.
      */
     public function scopeSearch(Builder $query, string $term): Builder
     {
-        $terms = SearchService::expandQuery($term);
-
-        return $query->where(function (Builder $q) use ($terms) {
-            foreach ($terms as $t) {
-                $q->orWhere('name', 'like', "%{$t}%")
-                  ->orWhere('description', 'like', "%{$t}%")
-                  ->orWhereHas('brand', fn (Builder $bq) => $bq->where('name', 'like', "%{$t}%"));
-            }
-
-            // Also match products whose category name matches any term
-            $q->orWhereHas('category', function (Builder $cq) use ($terms) {
-                $cq->where(function (Builder $inner) use ($terms) {
-                    foreach ($terms as $t) {
-                        $inner->orWhere('name', 'like', "%{$t}%");
-                    }
-                });
-            });
-        });
+        return SearchService::buildProductQuery($query, $term);
     }
 
     public function scopePopular($query)

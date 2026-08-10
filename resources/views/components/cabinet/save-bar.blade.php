@@ -32,8 +32,11 @@
         return $ns . '.' . $keys[0];
     };
 @endphp
+{{-- data-dirty starts false: the bar carries the Save button, but the "unsaved changes"
+     warning must not greet a user who has not touched anything yet. --}}
 <div {{ $attributes->merge(['class' => 'cab-save-bar']) }}
      data-saved="{{ $saved ? 'true' : 'false' }}"
+     data-dirty="false"
      data-saved-message="{{ $pick('save.saved', 'save.saved_alert') }}">
   <div class="left">
     <span class="dot"></span>

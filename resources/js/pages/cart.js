@@ -1,7 +1,9 @@
 // Page module for "cart" — ported from the inline <script> of the old cart.html.
 // The summary panel and the empty state are server-rendered by the Blade view now,
 // so this module only builds the item rows and keeps the numbers in sync.
-// Text templates and the promo table arrive from Blade on #ctPage as data-* JSON.
+// Text templates and the delivery city list arrive from Blade on #ctPage as data-* JSON.
+
+import { open as openLoginModal } from '../shared/login-modal.js';
 
 const DELIVERY_FREE = 100;
 const DELIVERY_FEE = 10;
@@ -27,6 +29,7 @@ const CLS = {
   field: 'flex flex-col gap-1.5',
   label: 'text-[13px] font-semibold text-ink',
   input: 'rounded-ds border border-black/15 px-3.5 py-[11px] text-sm outline-none [font-family:inherit] focus:border-ink',
+  select: 'rounded-ds border border-black/15 bg-white px-3.5 py-[11px] text-sm outline-none [font-family:inherit] focus:border-ink',
   textarea: 'rounded-ds border border-black/15 px-3.5 py-[11px] text-sm outline-none [font-family:inherit] focus:border-ink resize-none',
   fieldError: 'text-xs text-[#c0392b]',
   modalBtns: 'mt-5 flex gap-3',
@@ -82,7 +85,7 @@ export default function init() {
   if (!page) return;
 
   const T = readJson(page.dataset.i18n, {});
-  const PROMOS = readJson(page.dataset.promos, {});
+  const CITIES = readJson(page.dataset.cities, {});
   const authUser = readJson(page.dataset.auth, null);
   const orderUrl = page.dataset.orderUrl || '/api/orders';
   const fmt = makeFmt(T.locale);
@@ -90,29 +93,20 @@ export default function init() {
 
   const rowsEl = document.getElementById('ctRows');
   const emptyEl = document.getElementById('ctEmpty');
-  const msgEl = document.getElementById('ctMsg');
   const subLabelEl = document.getElementById('ctSubLabel');
   const subEl = document.getElementById('ctSub');
-  const discRowEl = document.getElementById('ctDiscRow');
-  const discLabelEl = document.getElementById('ctDiscLabel');
-  const discEl = document.getElementById('ctDisc');
   const delivEl = document.getElementById('ctDeliv');
   const totalEl = document.getElementById('ctTotal');
-  const promoInput = document.getElementById('ctPromo');
-  const applyBtn = document.getElementById('ctApply');
   const checkoutBtn = document.getElementById('ctCheckout');
 
   let cart = [];
-  let promo = null;
   try {
     cart = readJson(localStorage.getItem('archi-cart'), []);
-    promo = localStorage.getItem('archi-promo') || null;
   } catch (e) {
     // localStorage blocked — the page still works, nothing is persisted
   }
   if (!Array.isArray(cart)) cart = [];
   cart = cart.map((c) => ({ ...c, qty: c.qty || 1 }));
-  if (promoInput) promoInput.value = promo || '';
 
   function save() {
     try {
@@ -127,14 +121,6 @@ export default function init() {
   }
 
   const subtotal = () => cart.reduce((s, c) => s + (+c.price || 0) * (c.qty || 1), 0);
-
-  function discount() {
-    const p = promo ? PROMOS[promo] : null;
-    if (!p) return 0;
-    const sub = subtotal();
-    if (p.min && sub < p.min) return 0;
-    return p.type === 'pct' ? sub * p.val : p.val;
-  }
 
   function renderItems() {
     if (!rowsEl || !emptyEl) return;
@@ -155,42 +141,11 @@ export default function init() {
 
   function renderSum() {
     const sub = subtotal();
-    const disc = discount();
-    const afterDisc = sub - disc;
-    const delivery = cart.length ? (afterDisc >= DELIVERY_FREE ? 0 : DELIVERY_FEE) : 0;
-    const total = afterDisc + delivery;
-
-    if (msgEl) {
-      const p = promo ? PROMOS[promo] : null;
-      if (!promo) {
-        msgEl.hidden = true;
-        msgEl.removeAttribute('data-ok');
-        msgEl.textContent = '';
-      } else if (!p) {
-        msgEl.hidden = false;
-        msgEl.dataset.ok = 'false';
-        msgEl.textContent = T.promoUnknown;
-      } else if (p.min && sub < p.min) {
-        msgEl.hidden = false;
-        msgEl.dataset.ok = 'false';
-        msgEl.textContent = tr(T.promoMin, { code: promo, min: p.min });
-      } else {
-        msgEl.hidden = false;
-        msgEl.dataset.ok = 'true';
-        msgEl.textContent = tr(T.promoApplied, { code: promo, label: p.label });
-      }
-    }
+    const delivery = cart.length ? (sub >= DELIVERY_FREE ? 0 : DELIVERY_FEE) : 0;
+    const total = sub + delivery;
 
     if (subLabelEl) subLabelEl.textContent = tr(T.subtotal, { count: cart.reduce((s, c) => s + c.qty, 0) });
     if (subEl) subEl.textContent = money(sub);
-
-    if (discRowEl) {
-      discRowEl.hidden = disc <= 0;
-      if (disc > 0) {
-        if (discLabelEl) discLabelEl.textContent = tr(T.discount, { code: promo });
-        if (discEl) discEl.textContent = '− ' + money(disc);
-      }
-    }
 
     if (delivEl) delivEl.textContent = delivery ? money(delivery) : T.deliveryFree;
     if (totalEl) totalEl.textContent = money(total);
@@ -249,24 +204,6 @@ export default function init() {
     });
   }
 
-  function applyPromo() {
-    const code = (promoInput.value || '').trim().toUpperCase();
-    promo = code || null;
-    try {
-      localStorage.setItem('archi-promo', promo || '');
-    } catch (e) {
-      // localStorage blocked — skip silently
-    }
-    currentTotal = renderSum();
-  }
-
-  if (applyBtn && promoInput) {
-    applyBtn.addEventListener('click', applyPromo);
-    promoInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') applyPromo();
-    });
-  }
-
   // ---- Checkout flow ----
   // For all users: show a modal form collecting name/phone/address.
   // Auth users get their name/phone pre-filled from the server.
@@ -278,6 +215,10 @@ export default function init() {
 
   function showCheckoutForm() {
     removeModal();
+
+    const cityOptions = Object.keys(CITIES)
+      .map((value) => `<option value="${esc(value)}">${esc(CITIES[value])}</option>`)
+      .join('');
 
     const overlay = document.createElement('div');
     overlay.id = 'ctModal';
@@ -295,6 +236,14 @@ export default function init() {
             <label class="${CLS.label}">${esc(T.checkoutPhone)} *</label>
             <input class="${CLS.input}" id="coPhone" type="tel" value="${esc(authUser?.phone || '')}" autocomplete="tel">
             <div class="${CLS.fieldError}" id="coPhoneErr" hidden></div>
+          </div>
+          <div class="${CLS.field}">
+            <label class="${CLS.label}">${esc(T.checkoutCity)} *</label>
+            <select class="${CLS.select}" id="coCity" autocomplete="address-level2">
+              <option value="">${esc(T.checkoutCityPlaceholder || '')}</option>
+              ${cityOptions}
+            </select>
+            <div class="${CLS.fieldError}" id="coCityErr" hidden></div>
           </div>
           <div class="${CLS.field}">
             <label class="${CLS.label}">${esc(T.checkoutAddress)} *</label>
@@ -337,6 +286,7 @@ export default function init() {
   async function submitOrder() {
     const nameEl = document.getElementById('coName');
     const phoneEl = document.getElementById('coPhone');
+    const cityEl = document.getElementById('coCity');
     const addrEl = document.getElementById('coAddr');
     const notesEl = document.getElementById('coNotes');
     const submitBtn = document.getElementById('coSubmit');
@@ -356,16 +306,19 @@ export default function init() {
 
     hideFieldErr('coNameErr');
     hideFieldErr('coPhoneErr');
+    hideFieldErr('coCityErr');
     hideFieldErr('coAddrErr');
     if (globalErr) globalErr.hidden = true;
 
     const name = (nameEl?.value || '').trim();
     const phone = (phoneEl?.value || '').trim();
+    const city = (cityEl?.value || '').trim();
     const address = (addrEl?.value || '').trim();
     const notes = (notesEl?.value || '').trim();
 
     if (!name) { showFieldErr('coNameErr', T.checkoutNameReq); valid = false; }
     if (!phone) { showFieldErr('coPhoneErr', T.checkoutPhoneReq); valid = false; }
+    if (!city) { showFieldErr('coCityErr', T.checkoutCityReq); valid = false; }
     if (!address) { showFieldErr('coAddrErr', T.checkoutAddrReq); valid = false; }
 
     if (!valid) return;
@@ -384,19 +337,19 @@ export default function init() {
           'Accept': 'application/json',
           'X-CSRF-TOKEN': csrf(),
         },
+        // No price is sent: the server prices every line from the database.
+        // `name` stays only as a fallback for carts saved before product_id existed.
         body: JSON.stringify({
           items: cart.map((c) => ({
+            product_id: c.id ? +c.id : null,
             name: c.name,
-            price: +c.price || 0,
             qty: c.qty || 1,
-            brand: c.brand || '',
-            cat: c.cat || '',
           })),
           delivery_name: name,
           delivery_phone: phone,
+          delivery_city: city,
           delivery_address: address,
           notes: notes || null,
-          promo_code: promo || null,
         }),
       });
 
@@ -406,7 +359,6 @@ export default function init() {
         // Clear cart
         cart = [];
         save();
-        try { localStorage.removeItem('archi-promo'); } catch (e) { /* skip */ }
         removeModal();
         // Redirect to success page
         window.location.href = data.redirect;
@@ -442,6 +394,12 @@ export default function init() {
           const cta = emptyEl.querySelector('a');
           if (cta) cta.focus();
         }
+        return;
+      }
+      // Ordering requires an account. Prompt for sign-in and come back to the cart so
+      // the visitor can finish checking out instead of losing their place.
+      if (!authUser) {
+        openLoginModal({ redirectTo: window.location.href });
         return;
       }
       showCheckoutForm();

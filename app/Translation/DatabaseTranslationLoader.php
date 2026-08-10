@@ -28,9 +28,10 @@ class DatabaseTranslationLoader extends FileLoader
     {
         $fileLines = parent::load($locale, $group, $namespace);
 
-        // Only override the default namespace — leave vendor package namespaces alone.
+        // Only override the default namespace — leave vendor package namespaces alone,
+        // beyond filling the gaps in their translations (see below).
         if ($namespace !== null && $namespace !== '*') {
-            return $fileLines;
+            return $this->withVendorFallback($fileLines, $locale, $group, $namespace);
         }
 
         $dbLines = $this->loadDatabaseGroup($locale, $group);
@@ -40,6 +41,27 @@ class DatabaseTranslationLoader extends FileLoader
         }
 
         return array_replace_recursive($fileLines, $dbLines);
+    }
+
+    /**
+     * Vendor packages ship incomplete Azerbaijani translations (Filament, for one, is
+     * missing keys its newer versions added). APP_FALLBACK_LOCALE is `az`, so a key the
+     * az file lacks has nowhere to fall back to and renders as the raw key —
+     * "filament-tables::table.result_count" was visible under every admin table.
+     * Fill those gaps from the package's English file, which is always complete.
+     *
+     * @param  array<string, mixed>  $lines
+     * @return array<string, mixed>
+     */
+    protected function withVendorFallback(array $lines, string $locale, string $group, string $namespace): array
+    {
+        if ($locale === 'en') {
+            return $lines;
+        }
+
+        $english = parent::load('en', $group, $namespace);
+
+        return $english ? array_replace_recursive($english, $lines) : $lines;
     }
 
     /**

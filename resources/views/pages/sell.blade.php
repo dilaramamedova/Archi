@@ -32,6 +32,8 @@
           data-l-add-another="{{ t('sell.success.add_another') }}"
           data-l-sign-up="{{ t('sell.success.sign_up') }}"
           data-l-not-now="{{ t('sell.success.not_now') }}"
+          data-l-image-required="{{ t('business-product-edit.save.error_image') }}"
+          data-l-form-error="{{ t('sell.form.error') }}"
           data-l-cond-new="{{ t('sell.form.condition_new') }}"
           data-l-cond-used="{{ t('sell.form.condition_used') }}"
           data-l-server-error="{{ t('sell.form.server_error') }}">

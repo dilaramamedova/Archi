@@ -14,6 +14,13 @@ return [
     |
     */
 
+    /*
+     * ARCHI has no production mail provider wired up yet. The default stays "log",
+     * so password-reset and account-approval mails are written to
+     * storage/logs/laravel.log and the flows work out of the box in local dev.
+     * phpunit.xml forces the "array" mailer for tests. To send real mail, set
+     * MAIL_MAILER=smtp plus the MAIL_HOST/PORT/USERNAME/PASSWORD vars in .env.
+     */
     'default' => env('MAIL_MAILER', 'log'),
 
     /*

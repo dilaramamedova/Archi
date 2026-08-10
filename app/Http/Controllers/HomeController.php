@@ -22,20 +22,32 @@ class HomeController extends Controller
 
         $heroRole = Banner::position('hero_role')->active()->ordered()->get();
 
-        $categories = Category::roots()->active()->showOnHome()->ordered()->get();
+        // Real per-category count of products a visitor can actually open.
+        $withLiveCount = fn ($q) => $q->withCount([
+            'products' => fn ($p) => $p->visible()->approved(),
+        ]);
+
+        $categories = $withLiveCount(Category::roots()->active()->showOnHome()->ordered())->get();
+
+        // Nothing curated for the homepage yet (e.g. a fresh install where
+        // show_on_home was never set) — fall back to the real root categories
+        // rather than to hardcoded demo tiles.
+        if ($categories->isEmpty()) {
+            $categories = $withLiveCount(Category::roots()->active()->ordered())->take(7)->get();
+        }
 
         // Home grids show only the curated subset: flagged (sale/featured) AND
         // explicitly picked for the homepage (show_on_homepage).
         $saleProducts = Product::visible()->approved()->sale()
             ->where('show_on_homepage', true)
-            ->with(['images', 'category'])
+            ->with(['images', 'category', 'badges'])
             ->take(4)
             ->latest()
             ->get();
 
         $featuredProducts = Product::visible()->approved()->featured()
             ->where('show_on_homepage', true)
-            ->with(['images', 'category'])
+            ->with(['images', 'category', 'badges'])
             ->take(4)
             ->latest()
             ->get();

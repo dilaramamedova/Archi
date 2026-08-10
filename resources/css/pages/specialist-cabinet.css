@@ -74,14 +74,8 @@
   .sc-skill-add[hidden],
   .sc-skill-input[hidden] { @apply hidden; }
 
-  /* Below 1100px app.css turns .cab-body into a column but leaves .cab-main on
-     `flex-[1_0_0]`. In a column flex box that means a 0 height basis with no free space
-     to grow into, so the whole card column collapses to 0px and disappears — the same
-     defect is visible on all six business-profile-* pages. The shared rule is not ours to
-     change (ARCHITECTURE.md rule 2), so it is pulled back here and reported. */
-  @media (max-width: 1100px) {
-    .sc-page .cab-main { @apply w-full flex-none; }
-  }
+  /* The .cab-main collapse below 1100px is now fixed at source in app.css, so the
+     local override that used to live here is gone. */
 
   /* The three-up field row no longer fits once the sidebar is above the cards. */
   @media (max-width: 900px) {

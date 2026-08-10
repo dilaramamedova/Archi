@@ -236,15 +236,18 @@ class SpecialistCabinetTest extends TestCase
             ->assertSee('Təsdiqlənmiş şəkil');
     }
 
-    public function test_public_specialist_profile_shows_contact_phone_and_hides_disabled_sections(): void
+    public function test_public_specialist_profile_hides_the_phone_and_the_disabled_sections(): void
     {
         [, $profile] = $this->specialist();
         $profile->update(['phone' => '+994 50 123 45 67']);
 
+        // The number used to sit in data-phone for every anonymous visitor; it is now
+        // fetched from the auth-only endpoint (see SpecialistPhonePrivacyTest).
         $this->get("/specialist/{$profile->id}")
             ->assertOk()
             ->assertSee('Əlaqə saxla')
-            ->assertSee('data-phone="+994 50 123 45 67"', false)
+            ->assertDontSee('data-phone="', false)
+            ->assertDontSee('+994 50 123 45 67')
             ->assertDontSee('Müştəri rəyləri')
             ->assertDontSee('Mesaj göndər')
             ->assertDontSee('· ilk zəng')

@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\SpecialistProfile;
+use App\Services\SearchService;
 use Illuminate\Http\Request;
 
 class CatalogController extends Controller
@@ -35,6 +36,11 @@ class CatalogController extends Controller
 
         if ($request->filled('q')) {
             $query->search($request->q);
+
+            // Relevance first, but never override an explicit user sort.
+            if (! $request->filled('sort')) {
+                SearchService::orderProductsByRelevance($query, (string) $request->q);
+            }
         }
 
         // Sort — keys match the template sort menu data-sort values

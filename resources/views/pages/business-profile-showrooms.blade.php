@@ -28,7 +28,8 @@
           :data-showroom-id="$showroom->id"
           :data-name="$showroom->name"
           :data-address="$showroom->address"
-          :data-city="$showroom->city"
+          {{-- the modal's city <select> is keyed by slug, so hand the JS a slug --}}
+          :data-city="\App\Enums\City::resolve($showroom->city)?->value"
           :data-phone="$showroom->phone"
           :data-hours="$showroom->work_hours"
           :data-status="$showroom->status">
@@ -70,7 +71,9 @@
         </label>
         <label class="flex flex-col gap-1 text-sm font-medium">
           {{ t('business-profile-showrooms.modal.city') }}
-          <x-ui.input variant="b2b" name="city" id="showroomCity" />
+          <x-ui.select variant="b2b" name="city" id="showroomCity"
+                       :placeholder="t('register.form.select_placeholder')"
+                       :options="\App\Enums\City::options()" />
         </label>
         <label class="flex flex-col gap-1 text-sm font-medium">
           {{ t('business-profile-showrooms.modal.phone') }}

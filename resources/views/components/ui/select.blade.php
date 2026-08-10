@@ -19,6 +19,9 @@
 ])
 @php
     $resolvedOptions = $options instanceof \Illuminate\Support\Collection ? $options->all() : $options;
+    // t() falls back to the raw key (a string) when a translation array is missing;
+    // array_is_list() would then fatal, taking the whole page down with a 500.
+    $resolvedOptions = is_array($resolvedOptions) ? $resolvedOptions : [];
     $optionsAreList = array_is_list($resolvedOptions);
 @endphp
 <select {{ $attributes->merge(['class' => $variant === 'b2b' ? 'ui-control-b2b' : 'ui-control']) }}>

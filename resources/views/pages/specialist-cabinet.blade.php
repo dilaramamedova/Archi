@@ -82,8 +82,10 @@
       <x-cabinet.field :label="t('specialist-cabinet.main.city')" for="sc-city">
         <div class="sc-select">
           <x-ui.select variant="b2b" id="sc-city" name="city" class="sc-input sc-select-control"
-                       :options="t('specialist-cabinet.main.city_options')"
-                       :value="$profile->city ?? ''" />
+                       :placeholder="t('register.form.select_placeholder')"
+                       :options="\App\Enums\City::options()"
+                       {{-- options are keyed by slug, so the selected value must be a slug too --}}
+                       :value="\App\Enums\City::resolve($profile->city ?? '')?->value" />
           <img class="car" src="/assets/icon-chevron-down-small.svg" alt="">
         </div>
       </x-cabinet.field>

@@ -8,6 +8,7 @@ use App\Models\Category;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -177,12 +178,15 @@ class BusinessCabinetTest extends TestCase
     {
         $seller = User::factory()->seller()->create();
         $product = $this->product($seller, ['is_visible' => true, 'is_approved' => true]);
+        $image = $this->productImage($product);
 
         $this->actingAs($seller)->putJson('/business/products/'.$product->id, [
             'name' => 'Yenilənmiş ad',
             'category_id' => $product->category_id,
             'price' => 30,
             'stock' => 10,
+            // A published product must keep at least one image.
+            'kept_image_ids' => [$image->id],
         ])->assertOk();
 
         $product->refresh();
@@ -201,6 +205,7 @@ class BusinessCabinetTest extends TestCase
         ]);
 
         $this->assertSame('rejected', $product->moderation_status);
+        $image = $this->productImage($product);
 
         // Re-submitting clears the rejection
         $this->actingAs($seller)->putJson('/business/products/'.$product->id, [
@@ -209,6 +214,8 @@ class BusinessCabinetTest extends TestCase
             'price' => 20,
             'stock' => 3,
             'publish' => 1,
+            // Publishing requires at least one image.
+            'kept_image_ids' => [$image->id],
         ])->assertOk();
 
         $this->assertSame('pending', $product->fresh()->moderation_status);
@@ -411,6 +418,16 @@ class BusinessCabinetTest extends TestCase
             'is_visible' => true,
             'is_approved' => false,
         ], $overrides));
+    }
+
+    private function productImage(Product $product): ProductImage
+    {
+        return ProductImage::create([
+            'product_id' => $product->id,
+            'path' => 'products/fake.jpg',
+            'is_main' => true,
+            'sort_order' => 0,
+        ]);
     }
 
     private function orderWithProduct(User $buyer, User $seller): Order

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Cabinet;
 
+use App\Enums\City;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,16 +14,24 @@ class SpecialistProfileController extends Controller
 {
     public function update(Request $request): JsonResponse
     {
+        // A master already assigned to a specialty the admin later deactivated
+        // must still be able to save the rest of the form without being forced
+        // (or silently pushed) onto a different trade.
+        $currentSpecialtyId = $request->user()->specialistProfile?->specialist_specialty_id;
+
         $request->validate([
             'first_name' => ['required', 'string', 'max:100'],
             'last_name' => ['required', 'string', 'max:100'],
             'specialist_specialty_id' => [
                 'required',
                 'integer',
-                Rule::exists('specialist_specialties', 'id')->where('is_active', true),
+                Rule::exists('specialist_specialties', 'id')->where(
+                    fn ($query) => $query->where('is_active', true)
+                        ->orWhere('id', $currentSpecialtyId),
+                ),
             ],
             'experience_years' => ['nullable', 'integer', 'min:0', 'max:99'],
-            'city' => ['nullable', 'string', 'max:100'],
+            'city' => ['nullable', Rule::in(City::acceptedValues())],
             'phone' => ['nullable', 'string', 'max:30'],
             'whatsapp' => ['nullable', 'string', 'max:30'],
             'about' => ['nullable', 'string', 'max:400'],
@@ -37,9 +46,13 @@ class SpecialistProfileController extends Controller
                 'name' => trim($request->string('first_name').' '.$request->string('last_name')),
             ]);
 
-            $user->specialistProfile()->updateOrCreate([], $request->only([
-                'specialist_specialty_id', 'experience_years', 'city', 'phone', 'whatsapp', 'about', 'skills',
-            ]));
+            $user->specialistProfile()->updateOrCreate([], [
+                ...$request->only([
+                    'specialist_specialty_id', 'experience_years', 'phone', 'whatsapp', 'about', 'skills',
+                ]),
+                // Store the canonical Azerbaijani label whatever form was submitted.
+                'city' => City::canonical($request->input('city')),
+            ]);
         });
 
         return response()->json([

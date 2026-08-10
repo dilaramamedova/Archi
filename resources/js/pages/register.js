@@ -57,6 +57,12 @@ export default function init() {
         ok.textContent = res.data.message;
         ok.dataset.on = 'true';
       }
+      // Buyers are signed in straight away, so send them on instead of resetting the
+      // form under a message they have no reason to read.
+      if (res.data.redirect && role === 'buyer') {
+        window.location.href = res.data.redirect;
+        return;
+      }
       form.reset();
       pick('buyer');
       window.scrollTo({ top: 0, behavior: 'smooth' });

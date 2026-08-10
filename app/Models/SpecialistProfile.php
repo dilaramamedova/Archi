@@ -15,7 +15,10 @@ class SpecialistProfile extends Model
     {
         static::saving(function (SpecialistProfile $profile): void {
             if ($profile->specialist_specialty_id) {
-                $profile->craft = SpecialistSpecialty::query()->find($profile->specialist_specialty_id)?->name;
+                // craft stays a denormalized snapshot of the Azerbaijani name.
+                $profile->craft = SpecialistSpecialty::query()
+                    ->find($profile->specialist_specialty_id)
+                    ?->getTranslation('name', 'az', false) ?: $profile->craft;
             }
         });
     }
@@ -63,6 +66,15 @@ class SpecialistProfile extends Model
     public function reviews(): MorphMany
     {
         return $this->morphMany(Review::class, 'reviewable');
+    }
+
+    /**
+     * Display label for the trade. The specialty relation is the source of
+     * truth; translate_craft() only rescues legacy rows that never got one.
+     */
+    public function getCraftLabelAttribute(): ?string
+    {
+        return $this->specialty?->name ?: translate_craft($this->craft);
     }
 
     public function getAverageRatingAttribute(): float

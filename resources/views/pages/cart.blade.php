@@ -3,14 +3,16 @@
   state and the order summary) was built by an inline script. Everything whose shape
   does not depend on the localStorage cart is server-rendered here, so all strings go
   through t(); only the item rows stay in JS because their count is dynamic.
-  The promo table and the JS-side templates are handed to the module as data-* JSON.
+  The JS-side templates are handed to the module as data-* JSON.
 --}}
 @php
-    $promos = [
-        'ARCHI15' => ['type' => 'pct', 'val' => 0.15, 'label' => t('cart.promos.archi15')],
-        'YENI10' => ['type' => 'pct', 'val' => 0.10, 'label' => t('cart.promos.yeni10')],
-        'QIS20' => ['type' => 'pct', 'val' => 0.20, 'min' => 200, 'label' => t('cart.promos.qis20')],
-    ];
+    // Falls back to the register form labels until the cart-specific keys are seeded.
+    $tf = function (string $key, string $fallbackKey) {
+        $value = t($key);
+        return is_string($value) && $value !== $key ? $value : t($fallbackKey);
+    };
+
+    $cities = \App\Http\Controllers\OrderController::deliveryCities();
 
     // Raw templates (placeholders still in place) for the strings JS composes.
     // `locale` drives Intl number grouping in the module — without it JS would format
@@ -23,11 +25,7 @@
         'increase' => t('cart.items.increase'),
         'decrease' => t('cart.items.decrease'),
         'subtotal' => t('cart.summary.subtotal'),
-        'discount' => t('cart.summary.discount'),
         'deliveryFree' => t('cart.summary.delivery_free'),
-        'promoApplied' => t('cart.promo.applied'),
-        'promoMin' => t('cart.promo.min_required'),
-        'promoUnknown' => t('cart.promo.unknown'),
         'alertEmpty' => t('cart.alert.empty'),
         'alertDone' => t('cart.alert.done'),
         // Checkout form strings
@@ -35,6 +33,9 @@
         'checkoutName' => t('cart.checkout_form.name'),
         'checkoutPhone' => t('cart.checkout_form.phone'),
         'checkoutAddress' => t('cart.checkout_form.address'),
+        'checkoutCity' => $tf('cart.checkout_form.city', 'register.form.city_label'),
+        'checkoutCityPlaceholder' => $tf('cart.checkout_form.city_placeholder', 'register.form.select_placeholder'),
+        'checkoutCityReq' => $tf('cart.checkout_form.city_required', 'register.form.select_placeholder'),
         'checkoutNotes' => t('cart.checkout_form.notes'),
         'checkoutSubmit' => t('cart.checkout_form.submit'),
         'checkoutCancel' => t('cart.checkout_form.cancel'),
@@ -56,7 +57,7 @@
 <x-layout page="cart" :title="t('cart.title')">
 
 <section class="min-h-[60vh] bg-gray-soft2 pt-10 pb-20" id="ctPage"
-         data-promos="{{ json_encode($promos) }}"
+         data-cities="{{ json_encode($cities) }}"
          data-i18n="{{ json_encode($strings) }}"
          data-auth="{{ json_encode($authData) }}"
          data-order-url="{{ route('api.orders.store') }}">
@@ -87,22 +88,9 @@
       <aside class="sticky top-[156px] flex max-h-[calc(100vh-172px)] flex-col gap-4 overflow-y-auto rounded-ds border border-black/10 bg-white p-6 shadow-[0_4px_16px_rgba(0,0,0,0.05)] max-[900px]:static max-[900px]:max-h-none max-[900px]:overflow-visible" id="ctSum">
         <h3 class="text-lg font-bold text-ink">{{ t('cart.summary.title') }}</h3>
 
-        <div class="flex flex-col gap-2">
-          <label class="text-[13px] font-semibold text-ink">{{ t('cart.promo.label') }}</label>
-          <div class="flex gap-2">
-            <input class="flex-1 rounded-ds border border-black/15 px-3.5 py-[11px] text-sm uppercase outline-none [font-family:inherit] focus:border-ink" id="ctPromo" placeholder="ARCHI15" value="">
-            <x-ui.button variant="dark" :hover="false" id="ctApply" class="px-[18px] text-sm font-semibold [font-family:inherit]">{{ t('cart.promo.apply') }}</x-ui.button>
-          </div>
-          {{-- state colour comes from data-ok (ARCHITECTURE.md §7.1) --}}
-          <div class="text-[13px] font-medium data-[ok=true]:text-[#237a37] data-[ok=false]:text-[#c0392b]" id="ctMsg" hidden></div>
-          <div class="text-xs text-black/45">{{ t('cart.promo.try') }} <code class="rounded-[3px] bg-gray-soft px-1.5 py-px font-bold text-ink">ARCHI15</code> · <code class="rounded-[3px] bg-gray-soft px-1.5 py-px font-bold text-ink">YENI10</code> · <code class="rounded-[3px] bg-gray-soft px-1.5 py-px font-bold text-ink">QIS20</code></div>
-        </div>
-
         {{-- the figures stay empty until cart.js renders them, so no wrong totals are ever painted --}}
         <div class="flex flex-col gap-2.5 border-t border-black/8 pt-3.5">
           <div class="flex justify-between text-sm text-black/65"><span id="ctSubLabel"></span><b class="font-semibold text-ink" id="ctSub"></b></div>
-          {{-- flex + [hidden] needs the explicit override (ARCHITECTURE.md §6.5) --}}
-          <div class="flex justify-between text-sm text-black/65 [&[hidden]]:hidden" id="ctDiscRow" hidden><span id="ctDiscLabel"></span><b class="font-semibold text-[#237a37]" id="ctDisc"></b></div>
           <div class="flex justify-between text-sm text-black/65"><span>{{ t('cart.summary.delivery') }}</span><b class="font-semibold text-ink" id="ctDeliv"></b></div>
         </div>
 

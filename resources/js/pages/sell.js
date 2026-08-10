@@ -86,7 +86,13 @@ export default function init() {
     const price = parseFloat($('pPrice').value);
     const err = $('slErr');
 
-    if (!name || !cat || isNaN(price) || !(price >= 0)) {
+    const missingFields = !name || !cat || isNaN(price) || !(price >= 0);
+    // The listing is published straight away, so the server requires a photo; check it
+    // here too or the seller only ever sees a bare 422 — and say which one is missing.
+    if (missingFields || !selectedFile) {
+      err.textContent = missingFields
+        ? (d.lFormError || err.textContent)
+        : (d.lImageRequired || err.textContent);
       err.dataset.on = 'true'; // <x-ui.alert> visibility contract
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;

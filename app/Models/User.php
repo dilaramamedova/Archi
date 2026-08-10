@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Notifications\ResetPasswordNotification;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Builder;
@@ -85,6 +86,13 @@ class User extends Authenticatable implements FilamentUser
     public function reviews(): HasMany
     {
         return $this->hasMany(Review::class);
+    }
+
+    // --- Notifications ---
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordNotification($token));
     }
 
     // --- Helpers ---

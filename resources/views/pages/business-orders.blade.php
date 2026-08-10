@@ -32,10 +32,11 @@
       </div>
 
       {{-- customer strip --}}
-      <div class="flex items-center justify-between bg-gray-soft2 px-6 py-3.5">
+      {{-- gap-4 + wrap: without it the name and the phone ran together as one string. --}}
+      <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 bg-gray-soft2 px-6 py-3.5">
         <div class="flex items-center gap-3">
           <span class="flex size-[30px] items-center justify-center rounded-full border border-black/15 bg-white text-[11px] font-bold text-ink">{{ $initials }}</span>
-          <p class="text-sm font-semibold text-ink">{{ $customerName }}@if($order->delivery_city) · {{ $order->delivery_city }}@endif</p>
+          <p class="text-sm font-semibold text-ink">{{ $customerName }}@if (filled($order->delivery_city)) · {{ $order->delivery_city }}@endif</p>
         </div>
         @if ($order->delivery_phone)
           <a href="tel:{{ $order->delivery_phone }}" class="text-sm font-semibold text-ink hover:underline">{{ $order->delivery_phone }}</a>
