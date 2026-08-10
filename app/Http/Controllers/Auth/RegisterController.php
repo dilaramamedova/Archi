@@ -94,7 +94,7 @@ class RegisterController extends Controller
                 ], 201);
             }
 
-            return redirect()->route('home')->with('registered', true);
+            return redirect()->route('home')->with('success', t('register.buyer_message'));
         }
 
         if ($request->expectsJson()) {
@@ -105,6 +105,6 @@ class RegisterController extends Controller
             ], 201);
         }
 
-        return redirect()->route('login')->with('registered', true);
+        return redirect()->route('login')->with('success', t('register.pending_message'));
     }
 }

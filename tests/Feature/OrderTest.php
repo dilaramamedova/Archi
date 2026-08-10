@@ -264,6 +264,34 @@ class OrderTest extends TestCase
 
     // ─── Cart page ────────────────────────────────────────────
 
+    public function test_order_item_snapshot_preserves_product_and_seller_details(): void
+    {
+        $seller = User::factory()->seller()->create([
+            'name' => 'Test Seller',
+            'email' => 'snapshot-seller@example.com',
+            'phone' => '+994501234567',
+        ]);
+        $product = $this->product([
+            'user_id' => $seller->id,
+            'sku' => 'SNAP-001',
+            'unit' => 'm2',
+        ]);
+
+        $this->postJson('/api/orders', $this->payload([
+            ['product_id' => $product->id, 'qty' => 2],
+        ]))->assertOk();
+
+        $snapshot = Order::firstOrFail()->items()->firstOrFail()->product_snapshot;
+
+        $this->assertSame($product->id, $snapshot['id']);
+        $this->assertSame('SNAP-001', $snapshot['sku']);
+        $this->assertSame('m2', $snapshot['unit']);
+        $this->assertSame($seller->id, $snapshot['seller']['id']);
+        $this->assertSame('Test Seller', $snapshot['seller']['name']);
+        $this->assertSame('snapshot-seller@example.com', $snapshot['seller']['email']);
+        $this->assertSame('+994501234567', $snapshot['seller']['phone']);
+    }
+
     public function test_cart_page_no_longer_offers_promo_codes_and_exposes_the_city_list(): void
     {
         $response = $this->get('/cart')->assertOk();

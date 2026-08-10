@@ -19,7 +19,7 @@ export default function () {
         toggle.dataset.on = data.is_visible ? 'true' : 'false';
         toggle.setAttribute('aria-pressed', data.is_visible ? 'true' : 'false');
       } else {
-        window.ARCHI?.toast?.show({ type: 'error', title: data.message || document.body.dataset.errGeneric });
+        archiPopup.error(data.message || document.body.dataset.errGeneric);
       }
     });
   });

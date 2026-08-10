@@ -84,20 +84,14 @@ export default function init() {
     const name = $('pName').value.trim();
     const cat = $('pCat').value;
     const price = parseFloat($('pPrice').value);
-    const err = $('slErr');
 
     const missingFields = !name || !cat || isNaN(price) || !(price >= 0);
     // The listing is published straight away, so the server requires a photo; check it
     // here too or the seller only ever sees a bare 422 — and say which one is missing.
     if (missingFields || !selectedFile) {
-      err.textContent = missingFields
-        ? (d.lFormError || err.textContent)
-        : (d.lImageRequired || err.textContent);
-      err.dataset.on = 'true'; // <x-ui.alert> visibility contract
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      archiPopup.error(missingFields ? d.lFormError : d.lImageRequired);
       return;
     }
-    err.dataset.on = 'false';
 
     const old = parseFloat($('pOld').value);
     const desc = $('pDesc').value.trim();
@@ -149,10 +143,8 @@ export default function init() {
       if (res.status === 422) {
         // Validation error
         const data = await res.json();
-        const messages = data.errors ? Object.values(data.errors).flat() : [data.message || 'Validation error'];
-        err.textContent = messages.join('. ');
-        err.dataset.on = 'true';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        const messages = data.errors ? Object.values(data.errors).flat() : [data.message || document.body.dataset.errGeneric];
+        archiPopup.error(messages.join('. '));
         return;
       }
 
@@ -177,9 +169,7 @@ export default function init() {
 
       openModal();
     } catch (ex) {
-      err.textContent = d.lServerError || 'Xəta baş verdi. Yenidən cəhd edin.';
-      err.dataset.on = 'true';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      archiPopup.error(d.lServerError || document.body.dataset.errGeneric);
     } finally {
       submitBtn.disabled = false;
     }

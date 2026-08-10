@@ -14,9 +14,7 @@
       <h2 id="lmTitle">{{ t('login.head.title') }}</h2>
       <p class="sub">{{ t('login.head.subtitle') }}</p>
     </div>
-    <div class="lm-ok" id="lmOk" data-on="false">{{ t('login.success') }}</div>
-    <div class="lm-err" id="lmErr" data-on="false"></div>
-    <form class="lm-form" id="lmForm">
+    <form class="lm-form" id="lmForm" data-success="{{ t('login.success') }}">
       <div class="lm-field"><label for="lmIdentifier">{{ t('login.form.identifier_label') }}</label><input id="lmIdentifier" name="identifier" type="text" placeholder="{{ t('login.form.identifier_placeholder') }}" required></div>
       <div class="lm-field"><label for="lmPassword">{{ t('login.form.password_label') }}</label><input id="lmPassword" name="password" type="password" placeholder="{{ t('login.form.password_placeholder') }}" required></div>
       <div class="lm-row">

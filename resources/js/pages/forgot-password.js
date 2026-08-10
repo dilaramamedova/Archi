@@ -1,31 +1,35 @@
 import { authFetch, clearErrors, showErrors, setLoading } from '../shared/auth.js';
+import popup from '../shared/popup.js';
 
 export default function init() {
   const form = document.getElementById('forgotForm');
   if (!form) return;
 
-  const ok = document.getElementById('forgotOk');
   const btn = form.querySelector('[type=submit]');
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     clearErrors(form);
-    if (ok) ok.dataset.on = 'false';
     setLoading(btn, true);
 
-    const res = await authFetch(form.action, {
-      email: form.querySelector('[name=email]').value,
-    });
+    try {
+      const res = await authFetch(form.action, {
+        email: form.querySelector('[name=email]').value,
+      });
 
-    if (res.ok) {
-      if (ok) {
-        ok.textContent = res.data.message;
-        ok.dataset.on = 'true';
+      if (res.ok) {
+        form.reset();
+        popup.success(res.data.message || btn.dataset.labelSuccess);
+        return;
       }
-      form.reset();
-    } else {
-      showErrors(form, res.errors, 'forgotErr');
+
+      showErrors(form, res.errors);
+      const firstError = Object.values(res.errors)[0]?.[0];
+      popup.error(firstError || res.message || btn.dataset.labelError);
+    } catch {
+      popup.error(btn.dataset.labelError);
+    } finally {
+      setLoading(btn, false);
     }
-    setLoading(btn, false);
   });
 }

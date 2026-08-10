@@ -54,5 +54,10 @@ return [
         'description' => 'description',
         'legal_name' => 'legal name',
         'status' => 'status',
+        'delivery_name' => 'name',
+        'delivery_phone' => 'phone',
+        'delivery_city' => 'city',
+        'delivery_address' => 'address',
+        'notes' => 'notes',
     ],
 ];

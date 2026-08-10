@@ -5,6 +5,7 @@
 import './shared/navbar.js';
 import './shared/cursor.js';
 import './shared/login-modal.js';
+import './shared/popup.js'; // window.archiPopup + session-flash bridge (#archiFlash)
 import initCabinetDirty from './shared/cabinet-dirty.js';
 
 import home from './pages/home.js';

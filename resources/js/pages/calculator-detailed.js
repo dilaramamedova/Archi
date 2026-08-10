@@ -5,6 +5,8 @@
 // is written against them. Every string and all demo data come from Blade as data-*
 // JSON on #dcPage — nothing is hardcoded in this file.
 
+import popup from '../shared/popup.js';
+
 const CHK = '<svg><use href="#chk"/></svg>';
 const RESERVE_RATE = 0.1;
 const DELIVERY_COST = 2000;
@@ -394,7 +396,23 @@ export default function init() {
       <div class="dc-sec"><button id="dcPdf">${esc(a.pdf)}</button><button id="dcWa">${esc(a.whatsapp)}</button><button id="dcSave">${esc(a.save)}</button></div>
       <button class="dc-outline" id="dcTurnkey">${esc(a.turnkey)}</button>
     </div>`;
-      document.getElementById('dcAddAll').addEventListener('click', () => alert(T.alerts.added));
+      document.getElementById('dcAddAll').addEventListener('click', () => {
+        // "go to cart / continue" labels come from data-* on #dcPage (t() strings);
+        // fall back to the default single close button when they are missing
+        const gotoCart = page.dataset.gotoCart;
+        const cont = page.dataset.continue;
+        popup.success(
+          T.alerts.added,
+          gotoCart && cont
+            ? {
+                buttons: [
+                  { text: gotoCart, variant: 'primary', href: '/cart' },
+                  { text: cont, variant: 'outline' },
+                ],
+              }
+            : undefined
+        );
+      });
       document.getElementById('dcPdf').addEventListener('click', () => window.print());
       document.getElementById('dcSave').addEventListener('click', () => {
         try {
@@ -402,7 +420,7 @@ export default function init() {
         } catch (err) {
           // localStorage blocked — nothing is persisted
         }
-        alert(T.alerts.saved);
+        popup.success(T.alerts.saved);
       });
       document.getElementById('dcWa').addEventListener('click', () => {
         const est = computeEstimate();
@@ -412,7 +430,7 @@ export default function init() {
           '_blank'
         );
       });
-      document.getElementById('dcTurnkey').addEventListener('click', () => alert(T.alerts.turnkey));
+      document.getElementById('dcTurnkey').addEventListener('click', () => popup.info(T.alerts.turnkey));
       return;
     }
 

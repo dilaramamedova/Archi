@@ -54,5 +54,10 @@ return [
         'description' => 'Описание',
         'legal_name' => 'Юридическое название',
         'status' => 'Статус',
+        'delivery_name' => 'Имя',
+        'delivery_phone' => 'Телефон',
+        'delivery_city' => 'Город',
+        'delivery_address' => 'Адрес',
+        'notes' => 'Комментарий',
     ],
 ];

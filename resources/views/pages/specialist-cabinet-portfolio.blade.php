@@ -44,9 +44,6 @@
       <x-ui.button variant="primary" class="cab-btn-add" data-add>{{ t('specialist-cabinet-portfolio.list.add') }}</x-ui.button>
     </x-slot:action>
 
-    <x-ui.alert tone="error" id="portfolioErr" />
-    <x-ui.alert tone="ok" id="portfolioOk" />
-
     <div class="scp-grid" data-count="{{ $count }}" data-max="{{ $max }}">
       @foreach ($portfolioItems as $item)
         <div class="scp-tile" draggable="true" data-drag="false" data-over="false" data-id="{{ $item->id }}">

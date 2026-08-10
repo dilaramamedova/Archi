@@ -23,10 +23,6 @@
       <a href="{{ route('wishlist') }}" class="border-b-2 border-transparent px-4 pb-3 text-sm font-medium text-black/50 hover:text-ink">{{ t('account.nav.wishlist') }}</a>
     </div>
 
-    @if (session('success'))
-      <div class="mb-6 border border-green/20 bg-green/5 px-5 py-3 text-sm text-green-700">{{ session('success') }}</div>
-    @endif
-
     {{-- profile edit form --}}
     <form method="POST" action="{{ route('account.update') }}" class="border border-black/12 bg-white p-8 shadow-[-4px_4px_4px_rgba(0,0,0,0.05)]">
       @csrf
@@ -74,9 +70,6 @@
     {{-- security: change password (POST /cabinet/password, shared by all roles) --}}
     <form id="passwordForm" autocomplete="off" class="mt-8 border border-black/12 bg-white p-8 shadow-[-4px_4px_4px_rgba(0,0,0,0.05)]">
       <h2 class="mb-6 text-lg font-semibold text-ink">{{ t('account.security.title') }}</h2>
-
-      <x-ui.alert tone="error" id="pwdErr" class="mb-4" />
-      <x-ui.alert tone="ok" id="pwdOk" class="mb-4" />
 
       <div class="flex flex-col gap-5">
         <div class="flex flex-col gap-1.5">

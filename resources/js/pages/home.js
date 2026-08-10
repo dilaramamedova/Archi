@@ -3,6 +3,8 @@
 // The card grids are rendered server-side now, so only the listings a visitor posted
 // on /sell (localStorage) are still built here.
 
+import popup from '../shared/popup.js';
+
 const esc = (s) =>
   String(s == null ? '' : s).replace(
     /[&<>"']/g,
@@ -124,14 +126,12 @@ function initReveal() {
 
 function initLeadForm() {
   const form = document.getElementById('leadForm');
-  const feedback = document.getElementById('leadFeedback');
-  if (!form || !feedback) return;
+  if (!form) return;
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const submit = form.querySelector('[type="submit"]');
     submit.disabled = true;
-    feedback.classList.add('hidden');
 
     try {
       const response = await fetch(form.action, {
@@ -140,17 +140,16 @@ function initLeadForm() {
         body: new FormData(form),
       });
       const data = await response.json();
-      const errors = Object.values(data.errors || {}).flat().join(' ');
 
-      feedback.textContent = response.ok ? data.message : (errors || data.message);
-      feedback.className = response.ok
-        ? 'rounded border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-700'
-        : 'rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700';
-
-      if (response.ok) form.reset();
+      if (response.ok) {
+        popup.success(data.message);
+        form.reset();
+      } else {
+        const errors = Object.values(data.errors || {}).flat().join(' ');
+        popup.error(errors || data.message || form.dataset.lError || document.body.dataset.errGeneric);
+      }
     } catch (_error) {
-      feedback.textContent = form.dataset.lError || document.body.dataset.errGeneric;
-      feedback.className = 'rounded border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700';
+      popup.error(form.dataset.lError || document.body.dataset.errGeneric);
     } finally {
       submit.disabled = false;
     }

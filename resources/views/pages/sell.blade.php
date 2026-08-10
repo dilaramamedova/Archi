@@ -37,8 +37,6 @@
           data-l-cond-new="{{ t('sell.form.condition_new') }}"
           data-l-cond-used="{{ t('sell.form.condition_used') }}"
           data-l-server-error="{{ t('sell.form.server_error') }}">
-      <x-ui.alert tone="error" id="slErr" class="mb-[18px]">{{ t('sell.form.error') }}</x-ui.alert>
-
       <div class="grid grid-cols-[360px_1fr] gap-8 max-[860px]:grid-cols-1">
         {{-- image · the uploaded state is driven by the data-has attribute --}}
         <label class="group relative flex min-h-[360px] cursor-pointer items-center justify-center overflow-hidden border-2 border-dashed border-black/20 bg-gray-soft transition-[border-color,background] duration-200 hover:border-black hover:bg-[#eef1f4] max-[860px]:min-h-[240px]" id="upBox">

@@ -41,10 +41,14 @@ export default function init() {
           body: JSON.stringify(payload),
         });
         const data = await res.json().catch(() => ({}));
-        if (res.ok && data.success) setSaved(true);
-        else window.alert(data.message || 'Error');
+        if (res.ok && data.success) {
+          setSaved(true);
+          if (data.message) archiPopup.success(data.message);
+        } else {
+          archiPopup.error(data.message || document.body.dataset.errGeneric);
+        }
       } catch {
-        window.alert('Network error');
+        archiPopup.error(document.body.dataset.errNetwork);
       }
     });
   }
@@ -84,7 +88,7 @@ export default function init() {
       if (!file) return;
       const data = await upload('/business/profile/cover', 'cover', file);
       if (data.success && data.url && coverImg) coverImg.src = data.url;
-      else if (!data.success) window.alert(data.message || 'Error');
+      else if (!data.success) archiPopup.error(data.message || document.body.dataset.errGeneric);
       coverInput.value = '';
     });
   }
@@ -117,7 +121,7 @@ export default function init() {
       if (!file) return;
       const data = await upload('/business/profile/logo', 'logo', file);
       if (data.success && data.url) setLogo(data.url);
-      else if (!data.success) window.alert(data.message || 'Error');
+      else if (!data.success) archiPopup.error(data.message || document.body.dataset.errGeneric);
       logoInput.value = '';
     });
   }
@@ -126,7 +130,7 @@ export default function init() {
     logoDeleteBtn.addEventListener('click', async () => {
       const data = await destroy('/business/profile/logo');
       if (data.success) window.location.reload();
-      else window.alert(data.message || 'Error');
+      else archiPopup.error(data.message || document.body.dataset.errGeneric);
     });
   }
 }

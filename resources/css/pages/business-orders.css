@@ -1,0 +1,19 @@
+/* Seller order list. The cabinet skeleton remains shared; these rules keep the
+   order-specific rows fluid and prevent card content from being clipped. */
+@layer components {
+  .bo-page { @apply font-sans antialiased; }
+  .bo-page .cab-main { @apply overflow-visible; }
+  .bo-order-card { @apply overflow-hidden; }
+  .bo-order-head,
+  .bo-order-customer,
+  .bo-order-footer { @apply w-full; }
+  .bo-order-item { @apply w-full min-w-0; }
+
+  @media (max-width: 640px) {
+    .bo-order-head,
+    .bo-order-footer { @apply items-stretch; }
+    .bo-order-actions { @apply w-full flex-col; }
+    .bo-order-actions > * { @apply w-full justify-center; }
+    .bo-order-customer { @apply items-start; }
+  }
+}

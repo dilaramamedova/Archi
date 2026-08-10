@@ -37,6 +37,6 @@ class PasswordResetLinkController extends Controller
             return response()->json(['success' => true, 'message' => $message]);
         }
 
-        return back()->with('status', $message);
+        return back()->with('success', $message);
     }
 }

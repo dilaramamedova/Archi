@@ -104,6 +104,9 @@
 
 <section class="dc-page" id="dcPage"
          data-url-catalog="{{ route('catalog') }}"
+         {{-- popup buttons shown after "add all to cart" (shared/popup.js) --}}
+         data-goto-cart="{{ t('common.go_to_cart') }}"
+         data-continue="{{ t('common.continue') }}"
          data-i18n="{{ json_encode($tr) }}"
          data-defaults="{{ json_encode($defaults) }}">
   <div class="wrap-narrow dc-inner">

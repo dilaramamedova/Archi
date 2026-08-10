@@ -1,19 +1,16 @@
 import { authFetch, clearErrors, showErrors, setLoading } from '../shared/auth.js';
+import { success, error } from '../shared/popup.js';
 
 export default function init() {
   const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
 
   // --- Change password ---
   const pwdForm = document.getElementById('passwordForm');
-  const pwdErr = document.getElementById('pwdErr');
-  const pwdOk = document.getElementById('pwdOk');
   const pwdBtn = document.getElementById('pwdSubmit');
 
   if (pwdForm) {
     pwdForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      pwdErr.dataset.on = 'false';
-      pwdOk.dataset.on = 'false';
       clearErrors(pwdForm);
       setLoading(pwdBtn, true);
 
@@ -26,11 +23,11 @@ export default function init() {
       setLoading(pwdBtn, false);
 
       if (res.ok) {
-        pwdOk.textContent = res.data.message;
-        pwdOk.dataset.on = 'true';
+        success(res.data.message);
         pwdForm.reset();
       } else {
-        showErrors(pwdForm, res.errors, 'pwdErr');
+        // Per-field messages stay inline; showErrors pops the general part itself.
+        showErrors(pwdForm, res.errors, true);
       }
     });
   }
@@ -143,7 +140,6 @@ export default function init() {
   const deactivateConfirm = document.getElementById('deactivateConfirm');
   const deactivateConfirmBtn = document.getElementById('deactivateConfirmBtn');
   const deactivateCancelBtn = document.getElementById('deactivateCancelBtn');
-  const deactivateErr = document.getElementById('deactivateErr');
 
   if (deactivateBtn && deactivateConfirm) {
     deactivateBtn.addEventListener('click', () => {
@@ -154,11 +150,9 @@ export default function init() {
     deactivateCancelBtn?.addEventListener('click', () => {
       deactivateConfirm.classList.add('hidden');
       deactivateBtn.classList.remove('hidden');
-      deactivateErr.dataset.on = 'false';
     });
 
     deactivateConfirmBtn?.addEventListener('click', async () => {
-      deactivateErr.dataset.on = 'false';
       setLoading(deactivateConfirmBtn, true);
 
       const pwd = document.getElementById('deactivate-pwd')?.value;
@@ -167,11 +161,12 @@ export default function init() {
       setLoading(deactivateConfirmBtn, false);
 
       if (res.ok) {
-        window.location.href = res.data.redirect || '/';
+        const deactivatedText = document.querySelector('[data-deactivated-text]')?.textContent || '';
+        success(deactivatedText, { autoClose: 1800 }).then(() => {
+          window.location.href = res.data.redirect || '/';
+        });
       } else {
-        const msg = res.errors?.password?.[0] || res.message || 'Error';
-        deactivateErr.textContent = msg;
-        deactivateErr.dataset.on = 'true';
+        error(res.errors?.password?.[0] || res.message || document.body.dataset.errGeneric);
       }
     });
   }

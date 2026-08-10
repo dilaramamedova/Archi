@@ -276,7 +276,6 @@
             <x-ui.textarea name="message" :placeholder="t('home.lead.message_placeholder')" rows="3" maxlength="2000" />
           </x-ui.field>
           <x-ui.button variant="primary" type="submit" class="h-[50px] w-full rounded text-[15px] font-semibold">{{ t('home.lead.submit') }}</x-ui.button>
-          <p class="hidden rounded border px-4 py-3 text-sm" id="leadFeedback" role="status"></p>
           <p class="text-center text-xs text-black/40">{{ t('home.lead.privacy') }}</p>
         </form>
       </div>

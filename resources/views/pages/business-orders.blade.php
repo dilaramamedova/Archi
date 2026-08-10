@@ -1,7 +1,7 @@
 {{-- Business cabinet — orders list (Figma 1305:7017) --}}
 <x-layout page="business-orders" :title="t('business-orders.title')" bodyClass="bg-gray-soft2">
 
-<x-cabinet.shell ns="business-orders" active="orders" class="text-ink"
+<x-cabinet.shell ns="business-orders" active="orders" class="bo-page text-ink"
     :heading="t('business-orders.heading')" :show-view-button="false">
 
   {{-- Order cards --}}
@@ -18,9 +18,9 @@
       $initials = mb_strtoupper(mb_substr($customerName, 0, 1) . (str_contains(trim($customerName), ' ') ? mb_substr(explode(' ', trim($customerName))[1] ?? '', 0, 1) : ''));
       $sellerTotal = $order->items->sum('total');
     @endphp
-    <div class="cab-card overflow-hidden p-0">
+    <div class="cab-card bo-order-card p-0">
       {{-- head --}}
-      <div class="flex items-center justify-between px-6 py-[18px] max-[640px]:flex-col max-[640px]:items-start max-[640px]:gap-2">
+      <div class="bo-order-head flex items-center justify-between px-6 py-[18px] max-[640px]:flex-col max-[640px]:items-start max-[640px]:gap-2">
         <div class="flex flex-col gap-1">
           <p class="text-[15px] font-semibold text-black/90">{{ t('business-orders.card.order_no') }} {{ $order->order_number }}</p>
           <p class="text-[13px] text-black/40">{{ $order->created_at->format('d.m.Y, H:i') }} · {{ $order->items->count() }} {{ t('business-orders.card.products_count') }}</p>
@@ -33,7 +33,7 @@
 
       {{-- customer strip --}}
       {{-- gap-4 + wrap: without it the name and the phone ran together as one string. --}}
-      <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 bg-gray-soft2 px-6 py-3.5">
+      <div class="bo-order-customer flex flex-wrap items-center justify-between gap-x-4 gap-y-1 bg-gray-soft2 px-6 py-3.5">
         <div class="flex items-center gap-3">
           <span class="flex size-[30px] items-center justify-center rounded-full border border-black/15 bg-white text-[11px] font-bold text-ink">{{ $initials }}</span>
           <p class="text-sm font-semibold text-ink">{{ $customerName }}@if (filled($order->delivery_city)) · {{ $order->delivery_city }}@endif</p>
@@ -46,17 +46,17 @@
       {{-- items --}}
       <div class="flex flex-col gap-2.5 border-t border-black/10 px-6 py-4">
         @foreach ($order->items as $item)
-          <div class="flex items-center justify-between gap-4">
-            <p class="text-sm text-black/50">{{ $item->product_snapshot['name'] ?? $item->product?->name ?? '—' }} · {{ $item->quantity }} {{ t('business-orders.card.unit_short') }}</p>
+          <div class="bo-order-item flex items-center justify-between gap-4">
+            <p class="min-w-0 break-words text-sm text-black/50">{{ $item->product_snapshot['name'] ?? $item->product?->name ?? '—' }} · {{ $item->quantity }} {{ t('business-orders.card.unit_short') }}</p>
             <p class="shrink-0 text-sm font-semibold text-black/90">{{ number_format($item->total, 2) }} ₼</p>
           </div>
         @endforeach
       </div>
 
       {{-- footer --}}
-      <div class="flex items-center justify-between border-t border-black/10 px-6 py-4 max-[640px]:flex-col max-[640px]:items-start max-[640px]:gap-3">
+      <div class="bo-order-footer flex items-center justify-between border-t border-black/10 px-6 py-4 max-[640px]:flex-col max-[640px]:items-start max-[640px]:gap-3">
         <p class="text-[13px] text-black/40">{{ t('business-orders.card.note_' . $order->status) }}</p>
-        <div class="flex gap-2.5">
+        <div class="bo-order-actions flex gap-2.5">
           <x-ui.button variant="outline" :href="route('business.orders.show', $order)"
                        class="h-[39px] rounded px-[18px] text-sm font-semibold">{{ t('business-orders.card.details') }}</x-ui.button>
           @if ($order->status === 'pending')

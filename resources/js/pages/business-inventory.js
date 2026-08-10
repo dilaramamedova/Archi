@@ -48,7 +48,7 @@ export default function () {
       if (res.ok && data.success) {
         location.reload();
       } else {
-        window.ARCHI?.toast?.show({ type: 'error', title: data.message || document.body.dataset.errGeneric });
+        archiPopup.error(data.message || document.body.dataset.errGeneric);
         save.disabled = false;
       }
     } catch {

@@ -79,10 +79,13 @@ export default function init() {
   // Row edit / delete buttons
   document.querySelectorAll('[data-showroom-id]').forEach((row) => {
     row.querySelector('[data-edit]')?.addEventListener('click', () => openModal(row));
-    row.querySelector('[data-delete]')?.addEventListener('click', async () => {
+    const delBtn = row.querySelector('[data-delete]');
+    delBtn?.addEventListener('click', async () => {
       const id = row.dataset.showroomId;
-      const ask = window.ARCHI?.confirm || window.confirm;
-      const ok = await Promise.resolve(ask.call(window, row.dataset.name || ''));
+      const ok = await archiPopup.confirm(row.dataset.deleteConfirm || '', {
+        confirmText: delBtn.textContent.trim(),
+        danger: true,
+      });
       if (!ok) return;
       try {
         const res = await fetch(`/business/showrooms/${id}`, {
@@ -91,9 +94,9 @@ export default function init() {
         });
         const data = await res.json().catch(() => ({}));
         if (res.ok && data.success) window.location.reload();
-        else window.alert(data.message || 'Error');
+        else archiPopup.error(data.message || document.body.dataset.errGeneric);
       } catch {
-        window.alert('Network error');
+        archiPopup.error(document.body.dataset.errNetwork);
       }
     });
   });
@@ -123,9 +126,9 @@ export default function init() {
       });
       const data = await res.json().catch(() => ({}));
       if (res.ok && data.success) window.location.reload();
-      else window.alert(data.message || 'Error');
+      else archiPopup.error(data.message || document.body.dataset.errGeneric);
     } catch {
-      window.alert('Network error');
+      archiPopup.error(document.body.dataset.errNetwork);
     }
   });
 }

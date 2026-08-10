@@ -41,9 +41,6 @@
       <x-ui.button variant="primary" class="cab-btn-add" data-add>{{ t('specialist-cabinet-services.list.add') }}</x-ui.button>
     </x-slot:action>
 
-    <x-ui.alert tone="error" id="servicesErr" />
-    <x-ui.alert tone="ok" id="servicesOk" />
-
     <div class="scs-list">
       @foreach ($services as $service)
         <x-cabinet.row data-id="{{ $service->id }}">

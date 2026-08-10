@@ -1328,6 +1328,7 @@ class TranslationsSeeder extends Seeder
                 'email' => ['az' => 'E-poçt', 'ru' => 'E-mail', 'en' => 'E-mail'],
                 'error_generic' => ['az' => 'Xəta baş verdi', 'ru' => 'Произошла ошибка', 'en' => 'An error occurred'],
                 'error_network' => ['az' => 'Şəbəkə xətası.', 'ru' => 'Ошибка сети.', 'en' => 'Network error.'],
+                'go_to_cart' => ['az' => 'Səbətə keç', 'ru' => 'Перейти в корзину', 'en' => 'Go to cart'],
                 'go_to_product' => ['az' => 'Məhsula keç', 'ru' => 'К товару', 'en' => 'View product'],
                 'home' => ['az' => 'Ana səhifə', 'ru' => 'Главная', 'en' => 'Home'],
                 'more' => ['az' => 'Daha ətraflı', 'ru' => 'Подробнее', 'en' => 'Learn more'],

@@ -28,8 +28,13 @@
     $businessUser = auth()->user();
     $showroomCount = $businessUser?->sellerProfile?->showrooms()->count() ?? 0;
     $productCount = $businessUser?->products()->count() ?? 0;
+    $orderCount = $businessUser
+        ? \App\Models\Order::query()
+            ->whereHas('items.product', fn ($query) => $query->where('user_id', $businessUser->id))
+            ->count()
+        : 0;
     $items = $items ?: [
-        ['key' => 'orders',        'route' => 'business.orders'],
+        ['key' => 'orders',        'route' => 'business.orders', 'count' => 'orders_count', 'count_value' => $orderCount],
         ['key' => 'company',       'route' => 'business.profile.company'],
         ['key' => 'contact',       'route' => 'business.profile.contact'],
         ['key' => 'showrooms',     'route' => 'business.profile.showrooms', 'count' => 'showrooms_count', 'count_value' => $showroomCount],
@@ -37,6 +42,14 @@
         ['key' => 'inventory',     'route' => 'business.inventory'],
         ['key' => 'security',      'route' => 'business.profile.security'],
     ];
+    $items = collect($items)->map(function (array $item) use ($orderCount): array {
+        if ($item['key'] === 'orders') {
+            $item['count'] = 'orders_count';
+            $item['count_value'] = $orderCount;
+        }
+
+        return $item;
+    })->all();
 
     // Per-page namespaces own their labels; keys a page doesn't define (e.g. the
     // orders/inventory rows on the six legacy pages) fall back to business-cabinet.nav.*.

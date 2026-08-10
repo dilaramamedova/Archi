@@ -1,4 +1,5 @@
 import { authFetch, setLoading } from './auth.js';
+import popup from './popup.js';
 
 const overlay = document.getElementById('lmOverlay');
 
@@ -21,10 +22,7 @@ function close() {
   delete document.body.dataset.lmLock;
 }
 
-const onLoginPage = document.body.dataset.page === 'login';
-const openers = onLoginPage ? '[data-login]' : '.signin .txt:not([data-user]):not(.nav-logout), [data-login]';
-
-document.querySelectorAll(openers).forEach((el) =>
+document.querySelectorAll('[data-login]').forEach((el) =>
   el.addEventListener('click', (e) => {
     if (!overlay) return;
     e.preventDefault();
@@ -44,14 +42,10 @@ if (overlay) {
   });
 
   const form = document.getElementById('lmForm');
-  const ok = document.getElementById('lmOk');
-  const err = document.getElementById('lmErr');
   const btn = form?.querySelector('[type=submit]');
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (ok) ok.dataset.on = 'false';
-    if (err) err.dataset.on = 'false';
     if (btn) setLoading(btn, true);
 
     const data = {
@@ -63,15 +57,13 @@ if (overlay) {
     const res = await authFetch('/login', data);
 
     if (res.ok) {
-      if (ok) ok.dataset.on = 'true';
       const target = redirectOverride ?? res.data.redirect;
-      setTimeout(() => { window.location.href = target; }, 600);
+      // Redirect when the popup closes — autoClose and manual close both resolve.
+      popup.success(form.dataset.success, { autoClose: 1800 }).then(() => {
+        window.location.href = target;
+      });
     } else {
-      const msg = res.errors?.identifier?.[0] ?? res.message ?? 'Error';
-      if (err) {
-        err.textContent = msg;
-        err.dataset.on = 'true';
-      }
+      popup.error(res.errors?.identifier?.[0] ?? res.message ?? 'Error');
       if (btn) setLoading(btn, false);
     }
   });

@@ -4,6 +4,7 @@
 // Text templates and the delivery city list arrive from Blade on #ctPage as data-* JSON.
 
 import { open as openLoginModal } from '../shared/login-modal.js';
+import popup from '../shared/popup.js';
 
 const DELIVERY_FREE = 100;
 const DELIVERY_FEE = 10;
@@ -33,7 +34,6 @@ const CLS = {
   textarea: 'rounded-ds border border-black/15 px-3.5 py-[11px] text-sm outline-none [font-family:inherit] focus:border-ink resize-none',
   fieldError: 'text-xs text-[#c0392b]',
   modalBtns: 'mt-5 flex gap-3',
-  modalErr: 'mt-3 rounded-ds bg-[#fdecea] px-4 py-2.5 text-sm text-[#c0392b]',
 };
 
 // Thousands grouping follows the active locale (from Blade), not a hardcoded one.
@@ -86,6 +86,9 @@ export default function init() {
 
   const T = readJson(page.dataset.i18n, {});
   const CITIES = readJson(page.dataset.cities, {});
+  // product_id => image URL from the server cart — fills in rows whose localStorage
+  // entry predates the `img` field.
+  const IMAGES = readJson(page.dataset.images, {});
   const authUser = readJson(page.dataset.auth, null);
   const orderUrl = page.dataset.orderUrl || '/api/orders';
   const fmt = makeFmt(T.locale);
@@ -129,7 +132,7 @@ export default function init() {
       .map(
         (c, i) => `
     <div class="${CLS.row}" data-i="${i}">
-      <div class="${CLS.thumb}"></div>
+      <img class="${CLS.thumb}" src="${esc(c.img || (c.id && IMAGES[c.id]) || '/assets/product-marble-tile.png')}" alt="" loading="lazy">
       <div class="${CLS.info}"><b class="${CLS.name}">${esc(c.name)}</b><div class="${CLS.meta}">${esc(c.cat || '')}${c.brand ? ' · ' + esc(c.brand) : ''}</div><div class="${CLS.unit}">${esc(tr(T.unitPrice, { price: fmt(+c.price || 0) }))}</div></div>
       <div class="${CLS.qty}"><button type="button" class="${CLS.qtyBtn}" data-a="dec" aria-label="${esc(T.decrease)}">−</button><span class="${CLS.qtyNum}" data-qty>${c.qty}</span><button type="button" class="${CLS.qtyBtn}" data-a="inc" aria-label="${esc(T.increase)}">+</button></div>
       <div class="${CLS.line}" data-line>${esc(money((+c.price || 0) * (c.qty || 1)))}</div>
@@ -255,7 +258,6 @@ export default function init() {
             <textarea class="${CLS.textarea}" id="coNotes" rows="2"></textarea>
           </div>
         </div>
-        <div id="coGlobalErr" class="${CLS.modalErr}" hidden></div>
         <div class="${CLS.modalBtns}">
           <button type="button" id="coCancel" class="flex-1 rounded-ds border border-black/15 bg-white px-5 py-3 text-sm font-semibold text-ink [font-family:inherit] hover:bg-gray-soft cursor-pointer">${esc(T.checkoutCancel)}</button>
           <button type="button" id="coSubmit" class="flex-1 rounded-ds bg-[#c8a24e] px-5 py-3 text-sm font-semibold text-white [font-family:inherit] hover:brightness-[.93] cursor-pointer">${esc(T.checkoutSubmit)}</button>
@@ -290,7 +292,6 @@ export default function init() {
     const addrEl = document.getElementById('coAddr');
     const notesEl = document.getElementById('coNotes');
     const submitBtn = document.getElementById('coSubmit');
-    const globalErr = document.getElementById('coGlobalErr');
 
     // Validation
     let valid = true;
@@ -308,7 +309,6 @@ export default function init() {
     hideFieldErr('coPhoneErr');
     hideFieldErr('coCityErr');
     hideFieldErr('coAddrErr');
-    if (globalErr) globalErr.hidden = true;
 
     const name = (nameEl?.value || '').trim();
     const phone = (phoneEl?.value || '').trim();
@@ -363,21 +363,16 @@ export default function init() {
         // Redirect to success page
         window.location.href = data.redirect;
       } else {
-        // Show error
-        if (globalErr) {
-          globalErr.textContent = data.message || T.checkoutError;
-          globalErr.hidden = false;
-        }
+        // Global (non-field) error → popup. The checkout modal stays open under
+        // it (popup is z-[10000], the modal z-[9999]); per-field errors are inline.
+        popup.error(data.message || T.checkoutError);
         if (submitBtn) {
           submitBtn.disabled = false;
           submitBtn.textContent = T.checkoutSubmit;
         }
       }
     } catch (e) {
-      if (globalErr) {
-        globalErr.textContent = T.checkoutError;
-        globalErr.hidden = false;
-      }
+      popup.error(T.checkoutError);
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = T.checkoutSubmit;

@@ -9,10 +9,7 @@
         <p class="text-base leading-[1.5] text-black/55">{{ t('login.head.subtitle') }}</p>
       </div>
 
-      <x-ui.alert tone="ok" id="loginOk">{{ t('login.success') }}</x-ui.alert>
-      <x-ui.alert tone="error" id="loginErr"></x-ui.alert>
-
-      <form class="flex flex-col gap-[18px]" id="loginForm">
+      <form class="flex flex-col gap-[18px]" id="loginForm" data-success="{{ t('login.success') }}">
         <x-ui.field :label="t('login.form.identifier_label')" for="loginIdentifier">
           <x-ui.input id="loginIdentifier" name="identifier" type="text" :placeholder="t('login.form.identifier_placeholder')" required />
         </x-ui.field>

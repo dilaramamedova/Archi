@@ -9,7 +9,6 @@ export default function () {
   const slots = document.getElementById('imageSlots');
   const addSlot = document.getElementById('addImageSlot');
   const input = document.getElementById('imageInput');
-  const msg = document.getElementById('productFormMsg');
   const MAX_IMAGES = 5;
 
   // Newly picked File objects (existing images stay as data-existing-id divs).
@@ -68,9 +67,7 @@ export default function () {
     // Publishing needs at least one image (kept + newly picked) — inline error
     // instead of a bare 422 from the server. Drafts may be saved without one.
     if (publish === '1' && slotCount() === 0) {
-      const err = form.dataset.lImageRequired;
-      if (msg) msg.textContent = err;
-      window.ARCHI?.toast?.show({ type: 'error', title: err });
+      archiPopup.error(form.dataset.lImageRequired);
       addSlot?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
     }
@@ -100,12 +97,12 @@ export default function () {
       const data = await res.json().catch(() => ({}));
 
       if (res.ok && data.success) {
-        window.ARCHI?.toast?.show({ type: 'success', title: data.message });
-        if (data.redirect) setTimeout(() => (location.href = data.redirect), 600);
+        // The Promise resolves when the popup closes (autoClose or user action).
+        const shown = archiPopup.success(data.message, data.redirect ? { autoClose: 1800 } : {});
+        if (data.redirect) shown.then(() => (location.href = data.redirect));
       } else {
         const firstError = data.errors ? Object.values(data.errors)[0][0] : (data.message || document.body.dataset.errGeneric);
-        if (msg) msg.textContent = firstError;
-        window.ARCHI?.toast?.show({ type: 'error', title: firstError });
+        archiPopup.error(firstError);
         buttons.forEach((b) => (b.disabled = false));
       }
     } catch {

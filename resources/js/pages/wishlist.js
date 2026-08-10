@@ -2,6 +2,8 @@
  * Wishlist page JS — handles removing items via the toggle API.
  */
 
+import popup from '../shared/popup.js';
+
 function csrf() {
   return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 }
@@ -53,13 +55,15 @@ export default function wishlist() {
             }
           }, 300);
         } else {
-          // Revert on failure
+          // Revert on failure and tell the user why nothing was removed
           row.style.opacity = '';
           row.style.pointerEvents = '';
+          popup.error(document.body.dataset.errGeneric);
         }
       } catch {
         row.style.opacity = '';
         row.style.pointerEvents = '';
+        popup.error(document.body.dataset.errNetwork || document.body.dataset.errGeneric);
       }
     });
   });

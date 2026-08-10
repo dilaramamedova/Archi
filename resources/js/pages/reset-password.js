@@ -1,4 +1,5 @@
 import { authFetch, clearErrors, showErrors, setLoading } from '../shared/auth.js';
+import popup from '../shared/popup.js';
 
 const RULES = {
   ruleLen: (v) => v.length >= 8,
@@ -10,7 +11,6 @@ export default function init() {
   const form = document.getElementById('resetForm');
   if (!form) return;
 
-  const ok = document.getElementById('resetOk');
   const btn = form.querySelector('[type=submit]');
   const password = form.querySelector('[name=password]');
 
@@ -25,7 +25,6 @@ export default function init() {
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     clearErrors(form);
-    if (ok) ok.dataset.on = 'false';
     setLoading(btn, true);
 
     const res = await authFetch(form.action, {
@@ -36,13 +35,12 @@ export default function init() {
     });
 
     if (res.ok) {
-      if (ok) {
-        ok.textContent = res.data.message;
-        ok.dataset.on = 'true';
-      }
-      setTimeout(() => { window.location.href = res.data.redirect; }, 600);
+      // Redirect when the popup closes — autoClose and manual close both resolve.
+      popup.success(res.data.message, { autoClose: 1800 }).then(() => {
+        window.location.href = res.data.redirect;
+      });
     } else {
-      showErrors(form, res.errors, 'resetErr');
+      showErrors(form, res.errors, true);
       setLoading(btn, false);
     }
   });

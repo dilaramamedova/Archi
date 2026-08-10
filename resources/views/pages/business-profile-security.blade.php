@@ -1,3 +1,11 @@
+@php
+  // Translate, falling back to a literal while a key is still missing from the
+  // translations table (t() echoes the key back otherwise).
+  $tOr = function (string $key, string $fallback) {
+      $v = t($key);
+      return is_string($v) && $v !== $key ? $v : $fallback;
+  };
+@endphp
 <x-layout page="business-profile-security" :title="t('business-profile-security.title')" bodyClass="bg-gray-soft2">
 
 {{-- Business cabinet — security (Figma 1105:23405) --}}
@@ -8,8 +16,6 @@
       :title="t('business-profile-security.password.title')"
       :desc="t('business-profile-security.password.desc')">
     <form id="passwordForm" autocomplete="off">
-      <x-ui.alert tone="error" id="pwdErr" class="mb-4" />
-      <x-ui.alert tone="ok" id="pwdOk" class="mb-4" />
       <div class="cab-field-row">
         <x-cabinet.field :label="t('business-profile-security.password.current_label')" for="bpsec-current">
           <x-ui.input variant="b2b" type="password" id="bpsec-current" name="current_password" autocomplete="current-password" />
@@ -39,9 +45,10 @@
       <x-cabinet.field :label="t('specialist-cabinet-security.danger.password_label')" for="deactivate-pwd">
         <x-ui.input variant="b2b" type="password" id="deactivate-pwd" name="deactivate_password" autocomplete="current-password" />
       </x-cabinet.field>
-      <x-ui.alert tone="error" id="deactivateErr" class="mt-3" />
       <div class="mt-3 flex gap-3">
-        <x-ui.button variant="danger" id="deactivateConfirmBtn" class="h-[42px] px-[18px] text-[13px] font-semibold">{{ t('specialist-cabinet-security.danger.confirm_deactivate') }}</x-ui.button>
+        <x-ui.button variant="danger" id="deactivateConfirmBtn" class="h-[42px] px-[18px] text-[13px] font-semibold"
+          :data-l-confirm="$tOr('business-profile-security.danger.confirm_question', 'Hesab deaktiv edilsin? Bu əməliyyat geri qaytarıla bilməz.')"
+          data-l-deactivated="{{ t('security.deactivated') }}">{{ t('specialist-cabinet-security.danger.confirm_deactivate') }}</x-ui.button>
         <x-ui.button variant="outline" id="deactivateCancelBtn" class="h-[42px] px-[18px] text-[13px] font-semibold">{{ t('common.cancel') }}</x-ui.button>
       </div>
     </div>

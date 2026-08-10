@@ -47,9 +47,6 @@
       :title="t('specialist-cabinet-schedule.week.heading')"
       :desc="t('specialist-cabinet-schedule.week.desc')">
 
-    <x-ui.alert tone="error" id="scheduleErr" />
-    <x-ui.alert tone="ok" id="scheduleOk" />
-
     @foreach ($days as $day => [$open, $start, $end])
       @php $label = t($ns . '.days.' . $day); @endphp
       <x-cabinet.row class="sch-day" data-day="{{ $loop->iteration }}" data-on="{{ $open ? 'true' : 'false' }}">

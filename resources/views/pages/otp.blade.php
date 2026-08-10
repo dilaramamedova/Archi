@@ -9,8 +9,6 @@
         <p class="text-sm leading-[1.5] text-black/50">{{ t('auth.otp_subtitle') }}</p>
       </div>
 
-      <x-ui.alert tone="error" id="otpErr" style="display:none"></x-ui.alert>
-
       <form class="flex flex-col gap-6" id="otpForm">
         <div class="flex justify-center gap-3" id="otpInputs">
           @for ($i = 0; $i < 6; $i++)

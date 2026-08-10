@@ -52,9 +52,6 @@
 
   {{-- personal details --}}
   <x-cabinet.card gap="gap-[18px]" :title="t('specialist-cabinet.main.heading')">
-    <x-ui.alert tone="error" id="profileErr" class="mb-2" />
-    <x-ui.alert tone="ok" id="profileOk" class="mb-2" />
-
     <div class="cab-field-row">
       <x-cabinet.field :label="t('specialist-cabinet.main.first_name')" for="sc-first-name">
         <x-ui.input variant="b2b" id="sc-first-name" name="first_name" class="sc-input"

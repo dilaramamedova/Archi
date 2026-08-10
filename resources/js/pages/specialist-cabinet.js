@@ -3,6 +3,7 @@
 // so the active row is rendered server-side and needs no handler.
 // Every string comes from the markup: new chips are cloned from the <template> the Blade
 // page ships, so no label or class name is written here.
+import { success, error } from '../shared/popup.js';
 
 // The counter is "<used> / <max>"; only the number changes.
 function initCounter(root, onChange) {
@@ -172,21 +173,18 @@ export default function init() {
         });
 
         const data = await res.json();
-        const errBox = document.getElementById('profileErr');
-        const okBox = document.getElementById('profileOk');
 
         if (res.ok) {
-          if (okBox) { okBox.textContent = data.message; okBox.dataset.on = 'true'; }
-          if (errBox) errBox.dataset.on = 'false';
+          success(data.message);
           setSaved(true);
         } else {
-          const msgs = data.errors ? Object.values(data.errors).flat().join('. ') : data.message || 'Error';
-          if (errBox) { errBox.textContent = msgs; errBox.dataset.on = 'true'; }
-          if (okBox) okBox.dataset.on = 'false';
+          const msgs = data.errors
+            ? Object.values(data.errors).flat().join('. ')
+            : data.message || document.body.dataset.errGeneric;
+          error(msgs);
         }
       } catch {
-        const errBox = document.getElementById('profileErr');
-        if (errBox) { errBox.textContent = 'Network error'; errBox.dataset.on = 'true'; }
+        error(document.body.dataset.errNetwork);
       } finally {
         if (saveBtn) saveBtn.disabled = false;
       }

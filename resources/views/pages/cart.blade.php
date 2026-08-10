@@ -53,6 +53,12 @@
         'phone' => $user->phone ?? '',
         'email' => $user->email ?? '',
     ] : null;
+
+    // product_id => image URL for the server-side cart rows. Lets cart.js show images
+    // for localStorage items saved before the `img` field existed.
+    $itemImages = $items
+        ->mapWithKeys(fn ($item) => [$item->product_id => $item->product?->mainImageUrl])
+        ->filter();
 @endphp
 <x-layout page="cart" :title="t('cart.title')">
 
@@ -60,6 +66,7 @@
          data-cities="{{ json_encode($cities) }}"
          data-i18n="{{ json_encode($strings) }}"
          data-auth="{{ json_encode($authData) }}"
+         data-images="{{ json_encode($itemImages) }}"
          data-order-url="{{ route('api.orders.store') }}">
   <div class="wrap-narrow flex flex-col gap-6">
     {{-- geometry + type come from the caller; the shared .ui-crumbs owns tone and state.

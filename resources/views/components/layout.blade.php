@@ -62,20 +62,24 @@
 {{-- Shared login modal — opened by the navbar "sign in" link; /login is the no-JS fallback --}}
 <x-login-modal />
 
-{{-- Global toast notification --}}
-<x-ui.toast />
-
-{{-- Session flash → toast (e.g. the /sell seller-only guard) --}}
-@if (session('flash_error'))
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  window.ARCHI?.toast?.show({ type: 'error', title: @json(session('flash_error')), duration: 7000 });
-});
-</script>
+{{-- Session flash → popup (window.archiPopup, resources/js/shared/popup.js).
+     Any redirect()->with('success'|'error'|'warning'|'info', …) — plus the legacy
+     flash_error/flash_success keys and a validation-$errors summary — surfaces as
+     a centred popup on the next page load with zero per-page work. --}}
+@php
+    $archiFlash = array_filter([
+        'success' => session('success') ?? session('flash_success'),
+        'error'   => session('error') ?? session('flash_error'),
+        'warning' => session('warning'),
+        'info'    => session('info'),
+    ]);
+    if (! isset($archiFlash['error']) && isset($errors) && $errors->any()) {
+        $archiFlash['error'] = implode("\n", $errors->all());
+    }
+@endphp
+@if ($archiFlash)
+<script type="application/json" id="archiFlash">@json($archiFlash)</script>
 @endif
-
-{{-- Global confirm dialog --}}
-<x-ui.confirm-dialog />
 
 </body>
 </html>

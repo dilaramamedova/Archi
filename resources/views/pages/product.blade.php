@@ -164,9 +164,13 @@
                   data-label-add="{{ t('product.info.add_cart') }}"
                   data-label-added="{{ t('product.info.added') }}"
                   data-label-in-cart="{{ t('product.info.in_cart') }}"
+                  {{-- popup buttons shown after a successful add (shared/popup.js) --}}
+                  data-btn-goto-cart="{{ t('common.go_to_cart') }}"
+                  data-btn-continue="{{ t('common.continue') }}"
                   data-cart-unit="{{ $unitLabel ?: t('product.info.cart_unit') }}"
                   {{-- brand?->name, not the model itself (which stringifies to JSON) --}}
                   data-cart-brand="{{ $product->brand?->name ?? $product->category?->name ?? t('common.site_name') }}"
+                  data-cart-img="{{ $mainImg ?? '' }}"
                   data-cart-stock="{{ $inStock ? t('common.badge_in_stock') : t('common.badge_out_of_stock') }}"><img src="/assets/icon-cart.svg" alt="">{{ t('product.info.add_cart') }}</button>
           <button class="pd-wish" id="pdWish" data-liked="false" aria-label="{{ t('product.info.wish') }}"><img src="/assets/icon-heart-pointed.svg" alt=""></button>
         </div>

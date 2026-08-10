@@ -353,6 +353,7 @@ class BusinessCabinetTest extends TestCase
         $this->actingAs($seller)->get('/business/orders')
             ->assertOk()
             ->assertSee($mine->order_number)
+            ->assertSee('<p class="cnt">1</p>', false)
             ->assertDontSee($foreign->order_number);
 
         $this->actingAs($seller)->get('/business/orders/'.$foreign->id)->assertForbidden();

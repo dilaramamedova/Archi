@@ -18,7 +18,7 @@ async function changeStatus(orderId, next) {
   if (res.ok && data.success) {
     location.reload();
   } else {
-    window.ARCHI?.toast?.show({ type: 'error', title: data.message || document.body.dataset.errGeneric });
+    archiPopup.error(data.message || document.body.dataset.errGeneric);
   }
 }
 
@@ -27,11 +27,11 @@ export default function () {
     btn.addEventListener('click', async () => {
       const { orderId, next } = btn.dataset;
 
-      if (btn.dataset.confirm === 'true' && window.ARCHI?.confirm) {
-        const ok = await window.ARCHI.confirm({
-          title: btn.textContent.trim(),
-          body: document.querySelector('[data-cancel-confirm-body]')?.dataset.cancelConfirmBody || btn.textContent.trim() + '?',
-        });
+      if (btn.dataset.confirm === 'true') {
+        const ok = await archiPopup.confirm(
+          document.querySelector('[data-cancel-confirm-body]')?.dataset.cancelConfirmBody || btn.textContent.trim() + '?',
+          { title: btn.textContent.trim() }
+        );
         if (!ok) return;
       }
 

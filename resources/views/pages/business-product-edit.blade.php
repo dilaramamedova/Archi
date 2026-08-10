@@ -172,7 +172,7 @@
 
     {{-- Save bar (dark) --}}
     <div class="flex items-center justify-between gap-4 rounded bg-black/90 px-6 py-5 max-[900px]:flex-col max-[900px]:items-stretch">
-      <p class="text-[13px] font-medium text-white/85" id="productFormMsg">{{ t('business-product-edit.save.note') }}</p>
+      <p class="text-[13px] font-medium text-white/85">{{ t('business-product-edit.save.note') }}</p>
       <div class="flex gap-2.5 max-[640px]:flex-col">
         <button type="submit" data-publish="0" @disabled($atLimit)
                 class="h-[41px] rounded border border-white/60 px-5 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40">{{ t('business-product-edit.save.draft') }}</button>

@@ -1,4 +1,5 @@
 import { authFetch, clearErrors, showErrors, setLoading } from '../shared/auth.js';
+import popup from '../shared/popup.js';
 
 export default function init() {
   const roles = document.querySelectorAll('#roles [data-role]');
@@ -21,12 +22,10 @@ export default function init() {
   roles.forEach((r) => r.addEventListener('click', () => pick(r.dataset.role)));
 
   const btn = form.querySelector('[type=submit]');
-  const ok = document.getElementById('okMsg');
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     clearErrors(form);
-    if (ok) ok.dataset.on = 'false';
     setLoading(btn, true);
 
     const data = {
@@ -53,22 +52,20 @@ export default function init() {
     const res = await authFetch('/register', data);
 
     if (res.ok) {
-      if (ok) {
-        ok.textContent = res.data.message;
-        ok.dataset.on = 'true';
-      }
-      // Buyers are signed in straight away, so send them on instead of resetting the
-      // form under a message they have no reason to read.
+      // Buyers are signed in straight away — send them on when the popup closes
+      // (autoClose and manual close both resolve the promise).
       if (res.data.redirect && role === 'buyer') {
-        window.location.href = res.data.redirect;
+        popup.success(res.data.message, { autoClose: 1800 }).then(() => {
+          window.location.href = res.data.redirect;
+        });
         return;
       }
+      // Sellers/masters wait for approval — no redirect, just the pending message.
       form.reset();
       pick('buyer');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      popup.success(res.data.message);
     } else {
-      showErrors(form, res.errors, 'regErr');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      showErrors(form, res.errors, true);
     }
     setLoading(btn, false);
   });

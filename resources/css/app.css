@@ -31,6 +31,7 @@
 @import "./pages/business-profile-showrooms.css";
 @import "./pages/business-profile-notifications.css";
 @import "./pages/business-profile-security.css";
+@import "./pages/business-orders.css";
 
 @import "./pages/about.css";
 @import "./pages/blog-article.css";
@@ -77,7 +78,7 @@
 
   /* semantic status palette — these were hardcoded hexes on the six business-cabinet
      pages (#229653 appeared 23x, #e9f6ed 10x, #d33c32 10x). They drive
-     <x-ui.badge>, <x-ui.toggle>, <x-ui.alert> and the cabinet status chip. */
+     <x-ui.badge>, <x-ui.toggle> and the cabinet status chip. */
   --color-ok: #229653;            /* verified · published · switch ON */
   --color-ok-soft: #e9f6ed;       /* its 8% tint — status chip background */
   --color-warn: #c88200;
@@ -631,19 +632,6 @@
     @apply cursor-pointer border-b-2 border-yellow-line font-semibold text-ink;
   }
 
-  .lm-ok {
-    @apply hidden border border-green bg-[#eafce9] px-4 py-[13px] text-[15px] text-[#0a7a14];
-  }
-  .lm-ok[data-on="true"] {
-    @apply block;
-  }
-  .lm-err {
-    @apply hidden border border-red bg-[#fef2f2] px-4 py-[13px] text-[15px] text-[#b91c1c];
-  }
-  .lm-err[data-on="true"] {
-    @apply block;
-  }
-
   @media (max-width: 640px) {
     .lm-dialog {
       @apply px-[22px] py-7;
@@ -793,12 +781,6 @@
   .ui-control-b2b   { @apply w-full rounded-ds border border-black/14 bg-white px-4 py-[13px] font-sans text-sm leading-[normal] font-normal text-ink outline-none placeholder:text-black/40 focus:border-ink; }
   .ui-check         { @apply size-[18px] accent-yellow; }
   .ui-check-row     { @apply flex items-center gap-2 text-sm text-black/70; }
-
-  /* ---- message box (<x-ui.alert>) ---- */
-  .ui-alert                    { @apply hidden; }
-  .ui-alert[data-on="true"]    { @apply block; }
-  .ui-alert[data-tone="ok"]    { @apply border border-green bg-success-soft px-4 py-3.5 text-[15px] text-success; }
-  .ui-alert[data-tone="error"] { @apply border border-red bg-error-soft px-[15px] py-3 text-sm text-error; }
 
   /* ---- field-level validation error ---- */
   .field-error { @apply mt-1 text-[13px] text-error; }

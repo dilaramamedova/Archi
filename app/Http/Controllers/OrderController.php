@@ -19,10 +19,12 @@ use Illuminate\Validation\ValidationException;
 class OrderController extends Controller
 {
     private const DELIVERY_FREE_FROM = 100;
+
     private const DELIVERY_FEE = 10;
 
     /** Upper bound for a single order line — a sanity guard, stock is checked separately. */
     private const MAX_LINE_QTY = 999;
+
     private const MAX_LINES = 50;
 
     /** Orders accepted per minute, per user (or per IP for guests). */
@@ -36,7 +38,7 @@ class OrderController extends Controller
         $user = Auth::user();
 
         // routes/web.php has no throttle middleware on this endpoint, so the limiter lives here.
-        $limiterKey = 'orders:' . ($user?->id ?? $request->ip());
+        $limiterKey = 'orders:'.($user?->id ?? $request->ip());
         if (RateLimiter::tooManyAttempts($limiterKey, self::MAX_ORDERS_PER_MINUTE)) {
             return response()->json([
                 'success' => false,
@@ -48,10 +50,10 @@ class OrderController extends Controller
         $acceptedCities = self::acceptedCityValues();
 
         $rules = [
-            'items' => 'required|array|min:1|max:' . self::MAX_LINES,
+            'items' => 'required|array|min:1|max:'.self::MAX_LINES,
             'items.*.product_id' => 'nullable|integer|min:1',
             'items.*.name' => 'nullable|string|max:255',
-            'items.*.qty' => 'required|integer|min:1|max:' . self::MAX_LINE_QTY,
+            'items.*.qty' => 'required|integer|min:1|max:'.self::MAX_LINE_QTY,
             'delivery_city' => ['required', 'string', 'max:100'],
             'notes' => 'nullable|string|max:1000',
         ];
@@ -101,10 +103,19 @@ class OrderController extends Controller
                     'order_id' => $order->id,
                     'product_id' => $product->id,
                     'product_snapshot' => [
+                        'id' => $product->id,
                         'name' => (string) $product->name,
+                        'sku' => (string) ($product->sku ?? ''),
                         'brand' => (string) ($product->brand?->name ?? ''),
                         'cat' => (string) ($product->category?->name ?? ''),
+                        'unit' => (string) ($product->unit ?? 'ədəd'),
                         'price' => $line['unit_price'],
+                        'seller' => [
+                            'id' => $product->user?->id,
+                            'name' => (string) ($product->user?->name ?? ''),
+                            'email' => (string) ($product->user?->email ?? ''),
+                            'phone' => (string) ($product->user?->phone ?? ''),
+                        ],
                     ],
                     'quantity' => $line['qty'],
                     'unit_price' => $line['unit_price'],
@@ -264,7 +275,9 @@ class OrderController extends Controller
      */
     private function resolveProduct(array $item): ?Product
     {
-        $query = Product::query()->lockForUpdate();
+        $query = Product::query()
+            ->with(['brand', 'category', 'user'])
+            ->lockForUpdate();
 
         if (! empty($item['product_id'])) {
             return $query->find((int) $item['product_id']);

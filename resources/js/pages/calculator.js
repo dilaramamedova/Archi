@@ -2,6 +2,8 @@
 // three price tiers, which are rendered here because their count/order is data driven.
 // All texts come from Blade through #qcCalc[data-labels].
 
+import popup from '../shared/popup.js';
+
 const MIN_AREA = 1; // mirrors the min="1" of #qcArea
 
 const TIERS = [
@@ -93,7 +95,7 @@ export default function init() {
     try {
       localStorage.setItem('archi-quickcalc-saved', JSON.stringify({ ...state, ts: Date.now() }));
     } catch (e) {}
-    alert(labels.saved);
+    popup.success(labels.saved);
   });
 
   document.getElementById('qcWa').addEventListener('click', () => {

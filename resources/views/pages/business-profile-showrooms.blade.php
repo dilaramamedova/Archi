@@ -2,6 +2,16 @@
 <x-layout page="business-profile-showrooms" :title="t('business-profile-showrooms.title')" bodyClass="bg-gray-soft2">
 
 @php
+  // Translate, falling back to a literal while a key is still missing from the
+  // translations table (t() echoes the key back otherwise).
+  $tOr = function (string $key, string $fallback, array $replace = []) {
+      $v = t($key, $replace);
+      return is_string($v) && $v !== $key ? $v : strtr($fallback, array_combine(
+          array_map(fn ($k) => ':'.$k, array_keys($replace)),
+          array_map('strval', array_values($replace)),
+      ));
+  };
+
   $showroomCount = $showrooms->count();
   $businessNav = [
     ['key' => 'orders', 'route' => 'business.orders'],
@@ -32,7 +42,8 @@
           :data-city="\App\Enums\City::resolve($showroom->city)?->value"
           :data-phone="$showroom->phone"
           :data-hours="$showroom->work_hours"
-          :data-status="$showroom->status">
+          :data-status="$showroom->status"
+          :data-delete-confirm="$tOr('business-profile-showrooms.list.delete_confirm', '«:name» şourumu silinsin?', ['name' => $showroom->name])">
         <div class="bpsh-sh-icon">
           <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
             <path d="M10 2.5c-2.9 0-5.2 2.3-5.2 5.2 0 3.7 5.2 9.8 5.2 9.8s5.2-6.1 5.2-9.8c0-2.9-2.3-5.2-5.2-5.2Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>

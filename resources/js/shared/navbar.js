@@ -320,53 +320,27 @@ function initAccountDropdowns() {
   });
 }
 
-function initConfirmDialog() {
-  window.ARCHI = window.ARCHI || {};
-  window.ARCHI.confirm = function(opts) {
-    return new Promise((resolve) => {
-      const id = opts.id || 'confirmDialog';
-      let el = document.getElementById(id);
-      if (!el) return resolve(false);
-      if (opts.title) el.querySelector('.confirm-title').textContent = opts.title;
-      if (opts.body) el.querySelector('.confirm-body').textContent = opts.body;
-      el.style.display = 'flex';
-      const ok = el.querySelector('.confirm-ok');
-      const cancel = el.querySelector('.confirm-cancel');
-      function cleanup(result) {
-        el.style.display = 'none';
-        ok.removeEventListener('click', onOk);
-        cancel.removeEventListener('click', onCancel);
-        resolve(result);
-      }
-      function onOk() { cleanup(true); }
-      function onCancel() { cleanup(false); }
-      ok.addEventListener('click', onOk);
-      cancel.addEventListener('click', onCancel);
-    });
-  };
-}
-
-function initToast() {
-  const el = document.getElementById('globalToast');
-  if (!el) return;
-  let hideTimer = null;
-
+function initPopupCompat() {
+  // Backward-compat shims for the retired #globalToast / #confirmDialog infra:
+  // any straggler still calling ARCHI.toast / ARCHI.confirm lands on the global
+  // popup system (window.archiPopup, resources/js/shared/popup.js).
   window.ARCHI = window.ARCHI || {};
   window.ARCHI.toast = {
     show(opts) {
-      const { type = 'info', title = '', body = '', duration = 4000 } = opts;
-      const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
-      el.querySelector('.toast-icon').textContent = icons[type] || icons.info;
-      el.querySelector('.toast-title').textContent = title;
-      el.querySelector('.toast-body').textContent = body;
-      el.style.transform = 'translateX(0)';
-      if (hideTimer) clearTimeout(hideTimer);
-      if (duration) hideTimer = setTimeout(() => this.hide(), duration);
+      const { type = 'info', title = '', body = '' } = opts || {};
+      const kind = ['success', 'error', 'warning', 'info'].includes(type) ? type : 'info';
+      window.archiPopup?.[kind]?.([title, body].filter(Boolean).join('\n'));
     },
     hide() {
-      el.style.transform = 'translateX(120%)';
-      if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+      window.archiPopup?.close();
     }
+  };
+  window.ARCHI.confirm = function(opts) {
+    const isObj = opts !== null && typeof opts === 'object';
+    const message = isObj ? (opts.body || opts.title || '') : (opts || '');
+    if (!window.archiPopup) return Promise.resolve(window.confirm(message));
+    // only pass the title as a heading when it isn't already the message body
+    return window.archiPopup.confirm(message, isObj && opts.body && opts.title ? { title: opts.title } : {});
   };
 }
 
@@ -408,7 +382,6 @@ initSearch();
 initMenus();
 initMobileDrawer();
 initAccountDropdowns();
-initConfirmDialog();
-initToast();
+initPopupCompat();
 initFaqAccordion();
 initOtpInputs();

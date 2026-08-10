@@ -3,6 +3,8 @@
 // so only the interactive parts remain. State classes moved to data-* attributes
 // (ARCHITECTURE.md §7.1); the round card cursor comes from shared/cursor.js.
 
+import popup from '../shared/popup.js';
+
 // Gallery: picking a thumbnail cross-fades the main image.
 function initGallery() {
   const main = document.getElementById('pdMainImg');
@@ -90,6 +92,8 @@ function initAddToCart() {
         // Update quantity instead of silently ignoring
         existing.qty = (existing.qty || 1) + qty;
         if (id) existing.id = id;
+        // Backfill the image for rows saved before it was stored
+        if (!existing.img && d.cartImg) existing.img = d.cartImg;
         localStorage.setItem('archi-cart', JSON.stringify(cart));
         return false;
       }
@@ -98,6 +102,7 @@ function initAddToCart() {
         name: name.trim(),
         brand: d.cartBrand || '',
         cat: cat.trim(),
+        img: d.cartImg || '',
         calc: d.cartUnit || '',
         price,
         qty,
@@ -123,6 +128,16 @@ function initAddToCart() {
     );
     syncCartBadge();
 
+    // Global popup on top of the button ✓ micro-interaction. Texts come from the
+    // button's data-* attributes (t() strings from Blade).
+    popup.success(d.labelAdded || '', {
+      autoClose: 4000,
+      buttons: [
+        { text: d.btnGotoCart, variant: 'primary', href: '/cart' },
+        { text: d.btnContinue, variant: 'outline' },
+      ],
+    });
+
     // Persist to the server for logged-in users
     const productId = d.productId;
     const qty = document.getElementById('qtyVal');
@@ -143,8 +158,18 @@ function initAddToCart() {
         if (res.ok) {
           const data = await res.json();
           syncCartBadge(data.count);
+        } else if (!isGuest()) {
+          // Logged-in add rejected by the server — the account cart was NOT
+          // updated, so say so (replaces the success popup; one popup at a time).
+          // Guests always get 401 here and their localStorage cart did succeed.
+          const data = await res.json().catch(() => ({}));
+          popup.error(data.message || document.body.dataset.errGeneric);
         }
-      } catch { /* guest user or network error — localStorage fallback already ran */ }
+      } catch {
+        // network error — the localStorage fallback already ran; only warn
+        // logged-in users whose server cart is now out of sync
+        if (!isGuest()) popup.error(document.body.dataset.errGeneric);
+      }
     }
 
     resetTimer = setTimeout(() => {
@@ -404,6 +429,13 @@ function initFbtAddAll() {
     // Update badge with the latest count from the last successful response.
     const last = results.filter((r) => r.status === 'fulfilled' && r.value?.count != null).pop();
     if (last) syncCartBadge(last.value.count);
+
+    // Every request failed for a logged-in user → nothing was added; surface it.
+    // (Guests always 401 on /api/cart — keep their behaviour unchanged.)
+    if (!last && ids.length && !isGuest()) {
+      popup.error(document.body.dataset.errGeneric);
+      return;
+    }
 
     // Visual feedback.
     const origText = btn.textContent;

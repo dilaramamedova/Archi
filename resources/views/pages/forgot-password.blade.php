@@ -8,16 +8,15 @@
         <p class="text-base leading-[1.5] text-black/55">{{ t('login.forgot_subtitle') }}</p>
       </div>
 
-      <x-ui.alert tone="ok" id="forgotOk" style="display:none">{{ t('login.forgot_neutral') }}</x-ui.alert>
-      <x-ui.alert tone="error" id="forgotErr" style="display:none"></x-ui.alert>
-
       <form class="flex flex-col gap-[18px]" id="forgotForm" method="post" action="{{ route('password.email') }}">
         @csrf
         <x-ui.field :label="t('login.form.identifier_label')" for="forgotEmail">
           <x-ui.input id="forgotEmail" name="email" type="email" placeholder="email@example.com" required />
         </x-ui.field>
         <x-ui.button variant="primary" type="submit"
-                     class="h-[54px] rounded-none text-lg font-semibold duration-200 hover:brightness-[.93] disabled:cursor-default disabled:opacity-55 disabled:hover:brightness-100">{{ t('login.forgot_submit') }}</x-ui.button>
+                     data-label-success="{{ t('login.forgot_success') }}"
+                     data-label-error="{{ t('common.error_generic') }}"
+                     class="h-[54px] rounded-none px-4 text-lg font-semibold duration-200 hover:brightness-[.93] disabled:cursor-default disabled:opacity-55 disabled:hover:brightness-100">{{ t('login.forgot_submit') }}</x-ui.button>
         <p class="text-center text-[15px] text-black/60"><a class="border-b-2 border-yellow-line font-semibold text-ink" href="{{ route('login') }}">{{ t('login.back_to_login') }}</a></p>
       </form>
     </div>

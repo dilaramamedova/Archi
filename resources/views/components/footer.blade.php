@@ -104,12 +104,14 @@ document.addEventListener('DOMContentLoaded', function () {
             } else {
                 var msg = result.data.message || result.data.errors?.email?.[0] || form.dataset.errorFallback;
                 submitBtn.textContent = originalText;
-                alert(msg);
+                // window.archiPopup is set by the deferred vite module before any
+                // submit can happen; alert() only remains as a paranoid fallback.
+                if (window.archiPopup) window.archiPopup.error(msg); else alert(msg);
             }
         })
         .catch(function () {
             submitBtn.textContent = originalText;
-            alert(form.dataset.networkError);
+            if (window.archiPopup) window.archiPopup.error(form.dataset.networkError); else alert(form.dataset.networkError);
         })
         .finally(function () {
             submitBtn.disabled = false;

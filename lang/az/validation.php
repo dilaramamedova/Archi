@@ -54,5 +54,10 @@ return [
         'description' => 'Təsvir',
         'legal_name' => 'Hüquqi ad',
         'status' => 'Status',
+        'delivery_name' => 'Ad',
+        'delivery_phone' => 'Telefon',
+        'delivery_city' => 'Şəhər',
+        'delivery_address' => 'Ünvan',
+        'notes' => 'Qeyd',
     ],
 ];

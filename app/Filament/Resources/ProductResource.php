@@ -147,8 +147,10 @@ class ProductResource extends Resource
                         ->default(0),
 
                     Forms\Components\TextInput::make('min_order')
-                        ->label('Min. sifariş')
+                        ->label('Minimum sifariş miqdarı')
+                        ->helperText('Alıcı bir sifarişdə ən azı bu qədər məhsul seçməlidir. Adi satış üçün 1 yazın.')
                         ->numeric()
+                        ->minValue(1)
                         ->default(1),
                 ]),
 

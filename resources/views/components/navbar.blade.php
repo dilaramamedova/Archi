@@ -110,7 +110,7 @@
             </div>
           </div>
         @else
-          <a class="txt" href="{{ route('login') }}">{{ t('nav.sign_in') }}</a>
+          <a class="txt" data-login href="{{ route('login') }}">{{ t('nav.sign_in') }}</a>
         @endauth
         <a class="btn-post" href="{{ route('sell') }}"><img src="/assets/icon-plus.svg" alt=""><span>{{ t('nav.post_product') }}</span></a>
       </div>

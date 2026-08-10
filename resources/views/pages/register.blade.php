@@ -17,9 +17,6 @@
         <p class="text-base leading-[1.5] text-black/55">{{ t('register.head.subtitle') }}</p>
       </div>
 
-      <x-ui.alert tone="ok" id="okMsg">{{ t('register.pending_message') }}</x-ui.alert>
-      <x-ui.alert tone="error" id="regErr"></x-ui.alert>
-
       {{-- Role selection — the selected state is a data-sel attribute + Tailwind group-data variants. --}}
       <div>
         <div class="mb-3 text-base font-semibold text-black">{{ t('register.roles.label') }}</div>

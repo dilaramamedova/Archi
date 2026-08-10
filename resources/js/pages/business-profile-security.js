@@ -5,15 +5,11 @@ import { authFetch, clearErrors, showErrors, setLoading } from '../shared/auth.j
 export default function init() {
   // --- Change password ---
   const pwdForm = document.getElementById('passwordForm');
-  const pwdErr = document.getElementById('pwdErr');
-  const pwdOk = document.getElementById('pwdOk');
   const pwdBtn = document.getElementById('pwdSubmit');
 
   if (pwdForm) {
     pwdForm.addEventListener('submit', async (e) => {
       e.preventDefault();
-      if (pwdErr) pwdErr.dataset.on = 'false';
-      if (pwdOk) pwdOk.dataset.on = 'false';
       clearErrors(pwdForm);
       setLoading(pwdBtn, true);
 
@@ -26,13 +22,11 @@ export default function init() {
       setLoading(pwdBtn, false);
 
       if (res.ok) {
-        if (pwdOk) {
-          pwdOk.textContent = res.data.message;
-          pwdOk.dataset.on = 'true';
-        }
+        archiPopup.success(res.data.message);
         pwdForm.reset();
       } else {
-        showErrors(pwdForm, res.errors, 'pwdErr');
+        // per-field errors render inline; the general part is surfaced by showErrors
+        showErrors(pwdForm, res.errors, true);
       }
     });
   }
@@ -42,7 +36,6 @@ export default function init() {
   const deactivateConfirm = document.getElementById('deactivateConfirm');
   const deactivateConfirmBtn = document.getElementById('deactivateConfirmBtn');
   const deactivateCancelBtn = document.getElementById('deactivateCancelBtn');
-  const deactivateErr = document.getElementById('deactivateErr');
 
   deactivateBtn?.addEventListener('click', () => {
     deactivateConfirm?.classList.remove('hidden');
@@ -52,24 +45,29 @@ export default function init() {
   deactivateCancelBtn?.addEventListener('click', () => {
     deactivateConfirm?.classList.add('hidden');
     deactivateBtn?.classList.remove('hidden');
-    if (deactivateErr) deactivateErr.dataset.on = 'false';
   });
 
   deactivateConfirmBtn?.addEventListener('click', async () => {
-    if (deactivateErr) deactivateErr.dataset.on = 'false';
+    // The inline panel already asks for the password; guard the POST with one
+    // last explicit confirm, since deactivation logs the account out.
+    const sure = await archiPopup.confirm(deactivateConfirmBtn.dataset.lConfirm, {
+      confirmText: deactivateConfirmBtn.textContent.trim(),
+      danger: true,
+    });
+    if (!sure) return;
+
     setLoading(deactivateConfirmBtn, true);
     const password = document.getElementById('deactivate-pwd')?.value || '';
     const response = await authFetch('/cabinet/deactivate', { password });
     setLoading(deactivateConfirmBtn, false);
 
     if (response.ok) {
-      window.location.href = response.data.redirect || '/';
+      archiPopup
+        .success(deactivateConfirmBtn.dataset.lDeactivated, { autoClose: 1800 })
+        .then(() => (window.location.href = response.data.redirect || '/'));
       return;
     }
 
-    if (deactivateErr) {
-      deactivateErr.textContent = response.errors?.password?.[0] || response.message || 'Error';
-      deactivateErr.dataset.on = 'true';
-    }
+    archiPopup.error(response.errors?.password?.[0] || response.message || document.body.dataset.errGeneric);
   });
 }

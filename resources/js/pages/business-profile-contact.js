@@ -55,10 +55,14 @@ export default function init() {
           body: JSON.stringify(payload),
         });
         const data = await res.json().catch(() => ({}));
-        if (res.ok && data.success) setSaved(true);
-        else window.alert(data.message || 'Error');
+        if (res.ok && data.success) {
+          setSaved(true);
+          if (data.message) archiPopup.success(data.message);
+        } else {
+          archiPopup.error(data.message || document.body.dataset.errGeneric);
+        }
       } catch {
-        window.alert('Network error');
+        archiPopup.error(document.body.dataset.errNetwork);
       }
     });
   }

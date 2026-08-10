@@ -3,6 +3,8 @@
 // cover), add photos through either "add" affordance — plus the shared save-bar contract
 // (.cab-save-bar / .msg / [data-save] / [data-cancel]). No upload happens: new tiles are
 // object-URL previews before upload. Shared behaviour lives in resources/js/shared/.
+import { success, error } from '../shared/popup.js';
+
 export default function init() {
   const grid = document.querySelector('.scp-grid');
   if (!grid) return;
@@ -166,16 +168,12 @@ export default function init() {
         body: formData,
       });
       const data = await res.json();
-      const err = document.getElementById('portfolioErr');
-      const ok = document.getElementById('portfolioOk');
       if (res.ok) {
-        if (ok) { ok.textContent = data.message; ok.dataset.on = 'true'; }
-        if (err) err.dataset.on = 'false';
         setSaved(true);
-        window.setTimeout(() => window.location.reload(), 400);
-      } else if (err) {
-        err.textContent = data.message || Object.values(data.errors || {}).flat().join('. ');
-        err.dataset.on = 'true';
+        // The reload waits for the popup so the confirmation stays readable.
+        success(data.message, { autoClose: 1800 }).then(() => window.location.reload());
+      } else {
+        error(data.message || Object.values(data.errors || {}).flat().join('. '));
       }
     } finally {
       saveBtn.disabled = false;

@@ -2,6 +2,8 @@
 // (the CSS swaps the time fields for the "day off" note), the free-slot stepper counts
 // up and down, and the save bar confirms inline while Cancel discards by reloading.
 // Shared behaviour (navbar, cursor) lives in resources/js/shared/.
+import { success, error } from '../shared/popup.js';
+
 const SLOT_MIN = 0;
 const SLOT_MAX = 20;
 
@@ -97,15 +99,11 @@ export default function init() {
           }),
         });
         const data = await res.json();
-        const err = document.getElementById('scheduleErr');
-        const ok = document.getElementById('scheduleOk');
         if (res.ok) {
-          if (ok) { ok.textContent = data.message; ok.dataset.on = 'true'; }
-          if (err) err.dataset.on = 'false';
+          success(data.message);
           setSaved(true);
-        } else if (err) {
-          err.textContent = data.message || Object.values(data.errors || {}).flat().join('. ');
-          err.dataset.on = 'true';
+        } else {
+          error(data.message || Object.values(data.errors || {}).flat().join('. '));
         }
       } finally {
         saveBtn.disabled = false;

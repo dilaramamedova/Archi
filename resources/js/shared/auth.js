@@ -1,4 +1,5 @@
 // Shared auth utilities — CSRF-aware fetch, error rendering, field error display.
+import popup from './popup.js';
 
 function csrfToken() {
   return document.querySelector('meta[name="csrf-token"]')?.content ?? '';
@@ -24,20 +25,16 @@ export function clearErrors(form) {
   form.querySelectorAll('.ui-control-error, .ui-control-b2b-error').forEach(el => {
     el.classList.remove('ui-control-error', 'ui-control-b2b-error');
   });
-  const alert = form.closest('section')?.querySelector('[data-tone="error"]');
-  if (alert) alert.dataset.on = 'false';
 }
 
-export function showErrors(form, errors, generalAlertId) {
+// Pass a truthy `showGeneral` to surface the first error in the global popup
+// (replaces the old inline general-alert element); field errors stay inline.
+export function showErrors(form, errors, showGeneral) {
   clearErrors(form);
 
   const firstField = Object.keys(errors)[0];
-  if (generalAlertId && firstField) {
-    const alert = document.getElementById(generalAlertId);
-    if (alert) {
-      alert.textContent = errors[firstField][0];
-      alert.dataset.on = 'true';
-    }
+  if (showGeneral && firstField) {
+    popup.error(errors[firstField][0]);
   }
 
   for (const [field, messages] of Object.entries(errors)) {

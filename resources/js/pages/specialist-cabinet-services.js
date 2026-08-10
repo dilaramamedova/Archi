@@ -1,8 +1,9 @@
 // Page module for "specialist-cabinet-services" — the service & price list of the
 // specialist cabinet. Everything the Figma frame shows as interactive is wired: the
 // visibility switch, the price field, the unit select, the delete and add-service buttons and
-// the ⠿ reorder handle. Save confirms inline inside the dark bar (no blocking alert),
+// the ⠿ reorder handle. Save confirms in the dark bar plus a popup,
 // Cancel discards the local state by reloading — same behaviour as the business cabinet.
+import { success, error } from '../shared/popup.js';
 
 // The count appears twice: in the card title "… (4)" and in the sidebar counter. Both
 // are rendered server-side, so the template of the title is passed down from Blade.
@@ -188,16 +189,12 @@ export default function init() {
           body: JSON.stringify({ services }),
         });
         const data = await res.json();
-        const err = document.getElementById('servicesErr');
-        const ok = document.getElementById('servicesOk');
         if (res.ok) {
-          if (ok) { ok.textContent = data.message; ok.dataset.on = 'true'; }
-          if (err) err.dataset.on = 'false';
           setSaved(true);
-          window.setTimeout(() => window.location.reload(), 400);
-        } else if (err) {
-          err.textContent = data.message || Object.values(data.errors || {}).flat().join('. ');
-          err.dataset.on = 'true';
+          // The reload waits for the popup so the confirmation stays readable.
+          success(data.message, { autoClose: 1800 }).then(() => window.location.reload());
+        } else {
+          error(data.message || Object.values(data.errors || {}).flat().join('. '));
         }
       } finally {
         saveBtn.disabled = false;

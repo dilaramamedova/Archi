@@ -9,9 +9,6 @@
         <p class="text-sm leading-[1.5] text-black/50">{{ t('auth.reset_subtitle') }}</p>
       </div>
 
-      <x-ui.alert tone="ok" id="resetOk" style="display:none"></x-ui.alert>
-      <x-ui.alert tone="error" id="resetErr" style="display:none"></x-ui.alert>
-
       <form class="flex flex-col gap-[18px]" id="resetForm" method="post" action="{{ route('password.update') }}">
         @csrf
         <input type="hidden" name="token" value="{{ request('token') }}">
