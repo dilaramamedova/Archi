@@ -7,6 +7,8 @@
 <section class="bg-gray-soft2 min-h-[60vh] py-12">
   <div class="mx-auto max-w-[800px] px-7">
 
+    <x-cabinet.back class="mb-5" />
+
     {{-- header --}}
     <div class="mb-8 flex items-center gap-5">
       <div class="flex size-16 items-center justify-center rounded-full bg-yellow text-xl font-semibold text-ink">{{ $initials }}</div>

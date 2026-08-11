@@ -33,8 +33,12 @@
         ? $tOr($specLabelKeys[$key], Str::headline($key))
         : Str::headline($key);
 
+    // Same array shape the admin KeyValue field / seller form saves — only the
+    // display is filtered here. A value counts as empty when it is null, an empty
+    // or whitespace-only string, or an array with no non-empty entries.
     $specs = collect($product->specifications ?? [])
-        ->reject(fn ($v) => $v === null || $v === '' || $v === []);
+        ->map(fn ($v) => is_array($v) ? array_values(array_filter($v, fn ($x) => $x !== null && trim((string) $x) !== '')) : $v)
+        ->reject(fn ($v) => $v === null || $v === [] || (is_string($v) && trim($v) === ''));
 
     // Rating distribution from reviews
     $ratingCounts = $product->reviews->groupBy('rating')->map->count();
@@ -194,7 +198,11 @@
             $sellerProfile = $seller?->sellerProfile;
             $sellerSub = $sellerProfile?->brand_name ?: $sellerProfile?->legal_name;
 
-            $sellerProductIds = $seller?->products()->pluck('id') ?? collect();
+            // Only an active seller account gets a public store page (StoreController
+            // 404s everyone else) — the "Mağazaya keç" button follows the same rule.
+            $sellerHasStore = $seller && $seller->isSeller() && $seller->isActive();
+
+            $sellerProductIds = $seller?->products()->visible()->approved()->pluck('products.id') ?? collect();
             $sellerAvgRating = $sellerProductIds->isNotEmpty()
                 ? \App\Models\Review::whereIn('reviewable_id', $sellerProductIds)
                     ->where('reviewable_type', \App\Models\Product::class)
@@ -222,10 +230,12 @@
             @endif
             <div class="ps-stat"><b>{{ number_format($sellerProductCount) }}</b><span>{{ t('product.seller.products_label') }}</span></div>
           </div>
+          @if ($sellerHasStore)
           <div class="ps-actions">
-            <x-ui.button variant="primary" href="#"
+            <x-ui.button variant="primary" :href="route('store.show', $seller)"
                 class="h-[46px] flex-1 rounded-none text-sm font-semibold duration-200 hover:brightness-[.93]">{{ t('product.seller.visit') }}</x-ui.button>
           </div>
+          @endif
         </div>
         @endif
       </div>
@@ -236,9 +246,14 @@
       <div class="sec-tag"><span class="line"></span><p>{{ t('product.about.tag') }}</p></div>
       <div class="sec-title mb-6">{{ t('product.about.title') }}</div>
 
+      {{-- A product with no filled-in specifications gets no specs tab at all: the
+           tab bar collapses to the single description tab (initTabs handles one
+           button fine) and the specs pane is not rendered. --}}
       <div class="pd-tabs" id="pdTabs">
         <button data-on="true" data-pane="desc">{{ t('product.about.tab_desc') }}</button>
-        <button data-on="false" data-pane="specs">{{ t('product.about.tab_specs') }}</button>
+        @if ($specs->isNotEmpty())
+          <button data-on="false" data-pane="specs">{{ t('product.about.tab_specs') }}</button>
+        @endif
       </div>
 
       <div class="pd-pane" data-on="true" data-pane="desc">
@@ -251,16 +266,16 @@
         </div>
       </div>
 
+      @if ($specs->isNotEmpty())
       <div class="pd-pane" data-on="false" data-pane="specs">
         <div class="pd-specs">
           {{-- Only the specifications the seller filled in; no demo rows. --}}
-          @forelse ($specs as $key => $val)
+          @foreach ($specs as $key => $val)
             <div class="row"><div class="k">{{ $specLabel((string) $key) }}</div><div class="v">{{ is_array($val) ? implode(', ', $val) : $val }}</div></div>
-          @empty
-            <p class="text-sm text-black/45">{{ $tOr('product.specs.empty', 'Bu məhsul üçün texniki xüsusiyyət əlavə edilməyib.') }}</p>
-          @endforelse
+          @endforeach
         </div>
       </div>
+      @endif
     </div>
 
     {{-- ===================== FREQUENTLY BOUGHT TOGETHER ===================== --}}

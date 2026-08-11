@@ -7,6 +7,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Models\SubCategory;
 use App\Models\User;
 use App\Services\SearchService;
 use Illuminate\Http\JsonResponse;
@@ -14,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 class BusinessProductController extends Controller
@@ -72,7 +74,8 @@ class BusinessProductController extends Controller
         return view('pages.business-product-edit', [
             'product' => null,
             'categories' => Category::roots()->active()->ordered()->get(),
-            'brands' => Brand::orderBy('name')->get(),
+            'brands' => Brand::orderBy('name->az')->get(),
+            'subCategories' => SubCategory::active()->ordered()->get(),
             'quota' => $this->productQuota($request->user()),
         ]);
     }
@@ -85,7 +88,8 @@ class BusinessProductController extends Controller
         return view('pages.business-product-edit', [
             'product' => $product->load('images'),
             'categories' => Category::roots()->active()->ordered()->get(),
-            'brands' => Brand::orderBy('name')->get(),
+            'brands' => Brand::orderBy('name->az')->get(),
+            'subCategories' => SubCategory::active()->ordered()->get(),
             // Editing an existing product never consumes quota.
             'quota' => ['limit' => null, 'used' => 0, 'remaining' => null, 'reached' => false],
         ]);
@@ -303,10 +307,30 @@ class BusinessProductController extends Controller
 
     private function validateProduct(Request $request): array
     {
-        return $request->validate([
+        // Fully empty attribute rows (both fields blank) are UI leftovers, not input —
+        // drop them before validation so they can't fail the pair rule below.
+        $rows = array_values(array_filter(
+            (array) $request->input('attributes', []),
+            fn ($row) => is_array($row)
+                && (trim((string) ($row['key'] ?? '')) !== '' || trim((string) ($row['value'] ?? '')) !== ''),
+        ));
+        $request->merge(['attributes' => $rows]);
+
+        $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
             'category_id' => ['required', 'exists:categories,id'],
+            'sub_category_id' => [
+                'nullable',
+                // The subcategory must belong to the chosen category, otherwise a stale
+                // id from a previously selected category could slip through.
+                Rule::exists('sub_categories', 'id')
+                    ->where('category_id', (int) $request->input('category_id')),
+            ],
             'brand_id' => ['nullable', 'exists:brands,id'],
+            'new_brand' => ['nullable', 'string', 'max:100'],
+            'attributes' => ['nullable', 'array', 'max:30'],
+            'attributes.*.key' => ['nullable', 'string', 'max:60'],
+            'attributes.*.value' => ['nullable', 'string', 'max:255'],
             'sku' => ['nullable', 'string', 'max:64'],
             'barcode' => ['nullable', 'string', 'max:64'],
             'price' => ['required', 'numeric', 'min:0'],
@@ -326,15 +350,47 @@ class BusinessProductController extends Controller
             'kept_image_ids' => ['nullable', 'array'],
             'kept_image_ids.*' => ['integer'],
         ]);
+
+        // A half-filled row (name without value or vice versa) is always a mistake.
+        foreach ($validated['attributes'] ?? [] as $row) {
+            if (trim((string) ($row['key'] ?? '')) === '' || trim((string) ($row['value'] ?? '')) === '') {
+                throw ValidationException::withMessages([
+                    'attributes' => $this->msg(
+                        'business-product-edit.attributes.error_pair',
+                        'Xüsusiyyətin həm adı, həm dəyəri doldurulmalıdır',
+                    ),
+                ]);
+            }
+        }
+
+        return $validated;
     }
 
     private function productAttributes(array $validated): array
     {
         $locale = app()->getLocale();
 
+        // Custom key-value rows live in the same flat `specifications` array the
+        // Filament KeyValue field edits, so admin and the product page render both
+        // sources identically. Fixed-field keys win a collision (`+` keeps the left).
+        $custom = [];
+        foreach ($validated['attributes'] ?? [] as $row) {
+            $custom[trim((string) $row['key'])] = trim((string) $row['value']);
+        }
+
+        $fixed = array_filter([
+            'barcode' => $validated['barcode'] ?? null,
+            'shelf' => $validated['shelf'] ?? null,
+            'dimensions' => $validated['dimensions'] ?? null,
+            'material' => $validated['material'] ?? null,
+            'color' => $validated['color'] ?? null,
+            'country' => $validated['country'] ?? null,
+        ]);
+
         return [
             'category_id' => $validated['category_id'],
-            'brand_id' => $validated['brand_id'] ?? null,
+            'sub_category_id' => $validated['sub_category_id'] ?? null,
+            'brand_id' => $this->resolveBrandId($validated),
             'sku' => $validated['sku'] ?? null,
             'name' => [$locale => $validated['name']],
             'description' => [$locale => $validated['description'] ?? ''],
@@ -343,15 +399,45 @@ class BusinessProductController extends Controller
             'unit' => $validated['unit'] ?? 'piece',
             'stock' => $validated['stock'],
             'min_order' => $validated['min_order'] ?? 1,
-            'specifications' => array_filter([
-                'barcode' => $validated['barcode'] ?? null,
-                'shelf' => $validated['shelf'] ?? null,
-                'dimensions' => $validated['dimensions'] ?? null,
-                'material' => $validated['material'] ?? null,
-                'color' => $validated['color'] ?? null,
-                'country' => $validated['country'] ?? null,
-            ]),
+            'specifications' => $fixed + $custom,
         ];
+    }
+
+    /**
+     * Brand for the product: an existing id from the combobox, or the typed name
+     * of a brand that is not in the list yet. New names are matched against
+     * existing brands by slug first (so "KALE" and "Kale" don't create duplicates)
+     * and only then created — active, but NOT shown in catalog filters until an
+     * admin opts them in (show_in_filters stays false, as in Filament's default).
+     */
+    private function resolveBrandId(array $validated): ?int
+    {
+        if (! empty($validated['brand_id'])) {
+            return (int) $validated['brand_id'];
+        }
+
+        $name = trim((string) ($validated['new_brand'] ?? ''));
+        if ($name === '') {
+            return null;
+        }
+
+        $base = Str::slug($name) ?: 'brand-'.substr(md5(mb_strtolower($name)), 0, 8);
+
+        if ($existing = Brand::where('slug', $base)->first()) {
+            return $existing->id;
+        }
+
+        // Brand names are proper nouns — store the same value for every locale so
+        // the brand renders in az/ru/en (matches how translatable JSON is queried).
+        $brand = Brand::create([
+            'name' => ['az' => $name, 'ru' => $name, 'en' => $name],
+            'slug' => $base,
+            'sort_order' => 0,
+            'is_active' => true,
+            'show_in_filters' => false,
+        ]);
+
+        return $brand->id;
     }
 
     private function uniqueSlug(string $name): string

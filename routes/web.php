@@ -23,6 +23,7 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SellController;
 use App\Http\Controllers\SpecialistController;
+use App\Http\Controllers\StoreController;
 use App\Http\Controllers\WishlistController;
 use App\Models\BlogPost;
 use App\Models\Product;
@@ -47,6 +48,9 @@ Route::post('/consultation-requests', [ConsultationRequestController::class, 'st
     ->name('consultation-requests.store');
 Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');
+// Public store page of a seller (the "Mağazaya keç" target on product pages).
+// StoreController 404s any user that is not an active seller.
+Route::get('/store/{seller}', [StoreController::class, 'show'])->name('store.show');
 Route::get('/blog', [BlogController::class, 'index'])->name('blog');
 Route::get('/blog/article', function () {
     $post = BlogPost::published()->latest('published_at')->first();

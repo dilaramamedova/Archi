@@ -40,7 +40,13 @@ class MenuItemResource extends Resource
 
                 Forms\Components\Select::make('parent_id')
                     ->label('Ana element')
-                    ->relationship('parent', 'label')
+                    // an item must never be its own parent — a self-referencing row
+                    // disappears from the frontend (it is excluded from the roots query)
+                    ->relationship(
+                        'parent',
+                        'label',
+                        modifyQueryUsing: fn ($query, ?MenuItem $record) => $record ? $query->whereKeyNot($record->getKey()) : $query,
+                    )
                     ->searchable()
                     ->nullable()
                     ->preload(),
@@ -96,6 +102,7 @@ class MenuItemResource extends Resource
                         'header_main' => 'Header əsas',
                         'header_mega_catalog' => 'Mega Kataloq',
                         'header_mega_specialists' => 'Mega Mütəxəssislər',
+                        'header_mega_blog' => 'Mega Bloq',
                         'footer' => 'Footer',
                         'footer_legal' => 'Footer hüquqi',
                     ]),

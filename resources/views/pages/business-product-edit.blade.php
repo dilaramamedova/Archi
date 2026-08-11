@@ -16,6 +16,26 @@
 
   $quota ??= ['limit' => null, 'used' => 0, 'remaining' => null, 'reached' => false];
   $atLimit = ! $isEdit && $quota['reached'];
+
+  // Combobox option payload (id + display name in the current locale).
+  $subCategories ??= collect();
+  $comboData = [
+      'brands' => $brands->map(fn ($b) => ['id' => $b->id, 'name' => (string) $b->name])->values(),
+      'categories' => $categories->map(fn ($c) => ['id' => $c->id, 'name' => (string) $c->name])->values(),
+      'subcategories' => $subCategories->map(fn ($s) => [
+          'id' => $s->id, 'category_id' => $s->category_id, 'name' => (string) $s->name,
+      ])->values(),
+  ];
+
+  // Free-form specification rows = everything in the JSON column except the keys
+  // owned by the fixed inputs below (barcode/shelf/dimensions/material/color/country).
+  $reservedSpecKeys = ['barcode', 'shelf', 'dimensions', 'material', 'color', 'country'];
+  $customSpecs = collect($spec)->except($reservedSpecKeys)
+      ->map(fn ($v) => is_array($v) ? implode(', ', $v) : (string) $v);
+
+  // The classes the page's native selects already use — the combobox inputs reuse them.
+  $comboInputCls = 'h-[43px] w-full rounded border border-black/15 bg-white px-3.5 pr-8 text-sm text-ink outline-none transition focus:border-black/40';
+  $comboListCls = 'absolute top-[calc(100%+4px)] left-0 z-30 hidden max-h-56 w-full overflow-auto rounded border border-black/15 bg-white py-1 shadow-lg';
 @endphp
 <x-layout page="business-product-edit" :title="t('business-product-edit.title')" bodyClass="bg-gray-soft2">
 
@@ -73,31 +93,60 @@
       </div>
     </x-cabinet.card>
 
-    {{-- Basic info --}}
-    <x-cabinet.card gap="gap-4" :title="t('business-product-edit.basic.title')">
+    {{-- Basic info. The card/row/field wrappers ship overflow-hidden from the cabinet
+         shell; the combobox dropdowns are absolutely positioned, so these three
+         wrappers get overflow-visible! or the lists would be clipped. --}}
+    <x-cabinet.card gap="gap-4" :title="t('business-product-edit.basic.title')" class="overflow-visible!">
       <x-cabinet.field full :label="t('business-product-edit.basic.name') . ' *'" for="pName">
         <x-ui.input variant="b2b" id="pName" name="name" :value="$isEdit ? $product->name : ''" :placeholder="t('business-product-edit.basic.name_placeholder')" required />
       </x-cabinet.field>
 
-      <div class="cab-field-row">
-        <x-cabinet.field :label="t('business-product-edit.basic.category') . ' *'" for="pCategory">
-          <select id="pCategory" name="category_id" required
-                  class="h-[43px] w-full rounded border border-black/15 bg-white px-3.5 text-sm text-ink outline-none transition focus:border-black/40">
-            <option value="">{{ t('business-product-edit.basic.select') }}</option>
-            @foreach ($categories as $cat)
-              <option value="{{ $cat->id }}" @selected($isEdit && $product->category_id === $cat->id)>{{ $cat->name }}</option>
-            @endforeach
-          </select>
+      <div class="cab-field-row overflow-visible!">
+        <x-cabinet.field class="overflow-visible!" :label="t('business-product-edit.basic.category') . ' *'" for="pCategory">
+          <div class="relative w-full" data-combo="category"
+               data-l-empty="{{ $tOr('business-product-edit.combo.empty', 'Nəticə tapılmadı') }}">
+            <input type="text" id="pCategory" data-combo-input autocomplete="off" role="combobox" aria-expanded="false"
+                   value="{{ $isEdit ? $product->category?->name : '' }}"
+                   placeholder="{{ t('business-product-edit.basic.select') }}"
+                   class="{{ $comboInputCls }}">
+            <input type="hidden" name="category_id" data-combo-id value="{{ $isEdit ? $product->category_id : '' }}">
+            <span class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-black/40">▾</span>
+            <ul data-combo-list class="{{ $comboListCls }}"></ul>
+          </div>
         </x-cabinet.field>
-        <x-cabinet.field :label="t('business-product-edit.basic.brand')" for="pBrand">
-          <select id="pBrand" name="brand_id"
-                  class="h-[43px] w-full rounded border border-black/15 bg-white px-3.5 text-sm text-ink outline-none transition focus:border-black/40">
-            <option value="">{{ t('business-product-edit.basic.select') }}</option>
-            @foreach ($brands as $brand)
-              <option value="{{ $brand->id }}" @selected($isEdit && $product->brand_id === $brand->id)>{{ $brand->name }}</option>
-            @endforeach
-          </select>
+        <x-cabinet.field class="overflow-visible!" :label="t('business-product-edit.basic.brand')" for="pBrand">
+          <div class="relative w-full" data-combo="brand"
+               data-l-empty="{{ $tOr('business-product-edit.combo.empty', 'Nəticə tapılmadı') }}"
+               data-l-add="{{ $tOr('business-product-edit.combo.add_brand', '«:name» — yeni brend əlavə et') }}">
+            <input type="text" id="pBrand" data-combo-input autocomplete="off" role="combobox" aria-expanded="false"
+                   value="{{ $isEdit ? $product->brand?->name : '' }}"
+                   placeholder="{{ t('business-product-edit.basic.select') }}"
+                   class="{{ $comboInputCls }}">
+            <input type="hidden" name="brand_id" data-combo-id value="{{ $isEdit ? $product->brand_id : '' }}">
+            <input type="hidden" name="new_brand" data-combo-new value="">
+            <span class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-black/40">▾</span>
+            <ul data-combo-list class="{{ $comboListCls }}"></ul>
+          </div>
         </x-cabinet.field>
+      </div>
+
+      {{-- Subcategory — only children of the selected category; the row is shown by
+           JS as soon as the chosen category actually has active subcategories. --}}
+      @php $showSubRow = $isEdit && ($product->sub_category_id || $comboData['subcategories']->where('category_id', $product->category_id)->isNotEmpty()); @endphp
+      <div class="cab-field-row overflow-visible!" id="subCatRow" @unless ($showSubRow) style="display:none" @endunless>
+        <x-cabinet.field class="overflow-visible!" :label="$tOr('business-product-edit.basic.subcategory', 'Alt kateqoriya')" for="pSubCategory">
+          <div class="relative w-full" data-combo="subcategory"
+               data-l-empty="{{ $tOr('business-product-edit.combo.empty', 'Nəticə tapılmadı') }}">
+            <input type="text" id="pSubCategory" data-combo-input autocomplete="off" role="combobox" aria-expanded="false"
+                   value="{{ $isEdit ? $product->subCategory?->name : '' }}"
+                   placeholder="{{ t('business-product-edit.basic.select') }}"
+                   class="{{ $comboInputCls }}">
+            <input type="hidden" name="sub_category_id" data-combo-id value="{{ $isEdit ? $product->sub_category_id : '' }}">
+            <span class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-black/40">▾</span>
+            <ul data-combo-list class="{{ $comboListCls }}"></ul>
+          </div>
+        </x-cabinet.field>
+        <div class="cab-field max-[900px]:hidden" aria-hidden="true"></div>
       </div>
 
       <div class="cab-field-row">
@@ -168,7 +217,37 @@
           <x-ui.input variant="b2b" id="pCountry" name="country" :value="$spec['country'] ?? ''" :placeholder="t('business-product-edit.description.country_placeholder')" />
         </x-cabinet.field>
       </div>
+
+      {{-- Free-form key-value specifications. Saved into the same `specifications`
+           JSON the admin KeyValue field edits, so both surfaces stay in sync. --}}
+      <div class="flex w-full flex-col items-start gap-2">
+        <p class="ui-label-b2b">{{ $tOr('business-product-edit.attributes.title', 'Əlavə xüsusiyyətlər') }}</p>
+        <p class="text-[13px] leading-[1.45] text-black/50">{{ $tOr('business-product-edit.attributes.desc', 'Məhsula öz xüsusiyyətlərini əlavə et — məsələn: Çəki → 5 kq.') }}</p>
+        <div id="attrRows" class="flex w-full flex-col gap-3"
+             data-l-key-ph="{{ $tOr('business-product-edit.attributes.key_placeholder', 'Məs.: Çəki') }}"
+             data-l-value-ph="{{ $tOr('business-product-edit.attributes.value_placeholder', 'Məs.: 5 kq') }}"
+             data-l-remove="{{ $tOr('business-product-edit.attributes.remove', 'Sil') }}">
+          @foreach ($customSpecs as $k => $v)
+            <div class="flex w-full items-center gap-4 max-[640px]:gap-2" data-attr-row>
+              <input type="text" name="attributes[{{ $loop->index }}][key]" value="{{ $k }}" maxlength="60"
+                     placeholder="{{ $tOr('business-product-edit.attributes.key_placeholder', 'Məs.: Çəki') }}"
+                     class="h-[43px] w-full min-w-0 flex-1 rounded border border-black/15 bg-white px-3.5 text-sm text-ink outline-none transition focus:border-black/40">
+              <input type="text" name="attributes[{{ $loop->index }}][value]" value="{{ $v }}" maxlength="255"
+                     placeholder="{{ $tOr('business-product-edit.attributes.value_placeholder', 'Məs.: 5 kq') }}"
+                     class="h-[43px] w-full min-w-0 flex-1 rounded border border-black/15 bg-white px-3.5 text-sm text-ink outline-none transition focus:border-black/40">
+              <button type="button" data-attr-remove aria-label="{{ $tOr('business-product-edit.attributes.remove', 'Sil') }}"
+                      class="flex size-[43px] shrink-0 items-center justify-center rounded border border-black/15 text-black/40 transition hover:border-error hover:text-error">✕</button>
+            </div>
+          @endforeach
+        </div>
+        <button type="button" id="attrAdd"
+                class="mt-1 h-[38px] rounded border border-black/20 px-4 text-[13px] font-semibold text-ink transition hover:bg-gray-soft2">
+          + {{ $tOr('business-product-edit.attributes.add', 'Xüsusiyyət əlavə et') }}
+        </button>
+      </div>
     </x-cabinet.card>
+
+    <script type="application/json" id="comboData">@json($comboData)</script>
 
     {{-- Save bar (dark) --}}
     <div class="flex items-center justify-between gap-4 rounded bg-black/90 px-6 py-5 max-[900px]:flex-col max-[900px]:items-stretch">

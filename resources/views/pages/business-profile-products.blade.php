@@ -44,28 +44,21 @@
       @endunless
     @endisset
 
-    {{-- Filters: server-side via GET. Status chips + search. --}}
+    {{-- Filters: server-side via GET. Status chips only. --}}
     @php $curStatus = request('status'); @endphp
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <div class="flex flex-wrap gap-2">
-        @foreach ([
-          'all' => t('business-inventory.filters.all') . ' · ' . $counts['all'],
-          'pending' => t('business-product-edit.badge.pending') . ' · ' . $counts['pending'],
-          'rejected' => t('business-product-edit.badge.rejected') . ' · ' . $counts['rejected'],
-        ] as $sk => $label)
-          @php $isActive = ($sk === 'all' && ! $curStatus) || $curStatus === $sk; @endphp
-          <a href="{{ route('business.profile.products', array_filter(['status' => $sk === 'all' ? null : $sk, 'q' => request('q')])) }}"
-             class="flex h-[34px] items-center rounded px-3.5 text-[13px] transition
-                    {{ $isActive ? 'bg-[#111] font-semibold text-white' : 'border border-black/15 bg-white font-medium text-black/70 hover:border-black/40' }}">
-            {{ $label }}
-          </a>
-        @endforeach
-      </div>
-      <form method="GET" action="{{ route('business.profile.products') }}" class="bpp-search">
-        @if ($curStatus)<input type="hidden" name="status" value="{{ $curStatus }}">@endif
-        <div class="ic"><img src="/assets/icon-search.svg" alt=""></div>
-        <input type="search" name="q" value="{{ request('q') }}" class="q" placeholder="{{ t('business-profile-products.filters.search') }}" aria-label="{{ t('business-profile-products.filters.search') }}">
-      </form>
+    <div class="flex flex-wrap gap-2">
+      @foreach ([
+        'all' => t('business-inventory.filters.all') . ' · ' . $counts['all'],
+        'pending' => t('business-product-edit.badge.pending') . ' · ' . $counts['pending'],
+        'rejected' => t('business-product-edit.badge.rejected') . ' · ' . $counts['rejected'],
+      ] as $sk => $label)
+        @php $isActive = ($sk === 'all' && ! $curStatus) || $curStatus === $sk; @endphp
+        <a href="{{ route('business.profile.products', array_filter(['status' => $sk === 'all' ? null : $sk])) }}"
+           class="flex h-[34px] items-center rounded px-3.5 text-[13px] transition
+                  {{ $isActive ? 'bg-[#111] font-semibold text-white' : 'border border-black/15 bg-white font-medium text-black/70 hover:border-black/40' }}">
+          {{ $label }}
+        </a>
+      @endforeach
     </div>
 
     @forelse ($products as $product)

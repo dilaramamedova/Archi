@@ -171,12 +171,16 @@ function initSearch() {
   overlay.addEventListener('click', close);
 }
 
-// Every navbar surface (mega panels + language dropdown) is CLICK-driven: hover
-// never opens or closes anything, there are no open/close timers, and only one
-// surface can be open at a time. The search autocomplete is not registered here —
-// it is input-driven and keeps its own focus/input handling.
+// Navbar surface controller. The language dropdown stays CLICK-driven; the mega
+// panels additionally open/close on HOVER on devices that actually have a hover
+// pointer (a short close delay bridges the trigger→panel move so the panel never
+// flickers shut mid-way). On touch/keyboard the click/Enter toggle still rules,
+// and only one surface can be open at a time. The search autocomplete is not
+// registered here — it is input-driven and keeps its own focus/input handling.
 function initMenus() {
   let current = null;
+  const hoverable = window.matchMedia('(hover: hover) and (pointer: fine)');
+  let hoverCloseTimer = null;
 
   function closeCurrent(focusTrigger) {
     if (!current) return;
@@ -209,6 +213,11 @@ function initMenus() {
 
     trigger.addEventListener('click', (e) => {
       if (surface.contains(e.target)) return;
+      // On hover devices the panel is already open on hover, so a click on a
+      // trigger with a real destination should follow the link instead of
+      // re-toggling the panel it is hovering over.
+      const href = trigger.getAttribute('href');
+      if (menu.hoverOpens && hoverable.matches && href && href !== '#') return;
       e.preventDefault(); // the trigger only opens the menu; its href is the no-JS fallback
       toggleMenu(menu);
     });
@@ -227,12 +236,30 @@ function initMenus() {
   document.querySelectorAll('.nav-item[data-mega]').forEach((trigger) => {
     const panel = document.querySelector('.mega-panel[data-panel="' + trigger.dataset.mega + '"]');
     if (!panel) return;
-    register(
+    const menu = register(
       trigger,
       panel,
       () => { panel.classList.add('open'); trigger.classList.add('mega-active'); },
       () => { panel.classList.remove('open'); trigger.classList.remove('mega-active'); }
     );
+    menu.hoverOpens = true;
+
+    // Hover behaviour (hover-capable pointers only). The trigger's bottom edge and
+    // the panel's top edge are contiguous (both sit on `.topbar`'s bottom), and the
+    // 200ms grace timer absorbs the border crossing and diagonal mouse paths.
+    const cancelClose = () => { if (hoverCloseTimer) { clearTimeout(hoverCloseTimer); hoverCloseTimer = null; } };
+    const scheduleClose = () => {
+      cancelClose();
+      hoverCloseTimer = setTimeout(() => { if (current === menu) closeCurrent(false); }, 200);
+    };
+    trigger.addEventListener('mouseenter', () => {
+      if (!hoverable.matches) return;
+      cancelClose();
+      openMenu(menu);
+    });
+    trigger.addEventListener('mouseleave', () => { if (hoverable.matches && current === menu) scheduleClose(); });
+    panel.addEventListener('mouseenter', () => { if (hoverable.matches && current === menu) cancelClose(); });
+    panel.addEventListener('mouseleave', () => { if (hoverable.matches && current === menu) scheduleClose(); });
   });
 
   // Switching the language is server-side (<a href="/lang/az">), so this only

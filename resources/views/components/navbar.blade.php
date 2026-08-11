@@ -15,6 +15,7 @@
     'megaCatalog' => collect(),
     'megaSpecialists' => collect(),
     'megaBlog' => collect(),
+    'megaBlogMenu' => collect(),
 ])
 @php
     $locale = app()->getLocale();
@@ -25,6 +26,17 @@
         'specialists' => 'spec',
         'blog' => 'blog',
     ];
+
+    // "Məhsul yerləşdir" target depends on who is looking at it:
+    //   guest        → register (they need an account first)
+    //   seller       → straight to the product create form
+    //   buyer/master → /sell landing page (explains how to become a seller;
+    //                  the create form would 403 for them)
+    $postProductHref = match (true) {
+        ! auth()->check() => route('register'),
+        auth()->user()->isSeller() => route('business.products.create'),
+        default => route('sell'),
+    };
 @endphp
 
 <header class="topbar">
@@ -112,7 +124,7 @@
         @else
           <a class="txt" data-login href="{{ route('login') }}">{{ t('nav.sign_in') }}</a>
         @endauth
-        <a class="btn-post" href="{{ route('sell') }}"><img src="/assets/icon-plus.svg" alt=""><span>{{ t('nav.post_product') }}</span></a>
+        <a class="btn-post" href="{{ $postProductHref }}"><img src="/assets/icon-plus.svg" alt=""><span>{{ t('nav.post_product') }}</span></a>
       </div>
 
       {{-- Mobile hamburger — visible only ≤900px --}}
@@ -156,6 +168,11 @@
             @if ($isCalc)<img src="/assets/icon-calculator.svg" alt="">@endif
             {{ $item->label }}
           </a>
+          {{-- admin sub-items: the mega panels are desktop-only, so children must be
+               reachable here as indented links --}}
+          @foreach ($item->children as $child)
+            <a class="mob-link mob-sub" href="{{ $child->resolved_url ?? '#' }}"@if($child->open_in_new_tab) target="_blank" rel="noopener"@endif>{{ $child->label }}</a>
+          @endforeach
         @endforeach
       </div>
 
@@ -170,7 +187,7 @@
           <a class="mob-link" href="{{ route('login') }}">{{ t('nav.sign_in') }}</a>
           <a class="mob-link" href="{{ route('register') }}">{{ t('nav.register') }}</a>
         @endauth
-        <a class="mob-post-btn" href="{{ route('sell') }}"><img src="/assets/icon-plus.svg" alt=""><span>{{ t('nav.post_product') }}</span></a>
+        <a class="mob-post-btn" href="{{ $postProductHref }}"><img src="/assets/icon-plus.svg" alt=""><span>{{ t('nav.post_product') }}</span></a>
 
         <div class="mob-lang">
           @foreach ($langLabels as $code => $label)
@@ -188,7 +205,10 @@
           @php
               $href = $item->resolved_url ?? '#';
               $isActive = $item->route_name && request()->routeIs($item->route_name . '*');
-              $megaKey = $megaPanelMap[$item->route_name] ?? null;
+              // A shared mega panel is used only when the admin turned the item's
+              // "Dropdown var?" toggle ON — a plain link that merely points at the
+              // catalog/specialists/blog route must NOT hijack the mega panel.
+              $megaKey = $item->has_dropdown ? ($megaPanelMap[$item->route_name] ?? null) : null;
               $hasChildren = $item->children->isNotEmpty();
               $isCalc = $item->css_class === 'nav-calc';
               $isCatalogItem = $item->css_class === 'catalog';
@@ -256,14 +276,20 @@
     </div>
   </div>
 
-  {{-- MEGA: blog --}}
-  @php $blogItem = $headerMenu->firstWhere('route_name', 'blog'); @endphp
+  {{-- MEGA: blog — admin cards first ("Header — Mega Bloq" location, then children of
+       the Bloq nav item), latest blog posts as the fallback when no cards exist --}}
+  @php
+      $blogItem = $headerMenu->firstWhere('route_name', 'blog');
+      $blogCards = $megaBlogMenu->isNotEmpty()
+          ? $megaBlogMenu
+          : ($blogItem ? $blogItem->children : collect());
+  @endphp
   <div class="mega-panel" id="megaBlog" data-panel="blog">
     <div class="mega-inner">
-      @if ($blogItem && $blogItem->children->isNotEmpty())
+      @if ($blogCards->isNotEmpty())
         <div class="mega-cats">
-          @foreach ($blogItem->children as $child)
-            <a class="mcat" href="{{ $child->resolved_url ?? '#' }}"@if($child->open_in_new_tab) target="_blank" rel="noopener"@endif>
+          @foreach ($blogCards as $child)
+            <a class="mcat @if (!$child->icon) no-icon @endif" href="{{ $child->resolved_url ?? '#' }}"@if($child->open_in_new_tab) target="_blank" rel="noopener"@endif>
               <div class="top">
                 @if ($child->icon)<img src="{{ storage_url($child->icon) }}" alt="">@endif
                 <p>{{ $child->label }}</p>
@@ -293,14 +319,17 @@
     </div>
   </div>
 
-  {{-- MEGA: dynamic panels for menu items with children --}}
+  {{-- MEGA: dynamic panels for admin menu items with children. The condition must
+       mirror the trigger loop above: an item only uses a shared mega panel when its
+       "Dropdown var?" toggle is on AND its route is one of the three mapped ones —
+       every other item with children gets its own generic panel here. --}}
   @foreach ($headerMenu as $item)
-    @if ($item->children->isNotEmpty() && !isset($megaPanelMap[$item->route_name]))
+    @if ($item->children->isNotEmpty() && !($item->has_dropdown && isset($megaPanelMap[$item->route_name])))
       <div class="mega-panel" data-panel="menu-{{ $item->id }}">
         <div class="mega-inner">
           <div class="mega-cats">
             @foreach ($item->children as $child)
-              <a class="mcat" href="{{ $child->resolved_url ?? '#' }}"@if($child->open_in_new_tab) target="_blank" rel="noopener"@endif>
+              <a class="mcat @if (!$child->icon) no-icon @endif" href="{{ $child->resolved_url ?? '#' }}"@if($child->open_in_new_tab) target="_blank" rel="noopener"@endif>
                 <div class="top">
                   @if ($child->icon)<img src="{{ storage_url($child->icon) }}" alt="">@endif
                   <p>{{ $child->label }}</p>

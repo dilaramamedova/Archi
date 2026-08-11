@@ -1,5 +1,5 @@
-// Business products list: visibility toggles persist via the API; filters and
-// search are server-rendered (GET), so no client-side row filtering remains.
+// Business products list: visibility toggles persist via the API; the status
+// filter is server-rendered (GET), so no client-side row filtering remains.
 
 const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
 

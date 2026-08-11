@@ -10,6 +10,7 @@
     heading  — override the title (default {ns}.heading)
     viewHref — button target; false → a plain <button> with no destination
     hover    — false → no hover on the button (business-profile-company)
+    showBack — false → hide the "‹ Geri" back button (shown by default)
 --}}
 @props([
     'ns' => null,
@@ -18,6 +19,7 @@
     'hover' => true,
     'showStatus' => false,
     'showViewButton' => true,
+    'showBack' => true,
 ])
 @php
     // The six lang files were written independently and use two key shapes for the
@@ -37,6 +39,9 @@
 @endphp
 <div class="cab-head">
   <div class="cab-head-left">
+    @if ($showBack)
+      <x-cabinet.back />
+    @endif
     <x-ui.breadcrumbs
         :sep="$pick('crumbs.sep', 'crumbs.separator')"
         :items="[

@@ -51,7 +51,7 @@
     data-err-network="{{ t('common.error_network') }}"
 >
 
-<x-navbar :headerMenu="$headerMenu" :megaCatalog="$megaCatalog" :megaSpecialists="$megaSpecialists" :megaBlog="$megaBlog" />
+<x-navbar :headerMenu="$headerMenu" :megaCatalog="$megaCatalog" :megaSpecialists="$megaSpecialists" :megaBlog="$megaBlog" :megaBlogMenu="$megaBlogMenu" />
 
 {{ $slot }}
 

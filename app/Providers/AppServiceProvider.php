@@ -39,6 +39,10 @@ class AppServiceProvider extends ServiceProvider
 
                 'megaSpecialists' => MenuItem::location('header_mega_specialists')->roots()->active()->ordered()->get(),
 
+                // Admin-managed cards for the Bloq dropdown ("Header — Mega Bloq" in Filament).
+                // When empty the panel falls back to the latest blog posts below.
+                'megaBlogMenu' => MenuItem::location('header_mega_blog')->roots()->active()->ordered()->get(),
+
                 'megaBlog' => BlogPost::published()->showInHeader()->latest('published_at')->take(3)->get(),
 
                 'footerMenu' => MenuItem::location('footer')->roots()->active()->ordered()

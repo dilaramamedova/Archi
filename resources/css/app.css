@@ -276,7 +276,9 @@
   .nav-row2        { @apply border-y border-black/50; }
   .nav-row2 .inner { @apply flex h-15 max-w-none items-center justify-between px-7; }
   .nav-left        { @apply flex h-15 items-stretch; }
-  .nav-item        { @apply flex w-[150px] items-center justify-center gap-1 border-r border-black/50
+  /* min-width instead of a fixed width: admin-entered labels longer than 150px
+     widen their cell instead of overflowing it */
+  .nav-item        { @apply flex min-w-[150px] items-center justify-center gap-1 border-r border-black/50
                             px-3 font-sans text-base font-medium whitespace-nowrap text-black; }
   .nav-item img         { @apply size-4; }
   .nav-item.catalog     { @apply gap-2 border-x border-black/40 font-sans; }
@@ -323,6 +325,8 @@
   .mcat .desc        { @apply pl-10 text-base leading-[22px] text-black/50; }
   .mcat:hover .top p { @apply text-black; }
   .mcat:hover .desc  { @apply text-black/70; }
+  /* admin cards without an icon: the description's icon indent would look detached */
+  .mcat.no-icon .desc { @apply pl-0; }
 
   /* specialists layout */
   .mega-spec               { @apply flex items-center gap-12; }
@@ -808,6 +812,10 @@
 
   .cab-head       { @apply flex w-full items-end justify-between overflow-hidden; }
   .cab-head-left  { @apply flex flex-col items-start gap-2.5 overflow-hidden whitespace-nowrap; }
+
+  /* "‹ Geri" back button (x-cabinet.back) — also used on the buyer account pages. */
+  .cab-back       { @apply flex cursor-pointer items-center gap-1 text-[13px] leading-[normal] font-medium text-black/50 transition-colors duration-150 hover:text-ink; }
+  .cab-back svg   { @apply size-4 shrink-0; }
   .cab-head-right { @apply flex items-center gap-3 overflow-hidden; }
   .cab-title      { @apply text-[34px] leading-[normal] font-bold text-ink; }
 
@@ -897,7 +905,8 @@
   /* ==========================================================================
      SHARED TRANSITIONS / HOVERS (from the old archi.css)
      Hover only tints the trigger itself — no rule here may open a menu surface
-     (`.mega-panel`, `.lang-menu`); those are click-driven from shared/navbar.js.
+     (`.mega-panel`, `.lang-menu`); those are driven from shared/navbar.js
+     (mega panels: hover on hover-capable pointers + click; lang: click only).
      ========================================================================== */
   .nav-item, .nav-calc, .btn-post, .sec-more, .foot-col a, .foot-products, .foot-social a {
     @apply transition-all duration-[250ms];
@@ -997,6 +1006,8 @@
   .mob-drawer-body  { @apply flex-1 overflow-y-auto px-5 py-4; }
   .mob-link         { @apply flex items-center gap-2 py-3 text-base font-medium text-ink border-b border-black/8; }
   .mob-link img     { @apply size-5; }
+  /* admin sub-items under a parent link in the drawer */
+  .mob-link.mob-sub { @apply pl-6 text-[15px] font-normal text-black/70; }
   .mob-drawer-foot  { @apply flex flex-col gap-2 border-t border-black/10 px-5 py-4; }
   .mob-post-btn     { @apply flex items-center justify-center gap-2 bg-ink px-5 py-3 text-base text-white; }
   .mob-post-btn img { @apply size-5; }

@@ -4,13 +4,13 @@
    The page shell, header, settings sidebar, card, list row, status badge, switch,
    buttons and save bar now come from the shared design system
    (<x-cabinet.*> / <x-ui.*>, styled in app.css). Only this page's own widgets are
-   left here: the filter row (search + two dropdowns), the thumbnail/info/price
+   left here: the filter row (two dropdowns), the thumbnail/info/price
    cells of a row, the empty state and the pager.
 
    State classes are data-* attributes (ARCHITECTURE.md 7.1):
    .pg.active -> [data-on="true"], .pg.dots -> [data-dots="true"].
 
-   Images: the pager arrows and the search icon are the only assets; the 8px status
+   Images: the pager arrows are the only assets; the 8px status
    dots and the switches are CSS shapes owned by the design system. */
 @layer components {
 
@@ -29,14 +29,6 @@
 
   /* filters — no overflow-hidden on the row: the dropdown menus escape their trigger. */
   .bpp-filters        { @apply flex w-full items-start gap-2.5; }
-  .bpp-search         { @apply flex h-[42px] min-w-0 flex-[1_0_0] items-center gap-2 overflow-hidden rounded-ds bg-gray-soft2 pl-3.5; }
-  .bpp-search .ic     { @apply relative size-4 shrink-0; }
-  .bpp-search .ic img { @apply absolute inset-0 size-full max-w-none; }
-  /* Real <input>. app.css @layer base reverts the UA border/background of form controls,
-     so the box has to be flattened again here (components beats base). */
-  .bpp-search input   { @apply h-full min-w-0 flex-[1_0_0] rounded-none border-none bg-transparent pr-3.5 text-[13px] leading-[normal] font-normal text-ink outline-none placeholder:text-black/45; }
-  .bpp-search:focus-within { @apply outline-2 outline-offset-2 outline-ink; }
-
   .bpp-drop-wrap      { @apply relative shrink-0; }
   .bpp-drop           { @apply flex h-[42px] shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-ds border border-black/15 bg-white px-4 transition-colors duration-150 hover:border-black/35 hover:bg-gray-soft2; }
   .bpp-drop span      { @apply text-[13px] leading-[normal] font-medium whitespace-nowrap text-black/70; }
