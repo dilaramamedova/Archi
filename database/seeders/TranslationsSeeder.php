@@ -1735,6 +1735,7 @@ class TranslationsSeeder extends Seeder
             ],
             'newsletter' => [
                 'already_subscribed' => ['az' => 'Bu e-poçt artıq abunə olub.', 'ru' => 'Эта почта уже подписана.', 'en' => 'This email is already subscribed.'],
+                'invalid_email' => ['az' => 'Düzgün e-poçt ünvanı yazın — məsələn: ad@nümunə.com', 'ru' => 'Введите корректный e-mail — например: name@example.com', 'en' => 'Enter a valid e-mail address — for example: name@example.com'],
                 'subscribed' => ['az' => 'Abunə oldunuz! Təşəkkür edirik.', 'ru' => 'Вы подписались! Спасибо.', 'en' => 'You are subscribed! Thank you.'],
             ],
             // Transactional e-mail copy (App\Notifications\*).

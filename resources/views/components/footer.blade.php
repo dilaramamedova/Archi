@@ -41,9 +41,10 @@
           <p>{{ t('footer.news_sub') }}</p>
         </div>
       </div>
-      <form class="form" id="footer-newsletter-form"
+      <form class="form" id="footer-newsletter-form" novalidate
             data-error-fallback="{{ t('footer.newsletter_error') }}"
-            data-network-error="{{ t('footer.newsletter_network_error') }}">
+            data-network-error="{{ t('footer.newsletter_network_error') }}"
+            data-invalid-email="{{ t('newsletter.invalid_email') }}">
         <input class="ip" type="email" name="email" required aria-label="{{ t('footer.news_email') }}" placeholder="{{ t('footer.news_email') }}">
         <button class="sub" type="submit">{{ t('footer.news_submit') }}</button>
       </form>
@@ -75,12 +76,23 @@ document.addEventListener('DOMContentLoaded', function () {
     var form = document.getElementById('footer-newsletter-form');
     if (!form) return;
 
+    // `novalidate` on the form: the browser's own bubble is unstyled, untranslated
+    // and easy to miss on a phone, so the same popup carries every message.
+    // Mirrors the server rule in NewsletterController (rfc + a dotted TLD).
+    var EMAIL_RE = /^[^@\s]+@[^@\s.]+(\.[^@\s.]+)*\.[a-zA-Z]{2,}$/;
+
     form.addEventListener('submit', function (e) {
         e.preventDefault();
         var emailInput = form.querySelector('input[name="email"]');
         var submitBtn = form.querySelector('button[type="submit"]');
         var email = emailInput.value.trim();
-        if (!email) return;
+
+        if (!EMAIL_RE.test(email)) {
+            var invalid = form.dataset.invalidEmail;
+            if (window.archiPopup) window.archiPopup.error(invalid); else alert(invalid);
+            emailInput.focus();
+            return;
+        }
 
         submitBtn.disabled = true;
         var originalText = submitBtn.textContent;
@@ -97,10 +109,14 @@ document.addEventListener('DOMContentLoaded', function () {
         })
         .then(function (response) { return response.json().then(function (data) { return { ok: response.ok, data: data }; }); })
         .then(function (result) {
-            if (result.ok) {
+            // `result.ok` alone used to be the test, so "already subscribed"
+            // (a 200 with success:false at the time) was celebrated as a success.
+            if (result.ok && result.data.success) {
                 emailInput.value = '';
                 submitBtn.textContent = '✓';
                 setTimeout(function () { submitBtn.textContent = originalText; }, 3000);
+                var okMsg = result.data.message;
+                if (window.archiPopup) window.archiPopup.success(okMsg); else alert(okMsg);
             } else {
                 var msg = result.data.message || result.data.errors?.email?.[0] || form.dataset.errorFallback;
                 submitBtn.textContent = originalText;
