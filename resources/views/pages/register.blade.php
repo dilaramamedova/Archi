@@ -93,7 +93,10 @@
           {{ t('register.form.info_note') }}
         </div>
 
-        <p class="text-center text-[15px] text-black/60">{{ t('register.form.have_account') }} <a class="border-b-2 border-yellow-line font-semibold text-ink" href="{{ route('login') }}">{{ t('register.form.sign_in') }}</a></p>
+        {{-- The terms/privacy links above stay inline: they sit mid-sentence inside the
+             consent label, where a 44px box would break the running text. WCAG 2.5.8
+             exempts targets inline in a sentence for exactly this reason. --}}
+        <p class="text-center text-[15px] text-black/60">{{ t('register.form.have_account') }} <a class="font-semibold text-ink max-[900px]:inline-flex max-[900px]:min-h-11 max-[900px]:items-center" href="{{ route('login') }}"><span class="border-b-2 border-yellow-line">{{ t('register.form.sign_in') }}</span></a></p>
       </form>
     </div>
   </div>

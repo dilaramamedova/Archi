@@ -2,6 +2,8 @@
 // submission via AJAX to the backend. Products are saved to the database and require
 // admin approval before appearing in the catalog.
 
+import { lockScroll, unlockScroll } from '../shared/scroll-lock.js';
+
 // Tailwind class sets for the modal buttons (built in JS, scanned via @source "../js").
 const BTN_BASE = 'flex h-[50px] items-center justify-center text-base font-semibold transition duration-200';
 const BTN_PRIMARY = BTN_BASE + ' bg-yellow text-ink hover:brightness-[.93]';
@@ -179,11 +181,14 @@ export default function init() {
   // Same contract as the shared login modal: scroll lock, focus moved inside, Escape closes.
   const ov = $('okOv');
 
+  let modalLocked = false;
+
   function openModal() {
     // <x-ui.modal> visibility contract: data-on flips the overlay to display:flex
     ov.dataset.on = 'true';
     ov.classList.add('animate-[fadeIn_0.2s_ease]');
     document.body.dataset.lmLock = 'true';
+    if (!modalLocked) { lockScroll(); modalLocked = true; }
     const first = $('okBtns').firstElementChild;
     if (first) setTimeout(() => first.focus(), 60);
   }
@@ -193,6 +198,7 @@ export default function init() {
     ov.dataset.on = 'false';
     ov.classList.remove('animate-[fadeIn_0.2s_ease]');
     delete document.body.dataset.lmLock;
+    if (modalLocked) { unlockScroll(); modalLocked = false; }
     $('pSubmit').focus();
   }
 

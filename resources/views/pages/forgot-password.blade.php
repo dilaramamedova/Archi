@@ -17,7 +17,7 @@
                      data-label-success="{{ t('login.forgot_success') }}"
                      data-label-error="{{ t('common.error_generic') }}"
                      class="h-[54px] rounded-none px-4 text-lg font-semibold duration-200 hover:brightness-[.93] disabled:cursor-default disabled:opacity-55 disabled:hover:brightness-100">{{ t('login.forgot_submit') }}</x-ui.button>
-        <p class="text-center text-[15px] text-black/60"><a class="border-b-2 border-yellow-line font-semibold text-ink" href="{{ route('login') }}">{{ t('login.back_to_login') }}</a></p>
+        <p class="text-center text-[15px] text-black/60"><a class="font-semibold text-ink max-[900px]:inline-flex max-[900px]:min-h-11 max-[900px]:items-center" href="{{ route('login') }}"><span class="border-b-2 border-yellow-line">{{ t('login.back_to_login') }}</span></a></p>
       </form>
     </div>
   </div>

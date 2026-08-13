@@ -12,6 +12,15 @@
     @apply data-[on=true]:border-yellow data-[on=true]:bg-[#fffdf0] data-[on=true]:text-ink data-[on=true]:shadow-[inset_0_0_0_1px_var(--color-yellow)];
   }
 
+  /* The 375 frame labels every field at 13/600 over a 44px control, where the shared
+     .ui-label is 14/500. Scoped to the form and to the mobile breakpoint so the
+     design-system label is unchanged everywhere else, desktop sell included. */
+  @media (max-width: 560px) {
+    #sellForm .ui-label { @apply text-[13px] font-semibold text-ink; }
+    /* the condition chips ride down with the controls so the row keeps one type scale */
+    #sellForm .sl-chip  { @apply px-3.5 py-2.5 text-[13px]; }
+  }
+
   @keyframes lmIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
   @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 }

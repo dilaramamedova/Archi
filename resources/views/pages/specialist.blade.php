@@ -28,7 +28,8 @@
 <main class="pp">
 
   {{-- breadcrumb --}}
-  <x-ui.breadcrumbs class="pp-crumbs text-sm" :items="[
+  {{-- 14px crumbs on desktop, 12px on the mobile comp (Figma 777:3143) --}}
+  <x-ui.breadcrumbs class="pp-crumbs text-sm max-[640px]:text-xs" :items="[
       ['label' => t('specialist.crumb_home'), 'href' => route('home')],
       ['label' => t('specialist.crumb_specialists'), 'href' => route('specialists')],
       ['label' => $fullName],
@@ -41,7 +42,11 @@
       {{-- identity --}}
       <div class="pp-id">
         <div class="pp-ava">
-          <div class="ring"><img src="{{ $avatarUrl }}" alt="{{ $fullName }}"></div>
+          {{-- NB: the legacy class name `ring` collides with Tailwind's ring
+               utility, so the circle also picks up a 1px black box-shadow. The
+               mobile comp (777:3143) has a clean yellow ring only — kill it at
+               <=640. Desktop keeps the existing look on purpose. --}}
+          <div class="ring max-[640px]:ring-0"><img src="{{ $avatarUrl }}" alt="{{ $fullName }}"></div>
           @if ($specialist->is_featured)
             <span class="pp-badge"><img src="/assets/icon-crown-gold.svg" alt="">{{ t('specialist.id.badge_top') }}</span>
           @endif
@@ -77,7 +82,7 @@
       {{-- about --}}
       <section class="pp-about">
         <div class="pp-sechead">
-          <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3" :label="t('specialist.about.eyebrow')" />
+          <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3 max-[640px]:gap-2" :label="t('specialist.about.eyebrow')" />
           <h2>{{ t('specialist.about.title') }}</h2>
         </div>
         @if (filled($specialist->about))
@@ -118,7 +123,7 @@
       @endphp
       <x-ui.button variant="primary" id="ppContact" :attributes="$contactAttrs"
           data-no-phone="{{ t('specialist.contact_no_phone') }}"
-          class="rounded-none px-6 py-4 text-base font-medium duration-200">{{ t('specialist.contact') }}</x-ui.button>
+          class="rounded-none px-6 py-4 text-base font-medium duration-200 max-[640px]:rounded-ds max-[640px]:py-[15px] max-[640px]:text-[15px] max-[640px]:font-bold">{{ t('specialist.contact') }}</x-ui.button>
       <a id="ppContactPhone" class="pp-contact-phone" href="#" hidden></a>
       <div class="div"></div>
       <div class="pp-stat"><span class="k">{{ t('specialist.book.member_k') }}</span><span class="v">{{ $specialist->created_at->translatedFormat('M Y') }}</span></div>
@@ -134,7 +139,7 @@
   @if ($portfolioItems->isNotEmpty())
     <section class="pp-sec">
       <div class="pp-sechead">
-        <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3" :label="t('specialist.portfolio.eyebrow')" />
+        <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3 max-[640px]:gap-2" :label="t('specialist.portfolio.eyebrow')" />
         <h2>{{ t('specialist.portfolio.title') }}</h2>
       </div>
       <div class="pp-grid">
@@ -162,7 +167,7 @@
   @if ($services->isNotEmpty())
     <section class="pp-sec">
       <div class="pp-sechead">
-        <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3" :label="t('specialist.services.eyebrow')" />
+        <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3 max-[640px]:gap-2" :label="t('specialist.services.eyebrow')" />
         <h2>{{ t('specialist.services.title') }}</h2>
       </div>
       <div class="pp-svc-list">
@@ -180,7 +185,7 @@
   {{-- Müştəri rəyləri bölməsi hazırda göstərilmir. --}}
   <section class="pp-sec">
     <div class="pp-sechead">
-      <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3" :label="t('specialist.reviews.eyebrow')" />
+      <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3 max-[640px]:gap-2" :label="t('specialist.reviews.eyebrow')" />
       <h2>{{ t('specialist.reviews.title') }}</h2>
     </div>
     <div class="pp-score">

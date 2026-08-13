@@ -11,21 +11,28 @@ const DELIVERY_FEE = 10;
 
 // Row classes live here so the JS templates stay readable; Tailwind picks them up
 // through the `@source "../js"` rule in app.css.
+// Below 560px the row is the two-line grid from the mobile design — the areas are in
+// resources/css/pages/cart.css, the `ct-*` classes below are only its hooks. Everything
+// else stays a utility so the desktop row keeps its exact sizes.
 const CLS = {
-  row: 'flex items-center gap-4 rounded-ds border border-black/10 bg-white p-4 max-[560px]:flex-wrap',
-  thumb: 'size-[70px] shrink-0 rounded-ds bg-[#eceef1] object-cover',
-  info: 'min-w-0 flex-1',
-  name: 'block text-[15px] font-semibold text-ink',
-  meta: 'mt-0.5 text-[13px] text-black/50',
-  unit: 'mt-1 text-[13px] text-black/50',
-  qty: 'flex items-center overflow-hidden rounded-ds border border-black/15',
-  qtyBtn: 'size-[34px] cursor-pointer border-none bg-white text-lg text-ink [font-family:inherit] hover:bg-gray-soft',
-  qtyNum: 'min-w-[34px] text-center text-sm font-semibold',
-  line: 'min-w-[92px] text-right text-base font-bold text-ink max-[560px]:min-w-[auto]',
-  rm: 'cursor-pointer border-none p-1 text-[22px] leading-none text-black/35 [font-family:inherit] hover:text-[#c0392b]',
-  // Checkout modal classes
-  overlay: 'fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4',
-  modal: 'relative w-full max-w-[440px] rounded-ds bg-white p-6 shadow-xl',
+  row: 'ct-row flex items-center gap-4 rounded-ds border border-black/10 bg-white p-4 max-[560px]:grid max-[560px]:items-start max-[560px]:gap-3 max-[560px]:p-3.5',
+  thumb: 'ct-thumb size-[70px] shrink-0 rounded-ds bg-[#eceef1] object-cover max-[560px]:size-16',
+  info: 'ct-info min-w-0 flex-1',
+  name: 'block text-[15px] font-semibold text-ink max-[560px]:text-sm',
+  meta: 'mt-0.5 text-[13px] text-black/50 max-[560px]:text-xs',
+  unit: 'mt-1 text-[13px] text-black/50 max-[560px]:text-xs',
+  qty: 'ct-qty flex items-center overflow-hidden rounded-ds border border-black/15 max-[560px]:justify-self-start',
+  qtyBtn: 'size-[34px] cursor-pointer border-none bg-white text-lg text-ink [font-family:inherit] hover:bg-gray-soft max-[560px]:size-[38px]',
+  qtyNum: 'min-w-[34px] text-center text-sm font-semibold max-[560px]:min-w-10',
+  line: 'ct-total min-w-[92px] text-right text-base font-bold text-ink max-[560px]:min-w-[auto] max-[560px]:self-center max-[560px]:text-[17px]',
+  // the mobile box is padded out to a 32px tap target and pulled back into the card
+  // corner, so it still reads as the small × the design draws
+  rm: 'ct-rm cursor-pointer border-none p-1 text-[22px] leading-none text-black/35 [font-family:inherit] hover:text-[#c0392b] max-[560px]:-mt-1 max-[560px]:-mr-1 max-[560px]:flex max-[560px]:size-8 max-[560px]:items-start max-[560px]:justify-center max-[560px]:p-0 max-[560px]:text-xl',
+  // Checkout modal classes. The form is taller than a phone viewport, so the overlay
+  // scrolls and the dialog is centred with `my-auto` instead of `items-center` — with
+  // items-center the top of a too-tall dialog is pushed off-screen and unreachable.
+  overlay: 'fixed inset-0 z-[9999] flex justify-center overflow-y-auto overscroll-contain bg-black/50 p-4',
+  modal: 'relative my-auto w-full max-w-[440px] rounded-ds bg-white p-6 shadow-xl max-[560px]:p-[18px]',
   modalTitle: 'mb-5 text-lg font-bold text-ink',
   field: 'flex flex-col gap-1.5',
   label: 'text-[13px] font-semibold text-ink',

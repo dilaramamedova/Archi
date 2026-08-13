@@ -35,24 +35,34 @@
         <span class="count">{{ $specialists->total() }}</span>
       </div>
     </div>
-    <div class="fsort sp-sort" id="spSort" data-open="false">
-      <span class="lbl">{{ t('specialists.sort.label') }}</span>
-      @php
-        $spSortOptions = [
-            'rating'   => t('specialists.sort.rating'),
-            'reviews'  => t('specialists.sort.reviews'),
-            'exp'      => t('specialists.sort.exp'),
-            'cheap'    => t('specialists.sort.cheap'),
-            'projects' => t('specialists.sort.projects'),
-        ];
-      @endphp
-      <span class="val" id="spSortVal">{{ $spSortOptions[$activeSort] ?? t('specialists.sort.rating') }}</span>
-      <img class="car" src="/assets/icon-chevron-down-small.svg" alt="">
-      <ul class="fsort-menu sp-sort-menu" id="spSortMenu">
-        @foreach ($spSortOptions as $key => $label)
-          <li data-sort="{{ $key }}" data-on="{{ $key === $activeSort ? 'true' : 'false' }}">{{ $label }}</li>
-        @endforeach
-      </ul>
+    {{-- Sort + the phone-only filter trigger — below 980px .sp-side is a bottom sheet. --}}
+    <div class="cat-tools sp-tools">
+      <button type="button" class="fsheet-btn" id="spFilterBtn" aria-expanded="false" aria-controls="spFside">
+        <svg class="ic" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M3 6h14M3 10.5h9M3 15h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+        <span class="t">{{ t('specialists.filters.mobile_title') }}</span>
+        <span class="n" hidden></span>
+      </button>
+      <div class="fsort sp-sort" id="spSort" data-open="false">
+        <span class="lbl">{{ t('specialists.sort.label') }}</span>
+        @php
+          $spSortOptions = [
+              'rating'   => t('specialists.sort.rating'),
+              'reviews'  => t('specialists.sort.reviews'),
+              'exp'      => t('specialists.sort.exp'),
+              'cheap'    => t('specialists.sort.cheap'),
+              'projects' => t('specialists.sort.projects'),
+          ];
+        @endphp
+        <span class="val" id="spSortVal">{{ $spSortOptions[$activeSort] ?? t('specialists.sort.rating') }}</span>
+        <img class="car" src="/assets/icon-chevron-down-small.svg" alt="">
+        <ul class="fsort-menu sp-sort-menu" id="spSortMenu">
+          @foreach ($spSortOptions as $key => $label)
+            <li data-sort="{{ $key }}" data-on="{{ $key === $activeSort ? 'true' : 'false' }}">{{ $label }}</li>
+          @endforeach
+        </ul>
+      </div>
     </div>
   </div>
 
@@ -65,7 +75,13 @@
   <div class="sp-body">
 
     {{-- filter sidebar --}}
-    <aside class="fside sp-side">
+    <aside class="fside sp-side fsheet" id="spFside" data-open="false">
+     {{-- sheet handle + title: phone only (.fsheet-head is display:none above 980px) --}}
+     <div class="fsheet-head">
+       <span class="grip" aria-hidden="true"></span>
+       <p class="ttl">{{ t('specialists.filters.mobile_title') }}</p>
+       <button type="button" class="cls" id="spFilterClose" aria-label="{{ t('common.close') }}">✕</button>
+     </div>
      <div class="fside-scroll sp-fs-scroll">
 
       {{-- specialization --}}
@@ -123,6 +139,7 @@
       <div class="fside-apply-sep"></div>
       <button type="button" class="fside-apply" id="spApply">{{ t('specialists.filters.apply') }}</button>
     </aside>
+    <div class="fsheet-scrim" id="spFilterScrim" hidden></div>
 
     {{-- grid --}}
     <div class="sp-grid" id="spGrid">

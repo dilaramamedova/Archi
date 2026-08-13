@@ -70,7 +70,21 @@
     .scs-page .cab-row { @apply flex-wrap; }
     .scs-info          { @apply whitespace-normal; }
   }
+  /* Phone: the row carries six items (grip · name/description · price · unit · switch ·
+     delete) and only `.scs-info` can shrink, so on a 311px row the service name was
+     squeezed to about one character wide and rendered as a vertical stack of letters.
+     A basis of "the rest of line 1" forces a clean break: grip + name/description on
+     top, the four controls underneath. */
   @media (max-width: 640px) {
-    .scs-hint { @apply whitespace-normal; }
+    .scs-hint          { @apply whitespace-normal; }
+    .scs-page .cab-row { @apply items-center gap-x-3 gap-y-3; }
+    .scs-grip          { @apply text-lg; }
+    .scs-info          { @apply basis-[calc(100%-28px)] grow-0; }
+    .scs-info .n       { @apply overflow-visible text-clip; }
+    .scs-info .d       { @apply overflow-visible text-clip; }
+    /* 15×16 as bare text — the delete link anchors the right end of line 2 and needs a
+       thumb-sized box. `px-1` reached 44 tall but left it 22 wide, so the target was
+       still half-size on the axis the thumb actually misses; `min-w-11` squares it off. */
+    .scs-page .scs-del { @apply ml-auto inline-flex min-h-11 min-w-11 items-center justify-center px-2; }
   }
 }

@@ -2,6 +2,8 @@
 // via URL query parameters. The JS collects the sidebar state, builds a URL and
 // navigates to it.
 
+import initFilterSheet from '../shared/filter-sheet.js';
+
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => Array.prototype.slice.call(root.querySelectorAll(sel));
 
@@ -101,6 +103,14 @@ export default function init() {
     })
   );
 
+  /* ---- mobile filter sheet (≤980px) ---- */
+  const sheet = initFilterSheet({
+    sheet: 'spFside',
+    btn: 'spFilterBtn',
+    scrim: 'spFilterScrim',
+    close: 'spFilterClose',
+  });
+
   /* ---- active filter chips ---- */
   const chipWrap = document.getElementById('spChips');
   const clearBtn = document.getElementById('spClear');
@@ -132,6 +142,15 @@ export default function init() {
       chipWrap.insertBefore(chip, clearBtn);
     });
     clearBtn.style.display = items.length ? '' : 'none';
+    // badge on the phone filter trigger — chips only cover spec + city, the
+    // experience chip and the two switches are counted here as well
+    if (sheet) {
+      let n = items.length;
+      if ($('#spYearBlock .sp-year[data-on="true"]')) n += 1;
+      if (swVerified && swVerified.dataset.on === 'true') n += 1;
+      if (swFree && swFree.dataset.on === 'true') n += 1;
+      sheet.setCount(n);
+    }
   }
 
   if (chipWrap && clearBtn) {

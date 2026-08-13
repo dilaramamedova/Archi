@@ -41,10 +41,15 @@
   /* ============ HERO ============ */
   .hero            { @apply relative pt-0; }
   .hero-grid       { @apply mt-0 flex h-[543px] gap-1 pt-0; }
-  .hero-main       { @apply relative w-[960px] shrink-0 overflow-hidden; }
+  /* 960px is the Figma width at the 1384px shell. Fixed + shrink-0 it overflowed
+     every laptop between 1201px and 1440px (960 + 4 + 420 = 1384 > the shell), and
+     `html { overflow-x: hidden }` clipped the promo column rather than scrolling.
+     Flexing the main panel keeps the design at full width and degrades cleanly. */
+  .hero-main       { @apply relative min-w-0 flex-1 overflow-hidden; }
   .hero-main > img { @apply absolute inset-0 size-full object-cover; }
   .hero-main .ov   { @apply absolute inset-0 bg-black/30; }
-  .hero-main .copy { @apply absolute top-[199px] left-[30px] z-[2] flex w-[756px] flex-col gap-6; }
+  /* max-w keeps the copy inside the panel now that the panel itself can shrink */
+  .hero-main .copy { @apply absolute top-[199px] left-[30px] z-[2] flex w-[756px] max-w-[calc(100%-60px)] flex-col gap-6; }
   .hero-tag        { @apply flex items-center gap-2.5; }
   .hero-tag .line  { @apply h-0.5 w-10 bg-yellow; }
   .hero-tag p      { @apply text-lg font-medium text-white uppercase; }
@@ -130,18 +135,30 @@
   /* ============ HOME RESPONSIVE ============ */
   @media (max-width: 1200px) {
     .hero-grid     { @apply h-auto flex-col; }
-    .hero-main     { @apply w-full h-[400px]; }
+    /* `flex-none` matters: the desktop rule makes .hero-main a flex item with
+       flex-basis:0, and in this column that basis governs HEIGHT and outranks
+       `h-[400px]` — the whole hero collapsed to 0px on every phone and tablet.
+       Same trap the promo/role panels hit at ≤900px. */
+    .hero-main     { @apply h-[400px] w-full flex-none; }
     .hero-side     { @apply w-full flex-row h-auto; }
     .hero-promo    { @apply h-[200px] flex-1; }
     .hero-role     { @apply h-[240px] flex-1; }
     .hero-main .copy { @apply top-auto bottom-8 left-6 w-[calc(100%-48px)]; }
+    /* the promo panel is shorter than the desktop 236px it was positioned for,
+       so anchor its CTA and dots to the bottom instead of a fixed top offset */
+    .hero-promo .cta-white { @apply top-auto bottom-10; }
+    .hero-promo .dots      { @apply top-auto bottom-3 left-5; }
   }
   @media (max-width: 900px) {
     .service-strip .inner { @apply flex-wrap gap-4 px-4 py-4; }
     .svc { @apply w-[calc(50%-8px)]; }
     .hero-side     { @apply flex-col; }
-    .hero-promo    { @apply h-[180px] w-full; }
-    .hero-role     { @apply h-[240px] w-full; }
+    /* `flex-1` (from the ≤1200 row layout) keeps flex-basis:0, which outranks
+       `height` on a flex item — in this auto-height column the promo panel has
+       nothing but absolutely-positioned children, so it collapsed to its padding
+       and rendered as a 16px sliver. Both panels size from their height here. */
+    .hero-promo    { @apply h-[180px] w-full flex-none; }
+    .hero-role     { @apply h-[240px] w-full flex-none; }
     .hero-main     { @apply h-[340px]; }
     .hero-main h1  { @apply text-3xl; }
     .hero-main .sub { @apply text-base; }
@@ -162,6 +179,178 @@
     .promo-banner  { @apply px-4 py-4; }
     .promo-banner h3 { @apply text-lg; }
     .sale-track span { @apply text-lg tracking-[2px]; }
+  }
+
+  /* ============================================================================
+     MOBILE — 1:1 with Figma "m-home" (725:5763), a 375px frame.
+     Everything below is measured off that frame; the numbers in the comments are
+     the Figma values so a later reader can re-check them without opening Figma.
+
+     This file is @imported BEFORE app.css's own @layer components block, so a
+     shared component (.sec-head, .pcard, .scard, .grid4, .inner …) only loses to
+     its app.css rule on equal specificity. Those overrides are therefore scoped
+     with `body[data-page="home"]`, which both raises specificity and keeps the
+     change on this page. Home-only classes (.hero-*, .cat-*, .svc, .promo-banner)
+     are declared in this file and just need to come after their own base rule.
+     ============================================================================ */
+  @media (max-width: 640px) {
+    /* ---- page gutter ----------------------------------------------------
+       `.wrap` and `.inner` each carry px-4 at this width and every section
+       nests one inside the other, so the content sat on a 32px gutter and the
+       card rows were 311px wide. Figma m-home uses a single 16px gutter (343px
+       of content), which is what `.wrap` alone already gives. */
+    body[data-page="home"] .wrap > .inner { @apply px-0; }
+
+    /* Figma section rhythm is 40px between two sections, not 40px on each side
+       of the boundary — `.section`'s py-10 doubled every gap to 80px. */
+    body[data-page="home"] .wrap > .inner.section { @apply py-5; }
+
+    /* ---- HERO — full-bleed 375×340, copy anchored to the bottom ---------- */
+    /* `.hero-grid` is also an `.inner`, hence the extra `.hero` for specificity. */
+    .hero .hero-grid  { @apply gap-4 px-0; }
+    .hero-main        { @apply h-[340px]; }
+    /* A flat 30% wash left the 28px headline sitting on top of the brickwork.
+       Figma darkens the foot of the photo instead, so the copy gets contrast
+       without greying out the image. */
+    .hero-main .ov    { background: linear-gradient(180deg, rgba(0,0,0,.12), rgba(0,0,0,.58) 42%, rgba(0,0,0,.86)); }
+    .hero-main .copy  { @apply top-auto bottom-5 left-5 w-[calc(100%-40px)] gap-4; }
+    .hero-tag .line   { @apply w-6; }
+    .hero-tag p       { @apply text-[11px] leading-[1.21] font-semibold; }
+    .hero-main h1     { @apply text-[28px] leading-[1.21] font-bold; }
+    .hero-main .sub   { @apply mt-2 text-sm leading-[1.21] font-normal; }
+    /* Figma turns the "Pulsuz konsultasiya al" link into a solid yellow button
+       (190×43, 13/20 padding). The question above it stays as a caption. */
+    .hero-info        { @apply flex-col items-start gap-2.5 text-sm leading-[1.21]; }
+    .hero-info .u     { @apply bg-yellow px-5 py-3 text-sm font-semibold text-ink no-underline; }
+
+    /* ---- PROMO PAIR (Figma "pu": 16px gutter, 12px gap) ------------------
+       Figma stacks the role card first and the OMID banner under it; the DOM
+       order is the reverse, so the column is reversed rather than the markup. */
+    /* w-auto undoes the `w-full` from the ≥900 layout: 100% of the now-unpadded
+       375px grid plus the 16px margins overflowed the viewport by 16px. */
+    .hero-side        { @apply mx-4 w-auto flex-col-reverse gap-3; }
+    /* Both panels are `flex-1` from the ≥900 layout. In an auto-height column
+       `flex-basis:0` beats `height`, which collapsed the promo to its 16px of
+       padding — it has none but absolutely-positioned children. */
+    .hero-promo       { @apply h-[198px] w-full flex-none p-0; }
+    .hero-promo .cta-white { @apply top-auto bottom-10 left-4; }
+    .hero-promo .dots      { @apply top-auto bottom-3 left-1/2 -translate-x-1/2; }
+    .hero-role        { @apply h-[175px] w-full flex-none; }
+    .hr-slide         { @apply p-[18px]; }
+    /* The desktop wash clears the photo by 80%; at 343px the headline still landed
+       on the tiler's face, so the white holds longer and fades later. */
+    .hr-slide::before { background: linear-gradient(90deg, rgba(255,255,255,.97), rgba(255,255,255,.92) 52%, rgba(255,255,255,0) 92%); }
+    .hero-role .box   { @apply w-[62%] gap-2; }
+    .hero-role .tag .line { @apply w-6; }
+    .hero-role .tag p { @apply text-[11px] font-semibold; }
+    .hero-role .mid   { @apply gap-2; }
+    .hero-role h3     { @apply text-xl leading-[1.21] font-bold; }
+    .hero-role .d     { @apply mt-2 text-[13px] leading-[1.21]; }
+    .hero-role .reg   { @apply px-[22px] py-3 text-[13px] font-semibold; }
+    .hero-role .dots  { @apply bottom-3 left-1/2 -translate-x-1/2; }
+
+    /* ---- SERVICE STRIP — Figma keeps two columns (74px tall), not four rows -- */
+    .service-strip .inner { @apply flex-row flex-wrap items-center gap-3 px-4 py-5; }
+    .svc              { @apply w-[calc(50%-6px)] items-start gap-2; }
+    .svc .ic          { @apply p-2; }                /* 32px circle */
+    .svc .ic img      { @apply size-4; }
+    .svc > div        { @apply ml-0 min-w-0; }
+    .svc .t1          { @apply mb-0.5 text-xs leading-[15px]; }
+    .svc .t2          { @apply text-[10px] leading-[13px]; }
+
+    /* ---- CATEGORIES — 150×110 tiles on a swipeable row, not a full-width stack -- */
+    .cat-row          { @apply snap-x snap-mandatory flex-nowrap gap-2 overflow-x-auto overscroll-x-contain scroll-smooth;
+                        scrollbar-width: none; }
+    .cat-row::-webkit-scrollbar { display: none; }
+    /* `.cat-row .cat-thumb` also exists in the @media (hover:none) block below,
+       where `grow` would stretch these back to full width — hence the page scope. */
+    body[data-page="home"] .cat-row .cat-thumb { @apply h-[110px] w-[150px] min-w-[150px] shrink-0 grow-0 snap-start; }
+    /* On a 110px tile the label sits much closer to the top of the photo than it
+       does on the 238px desktop tile, so the wash has to start higher. */
+    .cat-thumb .ov        { background: linear-gradient(180deg, rgba(0,0,0,0) 18%, rgba(0,0,0,.78)); }
+    .cat-thumb .info      { @apply p-3; }
+    .cat-thumb .info h4   { @apply line-clamp-2 text-sm leading-[1.21] font-bold whitespace-normal; }
+    .cat-thumb .info p    { @apply mt-0.5 text-[11px] leading-[1.21] font-normal; }
+    /* Figma's tile overlay is title + count only — at 150px the arrow ate a third
+       of the label's line and pushed long section names onto a third line. */
+    .cat-thumb .info img  { @apply hidden; }
+
+    /* ---- SECTION HEAD — Figma is 43px tall: 11px eyebrow, 6px, 20px title ----
+       app.css stacks the "Ətraflı bax" link under the title at this width, which
+       cost ~90px per section across five sections. Figma drops the link on mobile;
+       it stays here (it is the only route to the filtered catalog) but moves back
+       onto the title row as a compact, still-tappable 34px target. */
+    body[data-page="home"] .sec-head        { @apply mb-4 flex-row items-end justify-between gap-3; }
+    body[data-page="home"] .sec-head > div  { @apply min-w-0 flex-1; }
+    body[data-page="home"] .sec-tag         { @apply mb-1.5; }
+    body[data-page="home"] .sec-tag .line   { @apply w-5; }
+    body[data-page="home"] .sec-tag p       { @apply text-[11px] leading-[1.21] font-semibold text-black/50; }
+    body[data-page="home"] .sec-title       { @apply text-xl leading-[1.21] font-bold text-ink; }
+    body[data-page="home"] .sec-more        { @apply flex min-h-[34px] shrink-0 items-end gap-1.5 pb-1; }
+    body[data-page="home"] .sec-more p      { @apply text-[11px] font-semibold; }
+    body[data-page="home"] .sec-more img    { @apply size-4; }
+
+    /* ---- PRODUCT CARDS — two 166px cards with a 12px gap ------------------
+       app.css already sets --crow-per:2 here; only the gap differs (8 → 12).
+       Figma's mobile card drops the border and the 12px inset: the photo runs
+       the full card width and the text sits directly under it. */
+    body[data-page="home"] .grid4 { @apply gap-3; --crow-gap: .75rem; }
+    body[data-page="home"] .pcard { @apply gap-2 rounded-none border-0 p-0; }
+    body[data-page="home"] .pcard .ph { @apply h-[150px]; }
+    body[data-page="home"] .pcard .ph > img.prod { @apply h-[72%]; }
+    body[data-page="home"] .pcard .badges    { @apply max-w-full flex-wrap; }
+    body[data-page="home"] .pcard .badges .b { @apply px-1.5 py-0.5 text-[10px]; }
+    body[data-page="home"] .pcard .heart     { @apply p-1.5; }
+    body[data-page="home"] .pcard .heart img { @apply size-4; }
+    body[data-page="home"] .pcard .rating img { @apply size-4; }
+    body[data-page="home"] .pcard .rating p   { @apply text-[13px]; }
+    /* Two cards sit side by side, so a one-line name next to a two-line one left
+       their price rows on different baselines. Both blocks get the height they
+       occupy at their maximum, which is what keeps the pair reading as a grid. */
+    body[data-page="home"] .pcard .cat        { @apply line-clamp-1 text-[10px]; }
+    body[data-page="home"] .pcard .name       { @apply line-clamp-2 min-h-[32px] text-[13px] leading-[1.21] font-semibold; }
+    body[data-page="home"] .pcard .price      { @apply flex-wrap items-center gap-1.5; }
+    body[data-page="home"] .pcard .price .now { @apply text-[15px] font-bold; }
+    body[data-page="home"] .pcard .price .old { @apply text-[11px]; }
+    body[data-page="home"] .pcard .price .off { @apply text-[10px]; }
+
+    /* ---- SPECIALIST CARDS — 166×167: 110px tinted head, 57px foot --------
+       Figma left-aligns the head (avatar, craft, rating) instead of centring it
+       in a 201px block, which is what made these cards twice as tall as designed. */
+    body[data-page="home"] .scard             { @apply gap-0 border-0 p-0; }
+    body[data-page="home"] .scard .top        { @apply h-[110px] items-start justify-start gap-2 p-3; }
+    body[data-page="home"] .scard .avatar     { @apply mt-0 size-11; }
+    body[data-page="home"] .scard .avatar img { @apply size-6; }
+    body[data-page="home"] .scard .role       { @apply text-[11px] leading-[1.21] font-medium text-black/50; }
+    body[data-page="home"] .scard .rating img { @apply size-3.5; }
+    body[data-page="home"] .scard .rating p   { @apply text-[11px] font-semibold; }
+    body[data-page="home"] .scard .heart      { @apply p-1.5; }
+    body[data-page="home"] .scard .heart img  { @apply size-4; }
+    body[data-page="home"] .scard .badges .b  { @apply px-1.5 py-0.5 text-[10px]; }
+    body[data-page="home"] .scard .badges .b img { @apply size-3.5; }
+    /* the name + meta wrapper (scard.blade.php renders it as a bare <div>) */
+    body[data-page="home"] .scard > div:last-child { @apply flex flex-col gap-1 p-3; }
+    body[data-page="home"] .scard .name  { @apply text-[13px] leading-[1.21] font-semibold text-ink; }
+    body[data-page="home"] .scard .meta  { @apply gap-2 text-[11px] leading-[1.21] text-black/50; }
+
+    /* ---- BLOG — Figma stacks full-width posts instead of a peeking row ----
+       Card metrics (228px cover, 20px body, 8px gaps) already match app.css, so
+       only the axis changes. Figma draws two posts; the teaser is capped at three
+       because every extra post costs a full 427px screen of scrolling and the
+       "Ətraflı bax" link beside the heading is the route to the rest. */
+    body[data-page="home"] .blog-grid { @apply flex-col gap-3.5 overflow-x-visible; }
+    body[data-page="home"] .blog-grid > * { @apply w-full; }
+    body[data-page="home"] .blog-grid > *:nth-child(n+4) { @apply hidden; }
+
+    /* ---- CAMPAIGN BANNER — badge above the copy, not beside it ------------
+       Figma "bannerm": 343×113, square, 18px padding, 8px gaps. The inline
+       badge left the heading a ~120px column and pushed the banner to 3 lines. */
+    .promo-banner        { @apply mb-10 gap-4 rounded-none p-[18px]; }
+    .promo-banner .pb-l  { @apply flex-col items-start gap-2; }
+    .pb-badge            { @apply rounded-none px-2.5 py-[5px] text-[11px] tracking-normal; }
+    .promo-banner h3     { @apply text-lg leading-[1.21]; }
+    .promo-banner p      { @apply mt-1 text-[13px] leading-[1.21]; }
+    .pb-copy             { @apply rounded-none px-5 py-3 text-[13px]; }
   }
 
   /* Touch devices have no hover: without this the first tile stays expanded forever and

@@ -42,6 +42,14 @@
 
 <header class="topbar">
   <div class="nav-row1">
+    {{-- Mobile hamburger — visible only ≤900px. It is a direct child of .nav-row1
+         (not of .nav-menu) because the mobile header is a 3-column grid that puts
+         it on the left, the logo in the centre and the icons on the right, exactly
+         like the Figma m-home frame (725:5763). --}}
+    <button class="mob-burger" id="mobBurger" type="button" aria-label="{{ t('nav.menu_aria') }}" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+
     <a href="{{ route('home') }}" aria-label="{{ t('nav.logo_aria') }}"><img class="logo" src="/assets/logo-archi-black.png" alt="ARCHI"></a>
 
     <div class="search"
@@ -56,7 +64,13 @@
          data-l-loading="{{ t('nav.sd_loading', [], app()->getLocale()) }}"
          data-l-no-results="{{ t('nav.sd_no_results', [], app()->getLocale()) }}">
       <img src="/assets/icon-search.svg" alt="">
-      <input type="text" id="navSearch" aria-label="{{ t('nav.search_aria') }}" placeholder="{{ t('nav.search_placeholder') }}" autocomplete="off">
+      {{-- data-ph-short is swapped in by shared/navbar.js below 640px: the full
+           sentence does not fit a 375px field and the input must stay at 16px. --}}
+      <input type="text" id="navSearch" aria-label="{{ t('nav.search_aria') }}"
+             placeholder="{{ t('nav.search_placeholder') }}"
+             data-ph-long="{{ t('nav.search_placeholder') }}"
+             data-ph-short="{{ t('nav.search_placeholder_short') }}"
+             autocomplete="off">
       <div class="search-dropdown" id="searchDrop"></div>
     </div>
 
@@ -127,11 +141,6 @@
         @endauth
         <a class="btn-post" href="{{ $postProductHref }}"><img src="/assets/icon-plus.svg" alt=""><span>{{ t('nav.post_product') }}</span></a>
       </div>
-
-      {{-- Mobile hamburger — visible only ≤900px --}}
-      <button class="mob-burger" id="mobBurger" type="button" aria-label="{{ t('nav.menu_aria') }}" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
     </div>
 
     {{-- Mobile drawer — slides from right, holds all nav links --}}
@@ -142,22 +151,10 @@
         <button class="mob-close" id="mobClose" type="button" aria-label="{{ t('nav.close_menu_aria') }}">✕</button>
       </div>
 
-      <div class="mob-drawer-search">
-        <div class="search mob-search"
-             data-url-api="/api/search"
-             data-url-search="{{ route('search') }}"
-             data-url-specialists="/specialist"
-             data-url-product="/product"
-             data-l-quick="{{ t('nav.sd_quick') }}"
-             data-l-products="{{ t('nav.sd_products') }}"
-             data-l-masters="{{ t('nav.sd_masters') }}"
-             data-l-all="{{ t('nav.sd_all_results') }}"
-             data-l-loading="{{ t('nav.sd_loading', [], app()->getLocale()) }}"
-             data-l-no-results="{{ t('nav.sd_no_results', [], app()->getLocale()) }}">
-          <img src="/assets/icon-search.svg" alt="">
-          <input type="text" aria-label="{{ t('nav.search_aria') }}" placeholder="{{ t('nav.search_placeholder') }}" autocomplete="off">
-        </div>
-      </div>
+      {{-- No search field here: the header search is now visible on every mobile
+           page (Figma m-home 725:5763), so a second copy in the drawer would be
+           redundant. It was also dead markup — shared/navbar.js binds only
+           #navSearch / #searchDrop, so this input never returned a result. --}}
 
       <div class="mob-drawer-body">
         @foreach ($headerMenu as $item)

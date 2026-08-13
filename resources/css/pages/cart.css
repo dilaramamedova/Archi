@@ -9,4 +9,30 @@
      keeps the current crumb at the normal weight (.ui-crumbs .cur is font-medium).
      Size, gap and line-height are caller utilities on the element itself. */
   #ctPage .ui-crumbs .cur { @apply font-normal; }
+
+  /* Mobile item row (Figma "basket-html — Mobile", 375).
+     Five children — thumb, details, stepper, line total, remove — do not fit on one
+     line at 375px; `flex-wrap` used to break them at arbitrary points, squeezing the
+     product name to one word per line and dropping the remove button onto its own row.
+     Below 560px the row becomes the two-line grid the design specifies instead:
+
+       [thumb] [details……] [×]
+       [stepper]  ……  [line total]
+
+     Only the areas live here — every size and type step is a `max-[560px]:` utility on
+     the element in resources/js/pages/cart.js, so the utilities layer still wins and
+     the desktop flex row is untouched. */
+  @media (max-width: 560px) {
+    .ct-row {
+      grid-template-columns: 64px minmax(0, 1fr) auto;
+      grid-template-areas:
+        'thumb info  rm'
+        'qty   qty   total';
+    }
+    .ct-row > .ct-thumb { grid-area: thumb; }
+    .ct-row > .ct-info  { grid-area: info; }
+    .ct-row > .ct-qty   { grid-area: qty; }
+    .ct-row > .ct-total { grid-area: total; }
+    .ct-row > .ct-rm    { grid-area: rm; }
+  }
 }

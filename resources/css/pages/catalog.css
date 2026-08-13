@@ -143,19 +143,83 @@
   .cat-grid .cat-empty[hidden] { @apply hidden; }
   .cat-empty { @apply col-span-full py-16 text-center text-[15px] text-black/50; }
 
+  /* ==========================================================================
+     MOBILE FILTER SHEET (`.fsheet`)
+     The Figma has no mobile frame for the filtered listings. Rendered inline, the
+     sidebar is a ~2,800px wall the visitor must scroll past before the first
+     product — so below 980px `.fside` becomes a bottom sheet opened by
+     `.fsheet-btn`. Nothing here applies at ≥981px: the sidebar keeps its Figma
+     sticky-rail behaviour untouched.
+     Declared here rather than in app.css (not this task's file) and reused by
+     /specialists, which shares the same `.fside` skeleton — see specialists.css.
+     ========================================================================== */
+  .cat-tools    { @apply flex items-center gap-2.5; }
+  /* Desktop: the sheet chrome does not exist. */
+  .fsheet-btn   { @apply hidden; }
+  .fsheet-head  { @apply hidden; }
+  .fsheet-scrim { @apply hidden; }
+
+  @media (max-width: 980px) {
+    .cat-tools    { @apply w-full; }
+    .cat-tools .cat-sort { @apply ml-auto; }
+
+    .fsheet-btn   { @apply inline-flex h-[41px] shrink-0 cursor-pointer items-center gap-2 rounded-ds
+                            border border-black/14 bg-white px-4 text-sm font-semibold text-ink
+                            transition-colors duration-150 hover:border-black/35; }
+    .fsheet-btn .ic { @apply size-5 shrink-0 text-black/55; }
+    /* count of active filters — hidden (via [hidden]) while nothing is selected */
+    .fsheet-btn .n  { @apply inline-grid h-5 min-w-5 place-items-center rounded-full bg-ink px-1.5
+                             text-[11px] font-bold text-white; }
+    .fsheet-btn .n[hidden] { @apply hidden; }
+
+    /* z-[70] puts the sheet over the sticky topbar (z-60); the scrim sits just under it.
+       `visibility` (not `display`) so the panel can transition and stays out of the tab
+       order while closed. */
+    .fsheet-scrim { @apply fixed inset-0 z-[65] block bg-black/45 opacity-0 transition-opacity duration-300; }
+    .fsheet-scrim[hidden] { @apply pointer-events-none hidden; }
+    .fsheet-scrim[data-open="true"] { @apply opacity-100; }
+
+    /* `.fside` in app.css un-sticks itself below 980px with
+       `static block max-h-none overflow-visible` — the sheet needs the desktop
+       flex column back so `.fside-scroll` scrolls and "apply" stays pinned. */
+    .cat-body .fsheet,
+    .sp-body .fsheet {
+      @apply fixed inset-x-0 top-auto bottom-0 z-[70] flex max-h-[86vh] w-full translate-y-full
+             flex-col overflow-hidden rounded-t-[20px] rounded-b-none border-x-0 border-b-0
+             px-4 pt-0 pb-[max(16px,env(safe-area-inset-bottom))]
+             shadow-[0_-10px_34px_rgba(0,0,0,0.22)] transition-transform duration-300 [visibility:hidden];
+    }
+    .cat-body .fsheet[data-open="true"],
+    .sp-body .fsheet[data-open="true"] { @apply translate-y-0 [visibility:visible]; }
+
+    .fsheet-head       { @apply relative -mx-4 flex shrink-0 items-center gap-3 border-b border-black/10 px-4 pt-4 pb-3; }
+    .fsheet-head .grip { @apply absolute top-2 left-1/2 h-1 w-9 -translate-x-1/2 rounded-full bg-black/15; }
+    .fsheet-head .ttl  { @apply flex-1 text-base font-semibold text-ink; }
+    .fsheet-head .cls  { @apply -mr-2 grid size-10 shrink-0 cursor-pointer place-items-center rounded-ds
+                                border-none text-base text-black/55 [background:none] [font-family:inherit] hover:text-ink; }
+
+    .fsheet .fside-scroll { @apply min-h-0 flex-1 overflow-y-auto pt-4 [overscroll-behavior:contain]; }
+    /* the sheet is edge-to-edge, so the divider above "apply" must be too */
+    .fsheet .fside-apply-sep { @apply [margin:0_-16px]; }
+    .fsheet .fside-apply     { @apply mt-4 h-[50px]; }
+  }
+
   /* ---- catalog responsive ---- */
   @media (max-width: 980px) {
     .cat-body  { @apply flex-col; }
-    .cat-body .fside { @apply w-full; }
   }
   @media (max-width: 640px) {
-    .cat-head          { @apply flex-col items-start gap-3; }
-    .cat-head-l h1     { @apply text-[28px]; }
-    .cat-grid          { @apply grid-cols-2 gap-2; }
     main.catalog       { @apply pt-4 pb-10; }
-    .cat-head          { @apply mt-5; }
-  }
-  @media (max-width: 400px) {
-    .cat-grid          { @apply grid-cols-1; }
+    .cat-head          { @apply mt-5 flex-col items-start gap-3; }
+    .cat-head-l h1     { @apply text-[28px]; }
+    /* Two columns is the card rhythm the rest of the mobile site uses; one column at
+       375px produced ~600px-tall cards and one product per screen. */
+    .cat-grid          { @apply grid-cols-2 gap-2; }
+    /* 27px tall — the classifier drill-down rows are the primary navigation of the
+       sheet and have to be thumb-sized. */
+    .fs-cat            { @apply min-h-11 py-2.5; }
+    .fs-sub, .fs-sub2  { @apply min-h-10 py-2; }
+    .fs-check          { @apply min-h-9 items-center; }
+    .fs-size           { @apply h-9 px-3.5 text-sm; }
   }
 }

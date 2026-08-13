@@ -349,14 +349,16 @@
   .mega-spec .promo .card .pill { @apply self-start bg-yellow px-[18px] py-3 text-base font-medium text-ink
                                          transition-all duration-[250ms] hover:brightness-[.92]; }
 
-  /* blog layout (3 cards) */
+  /* blog layout (3 cards). The cards must shrink: at the design's fixed sizes the
+     three of them add up to ~1446px, which overflowed the panel on any laptop
+     narrower than 1440. */
   .mega-blog          { @apply flex items-stretch; }
-  .mblog              { @apply flex items-center gap-3 border-r border-black/10 px-6; }
+  .mblog              { @apply flex min-w-0 flex-1 items-center gap-3 border-r border-black/10 px-6; }
   .mblog:first-child  { @apply pl-0; }
   .mblog:last-child   { @apply border-r-0 pr-0; }
   .mblog img.ph       { @apply h-52 w-48 shrink-0 rounded-ds object-cover transition-transform duration-500; }
   .mblog:hover img.ph { @apply scale-[1.04]; }
-  .mblog .info        { @apply flex h-52 w-[230px] flex-col justify-center gap-3; }
+  .mblog .info        { @apply flex h-52 w-[230px] min-w-0 flex-1 flex-col justify-center gap-3; }
   .mblog .info h4     { @apply text-2xl leading-[1.25] font-medium text-ink; }
   .mblog .info .d     { @apply text-sm leading-[1.25] text-black/70; }
   .mblog .info .read  { @apply flex items-center gap-2 self-start border-b-2 border-yellow-line pb-0.5
@@ -1014,11 +1016,61 @@
     .mega-inner      { @apply p-6; }
     .mega-cats       { @apply grid-cols-2; }
     .mega-cats.mega-clusters { @apply grid-cols-2; }
+
+    /* ---- touch targets ----
+       Audit at 375px: `.sec-more` 138x28 (on ~8 pages), footer links 343x16,
+       `.cab-back` 46x16 (every cabinet page), `.nav-cart`/`.nav-wish` 24x24.
+       All are comfortably under the 44px guideline. Each one below grows its BOX
+       only — no type scale, colour or underline position changes. */
+
+    /* pt-4 rather than min-height: the ::before/::after underline is pinned to
+       bottom-0, so growing the box downwards would tear it off the text. Padding
+       on top keeps text + arrow + rule exactly as designed and still hits 44. */
+    .sec-more            { @apply pt-4; }
+    /* the arrow is what sets the content band's height, and page CSS shrinks it to
+       16px on some pages — pinning the label to 24px keeps the total at 44 there too */
+    .sec-more p          { @apply flex min-h-6 items-center; }
+    .cab-back            { @apply min-h-11 pr-2; }
+    .nav-wish, .nav-cart { @apply size-11; }
+    /* breadcrumb links are 13px type on a 20px line — the smallest repeated target
+       on the site, and they appear on nearly every page */
+    .ui-crumbs a         { @apply inline-flex min-h-11 items-center; }
+    /* the 16px bottom margin becomes the row's own height instead of dead space,
+       so the column is barely taller than before */
+    .foot-col a          { @apply mb-0 flex min-h-11 items-center; }
+    .foot-legal .links a { @apply flex min-h-11 items-center; }
+
+    /* `.fsort` is whitespace-nowrap, so on /specialists the longest option label
+       ("Ən yüksək reytinq") pushed the toolbar 142px past a 375px viewport — the
+       only horizontal overflow left on the site. Let the control shrink and clip
+       its value; the "Sırala:" prefix and the chevron still identify it. */
+    .fsort      { @apply min-w-0 max-w-full; }
+    .fsort .val { @apply min-w-0 overflow-hidden text-ellipsis; }
   }
   @media (max-width: 640px) {
-    /* 1.15 cards per view: the sliver of the next card is what tells a phone
-       user the row scrolls, which a full-width card would hide */
-    .grid4, .blog-grid, .fbt-cards { --crow-per: 1.15; }
+    /* Figma m-home (725:5763) measures 2 product cards per 375px view: 16px gutter,
+       two 165px cards, a 12px gap. One-and-a-bit cards showed a single product per
+       screen, which turned every row into a long swipe and made the page read as a
+       list rather than a catalogue. `.pcard` survives 165px because its price row
+       already wraps the old price / discount badge onto their own line. */
+    .grid4, .fbt-cards { --crow-per: 2; }
+    /* Blog posts keep the 1.15 peek: a post card is a 16:9 cover plus a headline and
+       a two-line excerpt — at half width the excerpt is unreadable, and Figma shows
+       them full-bleed one at a time. The 0.15 sliver is what says "this row scrolls". */
+    .blog-grid { --crow-per: 1.15; }
+    /* Two cards per view means a ~165px card, and the desktop badge (14px type,
+       10px padding) then wraps to four lines and buries the thumbnail — measured
+       98x84 over a 127px photo on /catalog and /store. The home and product pages
+       each shrank it behind their own `body[data-page=…]` scope; it belongs to the
+       shared card, so every page that renders a `.pcard` gets it here. */
+    .pcard .badges         { @apply flex-wrap; }
+    .pcard .badges .b,
+    .scard .badges .b      { @apply px-1.5 py-0.5 text-[10px]; }
+    .scard .badges .b img  { @apply size-3.5; }
+    /* A long category or product name used to be sliced mid-word: the crumb row is
+       overflow-hidden with no ellipsis. Let it scroll sideways instead. */
+    .ui-crumbs             { @apply overflow-x-auto whitespace-nowrap; scrollbar-width: none; }
+    .ui-crumbs::-webkit-scrollbar { display: none; }
     .sec-title             { @apply text-[28px]; }
     .sec-head              { @apply flex-col items-start gap-3; }
     .foot-bottom           { @apply flex-col items-start gap-5; }
@@ -1029,8 +1081,10 @@
     .foot-news .form       { @apply h-auto flex-col gap-2; }
     .foot-news .form .ip   { @apply py-3; }
     .foot-news .form .sub  { @apply justify-center py-3; }
-    .foot-cols             { @apply flex-col gap-6 pt-8 pb-8; }
-    .foot-col              { @apply w-full; }
+    /* Figma m-home footer: the link columns stay 2-up on a phone ("ARCHİ-yə qoşul"
+       beside "Şirkət & dəstək"). Stacking all four made the footer ~2 screens tall. */
+    .foot-cols             { @apply grid grid-cols-2 gap-x-4 gap-y-7 pt-8 pb-8; }
+    .foot-col              { @apply w-full min-w-0; }
     .foot-top              { @apply h-auto flex-col items-start gap-3; }
     .mega-cats             { @apply grid-cols-1; }
     .mega-spec, .mega-blog { @apply flex-col gap-6; }
@@ -1053,8 +1107,7 @@
   .mob-drawer-head  { @apply flex h-16 items-center justify-between border-b border-black/10 px-5; }
   .mob-drawer-head .logo { @apply h-10 w-auto; }
   .mob-close        { @apply flex size-9 items-center justify-center text-xl text-black/60; }
-  .mob-drawer-search { @apply border-b border-black/10 px-5 py-3; }
-  .mob-drawer-search .search { @apply flex w-full rounded-ds; }
+  /* (.mob-drawer-search removed — the header search is visible on mobile now) */
   .mob-drawer-body  { @apply flex-1 overflow-y-auto px-5 py-4; }
   .mob-link         { @apply flex items-center gap-2 py-3 text-base font-medium text-ink border-b border-black/8; }
   .mob-link img     { @apply size-5; }
@@ -1069,24 +1122,51 @@
   .mob-lang a       { @apply px-3 py-1.5 text-sm font-medium text-black/60; }
   .mob-lang a.active { @apply bg-yellow text-ink; }
 
+  /* Figma m-home (725:5763) puts the mobile header on two rows:
+       row 1 — hamburger (left) · ARCHI wordmark (centred) · heart + cart (right)
+       row 2 — the search field, full width, always visible
+     A 3-column grid (1fr auto 1fr) is what actually centres the wordmark on the
+     viewport rather than "between its neighbours", and it survives the icon group
+     changing width (the cart badge appears/disappears). Before this, `.search` was
+     display:none ≤900 and nothing carried `flex-1`, so the logo + icons + burger
+     all bunched against the left edge with a large empty gap on the right.
+     `.mob-overlay` / `.mob-drawer` are also children of `.nav-row1` but they are
+     position:fixed, i.e. out of flow — they are never auto-placed into a cell. */
   @media (max-width: 900px) {
     .mob-burger {
-      @apply flex size-10 flex-col items-center justify-center gap-[5px];
+      @apply flex size-11 flex-col items-center justify-center gap-[5px];
     }
     .mob-burger span {
       @apply block h-[2px] w-[22px] bg-ink transition-all duration-200;
     }
-    .nav-row1     { @apply h-14 gap-4 px-4; }
+    .nav-row1 {
+      /* 48px row + a 44px field + 8px = a 100px sticky header. The row matches the
+         Figma frame and is the tightest that still holds the 44px icon targets. */
+      @apply grid h-auto grid-cols-[1fr_auto_1fr] items-center gap-0 px-4 pt-0 pb-2;
+      grid-template-rows: 48px auto;
+    }
+    .nav-row1 > .mob-burger { @apply col-start-1 row-start-1 justify-self-start; }
+    .nav-row1 > a           { @apply col-start-2 row-start-1 justify-self-center; }
+    .nav-row1 > .nav-menu   { @apply col-start-3 row-start-1 justify-self-end; }
+    .nav-row1 > .search     { @apply col-span-3 col-start-1 row-start-2 flex rounded-ds py-2.5; }
+    /* the desktop dropdown is pinned to 640px so it can hold three result columns;
+       on a phone it must simply match the field it hangs from */
+    .search-dropdown { @apply min-w-0 top-[calc(100%+6px)]; }
     .logo         { @apply h-10 w-auto; }
     .nav-menu .signin { @apply hidden; }
     .nav-menu .lang   { @apply hidden; }
     .nav-row2         { @apply hidden; }
     .mega-panel       { @apply hidden; }
+    /* touch targets — these two must be raised HERE and not in the shared
+       responsive block above, because their base rules are declared further down
+       this file and would otherwise win the equal-specificity tie */
+    .mob-close        { @apply size-11; }
+    .mob-lang a       { @apply flex min-h-11 items-center; }
   }
 
   @media (max-width: 640px) {
-    .nav-row1    { @apply h-14 gap-3 px-3; }
-    .nav-icons   { @apply gap-4; }
+    .nav-row1    { @apply px-3; }
+    .nav-icons   { @apply gap-1; }
     .wrap        { @apply px-4; }
     .inner       { @apply px-4; }
   }

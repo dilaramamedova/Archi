@@ -187,22 +187,139 @@
   /* not a link (there is no reviews route) — no `cursor-pointer` affordance */
   .sec-more2           { @apply inline-flex items-center border-b border-yellow-line pb-1 text-base font-medium text-ink-alt; }
 
-  /* ---- product page responsive ---- */
+  /* ---- product page responsive ----
+     The ≤640 block is measured against Figma "product-html — Mobile" (706:2858),
+     a 375px frame. This file is @imported before app.css's own @layer components,
+     so overrides of a shared component (.inner, .pcard, .scard, .sec-head) are
+     scoped with `body[data-page="product"]` to outrank it. */
   @media (max-width: 640px) {
+    /* `.wrap` and `.inner` both carry px-4 at this width and every block nests one
+       inside the other, so the page sat on a 32px gutter (311px of content).
+       Figma uses a single 16px gutter, i.e. 343px — what `.wrap` alone gives. */
+    body[data-page="product"] .wrap > .inner { @apply px-0; }
+    /* Figma's mobile sections are 32px top and bottom; `.section`'s py-10 put 40px
+       on each side of every boundary, so adjacent sections sat 80px apart. */
+    body[data-page="product"] .wrap > .inner.section { @apply py-8; }
+
     .pd           { @apply pt-4 pb-8; }
-    .pd-crumb     { @apply mb-3; }
-    .pd-price .now { @apply text-[26px]; }
-    .pd-buy       { @apply flex-wrap; }
-    .pd-add       { @apply h-[48px] min-w-0 flex-[1_1_100%] text-base; }
-    .pd-qty       { @apply h-[48px] flex-1; }
-    .pd-wish      { @apply size-[48px]; }
+    /* Figma draws the crumb as one 20px line. The base rule is `flex-wrap`, and the
+       links carry a 44px tap height while the separators are 19.5px, so a long
+       category name pushed the product title onto a second row and left a dangling
+       "/" — 71px of chrome above the gallery for one line of text. Swiping the trail
+       keeps every label readable at its full length and holds the row at 44px. */
+    .pd-crumb     { @apply mb-3 flex-nowrap overflow-x-auto overscroll-x-contain whitespace-nowrap;
+                    scrollbar-width: none; }
+    .pd-crumb::-webkit-scrollbar { display: none; }
+    .pd-crumb > *  { @apply shrink-0; }
+
+    /* ---- GALLERY (Figma pd-gallery-mobile: 343×300 stage, 64px thumbs, 8px gaps) ----
+       `.pd-main` is `flex-1`, and on this stacked mobile layout flex-basis:0 beats
+       its `height` — the stage holds nothing but absolutely-positioned children, so
+       it collapsed to its 2px of border and the product photo vanished. */
+    .pd-gallery   { @apply gap-2; }
+    .pd-main      { @apply h-[300px] flex-none; }
+    .pd-main img  { @apply h-[86%]; }
+    .pd-main .badges    { @apply top-2 left-2 gap-1; }
+    .pd-main .badges .b { @apply px-2 py-1 text-xs; }
+    .pd-main .heart     { @apply top-2 right-2 size-9 items-center justify-center p-0; }
+    .pd-main .heart img { @apply size-5; }
+    .pd-thumbs    { @apply gap-2; }
+    .pd-thumb     { @apply size-16; }
+
+    /* ---- INFO PANEL type scale ---- */
+    .pd-info      { @apply gap-3.5; }
+    .pd-info h1   { @apply text-[22px] leading-[1.2]; }
+    .pd-price .now { @apply text-[32px]; }
+    .pd-price .old { @apply mb-1 text-base; }
+    .pd-unit      { @apply -mt-2 text-xs; }
+    .pd-feats     { @apply gap-2; }
+    .pd-feats .f  { @apply items-start gap-2 text-sm; }
+    .pd-feats .f .tick     { @apply mt-px size-[18px]; }
+    .pd-feats .f .tick img { @apply size-3; }
+    .pd-assure    { @apply gap-2; }
+    .pd-assure .a { @apply gap-3 p-3.5; }
+
+    /* Figma keeps the stepper and the yellow button on one 50px row; `flex-wrap`
+       plus `flex-[1_1_100%]` on the button broke it into three stacked rows. */
+    .pd-buy       { @apply flex-nowrap gap-3; }
+    .pd-qty       { @apply h-[50px] w-auto flex-none; }
+    .pd-qty button { @apply w-10 text-xl; }
+    .pd-qty input  { @apply w-9 text-base; }
+    .pd-add       { @apply h-[50px] min-w-0 flex-[1_1_auto] gap-2 text-base; }
+    .pd-add img   { @apply size-5; }
+    /* Figma's mobile buy row is the stepper plus a full-width yellow button — the
+       wishlist lives on the gallery instead. Keeping both left "Səbətə at" a 151px
+       column. product.js toggles #pdWish and #pdHeartTop together, so the gallery
+       heart still carries the whole interaction here. */
+    .pd-wish      { @apply hidden; }
+
+    /* ---- SELLER CARD (Figma seller-card: 343×177, 14px padding, 40px buttons) ---- */
+    .ps-top       { @apply gap-3 p-3.5; }
+    .ps-logo      { @apply size-11; }
+    .ps-logo img  { @apply size-6; }
+    .ps-name      { @apply text-[15px]; }
+    /* Figma runs the stat row on the card's own white, with no rules above or below.
+       The desktop grey band reads as a third panel at 343px — and with a single stat
+       to show it became a full-width strip around one number. */
+    .ps-stats     { @apply border-y-0 bg-transparent px-3.5 pt-0 pb-1; }
+    .ps-actions   { @apply gap-2 p-3.5 pt-2; }
+    .ps-btn       { @apply h-10 text-[13px]; }
+
     .pd-specs .row { @apply grid-cols-[120px_1fr]; }
     .pd-specs .row > div { @apply px-3 py-2.5 text-sm; }
     .rev-summary  { @apply flex-col gap-4 p-4; }
     .rs-div       { @apply hidden; }
     .rs-rec       { @apply w-full; }
     .rs-rec .track { @apply w-full; }
-    .pd-section   { @apply pt-8; }
+    .pd-section   { @apply pt-8 pb-0; }
+    .pd-tabs      { @apply mb-4; }
     .pd-tabs button { @apply mr-4 text-sm; }
+    .pdb-lead     { @apply mb-4 text-sm leading-[1.5]; }
+
+    /* ---- CARD ROWS ("Bunları da unutma", "Oxşar məhsullar", specialists) ----
+       Same mobile card as Figma m-home: two per row, 12px gap, no border or inset
+       so the photo runs the full card width. Kept in step with home.css. */
+    body[data-page="product"] .grid4,
+    body[data-page="product"] .fbt-cards { @apply gap-3; --crow-gap: .75rem; }
+    body[data-page="product"] .pcard { @apply gap-2 rounded-none border-0 p-0; }
+    body[data-page="product"] .pcard .ph { @apply h-[150px]; }
+    body[data-page="product"] .pcard .ph > img.prod { @apply h-[72%]; }
+    body[data-page="product"] .pcard .badges    { @apply max-w-full flex-wrap; }
+    body[data-page="product"] .pcard .badges .b { @apply px-1.5 py-0.5 text-[10px]; }
+    body[data-page="product"] .pcard .heart      { @apply p-1.5; }
+    body[data-page="product"] .pcard .heart img  { @apply size-4; }
+    body[data-page="product"] .pcard .rating img { @apply size-4; }
+    body[data-page="product"] .pcard .rating p   { @apply text-[13px]; }
+    /* equal-height text blocks keep the two price rows on one baseline */
+    body[data-page="product"] .pcard .cat  { @apply line-clamp-1 text-[10px]; }
+    body[data-page="product"] .pcard .name { @apply line-clamp-2 min-h-[32px] text-[13px] leading-[1.21] font-semibold; }
+    body[data-page="product"] .pcard .price      { @apply flex-wrap items-center gap-1.5; }
+    body[data-page="product"] .pcard .price .now { @apply text-[15px] font-bold; }
+    body[data-page="product"] .pcard .price .old { @apply text-[11px]; }
+    body[data-page="product"] .pcard .price .off { @apply text-[10px]; }
+
+    body[data-page="product"] .scard             { @apply gap-0 border-0 p-0; }
+    body[data-page="product"] .scard .top        { @apply h-[110px] items-start justify-start gap-2 p-3; }
+    body[data-page="product"] .scard .avatar     { @apply mt-0 size-11; }
+    body[data-page="product"] .scard .avatar img { @apply size-6; }
+    body[data-page="product"] .scard .role       { @apply text-[11px] leading-[1.21] font-medium text-black/50; }
+    body[data-page="product"] .scard .rating img { @apply size-3.5; }
+    body[data-page="product"] .scard .rating p   { @apply text-[11px] font-semibold; }
+    body[data-page="product"] .scard .heart      { @apply p-1.5; }
+    body[data-page="product"] .scard .heart img  { @apply size-4; }
+    body[data-page="product"] .scard > div:last-child { @apply flex flex-col gap-1 p-3; }
+    body[data-page="product"] .scard .name { @apply text-[13px] leading-[1.21] font-semibold text-ink; }
+    body[data-page="product"] .scard .meta { @apply gap-2 text-[11px] leading-[1.21] text-black/50; }
+
+    /* section heads on this page follow the same 11/20px mobile scale as home */
+    body[data-page="product"] .sec-head        { @apply mb-4 flex-row items-end justify-between gap-3; }
+    body[data-page="product"] .sec-head > div  { @apply min-w-0 flex-1; }
+    body[data-page="product"] .sec-tag         { @apply mb-1.5; }
+    body[data-page="product"] .sec-tag .line   { @apply w-5; }
+    body[data-page="product"] .sec-tag p       { @apply text-[11px] leading-[1.21] font-semibold text-black/50; }
+    body[data-page="product"] .sec-title       { @apply text-xl leading-[1.21] font-bold text-ink; }
+    body[data-page="product"] .sec-more        { @apply flex min-h-[34px] shrink-0 items-end gap-1.5 pb-1; }
+    body[data-page="product"] .sec-more p      { @apply text-[11px] font-semibold; }
+    body[data-page="product"] .sec-more img    { @apply size-4; }
   }
 }

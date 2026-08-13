@@ -62,27 +62,29 @@
 @endphp
 <x-layout page="cart" :title="t('cart.title')">
 
-<section class="min-h-[60vh] bg-gray-soft2 pt-10 pb-20" id="ctPage"
+{{-- mobile geometry follows the 375 frame: 16px gutters, 16/40 page padding and a
+     16px rhythm between the crumb trail, the title, the item list and the summary --}}
+<section class="min-h-[60vh] bg-gray-soft2 pt-10 pb-20 max-[560px]:pt-4 max-[560px]:pb-10" id="ctPage"
          data-cities="{{ json_encode($cities) }}"
          data-i18n="{{ json_encode($strings) }}"
          data-auth="{{ json_encode($authData) }}"
          data-images="{{ json_encode($itemImages) }}"
          data-order-url="{{ route('api.orders.store') }}">
-  <div class="wrap-narrow flex flex-col gap-6">
+  <div class="wrap-narrow flex flex-col gap-6 max-[560px]:gap-4 max-[560px]:px-4">
     {{-- geometry + type come from the caller; the shared .ui-crumbs owns tone and state.
          leading-5 restores the 20px line-height text-sm pairs with (.ui-crumbs sets
          --tw-leading:normal, which text-sm would otherwise pick up). --}}
-    <x-ui.breadcrumbs class="gap-1.5 text-sm leading-5" :items="[
+    <x-ui.breadcrumbs class="gap-1.5 text-sm leading-5 max-[560px]:text-xs max-[560px]:leading-[15px]" :items="[
         ['label' => t('common.home'), 'href' => route('home')],
         ['label' => t('cart.breadcrumb')],
     ]" />
-    <h1 class="text-[30px] font-bold tracking-[-0.4px] text-ink">{{ t('cart.heading') }}</h1>
-    <div class="grid grid-cols-[1fr_380px] items-start gap-6 max-[900px]:grid-cols-1">
+    <h1 class="text-[30px] font-bold tracking-[-0.4px] text-ink max-[560px]:text-[26px]">{{ t('cart.heading') }}</h1>
+    <div class="grid grid-cols-[1fr_380px] items-start gap-6 max-[900px]:grid-cols-1 max-[560px]:gap-4">
 
       {{-- items: #ctRows is filled by cart.js, #ctEmpty is shown when the cart is empty --}}
       <div id="ctItems">
-        <div class="flex flex-col gap-3" id="ctRows"></div>
-        <div class="rounded-ds border border-black/10 bg-white px-6 py-[60px] text-center" id="ctEmpty" hidden>
+        <div class="flex flex-col gap-3 max-[560px]:gap-4" id="ctRows"></div>
+        <div class="rounded-ds border border-black/10 bg-white px-6 py-[60px] text-center max-[560px]:px-4 max-[560px]:py-10" id="ctEmpty" hidden>
           <p class="mb-5 text-base text-black/55">{{ t('cart.empty.text') }}</p>
           {{-- inline-flex keeps the old inline-block flow inside the centered box;
                overflow-visible keeps the text baseline (a clipped inline box would
@@ -92,19 +94,19 @@
       </div>
 
       {{-- order summary — `top` clears the 140px sticky `.topbar` (+16px gap), same as `.fside` --}}
-      <aside class="sticky top-[156px] flex max-h-[calc(100vh-172px)] flex-col gap-4 overflow-y-auto rounded-ds border border-black/10 bg-white p-6 shadow-[0_4px_16px_rgba(0,0,0,0.05)] max-[900px]:static max-[900px]:max-h-none max-[900px]:overflow-visible" id="ctSum">
-        <h3 class="text-lg font-bold text-ink">{{ t('cart.summary.title') }}</h3>
+      <aside class="sticky top-[156px] flex max-h-[calc(100vh-172px)] flex-col gap-4 overflow-y-auto rounded-ds border border-black/10 bg-white p-6 shadow-[0_4px_16px_rgba(0,0,0,0.05)] max-[900px]:static max-[900px]:max-h-none max-[900px]:overflow-visible max-[560px]:gap-3.5 max-[560px]:p-4 max-[560px]:py-5" id="ctSum">
+        <h3 class="text-lg font-bold text-ink max-[560px]:text-[17px]">{{ t('cart.summary.title') }}</h3>
 
         {{-- the figures stay empty until cart.js renders them, so no wrong totals are ever painted --}}
-        <div class="flex flex-col gap-2.5 border-t border-black/8 pt-3.5">
-          <div class="flex justify-between text-sm text-black/65"><span id="ctSubLabel"></span><b class="font-semibold text-ink" id="ctSub"></b></div>
-          <div class="flex justify-between text-sm text-black/65"><span>{{ t('cart.summary.delivery') }}</span><b class="font-semibold text-ink" id="ctDeliv"></b></div>
+        <div class="flex flex-col gap-2.5 border-t border-black/8 pt-3.5 max-[560px]:gap-3.5">
+          <div class="flex justify-between text-sm text-black/65 max-[560px]:text-[13px]"><span id="ctSubLabel"></span><b class="font-semibold text-ink" id="ctSub"></b></div>
+          <div class="flex justify-between text-sm text-black/65 max-[560px]:text-[13px]"><span>{{ t('cart.summary.delivery') }}</span><b class="font-semibold text-ink" id="ctDeliv"></b></div>
         </div>
 
-        <div class="flex items-baseline justify-between border-t border-black/10 pt-3.5"><span class="text-base font-bold">{{ t('cart.summary.total') }}</span><span class="text-[26px] font-bold text-ink" id="ctTotal"></span></div>
+        <div class="flex items-baseline justify-between border-t border-black/10 pt-3.5"><span class="text-base font-bold max-[560px]:text-[15px]">{{ t('cart.summary.total') }}</span><span class="text-[26px] font-bold text-ink max-[560px]:text-2xl" id="ctTotal"></span></div>
 
         {{-- duration-200 / brightness-.93 keep the old timing over the .ui-btn defaults --}}
-        <x-ui.button variant="primary" id="ctCheckout" class="h-[52px] text-base font-semibold duration-200 [font-family:inherit] hover:brightness-[.93]">{{ t('cart.summary.checkout') }}</x-ui.button>
+        <x-ui.button variant="primary" id="ctCheckout" class="h-[52px] text-base font-semibold duration-200 [font-family:inherit] hover:brightness-[.93] max-[560px]:text-[15px]">{{ t('cart.summary.checkout') }}</x-ui.button>
       </aside>
 
     </div>

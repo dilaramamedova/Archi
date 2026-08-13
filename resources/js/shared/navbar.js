@@ -4,6 +4,8 @@
 // the login modal are gone — Laravel renders all of that server-side now.
 // The old hover-opened menus were replaced by the click-driven controller below.
 
+import { lockScroll, unlockScroll } from './scroll-lock.js';
+
 function initCartBadge() {
   try {
     const cart = JSON.parse(localStorage.getItem('archi-cart') || '[]');
@@ -42,6 +44,19 @@ function initSearch() {
   const overlay = document.createElement('div');
   overlay.className = 'search-overlay';
   (document.querySelector('.topbar') || document.body).appendChild(overlay);
+
+  // The header search is visible on phones now (Figma m-home 725:5763), where the
+  // full placeholder sentence is hard-clipped by the 375px field. The input keeps
+  // its 16px font — below that iOS Safari zooms the whole page on focus — so the
+  // copy shortens instead. Tracked live so a rotation/resize picks the right one.
+  if (input.dataset.phShort && input.dataset.phLong) {
+    const mq = window.matchMedia('(max-width: 640px)');
+    const syncPlaceholder = () => {
+      input.placeholder = mq.matches ? input.dataset.phShort : input.dataset.phLong;
+    };
+    syncPlaceholder();
+    mq.addEventListener('change', syncPlaceholder);
+  }
 
   const esc = (s) =>
     String(s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
@@ -288,18 +303,20 @@ function initMobileDrawer() {
   const close = document.getElementById('mobClose');
   if (!burger || !drawer || !overlay) return;
 
+  let locked = false;
+
   function open() {
     drawer.classList.add('open');
     overlay.classList.add('open');
     burger.setAttribute('aria-expanded', 'true');
-    document.body.style.overflow = 'hidden';
+    if (!locked) { lockScroll(); locked = true; }
   }
 
   function shut() {
     drawer.classList.remove('open');
     overlay.classList.remove('open');
     burger.setAttribute('aria-expanded', 'false');
-    document.body.style.overflow = '';
+    if (locked) { unlockScroll(); locked = false; }
   }
 
   burger.addEventListener('click', open);

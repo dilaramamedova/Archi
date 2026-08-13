@@ -30,6 +30,11 @@
   .sp-sort .car { @apply size-4 shrink-0; }
   .sp-sort-menu { @apply min-w-[220px]; }
 
+  /* Sort + phone filter trigger. `.cat-tools` / `.fsheet*` are declared in catalog.css
+     (the two listings share the `.fside` skeleton); only the deltas are here. */
+  .sp-tools     { @apply max-[980px]:w-full; }
+  .sp-tools .sp-sort { @apply max-[980px]:ml-auto; }
+
   /* active filter chips */
   .sp-chips     { @apply flex flex-wrap items-center gap-2; }
   .sp-chip      { @apply inline-flex cursor-pointer items-center rounded-ds border border-yellow-line bg-sel-bg px-3 py-2 text-[13px] font-medium text-ink hover:brightness-[.97]; }
@@ -95,9 +100,11 @@
   /* legacy delta: this page's knob has no shadow */
   .sp-toggle .ui-toggle .knob     { @apply shadow-none; }
 
-  /* specialist grid: 4 cards per row */
+  /* specialist grid: 4 cards per row. Two columns is kept down to 375px — one
+     full-width card per row made each card ~330px tall for very little content, and
+     the mobile design language elsewhere on the site pairs these cards 2-up. */
   .sp-grid  { @apply grid min-w-0 flex-1 grid-cols-4 content-start gap-3
-                     max-[1280px]:grid-cols-3 max-[1040px]:grid-cols-2 max-[980px]:w-full max-[640px]:grid-cols-1; }
+                     max-[1280px]:grid-cols-3 max-[1040px]:grid-cols-2 max-[980px]:w-full max-[640px]:gap-2; }
   .sp-empty { @apply col-span-full py-16 text-center text-[15px] text-black/50; }
 
   /* Cards filtered out by specialists.js are hidden with the `hidden` attribute; the
@@ -137,5 +144,25 @@
   .sp-card.hascur:hover .ui-btn { @apply cursor-none; }
   @media (hover: none) {
     .sp-card.hascur:hover .ui-btn { @apply cursor-auto; }
+  }
+
+  /* ---- phone ---- */
+  @media (max-width: 640px) {
+    .spec-cat            { @apply gap-4 pt-4 pb-10; }
+    /* a 2-up card is ~168px wide: the 170px tint block and the 16px role line were
+       measured for a 261px card and have to come down with it */
+    .sp-card             { @apply gap-2.5 px-2 pt-2 pb-3; }
+    .sp-card .top        { @apply h-[132px] gap-1.5; }
+    .sp-card .avatar     { @apply size-12 text-[15px]; }
+    .sp-card .role       { @apply px-1 text-[13px]; }
+    .sp-card .rate .r    { @apply hidden; }
+    .sp-card .name       { @apply text-[15px]; }
+    .sp-card .meta       { @apply flex-wrap gap-1.5 text-xs; }
+    .sp-card .foot .ui-btn { @apply h-9 w-full justify-center px-2; }
+    /* the city checkboxes and specialisation rows are the sheet's main controls */
+    .sp-cat              { @apply min-h-10 py-2; }
+    .sp-check            { @apply min-h-9 items-center; }
+    .sp-year             { @apply px-3.5 py-2.5 text-[13px]; }
+    .sp-toggle           { @apply min-h-9; }
   }
 }

@@ -82,4 +82,77 @@
     .bpp-page .cab-row { @apply flex-wrap; }
     .bpp-info          { @apply whitespace-normal; }
   }
+
+  /* Phone: the row carries six items (thumb · name/category · price · status badge ·
+     visibility switch · edit). All but `.bpp-info` are `shrink-0`, so on a 343px card
+     the name column was squeezed to roughly one character wide and every product read
+     as a vertical stack of letters. Giving `.bpp-info` a basis of "the rest of line 1"
+     forces a clean break: thumb + name on top, the four controls underneath. */
+  @media (max-width: 640px) {
+    .bpp-page .cab-row { @apply items-center gap-x-3 gap-y-3 py-3.5; }
+    .bpp-info          { @apply basis-[calc(100%-64px)] grow-0; }
+    .bpp-info .n       { @apply overflow-visible text-clip [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]; }
+    /* the edit button anchors the right end of line 2 */
+    .bpp-page .cab-row > .ui-btn { @apply ml-auto; }
+
+    /* filter chips and the pager are the two other touch targets on this page */
+    .bpp-pg            { @apply size-11; }
+  }
+
+  /* ==========================================================================
+     SHARED CABINET BUG, SCOPED — `.cab-field` collapses inside a phone field row.
+     app.css turns `.cab-field-row` into a column at ≤640px, but `.cab-field` keeps
+     `flex-[1_0_0]`: in a column the 0 flex-basis has no free space to grow into, so
+     every field measures 0px tall and the row's own `overflow-hidden` clips it away.
+     On /business/products/create that erased the entire "Qiymət və stok" card — a
+     seller could not enter a price or a stock count on a phone at all.
+     This is exactly the failure app.css already documents and fixes for `.cab-main`
+     at ≤1100px; the same one-liner belongs on `.cab-field` at ≤640px. app.css is not
+     this task's file, so the fix is scoped to the four affected pages of this task —
+     /business/profile/company and /business/profile/contact carry the same bug and
+     still need it promoted into app.css.
+     ========================================================================== */
+  @media (max-width: 640px) {
+    body[data-page="business-product-edit"] .cab-field,
+    body[data-page="business-profile-security"] .cab-field,
+    body[data-page="specialist-cabinet"] .cab-field,
+    body[data-page="specialist-cabinet-security"] .cab-field { @apply w-full flex-none; }
+  }
+
+  /* ==========================================================================
+     SHARED CABINET BUG, SCOPED — `.cab-card-head-row` eats its own card title.
+     The row is `flex items-center justify-between overflow-hidden`, the action is
+     `whitespace-nowrap`, and `.cab-card-head-txt` is `flex-[1_0_0]` — shrink 0 on a
+     0 basis, so the heading only ever gets the space the action leaves over, and
+     `overflow-hidden` silently cuts the rest off mid-word. Measured at 375px:
+       /business/profile/products  "Məhsullar" got 39px of the 88px it needs
+                                   (the "add product" button is 254px wide)
+       /specialist/cabinet/services "Xidmətlər və qiymətlər (4)" got 142px of 230px,
+                                   and the sub-heading was clipped too
+     Stacking the row below 640px gives the heading the full card width and puts the
+     action underneath it, which is what the rest of the mobile cabinet already does
+     (`.bp-page .id-actions` in business-profile.css).
+     /business/profile/showrooms and /specialist/cabinet/portfolio share the row but
+     happen to fit today, so they are deliberately left alone — the durable fix is to
+     promote this into app.css, where one long translation would otherwise clip them
+     too.
+     ========================================================================== */
+  @media (max-width: 640px) {
+    body[data-page="business-profile-products"] .cab-card-head-row,
+    body[data-page="specialist-cabinet-services"] .cab-card-head-row {
+      @apply flex-col items-stretch gap-3 overflow-visible;
+    }
+    body[data-page="business-profile-products"] .cab-card-head-txt,
+    body[data-page="specialist-cabinet-services"] .cab-card-head-txt {
+      @apply w-full flex-none overflow-visible;
+    }
+    /* the title/sub are only `nowrap`+clipped for the 1440 frame */
+    body[data-page="business-profile-products"] .cab-card-title,
+    body[data-page="specialist-cabinet-services"] .cab-card-title,
+    body[data-page="specialist-cabinet-services"] .cab-card-sub {
+      @apply overflow-visible whitespace-normal text-clip;
+    }
+    body[data-page="business-profile-products"] .cab-btn-add,
+    body[data-page="specialist-cabinet-services"] .cab-btn-add { @apply w-full; }
+  }
 }

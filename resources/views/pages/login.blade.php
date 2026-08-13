@@ -18,11 +18,15 @@
         </x-ui.field>
         <div class="flex items-center justify-between text-sm">
           <x-ui.checkbox name="remember">{{ t('login.form.remember') }}</x-ui.checkbox>
-          <a class="border-b border-yellow-line text-black/70" href="{{ route('password.request') }}">{{ t('login.form.forgot') }}</a>
+          {{-- 44px touch target, matching the shared `.ui-crumbs a` / `.foot-col a`
+               convention in app.css — including its `max-width: 900px` scope, so the
+               desktop line box is untouched. The rule moves onto the inner span:
+               growing the <a> itself drags the underline ~20px clear of the label. --}}
+          <a class="text-black/70 max-[900px]:inline-flex max-[900px]:min-h-11 max-[900px]:items-center" href="{{ route('password.request') }}"><span class="border-b border-yellow-line">{{ t('login.form.forgot') }}</span></a>
         </div>
         <x-ui.button variant="primary" type="submit"
                      class="h-[54px] rounded-none text-lg font-semibold duration-200 hover:brightness-[.93] disabled:cursor-default disabled:opacity-55 disabled:hover:brightness-100">{{ t('login.form.submit') }}</x-ui.button>
-        <p class="text-center text-[15px] text-black/60">{{ t('login.form.no_account') }} <a class="border-b-2 border-yellow-line font-semibold text-ink" href="{{ route('register') }}">{{ t('login.form.sign_up') }}</a></p>
+        <p class="text-center text-[15px] text-black/60">{{ t('login.form.no_account') }} <a class="font-semibold text-ink max-[900px]:inline-flex max-[900px]:min-h-11 max-[900px]:items-center" href="{{ route('register') }}"><span class="border-b-2 border-yellow-line">{{ t('login.form.sign_up') }}</span></a></p>
       </form>
     </div>
   </div>

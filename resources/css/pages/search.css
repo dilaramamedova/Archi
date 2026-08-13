@@ -38,4 +38,16 @@
     .sr-h1 { @apply text-[28px]; }
     .sr-h2 { @apply text-[22px]; }
   }
+  @media (max-width: 640px) {
+    .sr        { @apply pt-4 pb-10; }
+    .sr-inner  { @apply gap-5; }
+    .sr-h1     { @apply text-[26px]; }
+    .sr-h2     { @apply text-[20px]; }
+    /* 20px tall — the underline stays on the text box, the tap area grows around it */
+    .sr-more   { @apply inline-flex min-h-11 items-center; }
+    .sr-more::before, .sr-more::after { @apply bottom-3; }
+    /* the tabs are the page's primary control on a phone */
+    .sr-tab    { @apply min-h-11 py-2.5; }
+    .sr-suggest { @apply px-4 py-5; }
+  }
 }

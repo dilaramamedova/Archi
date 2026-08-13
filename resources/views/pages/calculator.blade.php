@@ -20,14 +20,16 @@
 @endphp
 <x-layout page="calculator" :title="t('calculator.title')">
 
-<section class="min-h-[60vh] bg-gray-soft2 pt-12 pb-20">
-  <div class="wrap"><div class="inner">
-    <x-ui.breadcrumbs class="qc-crumbs mb-7" :items="[
+<section class="min-h-[60vh] bg-gray-soft2 pt-12 pb-20 max-[640px]:pt-4 max-[640px]:pb-10">
+  {{-- .wrap and .inner both drop to px-4 below 640px, which doubled the gutter to 32px;
+       the frame asks for 16px, so the inner padding is dropped on mobile --}}
+  <div class="wrap"><div class="inner max-[640px]:px-0">
+    <x-ui.breadcrumbs class="qc-crumbs mb-7 max-[640px]:mb-4" :items="[
         ['label' => t('common.home'), 'href' => route('home')],
         ['label' => t('calculator.breadcrumb')],
     ]" />
 
-    <div class="mx-auto flex max-w-[620px] flex-col gap-5 rounded-ds border border-black/10 bg-white p-7 max-[640px]:p-5"
+    <div class="mx-auto flex max-w-[620px] flex-col gap-5 rounded-ds border border-black/10 bg-white p-7 max-[640px]:px-5 max-[640px]:py-6"
          id="qcCalc"
          data-labels="{{ json_encode($calcLabels, JSON_UNESCAPED_UNICODE) }}">
       <div>
@@ -89,14 +91,18 @@
       <div class="my-0.5 h-px bg-black/10"></div>
 
       <div class="text-[13px] font-semibold text-black/50" id="qcRlbl">{{ t('calculator.result.label', ['area' => 80]) }}</div>
-      <div class="flex gap-3 max-[640px]:flex-col" id="qcTiers"></div>
+      <div class="flex gap-3 max-[640px]:flex-col max-[640px]:gap-2.5" id="qcTiers"></div>
 
       <x-ui.button variant="primary" id="qcNext" :href="route('calculator.detailed')"
                    class="h-[50px] gap-2 text-[15px] font-semibold duration-200 hover:brightness-[.93]">{{ t('calculator.actions.next') }}</x-ui.button>
-      <div class="flex flex-wrap justify-center gap-5">
-        <button class="cursor-pointer border-none text-[13px] font-medium text-black/40 [background:none] [font-family:inherit] hover:text-ink" id="qcPdf">{{ t('calculator.actions.pdf') }}</button>
-        <button class="cursor-pointer border-none text-[13px] font-medium text-black/40 [background:none] [font-family:inherit] hover:text-ink" id="qcWa">{{ t('calculator.actions.whatsapp') }}</button>
-        <button class="cursor-pointer border-none text-[13px] font-medium text-black/40 [background:none] [font-family:inherit] hover:text-ink" id="qcSave">{{ t('calculator.actions.save') }}</button>
+      {{-- the three actions are one justified line in the frame; below 380px they still
+           wrap rather than shrink the gap to nothing. `.qc-act` carries the 44px touch
+           box below 900px (resources/css/pages/calculator.css) — the text itself is
+           unchanged, so `-my-2` keeps the taller boxes from stretching the card's rhythm --}}
+      <div class="flex flex-wrap justify-center gap-5 max-[900px]:-my-2 max-[640px]:justify-between max-[640px]:gap-x-3 max-[640px]:gap-y-0">
+        <button class="qc-act cursor-pointer border-none text-[13px] font-medium text-black/40 [background:none] [font-family:inherit] hover:text-ink" id="qcPdf">{{ t('calculator.actions.pdf') }}</button>
+        <button class="qc-act cursor-pointer border-none text-[13px] font-medium text-black/40 [background:none] [font-family:inherit] hover:text-ink" id="qcWa">{{ t('calculator.actions.whatsapp') }}</button>
+        <button class="qc-act cursor-pointer border-none text-[13px] font-medium text-black/40 [background:none] [font-family:inherit] hover:text-ink" id="qcSave">{{ t('calculator.actions.save') }}</button>
       </div>
     </div>
   </div></div>

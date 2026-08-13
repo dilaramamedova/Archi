@@ -66,6 +66,14 @@
     @if ($products->isEmpty())
       <x-ui.empty-state icon="📦" :title="t('business-inventory.empty.title')" :description="t('business-inventory.empty.desc')" />
     @else
+      {{-- The table is 760px wide by design (5 columns) and already scrolls inside its
+           own container, but on a phone nothing said so: no scrollbar is painted and the
+           cut-off "Rəf" column just looked broken. The hint line and the right-edge fade
+           below are the affordance; both disappear at ≥901px, where the table fits. --}}
+      <p class="flex items-center gap-1.5 border-b border-black/8 px-5 py-2.5 text-xs text-black/45 min-[901px]:hidden">
+        <span aria-hidden="true">↔</span>{{ t('business-inventory.table.scroll_hint') }}
+      </p>
+      <div class="relative w-full">
       <div class="w-full overflow-x-auto">
         <table class="w-full min-w-[760px]">
           <thead>
@@ -90,7 +98,7 @@
                     <img src="{{ $product->mainImageUrl ?? '/assets/product-marble-tile.png' }}" alt=""
                          class="size-11 rounded border border-black/10 object-cover">
                     <div class="flex min-w-0 flex-col gap-0.5">
-                      <a href="{{ route('business.products.edit', $product) }}" class="truncate text-sm font-semibold text-black/90 hover:underline">{{ $product->name }}</a>
+                      <a href="{{ route('business.products.edit', $product) }}" class="inline-flex min-h-9 items-center truncate text-sm font-semibold text-black/90 hover:underline">{{ $product->name }}</a>
                       <p class="text-xs text-black/40">{{ $product->sku ?? '—' }}</p>
                     </div>
                   </div>
@@ -117,6 +125,9 @@
             @endforeach
           </tbody>
         </table>
+      </div>
+        <div aria-hidden="true"
+             class="pointer-events-none absolute inset-y-0 right-0 hidden w-10 bg-gradient-to-l from-white to-transparent max-[900px]:block"></div>
       </div>
     @endif
   </div>

@@ -18,9 +18,12 @@ const CLS = {
   colStack: 'flex flex-col gap-2.5',
   sumRow: 'flex items-baseline justify-between border-t border-black/10 pt-4',
   sumLabel: 'text-[15px] font-semibold',
-  sumValue: 'text-[22px] font-bold',
+  // whitespace-nowrap: this is always a money figure, and at 375 the step-5 total was
+  // splitting "87 ₼" across two lines once its label wrapped and squeezed the column
+  sumValue: 'text-[22px] font-bold whitespace-nowrap',
   sumUnit: 'text-sm text-black/50',
-  cartRow: 'flex items-center justify-between rounded-ds border border-black/10 px-5 py-4',
+  // gap-3 so the wrapped label never touches the figure; px-3.5 is the mobile gutter
+  cartRow: 'flex items-center justify-between gap-3 rounded-ds border border-black/10 px-5 py-4 max-[640px]:px-3.5',
   cartLabel: 'text-sm font-semibold',
   sideMeta: 'text-[13px] text-black/50',
   sideBanner: 'flex-col items-stretch gap-2.5',
@@ -70,6 +73,9 @@ export default function init() {
     T.steps.cart,
     T.steps.summary,
   ];
+  // "Addım N · <step>" — the heading each step already prints, reused as the caption
+  // under the mobile stepper. Positionally parallel to STEPS.
+  const STEP_CAPTIONS = [T.object.k, T.rooms.k, T.works.k, T.materials.k, T.cart.k, T.summary.k];
   const WORKS = D.works;
   const money = (n) => tr(T.money, { amount: fmt(n) });
   const catalogUrl = page.dataset.urlCatalog || '#';
@@ -247,11 +253,19 @@ export default function init() {
   }
 
   function renderStepper() {
-    stepEl.innerHTML = STEPS.map((n, i) => {
+    const strip = STEPS.map((n, i) => {
       const cls = i < state.step ? 'done' : i === state.step ? 'active' : '';
       const inner = `<div class="dc-step ${cls}" data-i="${i}"><div class="c">${i < state.step ? '✓' : i + 1}</div><div class="l">${esc(n)}</div></div>`;
       return inner + (i < STEPS.length - 1 ? '<div class="dc-conn"></div>' : '');
     }).join('');
+    // Six labelled steps cannot fit across 375px, so the mobile design keeps only the
+    // numbered dots and names the current step underneath. The caption reuses the step's
+    // own "Addım N · …" heading — the same string the step head prints — so no new copy
+    // is needed and it stays translated. `.dc-stepcap` is display:none above 640px.
+    const caption = STEP_CAPTIONS[state.step] || STEPS[state.step] || '';
+    stepEl.innerHTML =
+      `<div class="dc-strip">${strip}</div>` +
+      `<div class="dc-stepcap">${esc(caption)}</div>`;
     stepEl.querySelectorAll('.dc-step').forEach((s) =>
       s.addEventListener('click', () => {
         const i = +s.dataset.i;
@@ -274,7 +288,7 @@ export default function init() {
     return `<div class="dc-sh"><div class="k">${esc(t.k)}</div><h2>${esc(t.h)}</h2></div>
   <div class="dc-group"><label>${esc(t.type)}</label>${chips('objV', D.objectTypes)}</div>
   <div class="dc-fields">
-    <div class="dc-fb"><span>${esc(t.area)}</span><div class="ip"><input id="dcArea" type="number" value="${esc(state.area)}"><span class="u">${esc(T.units.m2)}</span></div></div>
+    <div class="dc-fb dc-fb-wide"><span>${esc(t.area)}</span><div class="ip"><input id="dcArea" type="number" value="${esc(state.area)}"><span class="u">${esc(T.units.m2)}</span></div></div>
     <div class="dc-fb"><span>${esc(t.city)}</span><div class="ip"><input id="dcCity" value="${esc(state.city)}"></div></div>
     <div class="dc-fb"><span>${esc(t.floor)}</span><div class="ip"><input id="dcFloor" value="${esc(state.floor)}"></div></div>
   </div>
@@ -296,13 +310,16 @@ export default function init() {
         if (i === state.editRoom) {
           // the last room cannot be removed, so the button is disabled rather than inert
           const rm = state.rooms.length > 1 ? `data-rm="${i}"` : 'disabled';
+          // `dc-fb-sm` on perimeter/doors/windows: the frame lays the five room
+          // measurements out 2 + 3, so those three share the second line instead of
+          // falling into the default two-per-row (sizing lives in the page CSS).
           return `<div class="dc-room exp"><div class="dc-room-h"><b>${esc(r.name)}</b><button class="rm" ${rm}>${esc(t.remove)}</button></div>
       <div class="dc-fields">
         <div class="dc-fb"><span>${esc(t.floor_area)}</span><div class="ip"><input data-r="${i}" data-f="area" type="number" value="${esc(r.area)}"><span class="u">${esc(T.units.m2)}</span></div></div>
         <div class="dc-fb"><span>${esc(t.height)}</span><div class="ip"><input data-r="${i}" data-f="h" type="number" value="${esc(r.h)}"><span class="u">${esc(T.units.m)}</span></div></div>
-        <div class="dc-fb"><span>${esc(t.perimeter)}</span><div class="ip"><input data-r="${i}" data-f="per" type="number" value="${esc(r.per)}"><span class="u">${esc(T.units.m)}</span></div></div>
-        <div class="dc-fb"><span>${esc(t.doors)}</span><div class="ip"><input data-r="${i}" data-f="doors" type="number" value="${esc(r.doors)}"></div></div>
-        <div class="dc-fb"><span>${esc(t.windows)}</span><div class="ip"><input data-r="${i}" data-f="win" type="number" value="${esc(r.win)}"></div></div>
+        <div class="dc-fb dc-fb-sm"><span>${esc(t.perimeter)}</span><div class="ip"><input data-r="${i}" data-f="per" type="number" value="${esc(r.per)}"><span class="u">${esc(T.units.m)}</span></div></div>
+        <div class="dc-fb dc-fb-sm"><span>${esc(t.doors)}</span><div class="ip"><input data-r="${i}" data-f="doors" type="number" value="${esc(r.doors)}"></div></div>
+        <div class="dc-fb dc-fb-sm"><span>${esc(t.windows)}</span><div class="ip"><input data-r="${i}" data-f="win" type="number" value="${esc(r.win)}"></div></div>
       </div>
       <div class="dc-group"><label>${esc(t.floor_cover)}</label>${roomChips('floor', i, D.floorCovers, r.floor)}</div>
       <div class="dc-group"><label>${esc(t.wall_cover)}</label>${roomChips('wall', i, D.wallCovers, r.wall)}</div>

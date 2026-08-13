@@ -73,18 +73,29 @@
         <span class="count">{{ $products->total() }}</span>
       </div>
     </div>
-    <div class="fsort cat-sort" id="catSort" data-open="false">
-      <span class="lbl">{{ t('catalog.sort.label') }}</span>
-      <span class="val-wrap">
-        <span class="val" id="sortVal">{{ $sortOptions[$activeSort] ?? t('catalog.sort.popular') }}</span>
-        <span class="val-ghost" aria-hidden="true">@foreach ($sortOptions as $label)<i>{{ $label }}</i>@endforeach</span>
-      </span>
-      <span class="car">⌄</span>
-      <ul class="fsort-menu sort-menu" id="sortMenu">
-        @foreach ($sortOptions as $key => $label)
-          <li data-sort="{{ $key }}" data-on="{{ $key === $activeSort ? 'true' : 'false' }}">{{ $label }}</li>
-        @endforeach
-      </ul>
+    {{-- Sort + the phone-only filter trigger. Below 980px the sidebar is a bottom
+         sheet, so it needs an opener that sits next to the sort control. --}}
+    <div class="cat-tools">
+      <button type="button" class="fsheet-btn" id="catFilterBtn" aria-expanded="false" aria-controls="catFside">
+        <svg class="ic" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+          <path d="M3 6h14M3 10.5h9M3 15h5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+        </svg>
+        <span class="t">{{ t('catalog.filters.mobile_title') }}</span>
+        <span class="n" id="catFilterCount" hidden></span>
+      </button>
+      <div class="fsort cat-sort" id="catSort" data-open="false">
+        <span class="lbl">{{ t('catalog.sort.label') }}</span>
+        <span class="val-wrap">
+          <span class="val" id="sortVal">{{ $sortOptions[$activeSort] ?? t('catalog.sort.popular') }}</span>
+          <span class="val-ghost" aria-hidden="true">@foreach ($sortOptions as $label)<i>{{ $label }}</i>@endforeach</span>
+        </span>
+        <span class="car">⌄</span>
+        <ul class="fsort-menu sort-menu" id="sortMenu">
+          @foreach ($sortOptions as $key => $label)
+            <li data-sort="{{ $key }}" data-on="{{ $key === $activeSort ? 'true' : 'false' }}">{{ $label }}</li>
+          @endforeach
+        </ul>
+      </div>
     </div>
   </div>
 
@@ -99,7 +110,13 @@
 
   <div class="cat-body">
 
-    <aside class="fside">
+    <aside class="fside fsheet" id="catFside" data-open="false">
+     {{-- sheet handle + title: phone only (.fsheet-head is display:none above 980px) --}}
+     <div class="fsheet-head">
+       <span class="grip" aria-hidden="true"></span>
+       <p class="ttl">{{ t('catalog.filters.mobile_title') }}</p>
+       <button type="button" class="cls" id="catFilterClose" aria-label="{{ t('common.close') }}">✕</button>
+     </div>
      <div class="fside-scroll">
 
       {{-- Classifier rail: 5 customer clusters -> 12 sections; the selected
@@ -245,6 +262,7 @@
       <div class="fside-apply-sep"></div>
       <button type="button" class="fside-apply" id="catApply">{{ t('catalog.filters.apply') }}</button>
     </aside>
+    <div class="fsheet-scrim" id="catFilterScrim" hidden></div>
 
     <div class="cat-grid" id="catGrid">
       @forelse ($products as $product)

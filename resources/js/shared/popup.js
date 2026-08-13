@@ -80,6 +80,8 @@
 // Texts are localised from <html lang> (az/ru/en) with Azerbaijani fallback.
 // =============================================================================
 
+import { lockScroll, unlockScroll } from './scroll-lock.js';
+
 // Tailwind classes live in this object so the templates stay readable; the
 // compiler picks them up through the `@source "../js"` rule in app.css.
 // Colors/radius/shadow are the design-system tokens from @theme.
@@ -223,7 +225,6 @@ function show(opts = {}) {
     resolve: null,
     lastFocus: document.activeElement,
     autoTimer: null,
-    prevOverflow: document.body.style.overflow,
     onKeydown: null,
   };
 
@@ -271,7 +272,7 @@ function show(opts = {}) {
   document.addEventListener('keydown', current.onKeydown, true);
 
   document.body.appendChild(overlay);
-  document.body.style.overflow = 'hidden'; // scroll lock, like the login modal
+  lockScroll(); // <html>, not <body> — see shared/scroll-lock.js
 
   // fade+scale in on the next frame (transitions are disabled globally by app.css
   // under prefers-reduced-motion, so this degrades to an instant show)
@@ -309,7 +310,7 @@ function settle(value, immediate = false) {
 
   if (c.autoTimer) clearTimeout(c.autoTimer);
   document.removeEventListener('keydown', c.onKeydown, true);
-  document.body.style.overflow = c.prevOverflow;
+  unlockScroll();
 
   // return focus to where the user was before the popup opened
   if (c.lastFocus && typeof c.lastFocus.focus === 'function' && document.contains(c.lastFocus)) {

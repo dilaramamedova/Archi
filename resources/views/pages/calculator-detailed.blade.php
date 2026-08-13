@@ -110,6 +110,12 @@
          data-i18n="{{ json_encode($tr) }}"
          data-defaults="{{ json_encode($defaults) }}">
   <div class="wrap-narrow dc-inner">
+    {{-- the frame opens every step on a crumb trail back to the quick calculator --}}
+    <x-ui.breadcrumbs class="dc-crumbs" :items="[
+        ['label' => t('common.home'), 'href' => route('home')],
+        ['label' => t('calculator.breadcrumb'), 'href' => route('calculator')],
+        ['label' => t('calculator-detailed.breadcrumb')],
+    ]" />
     <div class="dc-head">
       <div class="tag"><span class="line"></span><p>{{ t('calculator-detailed.head.tag') }}</p></div>
       <h1>{{ t('calculator-detailed.head.title') }}</h1>

@@ -263,10 +263,12 @@
     <div class="inner flex items-center gap-14 max-[900px]:flex-col">
       <div class="flex flex-1 flex-col gap-5">
         <x-ui.eyebrow variant="kicker" :label="t('home.lead.tag')" />
-        <h2 class="text-[34px] font-bold leading-[1.18] text-ink max-[560px]:text-[26px]">{{ t('home.lead.title') }}</h2>
-        <p class="text-[15px] leading-[1.65] text-black/50">{{ t('home.lead.subtitle') }}</p>
+        {{-- Figma m-home has no lead block, so the phone sizes here follow the frame's
+             shared mobile scale instead: 20px section heading, 13px body. --}}
+        <h2 class="text-[34px] font-bold leading-[1.18] text-ink max-[640px]:text-xl max-[640px]:leading-[1.21]">{{ t('home.lead.title') }}</h2>
+        <p class="text-[15px] leading-[1.65] text-black/50 max-[640px]:text-[13px] max-[640px]:leading-[1.45]">{{ t('home.lead.subtitle') }}</p>
       </div>
-      <div class="w-full max-w-[480px] shrink-0 rounded border border-black/10 bg-white p-8 max-[900px]:max-w-none">
+      <div class="w-full max-w-[480px] shrink-0 rounded border border-black/10 bg-white p-8 max-[900px]:max-w-none max-[640px]:p-5">
         <form class="flex flex-col gap-4" id="leadForm" action="{{ route('consultation-requests.store') }}" method="post" data-l-error="{{ t('home.lead.error') }}">
           @csrf
           <x-ui.field :label="t('home.lead.name_label')">

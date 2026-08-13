@@ -17,4 +17,33 @@
     @apply hover:border-black/35;
     @apply data-[on=true]:border-ink data-[on=true]:bg-ink data-[on=true]:text-white;
   }
+
+  /* Mobile tier rows (Figma "calculator-html — Mobile", 375). Stacked full-width cards
+     read as a price list rather than three budget options, so below 640px each card is
+     laid out as one line: level on the left, price on the right, and the "Tövsiyə" note
+     tucked under the level. Only the areas are here — the DOM order is unchanged, so the
+     desktop three-column row keeps its vertical stack. */
+  @media (max-width: 640px) {
+    .qc-tier {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas:
+        'name price'
+        'rec  price';
+    }
+    .qc-tier > .qc-tier-n { grid-area: name; }
+    .qc-tier > .qc-tier-p { grid-area: price; }
+    .qc-tier > .qc-tier-r { grid-area: rec; }
+  }
+
+  /* ---- touch targets ----
+     The three actions under the CTA ("PDF yüklə", "WhatsApp-a göndər", "Yadda saxla")
+     are 13px type on a 20px line, so their boxes measured 62x20, 126x20 and 75x20 —
+     the smallest targets left on the page. Treated exactly like the shared text
+     controls in app.css: the BOX grows to 44px and nothing else moves — no type scale,
+     colour or alignment change. 900px is app.css's own touch-target breakpoint, so the
+     tablet width gets the same target the rest of the site does. All three are already
+     wider than 44px, so only the height needs a floor. */
+  @media (max-width: 900px) {
+    .qc-act { @apply inline-flex min-h-11 items-center justify-center; }
+  }
 }

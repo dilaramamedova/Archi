@@ -2,6 +2,8 @@
 // URL query parameters. The JS collects the sidebar state, builds a URL and
 // navigates to it. Sort, category clicks, and the "Apply" button all work this way.
 
+import initFilterSheet from '../shared/filter-sheet.js';
+
 // Read actual price range from the slider data attributes (set by the server)
 const sliderEl = document.getElementById('fsSlider');
 const PRICE_MIN = sliderEl ? parseInt(sliderEl.dataset.priceMin, 10) || 0 : 0;
@@ -104,7 +106,7 @@ function initSort() {
   window.addEventListener('scroll', () => { sortEl.dataset.open = 'false'; }, { passive: true });
 }
 
-function initFilters() {
+function initFilters(sheet) {
   const chipWrap = document.getElementById('catChips');
   const clearBtn = document.getElementById('catClear');
   const slider = document.getElementById('fsSlider');
@@ -180,6 +182,7 @@ function initFilters() {
       chipWrap.insertBefore(chip, clearBtn);
     });
     clearBtn.style.visibility = items.length ? '' : 'hidden';
+    if (sheet) sheet.setCount(items.length);
   }
 
   function paint() {
@@ -323,5 +326,11 @@ export default function init() {
   const grid = document.getElementById('catGrid');
   if (!grid) return;
   initSort();
-  initFilters();
+  const sheet = initFilterSheet({
+    sheet: 'catFside',
+    btn: 'catFilterBtn',
+    scrim: 'catFilterScrim',
+    close: 'catFilterClose',
+  });
+  initFilters(sheet);
 }

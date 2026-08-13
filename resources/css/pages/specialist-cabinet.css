@@ -82,4 +82,18 @@
     .sc-page .cab-field-row { @apply flex-wrap; }
     .sc-page .cab-field     { @apply min-w-[220px]; }
   }
+
+  /* Phone: the skill chip's remove control is an 11px "×" glyph — a 9×15px tap target.
+     The chip grows a little so the "×" gets a 36px box; the 32px Figma chip height is a
+     desktop measurement and does not survive a thumb. */
+  @media (max-width: 640px) {
+    .sc-skill          { @apply py-1 pr-1 pl-3; }
+    .sc-skill .x       { @apply grid size-9 place-items-center text-sm; }
+    .sc-skill-add      { @apply min-h-10 items-center; }
+    .sc-skill-input    { @apply h-10; }
+    /* "Sil" next to the avatar is a 38×31 ghost button — the `.cab-btn-del` padding in
+       app.css is sized for a mouse. Scoped here because app.css is not this task's
+       file; the sibling "Dəyişdir" button already clears 44. */
+    .sc-page .cab-btn-del { @apply min-h-11 px-4; }
+  }
 }

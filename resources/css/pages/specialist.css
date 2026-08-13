@@ -29,7 +29,11 @@
   .pp-sechead h2   { @apply text-[32px] font-semibold text-ink max-[900px]:text-[24px]; }
 
   /* header: left column + booking card */
-  .pp-head    { @apply flex items-start gap-12 max-[1200px]:flex-col max-[1200px]:gap-8; }
+  /* items-stretch once it turns into a column: with items-start the children are
+     cross-sized to fit-content, so a long word in the bio makes .pp-head-l grow
+     to max-content and the whole document scrolls sideways (seen at 768). The
+     row layout above 1200px keeps items-start and is untouched. */
+  .pp-head    { @apply flex items-start gap-12 max-[1200px]:flex-col max-[1200px]:items-stretch max-[1200px]:gap-8; }
   .pp-head-l  { @apply flex min-w-0 flex-1 flex-col gap-12; }
   .pp-id      { @apply flex items-start gap-6 max-[640px]:flex-col; }
 
@@ -57,7 +61,11 @@
 
   /* about */
   .pp-about      { @apply flex flex-col gap-6; }
-  .pp-about .txt { @apply text-base leading-[1.5] text-black/70; }
+  /* break-words: the bio is free text — a single unbroken token (a pasted URL or
+     e-mail) otherwise spills out of the column and gives the whole document a
+     horizontal scrollbar (reproducible at 768 on /specialist/5). It changes
+     nothing for text that already wraps. */
+  .pp-about .txt { @apply text-base leading-[1.5] break-words text-black/70; }
   .pp-tags       { @apply flex flex-wrap gap-2; }
   .pp-tag        { @apply rounded-ds bg-gray-soft px-3 py-1.5 text-sm text-ink; }
 
@@ -125,4 +133,101 @@
 
   /* .sec-more stretches inside a flex column — in Figma it is only as wide as its text */
   .pp-sec .sec-more { @apply self-start; }
+
+  /* ==========================================================================
+     MOBILE (Figma 777:3143 — "specialist-profile — Mobile", 375 wide)
+     The mobile comp is a different composition, not a squeezed desktop:
+       · page gutter 16, section rhythm 16 (+12 pt on each section head)
+       · identity becomes one full-width CENTERED card (avatar 72, chip, name,
+         role, rating, meta) instead of the 238x226 avatar box + left column
+       · the booking card moves ABOVE "Haqqında" (desktop keeps it as the right
+         rail).  `.pp-head-l { display:contents }` lifts .pp-id / .pp-about into
+         .pp-head so `order` can interleave them with the <aside>.
+       · portfolio is a 2-up 168x130 grid, services become bordered cards
+     Everything is scoped to max-width:640px so 768 / 1280 are untouched.
+     ========================================================================== */
+  @media (max-width: 640px) {
+    /* profile-page frame: pad 16/16/16/40, vertical gap 16 */
+    .pp { @apply gap-4 px-4 pt-4 pb-10; }
+
+    /* --- head: identity → booking → about ------------------------------- */
+    .pp-head    { @apply gap-4; }
+    .pp-head-l  { @apply contents; }
+    .pp-id      { @apply order-1 min-w-0; }
+    .pp-book    { @apply order-2 min-w-0; }
+    .pp-about   { @apply order-3 min-w-0; }
+
+    /* profile-head card: 343 wide, bg #f5f7f9, pt 29 / pb 20, gap 12, centred */
+    .pp-id { @apply relative items-center gap-3 rounded-ds bg-gray-soft2 px-4 pt-[29px] pb-5 text-center; }
+
+    /* the avatar box collapses to a plain centred column: ring + "Top usta"
+       chip stack, so .pp-badge leaves its absolute corner. .pp-fav is not in
+       the mobile comp but the control works — park it in the card's corner
+       (.pp-id is the positioned ancestor now). */
+    .pp-ava           { @apply static flex h-auto w-full flex-col items-center gap-3 overflow-visible rounded-none bg-transparent; }
+    .pp-ava .ring     { @apply static size-[72px] border-[2.25px]; }
+    .pp-ava .ring img { @apply size-[60px] rounded-full; }
+    .pp-badge         { @apply static; }
+    .pp-fav           { @apply top-2 right-2 size-8; }
+
+    .pp-id-r        { @apply w-full items-center gap-3; }
+    .pp-name        { @apply items-center gap-3; }
+    .pp-name h1     { @apply text-2xl leading-[29px]; }
+    .pp-name .role  { @apply mt-3 text-sm font-normal text-black/60; }
+    .pp-rate        { @apply justify-center; }
+    .pp-rate .v     { @apply text-[15px] font-bold; }
+    .pp-rate .r     { @apply text-[13px] text-black/45; }
+    .pp-meta        { @apply text-[13px] font-normal text-black/55; }
+    .pp-meta .dot   { @apply px-1.5; }
+
+    /* --- section heads: 11px eyebrow + 20px title, gap 8, 12 above -------- */
+    .pp-sechead                    { @apply gap-2 pt-3; }
+    .pp .pp-sechead .pp-eyebrow .rule { @apply w-6; }
+    .pp .pp-sechead .pp-eyebrow p  { @apply text-[11px] tracking-[1px] text-black/50; }
+    .pp-sechead h2                 { @apply text-xl leading-6; }
+
+    /* --- about ----------------------------------------------------------- */
+    .pp-about      { @apply gap-4; }
+    .pp-about .txt { @apply text-[13px] leading-5 text-black/65; }
+    .pp-tag        { @apply py-[7px] text-xs text-black/75; }
+
+    /* --- booking card: r4 + hairline border (mobile only — the desktop comp
+           has neither), pad 18/16, gap 12 ------------------------------------ */
+    .pp-book            { @apply gap-3 rounded-ds border border-black/[.08] px-4 py-[18px]; }
+    .pp-book .ph .lbl   { @apply text-[11px] tracking-[1px] uppercase; }
+    .pp-book .prow .now { @apply text-[26px]; }
+    .pp-btn             { @apply rounded-ds px-4 py-[15px] text-sm; }
+    .pp-stat            { @apply text-[13px]; }
+    .pp-stat .k         { @apply text-black/55; }
+    .pp-stat .v         { @apply font-semibold; }
+
+    /* --- portfolio: one wrapping 2-up grid of 130px tiles, 8 col / 16 row --- */
+    .pp-grid               { @apply flex-row flex-wrap gap-x-2 gap-y-4; }
+    .pp-grow               { @apply contents; }
+    /* no grow: with an odd number of tiles the last one must stay a half-width
+       cell of the 2-col grid, not stretch across the row */
+    .pp-tile               { @apply h-[130px] flex-[0_0_calc(50%-4px)]; }
+    /* the desktop label is pinned at top-189 of a 230px tile and never wraps;
+       at 168x130 it has to sit on the floor and clip instead of running out. */
+    .pp-tile .lb           { @apply top-auto bottom-2 left-2 max-w-[calc(100%-16px)] overflow-hidden text-[11px] text-ellipsis; }
+    .pp-tile.more .ov      { @apply gap-1; }
+    .pp-tile.more .ov b    { @apply text-base; }
+    .pp-tile.more .ov span { @apply text-[11px]; }
+
+    /* --- services: separate bordered cards, not a divider list ------------ */
+    .pp-svc-list      { @apply gap-4; }
+    .pp-svc           { @apply items-center gap-3 rounded-ds border border-black/10 bg-white px-3.5 py-[13px]; }
+    .pp-svc + .pp-svc { @apply border-t-black/10; }
+    .pp-svc .l        { @apply gap-[3px]; }
+    .pp-svc .t        { @apply text-sm font-semibold; }
+    .pp-svc .s        { @apply text-xs; }
+    .pp-svc .rr       { @apply gap-1.5 text-sm; }
+    .pp-svc .pr       { @apply font-bold; }
+    .pp-svc .ar       { @apply text-black/40; }
+
+    /* --- reviews (currently @if(false) in the blade, kept in sync) -------- */
+    .pp-rev           { @apply gap-2 border-black/[.08] bg-[#f9f9fb] p-3.5; }
+    .pp-rev .tx       { @apply text-[13px] leading-5; }
+    .pp-sec .sec-more { @apply w-full justify-center self-stretch rounded-ds border border-black/20 py-4; }
+  }
 }

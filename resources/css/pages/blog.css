@@ -26,8 +26,78 @@
   #blogCrumbs.ui-crumbs a,
   #blogCrumbs.ui-crumbs .cur { @apply leading-5; }
 
-  /* ---- blog responsive ---- */
+  /* the "SEÇİLMİŞ MƏQALƏ" flag over the featured cover exists only in the mobile
+     design (Figma 765:2509) — it is opted in by the ≤640 block below. */
+  .feat-badge { @apply hidden; }
+  /* the count pill on the active filter chip is mobile-only for the same reason */
+  .fchip-count { @apply hidden; }
+
+  /* ==========================================================================
+     BLOG — MOBILE (≤640), Figma "blog — Mobile" 765:2509
+     Everything here is scoped to `.blog-page` (the two .wrap elements of
+     pages/blog.blade.php) so the shared .wrap/.inner/.sec-head/.post/.blog-grid
+     rules in app.css keep their values on every other page.
+     ========================================================================== */
   @media (max-width: 640px) {
-    .fchip { @apply h-[48px] px-5 text-sm; }
+
+    /* ---- page gutter: the design has ONE 16px gutter, app.css stacks
+       .wrap(px-4) + .inner(px-4) = 32px ---- */
+    .blog-page.wrap  { @apply px-0; }
+    .blog-page .inner { @apply px-4; }
+
+    /* ---- breadcrumbs ---- */
+    #blogCrumbs.ui-crumbs .sep { @apply text-xs; }
+
+    /* ---- eyebrows: 12px label, 32×4 rule (hero) ---- */
+    .blog-page .ui-eyebrow                      { @apply gap-2.5; }
+    .blog-page .ui-eyebrow[data-variant="lg"] p { @apply text-xs font-semibold tracking-[1px]; }
+    /* the featured card uses the smaller 24×3 rule + 11px label */
+    .blog-page #featured .ui-eyebrow            { @apply gap-2; }
+    .blog-page #featured .ui-eyebrow .rule      { @apply h-[3px] w-6; }
+    .blog-page #featured .ui-eyebrow[data-variant="lg"] p { @apply text-[11px]; }
+
+    /* ---- filter chips: the desktop underline strip becomes wrapping pills ---- */
+    .fchip {
+      @apply h-[34px] gap-1.5 rounded-ds border border-black/14 bg-white px-3.5
+             text-[13px] font-medium text-black/75;
+    }
+    .fchip:hover              { @apply border-black/25 text-black; }
+    .fchip[data-on="true"]    { @apply border-ink bg-ink font-semibold text-white; }
+    .fchip-count {
+      @apply flex items-center rounded-ds-md bg-yellow px-1.5 py-px
+             text-[10px] leading-[1.2] font-semibold text-ink;
+    }
+
+    /* ---- featured: two columns → one bordered card ---- */
+    .blog-page #featured {
+      @apply overflow-hidden rounded-ds border border-black/10 bg-white;
+    }
+    .blog-page #featured > a { @apply w-full; }
+    .feat-badge {
+      @apply absolute top-3 left-3 flex rounded-ds bg-yellow px-2.5 py-1.5
+             text-[10px] leading-[1.2] font-bold tracking-[.6px] text-ink uppercase;
+    }
+
+    /* ---- section head: app.css stacks it at ≤640, the design keeps one row ---- */
+    .blog-page .sec-head       { @apply mb-4 flex-row items-end gap-3; }
+    .blog-page .sec-tag        { @apply mb-2 gap-2; }
+    .blog-page .sec-tag .line  { @apply w-6; }
+    .blog-page .sec-tag p      { @apply text-[11px] tracking-[1px]; }
+    .blog-page .sec-title      { @apply text-[22px] leading-[1.25] font-bold; }
+    .blog-page .sec-more       { @apply shrink-0; }
+    .blog-page .sec-more p     { @apply text-[11px]; }
+    .blog-page .sec-more img   { @apply size-4; }
+
+    /* ---- post grid: one full-width card per row, 16px apart ---- */
+    .blog-page .blog-grid      { --crow-per: 1; @apply gap-4; }
+    .blog-page .blog-grid > *  { @apply w-full min-w-0; }
+
+    /* ---- post card ---- */
+    .blog-page .post .ph   { @apply h-[170px]; }
+    .blog-page .post .body { @apply gap-2 px-4 pt-3.5 pb-4; }
+    .blog-page .post .time { @apply text-[11px]; }
+    .blog-page .post h3    { @apply text-base leading-[1.3] font-semibold tracking-normal; }
+    .blog-page .post .ex   { @apply mb-1 text-[13px] leading-[1.45]; }
+    .blog-page .post .read { @apply text-[13px]; }
   }
 }

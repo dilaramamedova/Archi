@@ -152,6 +152,13 @@
      ========================================================================== */
   @media (max-width: 1200px) {
     .bp-page .bp-body    { @apply flex-col; }
+    /* Once .bp-body is a column, the `flex-[1_0_0]` of .bp-left resolves to a 0 height
+       basis with no free space to grow into, so the whole left column (about text,
+       showrooms, "Kataloq" heading and the entire product grid) collapsed to 0px and its
+       own `overflow-hidden` clipped it away — /store/{seller} and the seller's own
+       storefront preview rendered as cover + contact card and nothing else. Same failure
+       mode (and same fix) as `.cab-main` in app.css. */
+    .bp-page .bp-left    { @apply w-full flex-none; }
     .bp-page .bp-sidebar { @apply w-full; }
     .bp-page .cards      { @apply flex-wrap; }
     .bp-page .card       { @apply min-w-[260px]; }
@@ -162,8 +169,53 @@
     .bp-page .sr-card   { @apply min-w-[200px]; }
   }
   @media (max-width: 640px) {
-    .bp-page .id-left { @apply flex-col items-start gap-5; }
-    .bp-page .id-meta { @apply flex-wrap whitespace-normal; }
-    .bp-page .cards, .bp-page .showrooms { @apply flex-col; }
+    /* Phone gutters: the page rows carry px-7 from the 1440 frame — 28px is a lot of a
+       375px screen, so they drop to the 16px the rest of the site uses. */
+    .bp-page .cover-wrap { @apply h-[168px] px-4 py-4; }
+    .bp-page .cover      { @apply h-[136px]; }
+    .bp-page .identity   { @apply gap-4 px-4; }
+    .bp-page .bp-body    { @apply gap-7 px-4 py-5; }
+    .bp-page .id-left    { @apply flex-col items-start gap-4; }
+    /* The 120px Figma logo eats a third of the identity block on a phone. */
+    .bp-page .biz-logo   { @apply size-[76px] border-2; }
+    .bp-page .biz-logo p { @apply top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-2xl; }
+    /* The identity/section headings are `whitespace-nowrap` for the 1440 frame; a long
+       brand name or section title has to be allowed to wrap on a phone. */
+    .bp-page .id-name    { @apply text-[26px] whitespace-normal; }
+    .bp-page .sec-title  { @apply text-[22px] whitespace-normal; }
+    .bp-page .id-meta    { @apply flex-wrap whitespace-normal; }
+    .bp-page .id-actions { @apply w-full; }
+    .bp-page .id-actions .ui-btn { @apply w-full; }
+    /* 19px tall. Padding alone stopped at 34px AND pushed the 2px rule 8px clear of
+       the label, because the border sits on the <a>. Moving the rule onto the <p>
+       lets the <a> grow to a transparent 44px box with the visual centred on top —
+       the same shape as `.sec-more` / `.ui-crumbs a` in app.css. */
+    .bp-page .see-all         { @apply min-h-11 items-center border-b-0 py-0; }
+    .bp-page .see-all p       { @apply border-b-2 border-yellow-line pb-0.5 transition-colors duration-200; }
+    .bp-page .see-all:hover p { @apply border-ink; }
+    .bp-page .bp-sidebar { @apply px-4 py-5; }
+    .bp-page .showrooms  { @apply flex-col; }
+
+    /* Products go 2-up rather than one full-width card per row: the Figma card is a
+       316px-tall image plus three text rows, which at full width is one product per
+       screen. Two columns is what /store/{seller} (same design language, shared
+       `.cat-grid`) and the rest of the mobile site use. */
+    .bp-page .cards        { @apply grid grid-cols-2 gap-2; }
+    .bp-page .card         { @apply min-w-0 p-2; }
+    /* the fixed 316px frame and the 200px product photo were measured for a 292px card */
+    .bp-page .card-img     { @apply h-auto w-full aspect-square; }
+    .bp-page .prod-img.a   { @apply top-1/2 size-[78%] -translate-y-1/2; }
+    .bp-page .prod-img.b   { @apply top-1/2 h-auto w-[92%] -translate-y-1/2 aspect-[282/159]; }
+    .bp-page .card-badge   { @apply px-1.5 py-0.5; }
+    .bp-page .card-badge p { @apply text-[10px]; }
+    /* both are `whitespace-nowrap` for the 292px card — at ~157px they have to wrap or
+       ellipsize instead of being clipped mid-word by the card's overflow-hidden */
+    .bp-page .card-cat     { @apply w-full overflow-hidden text-ellipsis; }
+    .bp-page .card-name    { @apply text-sm leading-tight whitespace-normal; }
+    /* new + old price + the discount badge do not fit one 157px line — wrap instead of
+       running past the card edge */
+    .bp-page .card-price   { @apply w-full flex-wrap justify-start gap-x-2 gap-y-1; }
+    .bp-page .card-price .now { @apply text-base; }
+    .bp-page .card-title   { @apply gap-2; }
   }
 }

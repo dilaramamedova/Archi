@@ -1,5 +1,6 @@
 import { authFetch, setLoading } from './auth.js';
 import popup from './popup.js';
+import { lockScroll, unlockScroll } from './scroll-lock.js';
 
 const overlay = document.getElementById('lmOverlay');
 
@@ -7,11 +8,16 @@ const overlay = document.getElementById('lmOverlay');
 // The cart sets it so checkout resumes on the cart instead of bouncing to the cabinet.
 let redirectOverride = null;
 
+// `body[data-lm-lock]` only styles the body, which cannot lock this site's scroll
+// (see shared/scroll-lock.js) — it is kept for the CSS hook, the real lock is JS.
+let locked = false;
+
 function open(options = {}) {
   if (!overlay) return;
   redirectOverride = options.redirectTo ?? null;
   overlay.dataset.on = 'true';
   document.body.dataset.lmLock = 'true';
+  if (!locked) { lockScroll(); locked = true; }
   const first = overlay.querySelector('input');
   if (first) setTimeout(() => first.focus(), 60);
 }
@@ -20,6 +26,7 @@ function close() {
   if (!overlay) return;
   overlay.dataset.on = 'false';
   delete document.body.dataset.lmLock;
+  if (locked) { unlockScroll(); locked = false; }
 }
 
 document.querySelectorAll('[data-login]').forEach((el) =>

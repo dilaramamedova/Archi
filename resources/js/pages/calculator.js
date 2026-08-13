@@ -12,9 +12,12 @@ const TIERS = [
   { key: 'premium', rate: 1500 },
 ];
 
-// Tailwind classes of a tier card (the card is built in JS, so they live here)
+// Tailwind classes of a tier card (the card is built in JS, so they live here).
+// Below 640px the three stacked cards turn into the frame's one-line rows — name on the
+// left, price on the right — through the grid areas in resources/css/pages/calculator.css.
+// Areas rather than a reorder, so the DOM order and the desktop column are untouched.
 const TIER_CLASS =
-  'flex min-w-0 flex-1 cursor-pointer flex-col gap-1 rounded-ds border border-black/10 bg-[#f9f9fb] p-4 transition-all duration-150 hover:border-black/30 data-[on=true]:border-2 data-[on=true]:border-yellow-line data-[on=true]:bg-sel-bg data-[on=true]:p-[15px]';
+  'qc-tier flex min-w-0 flex-1 cursor-pointer flex-col gap-1 rounded-ds border border-black/10 bg-[#f9f9fb] p-4 transition-all duration-150 hover:border-black/30 data-[on=true]:border-2 data-[on=true]:border-yellow-line data-[on=true]:bg-sel-bg data-[on=true]:p-[15px] max-[640px]:grid max-[640px]:items-center max-[640px]:gap-x-3 max-[640px]:gap-y-0.5 max-[640px]:px-4 max-[640px]:py-3.5 max-[640px]:data-[on=true]:px-[15px] max-[640px]:data-[on=true]:py-[13px]';
 
 export default function init() {
   const root = document.getElementById('qcCalc');
@@ -40,9 +43,9 @@ export default function init() {
     tiersEl.innerHTML = TIERS.map((t) => {
       const on = t.key === state.level;
       return `<div class="${TIER_CLASS}" data-v="${t.key}" data-on="${on}">
-        <div class="text-[13px] font-semibold text-ink">${labels.tiers[t.key]}</div>
-        <div class="flex items-baseline gap-[3px]"><b class="text-[19px] font-bold text-ink">${fmt(priceFor(t.rate))}</b><span class="text-[11px] font-medium text-black/50">${labels.currency}</span></div>
-        ${on ? `<div class="text-[11px] font-medium text-[#8c7f0d]">${labels.recommended}</div>` : ''}
+        <div class="qc-tier-n text-[13px] font-semibold text-ink">${labels.tiers[t.key]}</div>
+        <div class="qc-tier-p flex items-baseline gap-[3px] max-[640px]:justify-end"><b class="text-[19px] font-bold text-ink">${fmt(priceFor(t.rate))}</b><span class="text-[11px] font-medium text-black/50">${labels.currency}</span></div>
+        ${on ? `<div class="qc-tier-r text-[11px] font-medium text-[#8c7f0d]">${labels.recommended}</div>` : ''}
       </div>`;
     }).join('');
 

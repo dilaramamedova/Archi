@@ -68,9 +68,9 @@
         <p class="text-[15px] text-white/60">{{ t('help.contact_subtitle') }}</p>
       </div>
       <div class="flex flex-wrap gap-3">
-        <a href="#" class="rounded border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15">{{ t('help.contact_chat') }}</a>
-        <a href="tel:+994125550012" class="rounded border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15">+994 12 555 00 12</a>
-        <a href="mailto:salam@archi.az" class="rounded border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15">salam@archi.az</a>
+
+        <a href="tel:+994125550012" class="rounded border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15">{{ t('help.contact_number') }}</a>
+        <a href="mailto:salam@archi.az" class="rounded border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15">{{ t('help.contact_emailt') }}</a>
       </div>
     </div>
   </div>

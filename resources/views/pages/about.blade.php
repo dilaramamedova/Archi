@@ -91,7 +91,7 @@
           <span class="block h-[3px] w-10 rounded-sm bg-yellow"></span>
           <h3 class="text-[19px] leading-[normal] font-bold text-ink">{{ $feat['title'] }}</h3>
           <p class="text-sm leading-[1.6] text-black/50">{{ $feat['desc'] }}</p>
-          <a href="{{ $feat['url'] }}" class="mt-auto text-sm font-semibold text-ink hover:underline">{{ $feat['link'] }} →</a>
+          <a href="{{ $feat['url'] }}" class="mt-auto inline-flex min-h-11 items-center self-start text-sm font-semibold text-ink hover:underline">{{ $feat['link'] }} →</a>
         </div>
       @endforeach
     </div>
@@ -188,12 +188,14 @@
       </div>
       <div class="flex flex-col gap-2">
         <p class="text-[13px] font-semibold tracking-wide text-black/50 uppercase">{{ t('about.contact.phone_label') }}</p>
-        <a href="tel:{{ Setting::get('about_contact_phone') }}" class="text-[17px] font-semibold text-ink hover:underline">{{ Setting::get('about_contact_phone') }}</a>
+        {{-- self-start + min-h-11: a tel: link is the one thing on this page a phone
+             visitor actually taps, so it needs a thumb-sized box (not a 26px line) --}}
+        <a href="tel:{{ Setting::get('about_contact_phone') }}" class="inline-flex min-h-11 items-center self-start text-[17px] font-semibold text-ink hover:underline">{{ Setting::get('about_contact_phone') }}</a>
         <p class="text-sm text-black/50">{{ Setting::get('about_contact_hours') }}</p>
       </div>
       <div class="flex flex-col gap-2">
         <p class="text-[13px] font-semibold tracking-wide text-black/50 uppercase">{{ t('about.contact.email_label') }}</p>
-        <a href="mailto:{{ Setting::get('about_contact_email') }}" class="text-[17px] font-semibold text-ink hover:underline">{{ Setting::get('about_contact_email') }}</a>
+        <a href="mailto:{{ Setting::get('about_contact_email') }}" class="inline-flex min-h-11 items-center self-start text-[17px] font-semibold text-ink hover:underline">{{ Setting::get('about_contact_email') }}</a>
         <p class="text-sm text-black/50">{{ Setting::get('about_contact_email_b2b') }}</p>
       </div>
     </div>

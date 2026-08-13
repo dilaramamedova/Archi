@@ -8,6 +8,10 @@
   /* the narrow shell itself comes from `.wrap-narrow` in app.css */
   .dc-inner  { @apply flex flex-col gap-6; }
 
+  /* crumb trail — matches the quick calculator: 14/20, 6px gap, normal-weight current */
+  .dc-crumbs.ui-crumbs      { @apply gap-1.5 text-sm leading-5 text-black/50; }
+  .dc-crumbs.ui-crumbs .cur { @apply font-normal; }
+
   /* heading */
   .dc-head .tag      { @apply flex items-center gap-2.5; }
   .dc-head .tag .line{ @apply h-1 w-7 rounded-ds bg-yellow-line; }
@@ -15,8 +19,11 @@
   .dc-head h1        { @apply mt-2 text-[30px] font-bold tracking-[-.4px] text-ink; }
   .dc-head .sub      { @apply mt-1.5 text-[15px] text-black/50; }
 
-  /* stepper */
-  .dc-stepper           { @apply flex items-center justify-between overflow-x-auto rounded-ds border border-black/10 bg-white px-5 py-4; }
+  /* stepper — the box is the outer element, the scrolling strip of steps is `.dc-strip`
+     inside it, so the mobile caption can sit under the dots without joining their row */
+  .dc-stepper           { @apply rounded-ds border border-black/10 bg-white px-5 py-4; }
+  .dc-strip             { @apply flex items-center justify-between overflow-x-auto; }
+  .dc-stepcap           { @apply hidden; }
   .dc-step              { @apply flex items-center gap-2 whitespace-nowrap; }
   .dc-step .c           { @apply flex size-7 shrink-0 items-center justify-center rounded-full bg-[#e6e8eb] text-[13px] font-bold text-black/50; }
   .dc-step.done .c      { @apply bg-yellow-line text-ink; }
@@ -153,4 +160,103 @@
   .dc-sec               { @apply flex gap-2; }
   .dc-sec button        { @apply flex-1 cursor-pointer rounded-ds border border-black/10 bg-white p-3 text-[13px] font-medium text-ink [font-family:inherit]; }
   .dc-outline           { @apply cursor-pointer rounded-ds border-[1.5px] border-ink bg-white p-3.5 text-[15px] font-semibold text-ink [font-family:inherit]; }
+
+  /* ---- mobile (Figma "calculator-detailed — Addım 1…6", 375) ----------------------
+     Three things do not survive the narrow viewport and are rebuilt here; everything
+     else only steps down a size. */
+  @media (max-width: 640px) {
+    .dc-page   { @apply pt-4 pb-10; }
+    .dc-inner  { @apply gap-4; }
+    /* .wrap-narrow is px-5 with no mobile step; the frame gutter is 16px */
+    .dc-page .wrap-narrow { @apply px-4; }
+
+    .dc-crumbs.ui-crumbs { @apply text-xs leading-[15px]; }
+    .dc-head h1  { @apply mt-1.5 text-[22px]; }
+    .dc-head .sub{ @apply mt-1 text-[13px]; }
+
+    /* 1 · the stepper. Six labelled steps are ~500px wide, so the strip used to scroll
+       sideways and the later steps were invisible. The labels come off, the dots are
+       centred, and the current step is named in the caption underneath. */
+    .dc-stepper { @apply flex flex-col gap-2.5 p-4; }
+    .dc-strip   { @apply justify-center overflow-visible; }
+    .dc-step .l { @apply hidden; }
+    /* min-w-2 rather than min-w-4: six 28px dots plus five 16px rules already fill the
+       311px inner width, so the connectors have to be free to shrink below 16px */
+    .dc-conn    { @apply mx-2 min-w-2; }
+    .dc-stepcap { @apply block text-center text-[13px] font-semibold text-ink; }
+
+    .dc-main { @apply gap-[18px] px-4 py-5; }
+    .dc-sh h2{ @apply text-lg; }
+
+    /* two fields to a row, so a field flagged `.dc-fb-wide` (the area on step 1) takes
+       the full width instead of pairing up with whatever follows it */
+    .dc-fields          { @apply gap-3; }
+    .dc-fb              { min-width: calc(50% - 6px); }
+    .dc-fb.dc-fb-wide   { @apply w-full; flex-basis: 100%; }
+    /* …except the room's last three measurements, which the frame puts on one line
+       (perimeter, doors, windows). A quarter-width floor lets all three fit; the first
+       of them keeps a bigger share so "Divar perimetri" stays on a single label line
+       while "Qapı" and "Pəncərə" split what is left. */
+    .dc-fb.dc-fb-sm            { min-width: calc(25% - 9px); flex-grow: 1.6; }
+    .dc-fb.dc-fb-sm ~ .dc-fb.dc-fb-sm { flex-grow: 1; }
+
+    /* the switch rows are the frame's 50px tall cards */
+    .dc-tg      { @apply py-[13px]; }
+    .dc-tg span { @apply text-sm; }
+
+    /* 2 · cart rows (step 5). Checkbox, thumb, details, price and stock badge on one
+       flex line squeezed the product name to one word per line — same two-line grid as
+       the main cart: selection, image and details on top, price and stock underneath. */
+    .dc-cart-row {
+      @apply grid items-start gap-x-3 gap-y-1.5 p-3.5;
+      grid-template-columns: 22px 54px minmax(0, 1fr);
+      /* the price line sits in the info column, not across the whole card: in the frame
+         "1 840 ₼  Stokda var" is the last line of the text block and lines up with the
+         product name, so the second row leaves the checkbox and thumb cells empty */
+      grid-template-areas:
+        'cbx thumb info'
+        '.   .     rr';
+    }
+    .dc-cart-row > .cbx      { grid-area: cbx; }
+    .dc-cart-row > .dc-thumb { grid-area: thumb; }
+    .dc-cart-row > .info     { grid-area: info; }
+    /* the frame sets the price and the stock badge next to each other on the left of
+       the line, not spread to the edges */
+    .dc-cart-row > .rr       { grid-area: rr; @apply flex items-center gap-2.5 text-left; }
+    .dc-cart-row .rr .p      { @apply text-base; }
+    .dc-stock                { @apply mt-0; }
+
+    /* 3 · material rows stay on one line as the frame draws them. They only broke
+       because `.ml` had no min-width floor, so a long product sub-line ("Keramik kafel
+       60×60, mat") pushed the price and the badge out of the row. */
+    .dc-mr       { @apply gap-3 p-3.5; }
+    .dc-mr .ml   { @apply min-w-0; }
+    .dc-mr .mr-r { @apply shrink-0; }
+
+    /* 4 · the step-4 banner. It is a `justify-between` row holding the headline and a
+       `.dc-tg` switch card, and `.dc-tg` is `min-w-[180px] flex-1` — so at 375 the
+       switch claimed 180 of the 283px inner width and the headline was left wrapping
+       one word per line down six lines. The frame stacks them: headline across the
+       full width, the switch row underneath. The summary-side copy of this banner
+       already stacks through `CLS.sideBanner` utilities in calculator-detailed.js;
+       this brings the step-4 one in line with it. */
+    .dc-banner        { @apply flex-col items-stretch gap-2.5 px-3.5 py-3.5; }
+    .dc-banner b      { @apply text-[13px]; }
+    .dc-banner .dc-tg { @apply min-w-0; }
+
+    .dc-sum  { @apply gap-2.5 p-4; }
+    .dc-room { @apply gap-3 p-3.5; }
+  }
+
+  /* ---- touch targets ----
+     Same treatment the shared controls get in app.css, and at the same 900px
+     breakpoint that block uses: the BOX grows to 44px, nothing else moves — no type
+     scale, colour or alignment change. The negative margins let the taller boxes sit
+     inside the row they belong to instead of stretching it.
+       .dc-pick       "Kataloqdan seç", 13px type on py-[9px] → 127x40 at 375
+       .dc-room-h .rm "Sil", 13px type with no padding at all → 15x20 */
+  @media (max-width: 900px) {
+    .dc-pick       { @apply inline-flex min-h-11 items-center justify-center py-0; }
+    .dc-room-h .rm { @apply -my-3 -mr-2 inline-flex min-h-11 items-center py-3 pr-2 pl-3; }
+  }
 }
