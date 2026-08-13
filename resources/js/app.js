@@ -7,6 +7,7 @@ import './shared/cursor.js';
 import './shared/login-modal.js';
 import './shared/popup.js'; // window.archiPopup + session-flash bridge (#archiFlash)
 import './shared/back-button.js'; // cabinet "‹ Geri" button ([data-back-button])
+import './shared/card-slider.js'; // arrows for card rows that overflow (.grid4 …)
 import initCabinetDirty from './shared/cabinet-dirty.js';
 
 import home from './pages/home.js';

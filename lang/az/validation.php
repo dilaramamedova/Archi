@@ -59,5 +59,23 @@ return [
         'delivery_city' => 'Şəhər',
         'delivery_address' => 'Ünvan',
         'notes' => 'Qeyd',
+
+        // Kataloq klassifikatoru + biznes kabinetindəki məhsul formu. Etiket
+        // olmadan Laravel xam sahə adını göstərir ("Seçilmiş sub category id
+        // keçərli deyil.").
+        'section_id' => 'Bölmə',
+        'sub_category_id' => 'Məhsul sinfi',
+        'new_brand' => 'Brend',
+        'applications' => 'Tətbiq sahəsi',
+        'applications.*' => 'Tətbiq sahəsi',
+        'sku' => 'SKU',
+        'barcode' => 'Barkod',
+        'unit' => 'Ölçü vahidi',
+        'min_order' => 'Minimum sifariş',
+        'shelf' => 'Rəf',
+        'dimensions' => 'Ölçülər',
+        'material' => 'Material',
+        'color' => 'Rəng',
+        'country' => 'İstehsalçı ölkə',
     ],
 ];

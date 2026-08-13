@@ -13,10 +13,6 @@ const num = (el, key) => parseFloat(el.dataset[key]) || 0;
 function buildFilterUrl() {
   const params = new URLSearchParams();
 
-  // Category
-  const cat = document.querySelector('.fs-cat[data-on="true"]');
-  if (cat) params.set('category', cat.dataset.cat);
-
   // Sort
   const sortLi = document.querySelector('#sortMenu li[data-on="true"]');
   if (sortLi && sortLi.dataset.sort !== 'pop') params.set('sort', sortLi.dataset.sort);
@@ -50,10 +46,29 @@ function buildFilterUrl() {
   const stock = document.getElementById('stockSwitch');
   if (stock && stock.dataset.on === 'true') params.set('in_stock', '1');
 
-  // Preserve context params the sidebar has no controls for: the search query and
-  // the homepage "Ətraflı bax" entry filters (sale / featured / free_delivery / on_sale).
+  // Dynamic class-attribute filters (classifier). Option checkboxes carry
+  // data-attr + data-opt; the boolean control carries data-attr + data-bool;
+  // numeric min/max inputs live in .fs-attr-range[data-attr].
+  const attrOpts = {};
+  document.querySelectorAll('.fs-check[data-attr][data-opt][data-on="true"]').forEach((el) => {
+    (attrOpts[el.dataset.attr] = attrOpts[el.dataset.attr] || []).push(el.dataset.opt);
+  });
+  Object.entries(attrOpts).forEach(([slug, opts]) => params.set(`attr[${slug}]`, opts.join(',')));
+  document.querySelectorAll('.fs-check[data-attr][data-bool][data-on="true"]').forEach((el) => {
+    params.set(`attr[${el.dataset.attr}]`, '1');
+  });
+  document.querySelectorAll('.fs-attr-range[data-attr]').forEach((el) => {
+    const min = el.querySelector('[data-attr-min]');
+    const max = el.querySelector('[data-attr-max]');
+    if (min && min.value.trim() !== '') params.set(`attr_min[${el.dataset.attr}]`, min.value.trim());
+    if (max && max.value.trim() !== '') params.set(`attr_max[${el.dataset.attr}]`, max.value.trim());
+  });
+
+  // Preserve context params the sidebar has no controls for: the search query,
+  // the classifier drill-down position (section / group / class, plus the
+  // legacy category param) and the homepage "Ətraflı bax" entry filters.
   const url = new URL(window.location.href);
-  for (const key of ['q', 'sale', 'featured', 'free_delivery', 'on_sale']) {
+  for (const key of ['q', 'section', 'group', 'class', 'category', 'sale', 'featured', 'free_delivery', 'on_sale']) {
     if (url.searchParams.has(key)) params.set(key, url.searchParams.get(key));
   }
 
@@ -120,6 +135,22 @@ function initFilters() {
     document.querySelectorAll('#brandBlock .fs-check[data-on="true"]').forEach((el) =>
       out.push({ el, label: el.querySelector('.lbl').textContent.trim() })
     );
+    // Dynamic attribute filters: checked options / booleans get their label,
+    // filled numeric ranges get "Attribute: min–max".
+    document.querySelectorAll('.fs-attr .fs-check[data-on="true"]').forEach((el) => {
+      const title = el.closest('.fs-attr')?.querySelector('.fs-title .t')?.textContent.trim();
+      const lbl = el.querySelector('.lbl').textContent.trim();
+      out.push({ el, label: el.dataset.bool ? title || lbl : lbl });
+    });
+    document.querySelectorAll('.fs-attr-range[data-attr]').forEach((el) => {
+      const min = el.querySelector('[data-attr-min]');
+      const max = el.querySelector('[data-attr-max]');
+      const vMinT = min ? min.value.trim() : '';
+      const vMaxT = max ? max.value.trim() : '';
+      if (vMinT === '' && vMaxT === '') return;
+      const title = el.closest('.fs-attr')?.querySelector('.fs-title .t')?.textContent.trim() || el.dataset.attr;
+      out.push({ range: el, label: `${title}: ${vMinT || '…'} – ${vMaxT || '…'}` });
+    });
     // Show price chip only when the range differs from the full product range
     // (i.e. user has explicitly narrowed it via URL params or slider drag)
     if (!(Math.round(vMin) === PRICE_MIN && Math.round(vMax) === PRICE_MAX)) {
@@ -207,6 +238,9 @@ function initFilters() {
       vMin = PRICE_MIN;
       vMax = PRICE_MAX;
       paint();
+    } else if (chip._filter.range) {
+      chip._filter.range.querySelectorAll('input').forEach((i) => (i.value = ''));
+      renderChips();
     } else {
       chip._filter.el.dataset.on = 'false';
       renderChips();
@@ -224,24 +258,29 @@ function initFilters() {
     removeChip(x.closest('.cat-chip'));
   });
 
-  // Clear all filters — navigate to clean URL
+  // Clear all filters — navigate to clean URL. The drill-down position
+  // (section / group / class) and the search query are context, not filters,
+  // so they survive the reset.
   clearBtn.addEventListener('click', () => {
     // Reset all UI state
     document
-      .querySelectorAll('.fs-size[data-on="true"], #surfBlock .fs-check[data-on="true"], #brandBlock .fs-check[data-on="true"]')
+      .querySelectorAll('.fs-size[data-on="true"], .fs-check[data-on="true"]')
       .forEach((el) => (el.dataset.on = 'false'));
-    document.querySelectorAll('.fs-cat').forEach((el) => (el.dataset.on = 'false'));
+    document.querySelectorAll('.fs-attr-range input').forEach((i) => (i.value = ''));
     const stock = document.getElementById('stockSwitch');
     if (stock) stock.dataset.on = 'false';
     vMin = PRICE_MIN;
     vMax = PRICE_MAX;
-    // Navigate to page with no filters (preserve only q if present)
     const url = new URL(window.location.href);
-    const q = url.searchParams.get('q');
-    window.location.href = window.location.pathname + (q ? '?q=' + encodeURIComponent(q) : '');
+    const keep = new URLSearchParams();
+    for (const key of ['q', 'section', 'group', 'class', 'category']) {
+      if (url.searchParams.has(key)) keep.set(key, url.searchParams.get(key));
+    }
+    const qs = keep.toString();
+    window.location.href = window.location.pathname + (qs ? '?' + qs : '');
   });
 
-  // Toggle sidebar filter controls
+  // Toggle sidebar filter controls (brands, surfaces, dynamic attribute options)
   document.querySelectorAll('.fs-check, .fs-size').forEach((el) =>
     el.addEventListener('click', () => {
       el.dataset.on = el.dataset.on === 'true' ? 'false' : 'true';
@@ -249,11 +288,16 @@ function initFilters() {
     })
   );
 
-  // Category selection (single-select)
-  document.querySelectorAll('.fs-cat').forEach((c) =>
-    c.addEventListener('click', () => {
-      document.querySelectorAll('.fs-cat').forEach((x) => (x.dataset.on = 'false'));
-      c.dataset.on = 'true';
+  // Attribute range inputs feed the chips band too
+  document.querySelectorAll('.fs-attr-range input').forEach((i) =>
+    i.addEventListener('change', renderChips)
+  );
+
+  // Secondary / "Bütün filtrlər" expanders
+  document.querySelectorAll('.fs-expander .fs-exp-head').forEach((head) =>
+    head.addEventListener('click', () => {
+      const exp = head.closest('.fs-expander');
+      exp.dataset.open = exp.dataset.open === 'true' ? 'false' : 'true';
     })
   );
 

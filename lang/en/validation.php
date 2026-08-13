@@ -59,5 +59,22 @@ return [
         'delivery_city' => 'city',
         'delivery_address' => 'address',
         'notes' => 'notes',
+
+        // Catalog classifier + business-cabinet product form. Without a label
+        // Laravel falls back to the raw field name ("sub category id").
+        'section_id' => 'section',
+        'sub_category_id' => 'product class',
+        'new_brand' => 'brand',
+        'applications' => 'application area',
+        'applications.*' => 'application area',
+        'sku' => 'SKU',
+        'barcode' => 'barcode',
+        'unit' => 'unit',
+        'min_order' => 'minimum order',
+        'shelf' => 'shelf',
+        'dimensions' => 'dimensions',
+        'material' => 'material',
+        'color' => 'color',
+        'country' => 'country of origin',
     ],
 ];

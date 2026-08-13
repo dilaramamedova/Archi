@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\SearchSynonym;
+use App\Models\SubCategory;
 use Illuminate\Database\Eloquent\Builder;
 
 class SearchService
@@ -186,7 +188,60 @@ class SearchService
      */
     public static function buildProductQuery(Builder $baseQuery, string $query): Builder
     {
-        return self::applyMatcher($baseQuery, $query, self::productTermMatcher());
+        return self::applyMatcher(
+            $baseQuery,
+            $query,
+            self::productTermMatcher(),
+            self::findMatchingSubCategoryIds($query),
+        );
+    }
+
+    /**
+     * Classifier-aware query resolution: product-class (sub_categories) ids
+     * whose name matches the query, or that own a search_synonyms phrase the
+     * query overlaps with ("kvars vinil" -> "kvars vinil plitə" -> Laminat
+     * class). Both directions are checked: phrase contains the query, and
+     * query contains the whole phrase. Plain MySQL LIKE, case-insensitive,
+     * Azerbaijani-diacritics folded — same collation rules as orLike().
+     *
+     * @return array<int, int>
+     */
+    public static function findMatchingSubCategoryIds(string $query): array
+    {
+        $original = self::lower(trim($query));
+
+        // Too-short fragments would sweep whole classes into every search.
+        if (mb_strlen($original) < 3) {
+            return [];
+        }
+
+        $normalized = self::normalizeAzeri($original);
+        $terms = array_values(array_unique([$original, $normalized]));
+
+        $byClassName = SubCategory::query()
+            ->where('is_active', true)
+            ->where(function (Builder $q) use ($terms) {
+                foreach ($terms as $term) {
+                    self::orLike($q, 'sub_categories.name', $term);
+                }
+            })
+            ->pluck('id');
+
+        $byPhrase = SearchSynonym::query()
+            ->where(function (Builder $q) use ($terms, $normalized) {
+                // Phrase contains the query…
+                foreach ($terms as $term) {
+                    self::orLike($q, 'search_synonyms.phrase', $term);
+                }
+                // …or the query contains the whole phrase.
+                $q->orWhereRaw(
+                    "? like concat('%', ".self::columnExpression('search_synonyms.phrase', $normalized).", '%')",
+                    [$normalized]
+                );
+            })
+            ->pluck('sub_category_id');
+
+        return $byClassName->merge($byPhrase)->unique()->values()->all();
     }
 
     /**
@@ -288,7 +343,7 @@ class SearchService
      * token branch makes multi-word queries match when the words are spread
      * across a name (e.g. "Keramik kafel 30" -> "Keramik kafel 30x60 ağ mat").
      */
-    private static function applyMatcher(Builder $baseQuery, string $query, callable $orTerm): Builder
+    private static function applyMatcher(Builder $baseQuery, string $query, callable $orTerm, array $subCategoryIds = []): Builder
     {
         $phraseTerms = self::phraseTerms($query);
 
@@ -298,7 +353,7 @@ class SearchService
 
         $tokenGroups = self::tokenGroups($query);
 
-        return $baseQuery->where(function (Builder $q) use ($phraseTerms, $tokenGroups, $orTerm) {
+        return $baseQuery->where(function (Builder $q) use ($phraseTerms, $tokenGroups, $orTerm, $subCategoryIds) {
             $q->where(function (Builder $phrase) use ($phraseTerms, $orTerm) {
                 foreach ($phraseTerms as $term) {
                     $orTerm($phrase, $term);
@@ -315,6 +370,12 @@ class SearchService
                         });
                     }
                 });
+            }
+
+            // Classifier branch: the query resolved to product classes (via the
+            // class name or a seeded search synonym) — include their products.
+            if ($subCategoryIds !== []) {
+                $q->orWhereIn('products.sub_category_id', $subCategoryIds);
             }
         });
     }

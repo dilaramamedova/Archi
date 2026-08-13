@@ -9,7 +9,7 @@
 
   /* result grids sit tighter than the shared .grid4 (gap-2) — higher specificity
      is required because app.css is imported after this file */
-  .sr .grid4 { @apply gap-3; }
+  .sr .grid4 { @apply gap-3; --crow-gap: .75rem; }
 
   .sr-h1 { @apply text-[38px] leading-[1.2] font-semibold tracking-[-.4px] text-black; }
   .sr-h2 { @apply text-[26px] font-semibold tracking-[-.2px] text-ink; }
@@ -21,6 +21,13 @@
      through a hidden ghost label — otherwise a tab click resizes the button and
      shifts the whole row (worst in ru, where the labels are longest) */
   .sr-tab::after          { @apply invisible block h-0 overflow-hidden font-semibold; content: attr(data-label); }
+
+  /* "did you mean this category" strip — shown when the classifier resolved the
+     query to a product class that has no listings yet. Same card shell and chip
+     styling as the rest of the page so it reads as a hint, not a result block. */
+  .sr-suggest       { @apply flex flex-col items-start gap-3 rounded-ds border border-black/14 bg-white px-6 py-6; }
+  .sr-suggest-title { @apply text-[17px] font-semibold tracking-[-.1px] text-ink; }
+  .sr-suggest-desc  { @apply text-[15px] leading-[1.5] text-black/50; }
 
   .sr-more              { @apply relative pb-1 text-xs font-medium tracking-[.6px] text-ink-alt uppercase; }
   .sr-more::before      { @apply absolute inset-x-0 bottom-0 h-0.5 bg-yellow-line content-['']; }

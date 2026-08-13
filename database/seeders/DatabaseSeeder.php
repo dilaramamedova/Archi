@@ -37,6 +37,8 @@ class DatabaseSeeder extends Seeder
             AboutSeeder::class,
             LegalPageSeeder::class,
             DemoSeeder::class,
+            CatalogClassifierSeeder::class,
+            NavigationSeeder::class,
         ]);
     }
 }

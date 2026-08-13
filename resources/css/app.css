@@ -328,6 +328,17 @@
   /* admin cards without an icon: the description's icon indent would look detached */
   .mcat.no-icon .desc { @apply pl-0; }
 
+  /* cluster layout (5 columns): the classifier groups the 12 sections into five
+     navigation clusters, so the catalog panel is an index — a cluster heading in
+     the card-title type, its sections beneath in the card-description type. */
+  .mega-cats.mega-clusters { @apply grid-cols-5 gap-x-8 gap-y-8; }
+  .mclus                   { @apply flex flex-col; }
+  .mclus-h                 { @apply mb-2.5 border-b border-black/10 pb-2.5 text-sm font-semibold
+                                    tracking-[.4px] text-ink uppercase; }
+  .mcat.mclus-link         { @apply flex-row items-start gap-2.5 py-[7px] text-base leading-[22px] text-black/50; }
+  .mcat.mclus-link img     { @apply mt-px size-5 shrink-0; }
+  .mcat.mclus-link:hover   { @apply text-black; }
+
   /* specialists layout */
   .mega-spec               { @apply flex items-center gap-12; }
   .mega-spec .grid         { @apply grid grid-cols-[repeat(2,minmax(0,400px))] gap-x-20 gap-y-10 border-r border-black/10 pr-12; }
@@ -404,9 +415,43 @@
      Used on 5 pages: home · product · catalog · search · blog
      ========================================================================== */
 
-  /* ---- grids ---- */
-  .grid4     { @apply flex gap-2; }
-  .blog-grid { @apply flex gap-2; }
+  /* ---- card rows ("Oxşar məhsullar", "Seçilmiş mütəxəssislər", blog, …) ----
+     A row never wraps onto extra lines and never stacks on mobile: it scrolls
+     sideways instead, so a section costs the same vertical space no matter how
+     many cards it holds. `--crow-per` is how many cards fit in one view and is
+     the only thing the breakpoints below change; `--crow-gap` must mirror the
+     row's own gap so the arithmetic stays exact (see .sr .grid4 in search.css).
+     card-slider.js adds the arrow buttons whenever a row actually overflows. */
+  .grid4, .blog-grid, .fbt-cards {
+    @apply flex snap-x snap-mandatory scroll-smooth overflow-x-auto overscroll-x-contain gap-2;
+    --crow-gap: .5rem;
+    --crow-per: 4;
+    scrollbar-width: none;
+  }
+  .grid4::-webkit-scrollbar,
+  .blog-grid::-webkit-scrollbar,
+  .fbt-cards::-webkit-scrollbar { display: none; }
+
+  /* `flex-none!` beats the `flex-1` on .pcard/.scard/.post, which is declared
+     later in this file — without it the cards would shrink to fit and the row
+     would never overflow, so it could never scroll. */
+  .grid4 > *, .blog-grid > *, .fbt-cards > * {
+    @apply flex-none! snap-start;
+    width: calc((100% - var(--crow-gap) * (var(--crow-per) - 1)) / var(--crow-per));
+  }
+
+  /* ---- card row arrows (injected by card-slider.js) ---- */
+  .crow      { @apply relative; }
+  .crow-btn  { @apply absolute top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center
+                      rounded-full border border-black/10 bg-white shadow-[0_2px_12px_rgba(0,0,0,.14)]
+                      transition duration-200 hover:border-black/20 hover:bg-gray-soft; }
+  .crow-btn img   { @apply size-5; }
+  /* inside the row's edges: an ancestor with overflow-hidden would clip
+     buttons that hang outside it */
+  .crow-btn.prev  { @apply left-2; }
+  .crow-btn.next  { @apply right-2; }
+  .crow-btn.prev img { @apply rotate-180; }
+  .crow-btn[hidden] { @apply hidden; }
 
   /* ---- section head (home · catalog · specialists · blog) ---- */
   .section   { @apply py-10; }
@@ -948,10 +993,14 @@
      RESPONSIVE (shared part only — page-specific rules stay in the page CSS)
      ========================================================================== */
   @media (max-width: 1200px) {
-    .grid4, .blog-grid    { @apply flex-wrap; }
-    .pcard, .scard, .post { @apply min-w-[260px]; }
+    .grid4, .blog-grid, .fbt-cards { --crow-per: 3; }
+    /* five cluster columns get too narrow for the long section names */
+    .mega-cats.mega-clusters { @apply grid-cols-3; }
   }
   @media (max-width: 900px) {
+    .grid4, .blog-grid, .fbt-cards { --crow-per: 2; }
+    /* the arrows sit under a thumb on touch screens — swiping is the gesture there */
+    .crow-btn        { @apply hidden; }
     .search          { @apply hidden; }
     .nav-row2 .inner { @apply overflow-x-auto; }
     .nav-left        { @apply flex; }
@@ -964,9 +1013,12 @@
     .foot-news .form { @apply mt-0 w-full; }
     .mega-inner      { @apply p-6; }
     .mega-cats       { @apply grid-cols-2; }
+    .mega-cats.mega-clusters { @apply grid-cols-2; }
   }
   @media (max-width: 640px) {
-    .grid4, .blog-grid     { @apply flex-col; }
+    /* 1.15 cards per view: the sliver of the next card is what tells a phone
+       user the row scrolls, which a full-width card would hide */
+    .grid4, .blog-grid, .fbt-cards { --crow-per: 1.15; }
     .sec-title             { @apply text-[28px]; }
     .sec-head              { @apply flex-col items-start gap-3; }
     .foot-bottom           { @apply flex-col items-start gap-5; }
@@ -1008,6 +1060,8 @@
   .mob-link img     { @apply size-5; }
   /* admin sub-items under a parent link in the drawer */
   .mob-link.mob-sub { @apply pl-6 text-[15px] font-normal text-black/70; }
+  /* classifier cluster heading above its section sub-links (mirrors .mclus-h) */
+  .mob-group        { @apply pt-4 pb-1.5 text-xs font-semibold tracking-[.6px] text-black/45 uppercase; }
   .mob-drawer-foot  { @apply flex flex-col gap-2 border-t border-black/10 px-5 py-4; }
   .mob-post-btn     { @apply flex items-center justify-center gap-2 bg-ink px-5 py-3 text-base text-white; }
   .mob-post-btn img { @apply size-5; }

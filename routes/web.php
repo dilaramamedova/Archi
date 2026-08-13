@@ -216,6 +216,7 @@ Route::middleware(['auth', 'role:seller,admin'])->group(function () {
     Route::get('/business/products/create', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'create'])->name('business.products.create');
     Route::get('/business/products/{product}/edit', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'edit'])->name('business.products.edit');
     Route::get('/business/inventory', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'inventory'])->name('business.inventory');
+    Route::get('/business/api/sub-categories/{subCategory}/form', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'subCategoryForm'])->name('business.api.subcategory.form');
     Route::post('/business/products', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'store'])->name('business.products.store');
     Route::put('/business/products/{product}', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'update'])->name('business.products.update');
     Route::post('/business/products/{product}/toggle', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'toggleVisibility'])->name('business.products.toggle');

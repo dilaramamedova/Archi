@@ -87,6 +87,20 @@ class Product extends Model
         return $this->hasMany(Wishlist::class);
     }
 
+    /**
+     * Structured EAV values (catalog classifier). The legacy flat `specifications`
+     * json column stays untouched — new products fill these instead.
+     */
+    public function attributeValues(): HasMany
+    {
+        return $this->hasMany(ProductAttributeValue::class);
+    }
+
+    public function applications(): BelongsToMany
+    {
+        return $this->belongsToMany(Application::class, 'product_applications')->withTimestamps();
+    }
+
     public function scopeVisible($query)
     {
         return $query->where('is_visible', true);

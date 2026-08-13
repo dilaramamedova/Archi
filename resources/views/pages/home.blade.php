@@ -130,9 +130,12 @@
 <div class="wrap"><div class="inner section">
   <x-section-head :tag="t('home.categories.tag')" :title="t('home.categories.title')" :more="route('catalog')" />
   <div class="cat-row">
-    {{-- products_count is a real count of live products (see HomeController). --}}
+    {{-- products_count is the classifier rollup: the section's own + its groups' +
+         its classes' live products (HomeController -> CatalogNavigation). The tile
+         links with ?section=, the classifier param the count is computed over —
+         the legacy ?category= misses products attached to a class only. --}}
     @forelse ($categories as $c)
-      <a @class(['cat-thumb', 'open' => $loop->first]) href="{{ route('catalog', ['category' => $c->slug]) }}"><img src="{{ storage_url($c->image, '/assets/category-tile-showroom.png') }}" alt=""><div class="ov"></div><div class="info"><div><h4>{{ $c->name }}</h4><p>{{ $c->products_count }} {{ t('common.products_count') }}</p></div><img src="/assets/icon-arrow-right.svg" alt=""></div></a>
+      <a @class(['cat-thumb', 'open' => $loop->first]) href="{{ route('catalog', ['section' => $c->slug]) }}"><img src="{{ storage_url($c->image, '/assets/category-tile-showroom.png') }}" alt=""><div class="ov"></div><div class="info"><div><h4>{{ $c->name }}</h4><p>{{ $c->products_count }} {{ t('common.products_count') }}</p></div><img src="/assets/icon-arrow-right.svg" alt=""></div></a>
     @empty
       <p class="py-8 text-sm text-black/45">{{ $tOr('home.categories.empty', 'Hələ kateqoriya yoxdur.') }}</p>
     @endforelse

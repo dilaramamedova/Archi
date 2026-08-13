@@ -13,6 +13,7 @@
 @props([
     'headerMenu' => collect(),
     'megaCatalog' => collect(),
+    'megaCatalogClusters' => collect(),
     'megaSpecialists' => collect(),
     'megaBlog' => collect(),
     'megaBlogMenu' => collect(),
@@ -173,6 +174,16 @@
           @foreach ($item->children as $child)
             <a class="mob-link mob-sub" href="{{ $child->resolved_url ?? '#' }}"@if($child->open_in_new_tab) target="_blank" rel="noopener"@endif>{{ $child->label }}</a>
           @endforeach
+          {{-- Kataloq: same nested structure as the desktop mega panel — the five
+               classifier clusters as headings, their sections as indented links. --}}
+          @if ($item->css_class === 'catalog' && $megaCatalogClusters->isNotEmpty())
+            @foreach ($megaCatalogClusters as $cluster)
+              @if ($cluster['label'])<p class="mob-group">{{ $cluster['label'] }}</p>@endif
+              @foreach ($cluster['items'] as $sectionItem)
+                <a class="mob-link mob-sub" href="{{ $sectionItem->resolved_url ?? '#' }}"@if($sectionItem->open_in_new_tab) target="_blank" rel="noopener"@endif>{{ $sectionItem->label }}</a>
+              @endforeach
+            @endforeach
+          @endif
         @endforeach
       </div>
 
@@ -239,17 +250,38 @@
     </div>
   </div>
 
-  {{-- MEGA: catalog (3x2) --}}
+  {{-- MEGA: catalog — the classifier's five navigation clusters (Excel sheet 7,
+       rec. R8), each heading followed by its sections. The cluster definition is
+       shared with the catalog rail (App\Support\CatalogNavigation); labels come
+       from the same t('catalog-classifier.clusters.*') keys the rail uses.
+       Falls back to the flat card grid when no card maps to a section (fresh
+       install without the classifier). --}}
   <div class="mega-panel" id="megaCatalog" data-panel="catalog">
     <div class="mega-inner">
-      <div class="mega-cats">
-        @foreach ($megaCatalog as $item)
-          <a class="mcat" href="{{ $item->resolved_url }}">
-            <div class="top"><img src="{{ storage_url($item->icon) }}" alt=""><p>{{ $item->label }}</p></div>
-            <div class="desc">{{ $item->description }}</div>
-          </a>
-        @endforeach
-      </div>
+      @if ($megaCatalogClusters->isNotEmpty())
+        <div class="mega-cats mega-clusters">
+          @foreach ($megaCatalogClusters as $cluster)
+            <div class="mclus">
+              @if ($cluster['label'])<p class="mclus-h">{{ $cluster['label'] }}</p>@endif
+              @foreach ($cluster['items'] as $item)
+                <a class="mcat mclus-link" href="{{ $item->resolved_url }}"@if($item->open_in_new_tab) target="_blank" rel="noopener"@endif>
+                  @if ($item->icon)<img src="{{ storage_url($item->icon) }}" alt="">@endif
+                  <span>{{ $item->label }}</span>
+                </a>
+              @endforeach
+            </div>
+          @endforeach
+        </div>
+      @else
+        <div class="mega-cats">
+          @foreach ($megaCatalog as $item)
+            <a class="mcat" href="{{ $item->resolved_url }}">
+              <div class="top"><img src="{{ storage_url($item->icon) }}" alt=""><p>{{ $item->label }}</p></div>
+              <div class="desc">{{ $item->description }}</div>
+            </a>
+          @endforeach
+        </div>
+      @endif
     </div>
   </div>
 

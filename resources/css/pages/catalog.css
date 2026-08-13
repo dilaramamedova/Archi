@@ -65,6 +65,36 @@
   .fs-cat[data-on="true"]    { @apply bg-sel-bg font-semibold text-ink; }
   .fs-cat[data-on="true"] .n { @apply text-black/70; }
 
+  /* classifier rail: cluster headings + section/group/class drill-down.
+     `.fs-cat` is an <a> now — keep the row layout it had as a div. */
+  .fs-cluster            { @apply mt-4 mb-1.5 text-[11px] font-semibold tracking-[.6px] text-black/40 uppercase; }
+  .fs-cluster:first-of-type { @apply mt-0; }
+  a.fs-cat               { @apply no-underline; }
+  .fs-tree               { @apply mt-1 mb-1.5 ml-2 border-l border-black/8 pl-2; }
+  .fs-tree + .fs-cat     { @apply mt-2.5; }
+  .fs-tree .fs-cat + .fs-cat { @apply mt-1; }
+  .fs-tree-classes       { @apply ml-1.5; }
+  .fs-sub, .fs-sub2      { @apply py-1 text-[13px]; }
+
+  /* dynamic attribute filters */
+  .fs-attr .fs-title       { @apply flex items-start gap-1.5; }
+  .fs-attr .fs-title .t    { @apply min-w-0 flex-1; }
+  .fs-attr .fs-title .unit { @apply font-normal text-black/45; }
+
+  /* tooltip "?" — small popover on hover/focus, same affordance as elsewhere */
+  .fs-tip        { @apply relative mt-0.5 inline-grid size-4 shrink-0 cursor-help place-items-center rounded-full bg-black/8 text-[10px] font-semibold text-black/55 outline-none; }
+  .fs-tip .pop   { @apply invisible absolute top-full left-1/2 z-20 mt-1.5 w-56 -translate-x-1/2 rounded-ds border border-black/10 bg-white p-2.5 text-xs leading-[17px] font-normal text-ink normal-case opacity-0 shadow-lg transition-opacity duration-150; }
+  .fs-tip:hover .pop,
+  .fs-tip:focus-visible .pop { @apply visible opacity-100; }
+
+  /* "Əlavə filtrlər" / "Bütün filtrlər" expanders */
+  .fs-expander .fs-exp-head { @apply flex w-full cursor-pointer items-center justify-between border-none px-0 py-1 text-sm font-semibold text-ink [background:none] [font-family:inherit]; }
+  .fs-expander .fs-exp-head .car { @apply text-xs text-black/50 transition-transform duration-150; }
+  .fs-expander[data-open="true"] .fs-exp-head .car { @apply rotate-180; }
+  .fs-expander .fs-exp-body { @apply hidden pt-3.5; }
+  .fs-expander[data-open="true"] .fs-exp-body { @apply block; }
+  .fs-exp-body .fs-attr + .fs-div { @apply my-4; }
+
   /* price */
   .fs-price-inputs       { @apply flex items-center gap-2; }
   .fs-price-inputs .in   { @apply h-[38px] min-w-0 flex-1 rounded-ds border border-black/14 px-3 text-sm text-ink outline-none focus:border-ink; }

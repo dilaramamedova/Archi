@@ -134,18 +134,28 @@
 
         <div class="pd-line"></div>
 
-        {{-- Feature bullets come from the seller's own data; no demo bullets. --}}
-        @if ($product->features_text || $product->features)
+        {{-- Feature bullets: the seller's own first, otherwise the marketplace-wide
+             ones every listing shares (editable in the admin "Tərcümələr" module,
+             keys product.features.default_1..3). --}}
+        @php
+            $defaultFeats = collect([1, 2, 3])
+                ->map(fn ($i) => trim((string) t('product.features.default_'.$i)))
+                ->filter(fn ($line) => $line !== '' && ! str_starts_with($line, 'product.features.'))
+                ->all();
+        @endphp
         <div class="pd-feats">
           @if ($product->features_text)
             <div class="f-rich">{!! $product->features_text !!}</div>
-          @else
+          @elseif ($product->features)
             @foreach ($product->features as $key => $feat)
               <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ is_string($key) ? $key . ': ' . $feat : $feat }}</div>
             @endforeach
+          @else
+            @foreach ($defaultFeats as $feat)
+              <div class="f"><span class="tick"><img src="/assets/icon-check-green.svg" alt=""></span> {{ $feat }}</div>
+            @endforeach
           @endif
         </div>
-        @endif
 
         {{-- Single source of truth for stock, built from the real quantity. --}}
         <div class="pd-stock" data-in-stock="{{ $inStock ? 'true' : 'false' }}"><i></i>
@@ -246,12 +256,14 @@
       <div class="sec-tag"><span class="line"></span><p>{{ t('product.about.tag') }}</p></div>
       <div class="sec-title mb-6">{{ t('product.about.title') }}</div>
 
-      {{-- A product with no filled-in specifications gets no specs tab at all: the
-           tab bar collapses to the single description tab (initTabs handles one
-           button fine) and the specs pane is not rendered. --}}
+      {{-- A product with neither structured attribute values nor filled-in legacy
+           specifications gets no specs tab at all: the tab bar collapses to the
+           single description tab (initTabs handles one button fine) and the specs
+           pane is not rendered. --}}
+      @php $hasSpecsTab = $attributeSpecs->isNotEmpty() || $specs->isNotEmpty(); @endphp
       <div class="pd-tabs" id="pdTabs">
         <button data-on="true" data-pane="desc">{{ t('product.about.tab_desc') }}</button>
-        @if ($specs->isNotEmpty())
+        @if ($hasSpecsTab)
           <button data-on="false" data-pane="specs">{{ t('product.about.tab_specs') }}</button>
         @endif
       </div>
@@ -266,10 +278,23 @@
         </div>
       </div>
 
-      @if ($specs->isNotEmpty())
+      @if ($hasSpecsTab)
       <div class="pd-pane" data-on="false" data-pane="specs">
         <div class="pd-specs">
-          {{-- Only the specifications the seller filled in; no demo rows. --}}
+          {{-- Structured classifier attributes first (translated option values,
+               units from the class pivot, tooltip on professional attributes)… --}}
+          @foreach ($attributeSpecs as $spec)
+            <div class="row">
+              <div class="k">
+                {{ $spec['name'] }}
+                @if ($spec['tooltip'] !== '')
+                  <span class="pd-spec-tip" tabindex="0" role="note" aria-label="{{ $spec['tooltip'] }}"><span class="i">?</span><span class="pop">{{ $spec['tooltip'] }}</span></span>
+                @endif
+              </div>
+              <div class="v">{{ $spec['value'] }}</div>
+            </div>
+          @endforeach
+          {{-- …then the legacy flat rows the seller filled in; no demo rows. --}}
           @foreach ($specs as $key => $val)
             <div class="row"><div class="k">{{ $specLabel((string) $key) }}</div><div class="v">{{ is_array($val) ? implode(', ', $val) : $val }}</div></div>
           @endforeach
@@ -285,27 +310,10 @@
       <div class="sec-title mb-2.5">{{ t('product.fbt.title') }}</div>
       <p class="pdb-lead">{{ t('product.fbt.lead') }}</p>
 
+      {{-- Accessories only: this is a recommendation row like "Oxşar məhsullar",
+           not a bundle — checkout has no bundle pricing to total up. --}}
       <div class="fbt-cards" id="fbtCards">
-        {{-- Current product card (always first) --}}
-        @php
-            $mainBadges = [
-                ['icon' => '/assets/icon-check-green.svg', 'class' => 'fbt-ok'],
-                ['label' => t('product.fbt.badge_this'), 'mine' => true],
-                ['label' => $product->stock > 0 ? t('common.badge_in_stock') : t('common.badge_out_of_stock')],
-            ];
-        @endphp
-        <x-pcard :product-id="$product->id" :img="$mainImg" :badges="$mainBadges"
-                 :rate="$reviewsCount > 0 ? number_format($avgRating, 1) : null"
-                 :reviews="$reviewsCount > 0 ? $reviewsCount . ' ' . t('product.fbt.card_reviews') : null"
-                 :cat="$product->category?->name"
-                 :name="$product->name"
-                 :now="number_format($product->price, 2) . ' ₼'"
-                 :old="$product->old_price && $product->old_price > $product->price ? number_format($product->old_price, 2) . ' ₼' : null"
-                 :off="$product->old_price && $product->old_price > $product->price ? '-' . round((1 - $product->price / $product->old_price) * 100) . '%' : null" />
-
-        {{-- FBT product cards --}}
         @foreach ($fbtProducts as $fbt)
-          <div class="fbt-plus">+</div>
           @php
               $fbtBadges = [['label' => $fbt->stock > 0 ? t('common.badge_in_stock') : t('common.badge_out_of_stock')]];
           @endphp
@@ -320,20 +328,6 @@
                    :old="$fbt->old_price && $fbt->old_price > $fbt->price ? number_format($fbt->old_price, 2) . ' ₼' : null"
                    :off="$fbt->old_price && $fbt->old_price > $fbt->price ? '-' . round((1 - $fbt->price / $fbt->old_price) * 100) . '%' : null" />
         @endforeach
-
-        @php
-            // No bundle pricing exists at checkout, so the panel shows the plain sum.
-            // It used to render `total * 0.90` plus a fixed "28.69 ₼ saved" line, which
-            // promised a discount the order would never apply.
-            $fbtCount = $fbtProducts->count() + 1;
-            $fbtTotal = $product->price + $fbtProducts->sum('price');
-        @endphp
-        <div class="fbt-panel">
-          <span class="lbl">{{ t('product.fbt.selected_count', ['count' => $fbtCount]) }}</span>
-          <div class="tot"><b>{{ number_format($fbtTotal, 2) }} ₼</b></div>
-          <button class="fbt-addall" type="button"><img src="/assets/icon-cart.svg" alt="">{{ t('product.fbt.add_all') }}</button>
-          <div class="fbt-hint">{{ t('product.fbt.hint') }}</div>
-        </div>
       </div>
     </div>
     @endif
@@ -395,11 +389,13 @@
 </section>
 
 {{-- ===================== SIMILAR PRODUCTS ===================== --}}
+{{-- Nothing to recommend in this category — the whole section stays out of the page. --}}
+@if ($related->isNotEmpty())
 <div class="wrap"><div class="inner section">
   <x-section-head :tag="t('product.similar.tag')" :title="t('product.similar.title')"
                   :more="$product->category ? route('catalog', ['category' => $product->category->slug ?? $product->category->id]) : route('catalog')" :more-label="t('common.view_all')" />
   <div class="grid4" id="simGrid">
-    @forelse ($related as $rel)
+    @foreach ($related as $rel)
       <x-pcard
           :href="route('product.show', $rel->slug)"
           :product="$rel"
@@ -411,11 +407,10 @@
           :off="$rel->old_price && $rel->old_price > $rel->price ? '-' . round((1 - $rel->price / $rel->old_price) * 100) . '%' : null"
           :rate="$rel->reviewsCount > 0 ? number_format($rel->averageRating, 1) : null"
           :reviews="$rel->reviewsCount > 0 ? $rel->reviewsCount . ' ' . t('product.similar.reviews') : null" />
-    @empty
-      <p class="w-full py-8 text-sm text-black/45">{{ $tOr('product.similar.empty', 'Bu kateqoriyada başqa məhsul yoxdur.') }}</p>
-    @endforelse
+    @endforeach
   </div>
 </div></div>
+@endif
 
 {{-- ===================== FEATURED SPECIALISTS ===================== --}}
 <div class="wrap"><div class="inner section">

@@ -403,6 +403,128 @@ class ProductIntegrityTest extends TestCase
         $this->assertStringContainsString('yoxdur', $blogGrid);
     }
 
+    // ─── Özəlliklər (feature bullets) ─────────────────────────
+
+    public function test_product_without_features_shows_the_shared_defaults(): void
+    {
+        $product = $this->publicProduct();
+
+        $html = $this->get(route('product.show', $product->slug))->assertOk()->getContent();
+
+        $this->assertStringContainsString('pd-feats', $html);
+        $this->assertStringContainsString((string) t('product.features.default_1'), $html);
+        $this->assertStringContainsString((string) t('product.features.default_3'), $html);
+    }
+
+    public function test_seller_features_replace_the_defaults(): void
+    {
+        $product = $this->publicProduct();
+        $product->update(['features' => ['10 il zəmanət', 'Sertifikatlı material']]);
+
+        $html = $this->get(route('product.show', $product->slug))->assertOk()->getContent();
+
+        $this->assertStringContainsString('10 il zəmanət', $html);
+        $this->assertStringContainsString('Sertifikatlı material', $html);
+        $this->assertStringNotContainsString((string) t('product.features.default_1'), $html);
+    }
+
+    public function test_seller_form_stores_features_one_per_line(): void
+    {
+        $seller = User::factory()->seller()->create();
+        $category = $this->category();
+
+        $this->actingAs($seller)->post('/business/products', [
+            'name' => 'Özəllikli məhsul',
+            'category_id' => $category->id,
+            'price' => 10,
+            'stock' => 1,
+            'publish' => 0,
+            'features' => "  10 il zəmanət \n\n Sertifikatlı material \n",
+        ], ['Accept' => 'application/json'])->assertOk();
+
+        $this->assertSame(
+            ['10 il zəmanət', 'Sertifikatlı material'],
+            $seller->products()->latest('id')->first()->features,
+        );
+    }
+
+    public function test_empty_features_box_stores_null_so_defaults_apply(): void
+    {
+        $seller = User::factory()->seller()->create();
+        $category = $this->category();
+
+        $this->actingAs($seller)->post('/business/products', [
+            'name' => 'Özəlliksiz məhsul',
+            'category_id' => $category->id,
+            'price' => 10,
+            'stock' => 1,
+            'publish' => 0,
+            'features' => "   \n  ",
+        ], ['Accept' => 'application/json'])->assertOk();
+
+        $this->assertNull($seller->products()->latest('id')->first()->features);
+    }
+
+    // ─── Recommendation blocks ────────────────────────────────
+
+    public function test_accessories_picked_in_admin_render_in_the_fbt_block(): void
+    {
+        $product = $this->publicProduct();
+        $accessory = $this->publicProduct(['name' => ['az' => 'Aksessuar A']]);
+        $product->accessoryProducts()->attach($accessory->id);
+
+        $html = $this->get(route('product.show', $product->slug))->assertOk()->getContent();
+
+        $this->assertStringContainsString('id="fbtCards"', $html);
+        $this->assertStringContainsString('Aksessuar A', $html);
+    }
+
+    public function test_hidden_accessory_is_not_offered_and_empties_the_block(): void
+    {
+        $product = $this->publicProduct();
+        $accessory = $this->publicProduct(['name' => ['az' => 'Gizli aksessuar']]);
+        $accessory->update(['is_visible' => false]);
+        $product->accessoryProducts()->attach($accessory->id);
+
+        $html = $this->get(route('product.show', $product->slug))->assertOk()->getContent();
+
+        $this->assertStringNotContainsString('Gizli aksessuar', $html);
+        $this->assertStringNotContainsString('id="fbtCards"', $html);
+    }
+
+    public function test_fbt_block_is_absent_without_accessories(): void
+    {
+        $product = $this->publicProduct();
+
+        $this->get(route('product.show', $product->slug))
+            ->assertOk()
+            ->assertDontSee('id="fbtCards"', false);
+    }
+
+    public function test_similar_products_section_is_absent_without_siblings(): void
+    {
+        // publicProduct() mints a fresh category per product, so this one is alone.
+        $product = $this->publicProduct();
+
+        $this->get(route('product.show', $product->slug))
+            ->assertOk()
+            ->assertDontSee('id="simGrid"', false);
+    }
+
+    public function test_similar_products_section_renders_with_a_sibling(): void
+    {
+        $product = $this->publicProduct();
+        $this->publicProduct([
+            'category_id' => $product->category_id,
+            'name' => ['az' => 'Qonşu məhsul'],
+        ]);
+
+        $html = $this->get(route('product.show', $product->slug))->assertOk()->getContent();
+
+        $this->assertStringContainsString('id="simGrid"', $html);
+        $this->assertStringContainsString('Qonşu məhsul', $html);
+    }
+
     // ─── Helpers ──────────────────────────────────────────────
 
     private function category(): Category

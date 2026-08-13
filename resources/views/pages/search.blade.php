@@ -68,6 +68,28 @@
     </div>
     @endif
 
+    {{-- "did you mean this category" — the query resolved to a product class
+         through the classifier (class name or a seeded search synonym) but the
+         class has no listings yet, so route the buyer into the catalog instead
+         of leaving a dead end (classifier sheet 8, rec. R7). --}}
+    @if ($classSuggestions->isNotEmpty())
+    <div class="flex flex-col gap-6 [&[hidden]]:hidden" data-sec="prod" @if ($tab !== 'all' && $tab !== 'prod') hidden @endif>
+      <div class="sr-suggest">
+        <p class="sr-suggest-title">{{ t('search.suggest.title') }}</p>
+        <p class="sr-suggest-desc">{{ t('search.suggest.desc', ['query' => $displayQuery]) }}</p>
+        <div class="flex flex-wrap gap-2">
+          @foreach ($classSuggestions as $class)
+            <a class="sr-tab" href="{{ route('catalog', ['class' => $class->slug]) }}">{{ $class->name }}</a>
+          @endforeach
+        </div>
+        @php $suggestSection = $classSuggestions->first()->category?->parent; @endphp
+        @if ($suggestSection)
+          <a class="sr-more self-start" href="{{ route('catalog', ['section' => $suggestSection->slug]) }}">{{ t('search.suggest.section', ['name' => $suggestSection->name]) }}</a>
+        @endif
+      </div>
+    </div>
+    @endif
+
     {{-- masters --}}
     @if ($masters->isNotEmpty())
     <div class="flex flex-col gap-6 [&[hidden]]:hidden" data-sec="usta" @if ($tab !== 'all' && $tab !== 'usta') hidden @endif>

@@ -388,62 +388,6 @@ function initReveal() {
   document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 }
 
-function initFbtAddAll() {
-  const btn = document.querySelector('.fbt-addall');
-  if (!btn) return;
-
-  btn.addEventListener('click', async () => {
-    // Collect product IDs from every pcard in the FBT section (including the main product).
-    const container = document.getElementById('fbtCards');
-    if (!container) return;
-
-    const cards = container.querySelectorAll('.pcard');
-    const ids = [];
-    cards.forEach((card) => {
-      // Each pcard may carry a data-product-id; the main product also has its id
-      // on the add-to-cart button.
-      const pid = card.dataset.productId;
-      if (pid) ids.push(+pid);
-    });
-
-    // Fallback: if cards don't have data-product-id, at least add the main product.
-    const mainId = document.getElementById('addCart')?.dataset?.productId;
-    if (!ids.length && mainId) ids.push(+mainId);
-
-    // Fire individual add-to-cart requests in parallel.
-    const token = csrf();
-    const results = await Promise.allSettled(
-      ids.map((id) =>
-        fetch('/api/cart', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': token,
-          },
-          body: JSON.stringify({ product_id: id, quantity: 1 }),
-        }).then((r) => r.json())
-      )
-    );
-
-    // Update badge with the latest count from the last successful response.
-    const last = results.filter((r) => r.status === 'fulfilled' && r.value?.count != null).pop();
-    if (last) syncCartBadge(last.value.count);
-
-    // Every request failed for a logged-in user → nothing was added; surface it.
-    // (Guests always 401 on /api/cart — keep their behaviour unchanged.)
-    if (!last && ids.length && !isGuest()) {
-      popup.error(document.body.dataset.errGeneric);
-      return;
-    }
-
-    // Visual feedback.
-    const origText = btn.textContent;
-    btn.textContent = '✓';
-    setTimeout(() => { btn.textContent = origText; }, 1800);
-  });
-}
-
 export default function init() {
   initGallery();
   initQty();
@@ -454,6 +398,5 @@ export default function init() {
   initHelpful();
   initReviewForm();
   initScrollToReviews();
-  initFbtAddAll();
   initReveal();
 }

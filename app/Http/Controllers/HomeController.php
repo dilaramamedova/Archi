@@ -11,6 +11,7 @@ use App\Models\PromoBanner;
 use App\Models\SaleBanner;
 use App\Models\ServiceIcon;
 use App\Models\SpecialistProfile;
+use App\Support\CatalogNavigation;
 
 class HomeController extends Controller
 {
@@ -22,34 +23,44 @@ class HomeController extends Controller
 
         $heroRole = Banner::position('hero_role')->active()->ordered()->get();
 
-        // Real per-category count of products a visitor can actually open.
-        $withLiveCount = fn ($q) => $q->withCount([
-            'products' => fn ($p) => $p->visible()->approved(),
-        ]);
-
-        $categories = $withLiveCount(Category::roots()->active()->showOnHome()->ordered())->get();
+        $categories = Category::roots()->active()->showOnHome()->ordered()->get();
 
         // Nothing curated for the homepage yet (e.g. a fresh install where
         // show_on_home was never set) — fall back to the real root categories
         // rather than to hardcoded demo tiles.
         if ($categories->isEmpty()) {
-            $categories = $withLiveCount(Category::roots()->active()->ordered())->take(7)->get();
+            $categories = Category::roots()->active()->ordered()->take(7)->get();
         }
+
+        // Real per-section count of products a visitor can actually open, rolled
+        // up over the whole classifier subtree (section -> groups -> classes).
+        // withCount('products') counted only products whose category_id is the
+        // ROOT id — the classifier never attaches products there, so every tile
+        // read "0 məhsul". Same rollup the catalog rail uses.
+        CatalogNavigation::withRolledUpCounts($categories);
 
         // Home grids show only the curated subset: flagged (sale/featured) AND
         // explicitly picked for the homepage (show_on_homepage).
         $saleProducts = Product::visible()->approved()->sale()
             ->where('show_on_homepage', true)
             ->with(['images', 'category', 'badges'])
-            ->take(4)
+            // Same rule as the catalog: a product positioned in the admin panel
+            // leads, the rest stay newest-first.
+            ->orderByRaw('sort_order = 0')
+            ->orderBy('sort_order')
             ->latest()
+            ->take(4)
             ->get();
 
         $featuredProducts = Product::visible()->approved()->featured()
             ->where('show_on_homepage', true)
             ->with(['images', 'category', 'badges'])
-            ->take(4)
+            // Same rule as the catalog: a product positioned in the admin panel
+            // leads, the rest stay newest-first.
+            ->orderByRaw('sort_order = 0')
+            ->orderBy('sort_order')
             ->latest()
+            ->take(4)
             ->get();
 
         $specialists = SpecialistProfile::where('is_featured', true)

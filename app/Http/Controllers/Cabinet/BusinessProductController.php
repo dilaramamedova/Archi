@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers\Cabinet;
 
+use App\Enums\AttributeComplexity;
+use App\Enums\AttributeFieldType;
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductAttributeValue;
 use App\Models\ProductImage;
 use App\Models\SubCategory;
 use App\Models\User;
@@ -74,6 +77,7 @@ class BusinessProductController extends Controller
         return view('pages.business-product-edit', [
             'product' => null,
             'categories' => Category::roots()->active()->ordered()->get(),
+            'groups' => Category::active()->ordered()->whereNotNull('parent_id')->get(),
             'brands' => Brand::orderBy('name->az')->get(),
             'subCategories' => SubCategory::active()->ordered()->get(),
             'quota' => $this->productQuota($request->user()),
@@ -86,8 +90,9 @@ class BusinessProductController extends Controller
         app()->setLocale(session('locale', config('app.locale')));
 
         return view('pages.business-product-edit', [
-            'product' => $product->load('images'),
+            'product' => $product->load(['images', 'category.parent', 'attributeValues', 'applications']),
             'categories' => Category::roots()->active()->ordered()->get(),
+            'groups' => Category::active()->ordered()->whereNotNull('parent_id')->get(),
             'brands' => Brand::orderBy('name->az')->get(),
             'subCategories' => SubCategory::active()->ordered()->get(),
             // Editing an existing product never consumes quota.
@@ -128,11 +133,53 @@ class BusinessProductController extends Controller
 
     // ---------------------------------------------------------------- API
 
+    /**
+     * Class form definition for the dynamic "Məhsul xüsusiyyətləri" section:
+     * the attributes a product class carries (with per-class pivot settings)
+     * plus its suggested application areas. Cached client-side per class id.
+     */
+    public function subCategoryForm(SubCategory $subCategory): JsonResponse
+    {
+        app()->setLocale(session('locale', config('app.locale')));
+        $locale = app()->getLocale();
+
+        $subCategory->load([
+            'attributes' => fn ($q) => $q->where('attributes.is_active', true),
+            'attributes.options',
+            'applications' => fn ($q) => $q->where('applications.is_active', true),
+        ]);
+
+        return response()->json([
+            'id' => $subCategory->id,
+            'name' => (string) $subCategory->name,
+            'fields' => $subCategory->attributes->map(fn ($a) => [
+                'id' => $a->id,
+                'name' => (string) $a->name,
+                // Always the az name, lowercased: the form hides a generic field
+                // (Ölçü/Material/Rəng/Ölkə) when a class field asks the same thing,
+                // and that comparison must not depend on the viewing locale.
+                'match' => mb_strtolower($a->getTranslation('name', 'az')),
+                'tooltip' => trim((string) $a->getTranslation('tooltip', $locale)) ?: null,
+                'type' => $a->field_type->value,
+                'complexity' => $a->complexity->value,
+                'required' => (bool) $a->pivot->is_required,
+                'unit' => $a->pivot->unit ?: null,
+                'options' => $a->field_type->hasOptions()
+                    ? $a->options->map(fn ($o) => ['id' => $o->id, 'value' => (string) $o->value])->values()
+                    : [],
+            ])->values(),
+            'applications' => $subCategory->applications->map(
+                fn ($app) => ['id' => $app->id, 'name' => (string) $app->name],
+            )->values(),
+        ]);
+    }
+
     public function store(Request $request): JsonResponse
     {
         $this->guardProductQuota($request->user());
 
         $validated = $this->validateProduct($request);
+        $attrPlan = $this->validateClassAttributes($request, isset($validated['sub_category_id']) ? (int) $validated['sub_category_id'] : null);
 
         // Publishing requires at least one image; drafts may be saved without.
         if (($validated['publish'] ?? false) && count($request->file('images') ?? []) === 0) {
@@ -143,11 +190,11 @@ class BusinessProductController extends Controller
 
         // Re-check the quota under a row lock: the check above is a plain count(), so two
         // concurrent submissions could both pass it and push the seller over the cap.
-        $product = DB::transaction(function () use ($request, $validated): Product {
+        $product = DB::transaction(function () use ($request, $validated, $attrPlan): Product {
             User::whereKey($request->user()->id)->lockForUpdate()->first();
             $this->guardProductQuota($request->user()->fresh());
 
-            return Product::create([
+            $product = Product::create([
                 ...$this->productAttributes($validated),
                 'user_id' => $request->user()->id,
                 'slug' => $this->uniqueSlug($validated['name']),
@@ -157,6 +204,11 @@ class BusinessProductController extends Controller
                 'rejected_at' => null,
                 'rejection_reason' => null,
             ]);
+
+            $this->syncClassAttributes($product, $attrPlan);
+            $this->syncApplications($request, $product);
+
+            return $product;
         });
 
         $this->syncImages($request, $product);
@@ -174,6 +226,7 @@ class BusinessProductController extends Controller
     {
         $this->authorizeProduct($request, $product);
         $validated = $this->validateProduct($request);
+        $attrPlan = $this->validateClassAttributes($request, isset($validated['sub_category_id']) ? (int) $validated['sub_category_id'] : null);
 
         // A published product must keep at least one image: survivors + new uploads.
         $willBeVisible = ($validated['publish'] ?? false) || $product->is_visible;
@@ -189,14 +242,27 @@ class BusinessProductController extends Controller
 
         $wasApproved = $product->is_approved;
 
-        $product->update([
-            ...$this->productAttributes($validated),
-            'is_visible' => ($validated['publish'] ?? false) ? true : $product->is_visible,
-            // Substantive edits send the product back to moderation.
-            'is_approved' => false,
-            'rejected_at' => null,
-            'rejection_reason' => null,
-        ]);
+        DB::transaction(function () use ($request, $product, $validated, $attrPlan): void {
+            // Switching the product to another class orphans the old class's values —
+            // wipe them all before writing the new definition's rows.
+            $classChanged = (int) ($product->sub_category_id ?? 0) !== (int) ($validated['sub_category_id'] ?? 0);
+
+            $product->update([
+                ...$this->productAttributes($validated),
+                'is_visible' => ($validated['publish'] ?? false) ? true : $product->is_visible,
+                // Substantive edits send the product back to moderation.
+                'is_approved' => false,
+                'rejected_at' => null,
+                'rejection_reason' => null,
+            ]);
+
+            if ($classChanged) {
+                $product->attributeValues()->delete();
+            }
+
+            $this->syncClassAttributes($product, $attrPlan);
+            $this->syncApplications($request, $product);
+        });
 
         $this->syncImages($request, $product);
 
@@ -318,19 +384,27 @@ class BusinessProductController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            // Bölmə (section, a root category). Informational only — products keep
+            // storing the GROUP in category_id — but when sent it pins the chain check.
+            'section_id' => ['nullable', 'integer', Rule::exists('categories', 'id')->whereNull('parent_id')],
             'category_id' => ['required', 'exists:categories,id'],
             'sub_category_id' => [
                 'nullable',
-                // The subcategory must belong to the chosen category, otherwise a stale
-                // id from a previously selected category could slip through.
+                // The class must belong to the chosen group, otherwise a stale
+                // id from a previously selected group could slip through.
                 Rule::exists('sub_categories', 'id')
                     ->where('category_id', (int) $request->input('category_id')),
             ],
             'brand_id' => ['nullable', 'exists:brands,id'],
             'new_brand' => ['nullable', 'string', 'max:100'],
+            'applications' => ['nullable', 'array', 'max:50'],
+            'applications.*' => ['integer', 'exists:applications,id'],
+            'attrs' => ['nullable', 'array'],
             'attributes' => ['nullable', 'array', 'max:30'],
             'attributes.*.key' => ['nullable', 'string', 'max:60'],
             'attributes.*.value' => ['nullable', 'string', 'max:255'],
+            // Özəlliklər: one bullet per line, stored as a JSON list.
+            'features' => ['nullable', 'string', 'max:1500'],
             'sku' => ['nullable', 'string', 'max:64'],
             'barcode' => ['nullable', 'string', 'max:64'],
             'price' => ['required', 'numeric', 'min:0'],
@@ -351,6 +425,24 @@ class BusinessProductController extends Controller
             'kept_image_ids.*' => ['integer'],
         ]);
 
+        // Section → group chain: when the three-level cascade is used, the chosen
+        // group must be a child of the chosen section. Legacy products may still
+        // carry a root category directly (section_id === category_id passes).
+        if (! empty($validated['section_id']) && (int) $validated['section_id'] !== (int) $validated['category_id']) {
+            $isChild = Category::whereKey($validated['category_id'])
+                ->where('parent_id', (int) $validated['section_id'])
+                ->exists();
+
+            if (! $isChild) {
+                throw ValidationException::withMessages([
+                    'category_id' => $this->msg(
+                        'product-form-attrs.validation.group_mismatch',
+                        'Qrup seçilmiş bölməyə aid deyil',
+                    ),
+                ]);
+            }
+        }
+
         // A half-filled row (name without value or vice versa) is always a mistake.
         foreach ($validated['attributes'] ?? [] as $row) {
             if (trim((string) ($row['key'] ?? '')) === '' || trim((string) ($row['value'] ?? '')) === '') {
@@ -364,6 +456,207 @@ class BusinessProductController extends Controller
         }
 
         return $validated;
+    }
+
+    /**
+     * Validate attrs[<attribute_id>] input against the selected class definition
+     * and turn it into a persistence plan for product_attribute_values.
+     *
+     * MVP decision (classifier sheet 8): `is_required` blocks saving only for
+     * complexity=basic attributes. Professional required fields are badged in the
+     * UI but never block — quick publish must stay possible.
+     *
+     * Unknown attribute ids (not in the class definition) are ignored.
+     *
+     * @return array{submitted: list<int>, rows: list<array<string, mixed>>}
+     */
+    private function validateClassAttributes(Request $request, ?int $subCategoryId): array
+    {
+        if (! $subCategoryId) {
+            return ['submitted' => [], 'rows' => []];
+        }
+
+        $input = $request->input('attrs');
+        $input = is_array($input) ? $input : [];
+
+        $subCategory = SubCategory::with([
+            'attributes' => fn ($q) => $q->where('attributes.is_active', true),
+            'attributes.options',
+        ])->find($subCategoryId);
+
+        if (! $subCategory) {
+            return ['submitted' => [], 'rows' => []];
+        }
+
+        $errors = [];
+        $rows = [];
+        $submitted = [];
+
+        foreach ($subCategory->attributes as $attribute) {
+            $type = $attribute->field_type;
+            $key = 'attrs.'.$attribute->id;
+            $name = (string) $attribute->name;
+            $raw = $input[$attribute->id] ?? null;
+
+            if (array_key_exists($attribute->id, $input)) {
+                // "Submitted" = the form rendered this field, so its stored values
+                // are fully replaced (an emptied field deletes without re-insert).
+                $submitted[] = $attribute->id;
+            }
+
+            $isEmpty = match ($type) {
+                AttributeFieldType::Multiselect => array_filter(
+                    (array) $raw,
+                    fn ($v) => ! is_array($v) && trim((string) $v) !== '',
+                ) === [],
+                AttributeFieldType::Range => ! is_array($raw)
+                    || (trim((string) ($raw['min'] ?? '')) === '' && trim((string) ($raw['max'] ?? '')) === ''),
+                default => $raw === null || is_array($raw) || trim((string) $raw) === '',
+            };
+
+            if ($isEmpty) {
+                if ($attribute->complexity === AttributeComplexity::Basic && $attribute->pivot->is_required) {
+                    $errors[$key] = $this->attrMsg('validation.required', ':name sahəsi doldurulmalıdır', $name);
+                }
+
+                continue;
+            }
+
+            $optionIds = $attribute->options->pluck('id')->all();
+            $base = ['attribute_id' => $attribute->id];
+
+            switch ($type) {
+                case AttributeFieldType::Dropdown:
+                    if (! in_array((int) $raw, $optionIds, true)) {
+                        $errors[$key] = $this->attrMsg('validation.invalid_option', ':name üçün yanlış seçim', $name);
+                        break;
+                    }
+                    $rows[] = $base + ['attribute_option_id' => (int) $raw];
+                    break;
+
+                case AttributeFieldType::Multiselect:
+                    $picked = [];
+                    foreach ((array) $raw as $v) {
+                        if (is_array($v) || trim((string) $v) === '') {
+                            continue;
+                        }
+                        if (! in_array((int) $v, $optionIds, true)) {
+                            $errors[$key] = $this->attrMsg('validation.invalid_option', ':name üçün yanlış seçim', $name);
+                            // Skip the whole attribute (outer foreach): level 1 is this
+                            // foreach, level 2 the switch, level 3 the attribute loop.
+                            continue 3;
+                        }
+                        $picked[] = (int) $v;
+                    }
+                    // One row per chosen option — the EAV contract for multiselect.
+                    foreach (array_unique($picked) as $optionId) {
+                        $rows[] = $base + ['attribute_option_id' => $optionId];
+                    }
+                    break;
+
+                case AttributeFieldType::Boolean:
+                    $bool = filter_var($raw, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                    if ($bool === null) {
+                        $errors[$key] = $this->attrMsg('validation.invalid_option', ':name üçün yanlış seçim', $name);
+                        break;
+                    }
+                    $rows[] = $base + ['value_bool' => $bool];
+                    break;
+
+                case AttributeFieldType::Numeric:
+                case AttributeFieldType::Decimal:
+                    if (! is_numeric($raw)) {
+                        $errors[$key] = $this->attrMsg('validation.numeric', ':name rəqəm olmalıdır', $name);
+                        break;
+                    }
+                    $rows[] = $base + ['value_numeric' => $raw + 0];
+                    break;
+
+                case AttributeFieldType::Range:
+                    $min = trim((string) ($raw['min'] ?? ''));
+                    $max = trim((string) ($raw['max'] ?? ''));
+                    if (($min !== '' && ! is_numeric($min)) || ($max !== '' && ! is_numeric($max))) {
+                        $errors[$key] = $this->attrMsg('validation.numeric', ':name rəqəm olmalıdır', $name);
+                        break;
+                    }
+                    if ($min !== '' && $max !== '' && (float) $min > (float) $max) {
+                        $errors[$key] = $this->attrMsg('validation.range', ':name üçün minimum maksimumdan böyük ola bilməz', $name);
+                        break;
+                    }
+                    $rows[] = $base + [
+                        'value_min' => $min === '' ? null : $min + 0,
+                        'value_max' => $max === '' ? null : $max + 0,
+                    ];
+                    break;
+
+                case AttributeFieldType::Text:
+                case AttributeFieldType::Textarea:
+                    $limit = $type === AttributeFieldType::Text ? 255 : 5000;
+                    $value = trim((string) $raw);
+                    if (mb_strlen($value) > $limit) {
+                        $errors[$key] = $this->attrMsg('validation.text_long', ':name çox uzundur', $name);
+                        break;
+                    }
+                    $rows[] = $base + ['value_text' => $value];
+                    break;
+            }
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        return ['submitted' => $submitted, 'rows' => $rows];
+    }
+
+    /**
+     * Translated attr validation message with a :name placeholder, falling back
+     * to the literal while the key is missing from the translations table.
+     */
+    private function attrMsg(string $key, string $fallback, string $name): string
+    {
+        $full = 'product-form-attrs.'.$key;
+        $value = t($full, ['name' => $name]);
+
+        return is_string($value) && $value !== $full ? $value : strtr($fallback, [':name' => $name]);
+    }
+
+    /**
+     * Replace the stored EAV values of every attribute the form actually rendered
+     * (delete then insert — multiselect fans out to one row per option).
+     */
+    private function syncClassAttributes(Product $product, array $attrPlan): void
+    {
+        if ($attrPlan['submitted'] === []) {
+            return;
+        }
+
+        ProductAttributeValue::where('product_id', $product->id)
+            ->whereIn('attribute_id', $attrPlan['submitted'])
+            ->delete();
+
+        foreach ($attrPlan['rows'] as $row) {
+            ProductAttributeValue::create(['product_id' => $product->id] + $row);
+        }
+    }
+
+    /**
+     * Sync "Tətbiq sahəsi" checkboxes. `applications_present` marks that the block
+     * was rendered, so un-checking every chip clears product_applications; forms
+     * that never rendered the block (legacy clients) leave the pivot untouched.
+     */
+    private function syncApplications(Request $request, Product $product): void
+    {
+        if (! $request->exists('applications') && ! $request->exists('applications_present')) {
+            return;
+        }
+
+        $ids = array_values(array_unique(array_map(
+            'intval',
+            array_filter((array) $request->input('applications', []), fn ($v) => ! is_array($v) && trim((string) $v) !== ''),
+        )));
+
+        $product->applications()->sync($ids);
     }
 
     private function productAttributes(array $validated): array
@@ -400,7 +693,25 @@ class BusinessProductController extends Controller
             'stock' => $validated['stock'],
             'min_order' => $validated['min_order'] ?? 1,
             'specifications' => $fixed + $custom,
+            'features' => $this->featureLines($validated['features'] ?? null),
         ];
+    }
+
+    /**
+     * The Özəlliklər textarea → the `features` JSON list. Blank lines are dropped
+     * and an empty box stores null, which is what makes the product page fall back
+     * to the marketplace-wide default bullets.
+     *
+     * @return list<string>|null
+     */
+    private function featureLines(?string $raw): ?array
+    {
+        $lines = array_values(array_filter(
+            array_map('trim', preg_split('/\R/', (string) $raw) ?: []),
+            fn ($line) => $line !== '',
+        ));
+
+        return $lines === [] ? null : array_slice($lines, 0, 15);
     }
 
     /**

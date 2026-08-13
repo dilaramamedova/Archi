@@ -128,28 +128,20 @@
   .pd-specs .row .k       { @apply text-black/50; }
   .pd-specs .row .v       { @apply font-medium text-ink; }
 
+  /* classifier attribute tooltip — "?" bubble next to professional spec names */
+  .pd-spec-tip        { @apply relative ml-1 inline-grid size-4 shrink-0 cursor-help place-items-center rounded-full bg-black/8 align-middle text-[10px] font-semibold text-black/55 outline-none; }
+  .pd-spec-tip .pop   { @apply invisible absolute bottom-full left-1/2 z-20 mb-1.5 w-60 -translate-x-1/2 rounded-ds border border-black/10 bg-white p-2.5 text-xs leading-[17px] font-normal text-ink opacity-0 shadow-lg transition-opacity duration-150; }
+  .pd-spec-tip:hover .pop,
+  .pd-spec-tip:focus-visible .pop { @apply visible opacity-100; }
+
   .pd-section       { @apply pt-12 pb-2; }
 
-  /* "frequently bought together" — cards + summary panel */
+  /* "Bunları da unutma" — the accessories row. It is a plain card row (see
+     .crow-row in app.css): the bundle total and the "add all" button were
+     dropped because checkout never applied bundle pricing. */
   .pdb-lead         { @apply mb-[26px] max-w-[680px] text-base leading-[1.6] text-[#808080]; }
-  .fbt-cards        { @apply flex items-start gap-0; }
+  .fbt-cards        { @apply items-start; }
   .fbt-cards .badges{ @apply items-center; }
-  .fbt-ok           { @apply inline-flex size-[25px] items-center justify-center rounded-full border-green! bg-green! p-0!; }
-  .fbt-ok img       { @apply size-3 brightness-0 invert; }
-  .fbt-cards .pcard { @apply w-[340px] flex-none; }
-  .fbt-plus         { @apply mt-3 flex h-[316px] w-[38px] shrink-0 items-center justify-center text-[28px] font-semibold text-[#808080]; }
-  .fbt-panel        { @apply ml-2 flex w-[264px] shrink-0 flex-col bg-[#f5f6f8] px-3 py-4; }
-  .fbt-panel .lbl   { @apply text-sm text-[#808080]; }
-  .fbt-panel .tot   { @apply mt-3 flex items-baseline gap-2.5; }
-  .fbt-panel .tot b { @apply text-[34px] leading-[41px] font-semibold tracking-[-.5px] text-ink; }
-  .fbt-panel .tot .old { @apply text-[13px] font-medium text-[#808080] line-through; }
-  .fbt-save         { @apply mt-4 flex items-center gap-3 rounded-md bg-[#e5f7e8] px-3 py-[13px]; }
-  .fbt-save .ic     { @apply flex size-7 shrink-0 items-center justify-center rounded-[37px] bg-green; }
-  .fbt-save .ic img { @apply size-[13px] brightness-0 invert; }
-  .fbt-save p       { @apply text-sm leading-[17px] text-[#218038]; }
-  .fbt-addall       { @apply mt-4 flex h-[52px] w-full items-center justify-center gap-2.5 bg-yellow text-lg font-semibold text-ink transition-[filter] duration-200 hover:brightness-[.93]; }
-  .fbt-addall img   { @apply size-[22px]; }
-  .fbt-hint         { @apply mt-4 text-[13px] text-[#808080]; }
 
   /* rating / reviews — Figma 1:1 */
   .rev-summary        { @apply flex items-stretch gap-8 border border-black/10 bg-white p-7; }
@@ -206,10 +198,6 @@
     .pd-wish      { @apply size-[48px]; }
     .pd-specs .row { @apply grid-cols-[120px_1fr]; }
     .pd-specs .row > div { @apply px-3 py-2.5 text-sm; }
-    .fbt-cards    { @apply flex-col gap-2; }
-    .fbt-cards .pcard { @apply w-full; }
-    .fbt-plus     { @apply h-auto w-full py-1; }
-    .fbt-panel    { @apply w-full; }
     .rev-summary  { @apply flex-col gap-4 p-4; }
     .rs-div       { @apply hidden; }
     .rs-rec       { @apply w-full; }

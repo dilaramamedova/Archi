@@ -49,11 +49,20 @@ class CategoryResource extends Resource
                     ->maxLength(255),
 
                 Forms\Components\Select::make('parent_id')
-                    ->label('Ana kateqoriya')
-                    ->relationship('parent', 'name')
+                    ->label('Ana bölmə')
+                    ->relationship(
+                        'parent',
+                        'name',
+                        // Only root sections may be parents (2-level tree), and a
+                        // category can never be its own parent.
+                        modifyQueryUsing: fn ($query, ?Category $record) => $query
+                            ->whereNull('parent_id')
+                            ->when($record, fn ($q) => $q->whereKeyNot($record->getKey()))
+                    )
                     ->searchable()
                     ->nullable()
-                    ->preload(),
+                    ->preload()
+                    ->helperText('Boş saxlansa Bölmə (kök), seçilsə Qrup olur.'),
 
                 Forms\Components\FileUpload::make('icon')
                     ->label('İkon (SVG)')
@@ -91,8 +100,19 @@ class CategoryResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable()->width(60),
                 Tables\Columns\ImageColumn::make('icon')->label('İkon')->width(40)->height(40),
-                Tables\Columns\TextColumn::make('name')->label('Ad')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('parent.name')->label('Ana kateqoriya')->placeholder('—'),
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Ad')
+                    ->searchable()
+                    ->sortable()
+                    // Legacy inactive categories stay listed, but visibly muted.
+                    ->color(fn ($state, Category $record) => $record->is_active ? null : 'gray')
+                    ->description(fn (Category $record) => $record->is_active ? null : 'Passiv (köhnə)'),
+                Tables\Columns\TextColumn::make('level')
+                    ->label('Səviyyə')
+                    ->badge()
+                    ->state(fn (Category $record) => $record->parent_id ? 'Qrup' : 'Bölmə')
+                    ->color(fn (string $state) => $state === 'Bölmə' ? 'primary' : 'gray'),
+                Tables\Columns\TextColumn::make('parent.name')->label('Ana bölmə')->placeholder('—'),
                 Tables\Columns\TextColumn::make('slug')->label('Slug'),
                 Tables\Columns\TextColumn::make('sort_order')->label('Sıra')->sortable(),
                 Tables\Columns\ToggleColumn::make('is_active')->label('Aktiv'),
@@ -101,11 +121,21 @@ class CategoryResource extends Resource
             ->defaultSort('sort_order')
             ->reorderable('sort_order')
             ->filters([
+                Tables\Filters\SelectFilter::make('level')
+                    ->label('Səviyyə')
+                    ->options([
+                        'root' => 'Bölmə (kök)',
+                        'child' => 'Qrup',
+                    ])
+                    ->query(fn ($query, array $data) => $query
+                        ->when($data['value'] === 'root', fn ($q) => $q->whereNull('parent_id'))
+                        ->when($data['value'] === 'child', fn ($q) => $q->whereNotNull('parent_id'))),
                 Tables\Filters\SelectFilter::make('parent_id')
-                    ->label('Ana kateqoriya')
-                    ->relationship('parent', 'name')
+                    ->label('Ana bölmə')
+                    ->relationship('parent', 'name', modifyQueryUsing: fn ($query) => $query->whereNull('parent_id'))
                     ->searchable()
                     ->preload(),
+                Tables\Filters\TernaryFilter::make('is_active')->label('Aktiv'),
             ])
             ->actions([
                 Actions\EditAction::make(),

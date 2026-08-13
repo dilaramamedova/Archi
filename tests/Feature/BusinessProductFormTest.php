@@ -251,6 +251,65 @@ class BusinessProductFormTest extends TestCase
 
     // ─── Helpers (mirroring BusinessCabinetTest conventions) ──
 
+    public function test_create_form_keeps_every_specification_layer_in_one_card(): void
+    {
+        $seller = User::factory()->seller()->create();
+
+        $html = $this->actingAs($seller)->get('/business/products/create')->assertOk()->getContent();
+
+        // The card hosts the generic fields and the free-form rows, so it may not
+        // start hidden the way it did when it only held class attributes.
+        $this->assertDoesNotMatchRegularExpression('/id="classAttrsCard"[^>]*display:\s*none/', $html);
+
+        $cardStart = strpos($html, 'id="classAttrsCard"');
+        $genericStart = strpos($html, 'id="genericAttrs"');
+        $rowsStart = strpos($html, 'id="attrRows"');
+        $this->assertNotFalse($cardStart);
+        $this->assertGreaterThan($cardStart, $genericStart, 'generic fields must live inside the specifications card');
+        $this->assertGreaterThan($genericStart, $rowsStart, 'free-form rows must come after the generic fields');
+
+        // Each generic input exists exactly once — the whole point of the merge.
+        foreach (['pDim', 'pMaterial', 'pColor', 'pCountry'] as $id) {
+            $this->assertSame(1, substr_count($html, 'id="'.$id.'"'), $id.' must appear once');
+        }
+
+        // …and each carries the term its class-field counterpart is matched against,
+        // including the look-alikes that must NOT count as a duplicate.
+        $this->assertStringContainsString('data-generic-match="ölçü|qabarit"', $html);
+        $this->assertStringContainsString('data-generic-match="material"', $html);
+        $this->assertStringContainsString('data-generic-match="rəng"', $html);
+        $this->assertStringContainsString('data-generic-match="ölkə"', $html);
+        $this->assertStringContainsString('göz ölçüsü', $html);
+        $this->assertStringContainsString('rəng temperaturu', $html);
+    }
+
+    public function test_class_form_endpoint_sends_a_locale_independent_match_key(): void
+    {
+        $seller = User::factory()->seller()->create();
+        $subCategory = $this->subCategory($this->category(), 'Divan');
+
+        $attribute = \App\Models\Attribute::query()->create([
+            'name' => ['az' => 'Qabaritlər (U×E×H)', 'ru' => 'Габариты', 'en' => 'Dimensions'],
+            'slug' => 'qabaritler-'.uniqid(),
+            'field_type' => \App\Enums\AttributeFieldType::Text,
+            'complexity' => \App\Enums\AttributeComplexity::Basic,
+            'is_active' => true,
+        ]);
+        $subCategory->attributes()->attach($attribute, ['sort_order' => 0]);
+
+        // The generic-field rule compares against this key, so it must stay
+        // Azerbaijani even when the seller browses in another language.
+        session(['locale' => 'en']);
+
+        $field = $this->actingAs($seller)
+            ->getJson("/business/api/sub-categories/{$subCategory->id}/form")
+            ->assertOk()
+            ->json('fields.0');
+
+        $this->assertSame('Dimensions', $field['name']);
+        $this->assertSame('qabaritlər (u×e×h)', $field['match']);
+    }
+
     private function category(): Category
     {
         return Category::query()->create([

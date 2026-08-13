@@ -6,9 +6,11 @@ use App\Enums\UserStatus;
 use App\Models\BlogPost;
 use App\Models\Product;
 use App\Models\SpecialistProfile;
+use App\Models\SubCategory;
 use App\Services\SearchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\View\View;
 
 class SearchController extends Controller
@@ -26,6 +28,7 @@ class SearchController extends Controller
         $products = collect();
         $masters = collect();
         $posts = collect();
+        $classSuggestions = collect();
         $productCount = 0;
         $masterCount = 0;
         $postCount = 0;
@@ -41,6 +44,14 @@ class SearchController extends Controller
 
             $productCount = $productQuery->count();
             $products = $productQuery->take(4)->get();
+
+            // Classifier dead-end (sheet 8, rec. R7): a colloquial query such as
+            // "kvars vinil" resolves through search_synonyms to a product class
+            // that simply has no listings yet. Instead of a bare "no results"
+            // page, offer the class (and its section) in the catalog.
+            if ($productCount === 0) {
+                $classSuggestions = $this->classSuggestions($searchTerm);
+            }
         }
 
         // Masters -- fetch when showing "all" or "usta" tab
@@ -80,11 +91,36 @@ class SearchController extends Controller
             'products',
             'masters',
             'posts',
+            'classSuggestions',
             'productCount',
             'masterCount',
             'postCount',
             'totalCount',
         ));
+    }
+
+    /**
+     * Product classes the query resolved to (class name or seeded search
+     * synonym), eager-loaded with the group/section needed to link into the
+     * catalog. Capped so the suggestion strip stays a hint, not a second result
+     * list.
+     *
+     * @return Collection<int, SubCategory>
+     */
+    private function classSuggestions(string $searchTerm): Collection
+    {
+        $ids = SearchService::findMatchingSubCategoryIds($searchTerm);
+
+        if ($ids === []) {
+            return collect();
+        }
+
+        return SubCategory::active()
+            ->whereIn('id', $ids)
+            ->with('category.parent')
+            ->ordered()
+            ->take(3)
+            ->get();
     }
 
     public function autocomplete(Request $request): JsonResponse

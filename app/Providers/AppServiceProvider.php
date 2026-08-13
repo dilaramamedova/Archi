@@ -6,10 +6,12 @@ use App\Models\BlogPost;
 use App\Models\CartItem;
 use App\Models\MenuItem;
 use App\Models\SocialLink;
+use App\Support\CatalogNavigation;
 use App\Support\WindowsSafeFilesystem;
 use App\Translation\DatabaseTranslationLoader;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
+use Spatie\Translatable\Facades\Translatable;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -29,13 +31,24 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Content is authored in Azerbaijani first; ru/en fall back to az until translated.
+        Translatable::fallback(fallbackLocale: 'az');
+
         View::composer('components.layout', function ($view) {
+            $megaCatalog = MenuItem::location('header_mega_catalog')->roots()->active()->ordered()->get();
+
             $view->with([
                 'headerMenu' => MenuItem::location('header_main')->roots()->active()->ordered()
                     ->with(['children' => fn ($q) => $q->active()->ordered()])
                     ->get(),
 
-                'megaCatalog' => MenuItem::location('header_mega_catalog')->roots()->active()->ordered()->get(),
+                'megaCatalog' => $megaCatalog,
+
+                // The same twelve section cards, grouped into the classifier's five
+                // navigation clusters (App\Support\CatalogNavigation) — used by the
+                // "Kataloq" mega panel and the mobile drawer. Empty when no card
+                // maps to a section, in which case the navbar keeps the flat grid.
+                'megaCatalogClusters' => CatalogNavigation::clusterMenuItems($megaCatalog),
 
                 'megaSpecialists' => MenuItem::location('header_mega_specialists')->roots()->active()->ordered()->get(),
 

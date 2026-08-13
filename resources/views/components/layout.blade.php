@@ -49,9 +49,12 @@
     data-cur-details="{{ t('common.view_details') }}"
     data-err-generic="{{ t('common.error_generic') }}"
     data-err-network="{{ t('common.error_network') }}"
+    {{-- screen-reader labels for the card-row arrows injected by card-slider.js --}}
+    data-l-prev="{{ t('common.prev') }}"
+    data-l-next="{{ t('common.next') }}"
 >
 
-<x-navbar :headerMenu="$headerMenu" :megaCatalog="$megaCatalog" :megaSpecialists="$megaSpecialists" :megaBlog="$megaBlog" :megaBlogMenu="$megaBlogMenu" />
+<x-navbar :headerMenu="$headerMenu" :megaCatalog="$megaCatalog" :megaCatalogClusters="$megaCatalogClusters" :megaSpecialists="$megaSpecialists" :megaBlog="$megaBlog" :megaBlogMenu="$megaBlogMenu" />
 
 {{ $slot }}
 

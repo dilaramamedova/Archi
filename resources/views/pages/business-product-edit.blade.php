@@ -18,20 +18,56 @@
   $atLimit = ! $isEdit && $quota['reached'];
 
   // Combobox option payload (id + display name in the current locale).
+  // Three-level classifier cascade: Bölmə (section roots) → Qrup (child groups,
+  // saved into products.category_id) → Sinif (product classes, sub_category_id).
   $subCategories ??= collect();
+  $groups ??= collect();
   $comboData = [
       'brands' => $brands->map(fn ($b) => ['id' => $b->id, 'name' => (string) $b->name])->values(),
-      'categories' => $categories->map(fn ($c) => ['id' => $c->id, 'name' => (string) $c->name])->values(),
-      'subcategories' => $subCategories->map(fn ($s) => [
-          'id' => $s->id, 'category_id' => $s->category_id, 'name' => (string) $s->name,
+      'sections' => $categories->map(fn ($c) => ['id' => $c->id, 'name' => (string) $c->name])->values(),
+      'groups' => $groups->map(fn ($c) => [
+          'id' => $c->id, 'parent_id' => $c->parent_id, 'name' => (string) $c->name,
+      ])->values(),
+      'classes' => $subCategories->map(fn ($s) => [
+          'id' => $s->id, 'group_id' => $s->category_id, 'name' => (string) $s->name,
       ])->values(),
   ];
+
+  // Edit mode: resolve the stored category into section + group combobox values.
+  // Legacy products may still point at a ROOT category — it then shows as the
+  // section and the seller picks a group before the next save.
+  $editCategory = $isEdit ? $product->category : null;
+  $editGroup = $editCategory?->parent_id ? $editCategory : null;
+  $editSection = $editCategory?->parent_id ? $editCategory->parent : $editCategory;
+
+  // Existing EAV values + applications, handed to the JS renderer once the
+  // class form definition arrives (shape mirrors product_attribute_values).
+  $attrInitial = [];
+  if ($isEdit) {
+      foreach ($product->attributeValues as $v) {
+          $entry = $attrInitial[$v->attribute_id] ?? [];
+          if ($v->attribute_option_id !== null) { $entry['options'][] = $v->attribute_option_id; }
+          if ($v->value_text !== null) { $entry['text'] = $v->value_text; }
+          if ($v->value_numeric !== null) { $entry['numeric'] = (float) $v->value_numeric; }
+          if ($v->value_min !== null) { $entry['min'] = (float) $v->value_min; }
+          if ($v->value_max !== null) { $entry['max'] = (float) $v->value_max; }
+          if ($v->value_bool !== null) { $entry['bool'] = (bool) $v->value_bool; }
+          $attrInitial[$v->attribute_id] = $entry;
+      }
+  }
+  $appInitial = $isEdit
+      ? $product->applications->map(fn ($a) => ['id' => $a->id, 'name' => (string) $a->name])->values()
+      : collect();
 
   // Free-form specification rows = everything in the JSON column except the keys
   // owned by the fixed inputs below (barcode/shelf/dimensions/material/color/country).
   $reservedSpecKeys = ['barcode', 'shelf', 'dimensions', 'material', 'color', 'country'];
   $customSpecs = collect($spec)->except($reservedSpecKeys)
       ->map(fn ($v) => is_array($v) ? implode(', ', $v) : (string) $v);
+
+  // Özəlliklər textarea: one bullet per line (the column is a JSON list).
+  $featuresText = $isEdit ? implode("\n", array_map('strval', (array) ($product->features ?? []))) : '';
+  $featuresPlaceholder = $tOr('business-product-edit.features.placeholder', "Hər sətirdə bir özəllik yazın\nMəs.: 10 il zəmanət");
 
   // The classes the page's native selects already use — the combobox inputs reuse them.
   $comboInputCls = 'h-[43px] w-full rounded border border-black/15 bg-white px-3.5 pr-8 text-sm text-ink outline-none transition focus:border-black/40';
@@ -101,15 +137,49 @@
         <x-ui.input variant="b2b" id="pName" name="name" :value="$isEdit ? $product->name : ''" :placeholder="t('business-product-edit.basic.name_placeholder')" required />
       </x-cabinet.field>
 
+      {{-- Classifier cascade level 1+2: Bölmə (root section) → Qrup (child group).
+           The GROUP id is what products.category_id stores; the section id rides
+           along so the backend can verify the chain. --}}
       <div class="cab-field-row overflow-visible!">
-        <x-cabinet.field class="overflow-visible!" :label="t('business-product-edit.basic.category') . ' *'" for="pCategory">
-          <div class="relative w-full" data-combo="category"
+        <x-cabinet.field class="overflow-visible!" :label="$tOr('product-form-attrs.cascade.section', 'Bölmə') . ' *'" for="pSection">
+          <div class="relative w-full" data-combo="section"
                data-l-empty="{{ $tOr('business-product-edit.combo.empty', 'Nəticə tapılmadı') }}">
-            <input type="text" id="pCategory" data-combo-input autocomplete="off" role="combobox" aria-expanded="false"
-                   value="{{ $isEdit ? $product->category?->name : '' }}"
+            <input type="text" id="pSection" data-combo-input autocomplete="off" role="combobox" aria-expanded="false"
+                   value="{{ $editSection?->name }}"
+                   placeholder="{{ t('business-product-edit.basic.select') }}"
+                   class="{{ $comboInputCls }}">
+            <input type="hidden" name="section_id" data-combo-id value="{{ $editSection?->id }}">
+            <span class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-black/40">▾</span>
+            <ul data-combo-list class="{{ $comboListCls }}"></ul>
+          </div>
+        </x-cabinet.field>
+        <x-cabinet.field class="overflow-visible!" :label="$tOr('product-form-attrs.cascade.group', 'Qrup') . ' *'" for="pGroup">
+          <div class="relative w-full" data-combo="group"
+               data-l-empty="{{ $tOr('business-product-edit.combo.empty', 'Nəticə tapılmadı') }}">
+            <input type="text" id="pGroup" data-combo-input autocomplete="off" role="combobox" aria-expanded="false"
+                   value="{{ $editGroup?->name }}"
                    placeholder="{{ t('business-product-edit.basic.select') }}"
                    class="{{ $comboInputCls }}">
             <input type="hidden" name="category_id" data-combo-id value="{{ $isEdit ? $product->category_id : '' }}">
+            <span class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-black/40">▾</span>
+            <ul data-combo-list class="{{ $comboListCls }}"></ul>
+          </div>
+        </x-cabinet.field>
+      </div>
+
+      {{-- Cascade level 3 (Sinif = product class) + brand. The class row half is
+           shown by JS as soon as the chosen group actually has active classes. --}}
+      @php $showSubRow = $isEdit && ($product->sub_category_id || $comboData['classes']->where('group_id', $product->category_id)->isNotEmpty()); @endphp
+      <div class="cab-field-row overflow-visible!">
+        <x-cabinet.field class="overflow-visible!" :label="$tOr('product-form-attrs.cascade.class', 'Məhsul sinfi')" for="pSubCategory"
+                         id="subCatRow" :style="$showSubRow ? '' : 'display:none'">
+          <div class="relative w-full" data-combo="subcategory"
+               data-l-empty="{{ $tOr('business-product-edit.combo.empty', 'Nəticə tapılmadı') }}">
+            <input type="text" id="pSubCategory" data-combo-input autocomplete="off" role="combobox" aria-expanded="false"
+                   value="{{ $isEdit ? $product->subCategory?->name : '' }}"
+                   placeholder="{{ t('business-product-edit.basic.select') }}"
+                   class="{{ $comboInputCls }}">
+            <input type="hidden" name="sub_category_id" data-combo-id value="{{ $isEdit ? $product->sub_category_id : '' }}">
             <span class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-black/40">▾</span>
             <ul data-combo-list class="{{ $comboListCls }}"></ul>
           </div>
@@ -130,25 +200,6 @@
         </x-cabinet.field>
       </div>
 
-      {{-- Subcategory — only children of the selected category; the row is shown by
-           JS as soon as the chosen category actually has active subcategories. --}}
-      @php $showSubRow = $isEdit && ($product->sub_category_id || $comboData['subcategories']->where('category_id', $product->category_id)->isNotEmpty()); @endphp
-      <div class="cab-field-row overflow-visible!" id="subCatRow" @unless ($showSubRow) style="display:none" @endunless>
-        <x-cabinet.field class="overflow-visible!" :label="$tOr('business-product-edit.basic.subcategory', 'Alt kateqoriya')" for="pSubCategory">
-          <div class="relative w-full" data-combo="subcategory"
-               data-l-empty="{{ $tOr('business-product-edit.combo.empty', 'Nəticə tapılmadı') }}">
-            <input type="text" id="pSubCategory" data-combo-input autocomplete="off" role="combobox" aria-expanded="false"
-                   value="{{ $isEdit ? $product->subCategory?->name : '' }}"
-                   placeholder="{{ t('business-product-edit.basic.select') }}"
-                   class="{{ $comboInputCls }}">
-            <input type="hidden" name="sub_category_id" data-combo-id value="{{ $isEdit ? $product->sub_category_id : '' }}">
-            <span class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-black/40">▾</span>
-            <ul data-combo-list class="{{ $comboListCls }}"></ul>
-          </div>
-        </x-cabinet.field>
-        <div class="cab-field max-[900px]:hidden" aria-hidden="true"></div>
-      </div>
-
       <div class="cab-field-row">
         <x-cabinet.field :label="t('business-product-edit.basic.sku')" for="pSku">
           <x-ui.input variant="b2b" id="pSku" name="sku" :value="$isEdit ? $product->sku : ''" :placeholder="t('business-product-edit.basic.sku_placeholder')" />
@@ -158,6 +209,102 @@
         </x-cabinet.field>
       </div>
     </x-cabinet.card>
+
+    {{-- ONE place for everything a seller can say about the product, in three layers:
+         1. the class's own fields (loaded from the class-definition endpoint; only
+            required basic ones up front, the rest behind "Daha ətraflı doldur"),
+         2. the generic fields every product may carry — each one hides itself when
+            the chosen class already asks the same thing (no field twice),
+         3. free-form rows for anything the two layers above do not cover. --}}
+    <x-cabinet.card gap="gap-4" :title="$tOr('product-form-attrs.section.title', 'Xüsusiyyətlər')"
+        id="classAttrsCard" class="overflow-visible!"
+        data-endpoint="{{ url('/business/api/sub-categories') }}"
+        data-l-select="{{ $tOr('product-form-attrs.field.select', 'Seçin') }}"
+        data-l-yes="{{ $tOr('product-form-attrs.field.yes', 'Bəli') }}"
+        data-l-no="{{ $tOr('product-form-attrs.field.no', 'Xeyr') }}"
+        data-l-min="{{ $tOr('product-form-attrs.field.min', 'Min') }}"
+        data-l-max="{{ $tOr('product-form-attrs.field.max', 'Maks') }}"
+        data-l-req-badge="{{ $tOr('product-form-attrs.pro.required_badge', 'Nəşr üçün tövsiyə olunur') }}"
+        data-l-pro-show="{{ $tOr('product-form-attrs.pro.show', 'Daha ətraflı doldur (:count əlavə sahə)') }}"
+        data-l-pro-hide="{{ $tOr('product-form-attrs.pro.hide', 'Əlavə sahələri gizlət') }}"
+        data-l-required="{{ $tOr('product-form-attrs.validation.required', ':name sahəsi doldurulmalıdır') }}"
+        data-l-load-error="{{ $tOr('product-form-attrs.section.load_error', 'Sahələri yükləmək mümkün olmadı. Yenidən cəhd edin.') }}">
+      <p id="classAttrsDesc" style="display:none" class="text-[13px] leading-[1.45] text-black/50">{{ $tOr('product-form-attrs.section.desc', 'Seçilmiş sinfə uyğun sahələri doldurun — alıcılar məhsulu bu xüsusiyyətlərə görə tapır.') }}</p>
+
+      <div id="attrBasic" class="flex w-full flex-col gap-4"></div>
+
+      <button type="button" id="attrProToggle" style="display:none"
+              class="h-[38px] self-start rounded border border-black/20 px-4 text-[13px] font-semibold text-ink transition hover:bg-gray-soft2"></button>
+      <div id="attrPro" class="hidden w-full flex-col gap-4"></div>
+
+      {{-- Tətbiq sahəsi — cross-category application areas suggested by the class. --}}
+      <div id="appBlock" style="display:none" class="flex w-full flex-col items-start gap-2 border-t border-black/10 pt-4">
+        <p class="ui-label-b2b">{{ $tOr('product-form-attrs.apps.title', 'Tətbiq sahəsi') }}</p>
+        <p class="text-[13px] leading-[1.45] text-black/50">{{ $tOr('product-form-attrs.apps.notice', 'Bu məhsulu eyni anda bir neçə kateqoriyada satmaq olar — bütün uyğun variantları qeyd edin') }}</p>
+        <input type="hidden" name="applications_present" value="1" disabled id="appsPresent">
+        <div id="appChips" class="flex w-full flex-wrap gap-2"></div>
+      </div>
+
+      {{-- Layer 2: generic fields. `data-generic-field` marks the wrapper,
+           `data-generic-match` lists the words a class field must contain for this
+           one to step aside and `data-generic-except` the look-alikes that must not
+           count — see syncGenericFields() in the page module. --}}
+      <div id="genericAttrs" class="flex w-full flex-col gap-4 border-t border-black/10 pt-4">
+        <p class="text-[13px] leading-[1.45] text-black/50">{{ $tOr('product-form-attrs.generic.desc', 'Ümumi xüsusiyyətlər. Seçdiyiniz sinif eyni sahəni özü soruşursa, buradakı təkrar sahə gizlənir.') }}</p>
+        <div class="grid w-full grid-cols-2 items-start gap-4 max-[640px]:grid-cols-1">
+          <div data-generic-field data-generic-match="ölçü|qabarit" data-generic-except="göz ölçüsü|çip ölçüsü|yataq yerinin ölçüsü">
+            <x-cabinet.field :label="t('business-product-edit.description.dimensions')" for="pDim">
+              <x-ui.input variant="b2b" id="pDim" name="dimensions" :value="$spec['dimensions'] ?? ''" :placeholder="t('business-product-edit.description.dimensions_placeholder')" />
+            </x-cabinet.field>
+          </div>
+          <div data-generic-field data-generic-match="material">
+            <x-cabinet.field :label="t('business-product-edit.description.material')" for="pMaterial">
+              <x-ui.input variant="b2b" id="pMaterial" name="material" :value="$spec['material'] ?? ''" :placeholder="t('business-product-edit.description.material_placeholder')" />
+            </x-cabinet.field>
+          </div>
+          <div data-generic-field data-generic-match="rəng" data-generic-except="rəng temperaturu">
+            <x-cabinet.field :label="t('business-product-edit.description.color')" for="pColor">
+              <x-ui.input variant="b2b" id="pColor" name="color" :value="$spec['color'] ?? ''" :placeholder="t('business-product-edit.description.color_placeholder')" />
+            </x-cabinet.field>
+          </div>
+          <div data-generic-field data-generic-match="ölkə">
+            <x-cabinet.field :label="t('business-product-edit.description.country')" for="pCountry">
+              <x-ui.input variant="b2b" id="pCountry" name="country" :value="$spec['country'] ?? ''" :placeholder="t('business-product-edit.description.country_placeholder')" />
+            </x-cabinet.field>
+          </div>
+        </div>
+      </div>
+
+      {{-- Layer 3: free-form rows. Saved into the same `specifications` JSON the
+           admin KeyValue field edits, so both surfaces stay in sync. --}}
+      <div class="flex w-full flex-col items-start gap-2 border-t border-black/10 pt-4">
+        <p class="ui-label-b2b">{{ $tOr('business-product-edit.attributes.title', 'Siyahıda olmayan xüsusiyyət') }}</p>
+        <p class="text-[13px] leading-[1.45] text-black/50">{{ $tOr('business-product-edit.attributes.desc', 'Yuxarıdakı sahələrdə olmayan nəyisə yazmaq istəyirsinizsə — məsələn: Çəki → 5 kq.') }}</p>
+        <div id="attrRows" class="flex w-full flex-col gap-3"
+             data-l-key-ph="{{ $tOr('business-product-edit.attributes.key_placeholder', 'Məs.: Çəki') }}"
+             data-l-value-ph="{{ $tOr('business-product-edit.attributes.value_placeholder', 'Məs.: 5 kq') }}"
+             data-l-remove="{{ $tOr('business-product-edit.attributes.remove', 'Sil') }}">
+          @foreach ($customSpecs as $k => $v)
+            <div class="flex w-full items-center gap-4 max-[640px]:gap-2" data-attr-row>
+              <input type="text" name="attributes[{{ $loop->index }}][key]" value="{{ $k }}" maxlength="60"
+                     placeholder="{{ $tOr('business-product-edit.attributes.key_placeholder', 'Məs.: Çəki') }}"
+                     class="h-[43px] w-full min-w-0 flex-1 rounded border border-black/15 bg-white px-3.5 text-sm text-ink outline-none transition focus:border-black/40">
+              <input type="text" name="attributes[{{ $loop->index }}][value]" value="{{ $v }}" maxlength="255"
+                     placeholder="{{ $tOr('business-product-edit.attributes.value_placeholder', 'Məs.: 5 kq') }}"
+                     class="h-[43px] w-full min-w-0 flex-1 rounded border border-black/15 bg-white px-3.5 text-sm text-ink outline-none transition focus:border-black/40">
+              <button type="button" data-attr-remove aria-label="{{ $tOr('business-product-edit.attributes.remove', 'Sil') }}"
+                      class="flex size-[43px] shrink-0 items-center justify-center rounded border border-black/15 text-black/40 transition hover:border-error hover:text-error">✕</button>
+            </div>
+          @endforeach
+        </div>
+        <button type="button" id="attrAdd"
+                class="mt-1 h-[38px] rounded border border-black/20 px-4 text-[13px] font-semibold text-ink transition hover:bg-gray-soft2">
+          + {{ $tOr('business-product-edit.attributes.add', 'Xüsusiyyət əlavə et') }}
+        </button>
+      </div>
+    </x-cabinet.card>
+
+    <script type="application/json" id="attrInitial">@json(['values' => $attrInitial, 'applications' => $appInitial])</script>
 
     {{-- Pricing & stock --}}
     <x-cabinet.card gap="gap-4" :title="t('business-product-edit.pricing.title')">
@@ -200,51 +347,14 @@
         <x-ui.textarea variant="b2b" id="pDesc" name="description" class="h-[110px] resize-none" :placeholder="t('business-product-edit.description.short_placeholder')">{{ $isEdit ? $product->description : '' }}</x-ui.textarea>
       </x-cabinet.field>
 
-      <div class="cab-field-row">
-        <x-cabinet.field :label="t('business-product-edit.description.dimensions')" for="pDim">
-          <x-ui.input variant="b2b" id="pDim" name="dimensions" :value="$spec['dimensions'] ?? ''" :placeholder="t('business-product-edit.description.dimensions_placeholder')" />
-        </x-cabinet.field>
-        <x-cabinet.field :label="t('business-product-edit.description.material')" for="pMaterial">
-          <x-ui.input variant="b2b" id="pMaterial" name="material" :value="$spec['material'] ?? ''" :placeholder="t('business-product-edit.description.material_placeholder')" />
-        </x-cabinet.field>
-      </div>
-
-      <div class="cab-field-row">
-        <x-cabinet.field :label="t('business-product-edit.description.color')" for="pColor">
-          <x-ui.input variant="b2b" id="pColor" name="color" :value="$spec['color'] ?? ''" :placeholder="t('business-product-edit.description.color_placeholder')" />
-        </x-cabinet.field>
-        <x-cabinet.field :label="t('business-product-edit.description.country')" for="pCountry">
-          <x-ui.input variant="b2b" id="pCountry" name="country" :value="$spec['country'] ?? ''" :placeholder="t('business-product-edit.description.country_placeholder')" />
-        </x-cabinet.field>
-      </div>
-
-      {{-- Free-form key-value specifications. Saved into the same `specifications`
-           JSON the admin KeyValue field edits, so both surfaces stay in sync. --}}
-      <div class="flex w-full flex-col items-start gap-2">
-        <p class="ui-label-b2b">{{ $tOr('business-product-edit.attributes.title', 'Əlavə xüsusiyyətlər') }}</p>
-        <p class="text-[13px] leading-[1.45] text-black/50">{{ $tOr('business-product-edit.attributes.desc', 'Məhsula öz xüsusiyyətlərini əlavə et — məsələn: Çəki → 5 kq.') }}</p>
-        <div id="attrRows" class="flex w-full flex-col gap-3"
-             data-l-key-ph="{{ $tOr('business-product-edit.attributes.key_placeholder', 'Məs.: Çəki') }}"
-             data-l-value-ph="{{ $tOr('business-product-edit.attributes.value_placeholder', 'Məs.: 5 kq') }}"
-             data-l-remove="{{ $tOr('business-product-edit.attributes.remove', 'Sil') }}">
-          @foreach ($customSpecs as $k => $v)
-            <div class="flex w-full items-center gap-4 max-[640px]:gap-2" data-attr-row>
-              <input type="text" name="attributes[{{ $loop->index }}][key]" value="{{ $k }}" maxlength="60"
-                     placeholder="{{ $tOr('business-product-edit.attributes.key_placeholder', 'Məs.: Çəki') }}"
-                     class="h-[43px] w-full min-w-0 flex-1 rounded border border-black/15 bg-white px-3.5 text-sm text-ink outline-none transition focus:border-black/40">
-              <input type="text" name="attributes[{{ $loop->index }}][value]" value="{{ $v }}" maxlength="255"
-                     placeholder="{{ $tOr('business-product-edit.attributes.value_placeholder', 'Məs.: 5 kq') }}"
-                     class="h-[43px] w-full min-w-0 flex-1 rounded border border-black/15 bg-white px-3.5 text-sm text-ink outline-none transition focus:border-black/40">
-              <button type="button" data-attr-remove aria-label="{{ $tOr('business-product-edit.attributes.remove', 'Sil') }}"
-                      class="flex size-[43px] shrink-0 items-center justify-center rounded border border-black/15 text-black/40 transition hover:border-error hover:text-error">✕</button>
-            </div>
-          @endforeach
-        </div>
-        <button type="button" id="attrAdd"
-                class="mt-1 h-[38px] rounded border border-black/20 px-4 text-[13px] font-semibold text-ink transition hover:bg-gray-soft2">
-          + {{ $tOr('business-product-edit.attributes.add', 'Xüsusiyyət əlavə et') }}
-        </button>
-      </div>
+      {{-- Özəlliklər — one bullet per line, shown as ticks next to the price on the
+           product page. Left empty, the product falls back to the marketplace-wide
+           defaults (product.features.default_1..3). --}}
+      <x-cabinet.field full :label="$tOr('business-product-edit.features.title', 'Özəlliklər')" for="pFeatures">
+        <x-ui.textarea variant="b2b" id="pFeatures" name="features" class="h-[110px] resize-none"
+                       :placeholder="$featuresPlaceholder">{{ $featuresText }}</x-ui.textarea>
+        <p class="mt-1.5 text-[13px] leading-[1.45] text-black/50">{{ $tOr('business-product-edit.features.desc', 'Hər sətir məhsul səhifəsində ayrıca işarə ilə göstərilir. Boş buraxsanız, ümumi özəlliklər göstəriləcək.') }}</p>
+      </x-cabinet.field>
     </x-cabinet.card>
 
     <script type="application/json" id="comboData">@json($comboData)</script>

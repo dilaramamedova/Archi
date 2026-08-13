@@ -4,7 +4,12 @@
   card copy is translated — resources/js/pages/catalog.js only reorders the cards
   when the sort option changes (numeric data comes from the data-* attributes).
 --}}
-<x-layout page="catalog" :title="$selectedCategory ? $selectedCategory->name . ' — ' . t('catalog.head.eyebrow') . ' — ARCHİ' : t('catalog.title')">
+@php
+    // Classifier drill-down context: the deepest selected node names the page.
+    $classifierNode = $selectedClass ?? $selectedGroup ?? $selectedSection ?? $selectedCategory;
+    $pageTitle = $classifierNode ? $classifierNode->name : t('catalog.head.title');
+@endphp
+<x-layout page="catalog" :title="$classifierNode ? $pageTitle . ' — ' . t('catalog.head.eyebrow') . ' — ARCHİ' : t('catalog.title')">
 @php
     // Ghost labels that reserve the widest sort option, so picking one cannot resize
     // the control (the widths differ per locale, hence the rendered list).
@@ -27,25 +32,44 @@
     $activeMaxPrice = request('max_price', '');
     $activeInStock = request()->boolean('in_stock');
     $hasPriceFilter = request()->has('min_price') || request()->has('max_price');
+
+    // Breadcrumb chain: Home / Kataloq / Section / Group / Class — each level
+    // links back to its own catalog page except the current (deepest) one.
+    $crumbs = [['label' => t('common.home'), 'href' => route('home')]];
+    $crumbs[] = $classifierNode ? ['label' => t('common.catalog'), 'href' => route('catalog')] : ['label' => t('common.catalog')];
+    if ($selectedSection) {
+        $crumbs[] = ($selectedGroup || $selectedClass)
+            ? ['label' => $selectedSection->name, 'href' => route('catalog', ['section' => $selectedSection->slug])]
+            : ['label' => $selectedSection->name];
+    }
+    if ($selectedGroup) {
+        $crumbs[] = $selectedClass
+            ? ['label' => $selectedGroup->name, 'href' => route('catalog', ['group' => $selectedGroup->slug])]
+            : ['label' => $selectedGroup->name];
+    }
+    if ($selectedClass) {
+        $crumbs[] = ['label' => $selectedClass->name];
+    }
+    if ($selectedCategory) {
+        $crumbs[] = ['label' => $selectedCategory->name];
+    }
+
+    // Attribute filter helpers (class pages): which filter panels hold an
+    // active filter — those expanders must render open after a reload.
+    $attrGroupActive = function ($attributes) use ($activeAttrOptions, $activeAttrRanges) {
+        return collect($attributes)->contains(fn ($a) => isset($activeAttrOptions[$a->slug]) || isset($activeAttrRanges[$a->slug]));
+    };
 @endphp
 
 <main class="wrap catalog">
 
-  <x-ui.breadcrumbs class="cat-crumbs" :items="array_filter([
-      ['label' => t('common.home'), 'href' => route('home')],
-      $selectedCategory
-          ? ['label' => t('common.catalog'), 'href' => route('catalog')]
-          : ['label' => t('common.catalog')],
-      $selectedCategory
-          ? ['label' => $selectedCategory->name]
-          : null,
-  ])" />
+  <x-ui.breadcrumbs class="cat-crumbs" :items="$crumbs" />
 
   <div class="cat-head">
     <div class="cat-head-l">
-      <x-ui.eyebrow variant="flat" class="mb-3.5" :label="$selectedCategory ? $selectedCategory->name : t('catalog.head.eyebrow')" />
+      <x-ui.eyebrow variant="flat" class="mb-3.5" :label="$classifierNode ? $pageTitle : t('catalog.head.eyebrow')" />
       <div class="title-row">
-        <h1>{{ $selectedCategory ? $selectedCategory->name : t('catalog.head.title') }}</h1>
+        <h1>{{ $pageTitle }}</h1>
         <span class="count">{{ $products->total() }}</span>
       </div>
     </div>
@@ -78,10 +102,39 @@
     <aside class="fside">
      <div class="fside-scroll">
 
+      {{-- Classifier rail: 5 customer clusters -> 12 sections; the selected
+           section expands to its groups, the selected group to its product
+           classes. Rows are plain links — the drill-down needs no JS. --}}
       <div class="fs-block">
         <p class="fs-title">{{ t('catalog.filters.categories') }}</p>
-        @foreach ($categories as $category)
-          <div class="fs-cat" data-cat="{{ $category->slug }}" data-on="{{ request('category') === $category->slug ? 'true' : 'false' }}"><span>{{ $category->name }}</span><span class="n">{{ $category->products_count }}</span></div>
+        @foreach ($clusters as $cluster)
+          <p class="fs-cluster">{{ $cluster['label'] }}</p>
+          @foreach ($cluster['sections'] as $section)
+            <a class="fs-cat" href="{{ route('catalog', ['section' => $section->slug]) }}"
+               data-on="{{ $selectedSection?->id === $section->id && ! $selectedGroup ? 'true' : 'false' }}">
+              <span>{{ $section->name }}</span><span class="n">{{ $sectionCounts[$section->id] ?? 0 }}</span>
+            </a>
+            @if ($selectedSection?->id === $section->id)
+              <div class="fs-tree">
+                @foreach ($section->children as $group)
+                  <a class="fs-cat fs-sub" href="{{ route('catalog', ['group' => $group->slug]) }}"
+                     data-on="{{ $selectedGroup?->id === $group->id && ! $selectedClass ? 'true' : 'false' }}">
+                    <span>{{ $group->name }}</span><span class="n">{{ $groupCounts[$group->id] ?? 0 }}</span>
+                  </a>
+                  @if ($selectedGroup?->id === $group->id && $groupClasses->isNotEmpty())
+                    <div class="fs-tree fs-tree-classes">
+                      @foreach ($groupClasses as $class)
+                        <a class="fs-cat fs-sub2" href="{{ route('catalog', ['class' => $class->slug]) }}"
+                           data-on="{{ $selectedClass?->id === $class->id ? 'true' : 'false' }}">
+                          <span>{{ $class->name }}</span><span class="n">{{ $classCounts[$class->id] ?? 0 }}</span>
+                        </a>
+                      @endforeach
+                    </div>
+                  @endif
+                @endforeach
+              </div>
+            @endif
+          @endforeach
         @endforeach
       </div>
 
@@ -117,7 +170,49 @@
 
       <div class="fs-div"></div>
 
-      {{-- TODO: Surface filters need a surface column on products or a product_attributes table --}}
+      @if ($selectedClass && ($filterGroups['top']->isNotEmpty() || $filterGroups['secondary']->isNotEmpty() || $filterGroups['advanced']->isNotEmpty()))
+        {{-- Dynamic filters from the class's filterable attributes. Top priority
+             renders immediately; "secondary" sits in a collapsed group; "advanced"
+             hides behind the "Bütün filtrlər" expander. --}}
+        <div id="attrFilters">
+          @foreach ($filterGroups['top'] as $attribute)
+            @include('pages.partials.catalog-attr-filter', ['attribute' => $attribute])
+            @if (! $loop->last)<div class="fs-div"></div>@endif
+          @endforeach
+
+          @if ($filterGroups['secondary']->isNotEmpty())
+            @if ($filterGroups['top']->isNotEmpty())<div class="fs-div"></div>@endif
+            <div class="fs-expander" data-open="{{ $attrGroupActive($filterGroups['secondary']) ? 'true' : 'false' }}">
+              <button type="button" class="fs-exp-head">{{ t('catalog-classifier.filters.more') }} <span class="car">⌄</span></button>
+              <div class="fs-exp-body">
+                @foreach ($filterGroups['secondary'] as $attribute)
+                  @include('pages.partials.catalog-attr-filter', ['attribute' => $attribute])
+                  @if (! $loop->last)<div class="fs-div"></div>@endif
+                @endforeach
+              </div>
+            </div>
+          @endif
+
+          @if ($filterGroups['advanced']->isNotEmpty())
+            <div class="fs-div"></div>
+            <div class="fs-expander" data-open="{{ $attrGroupActive($filterGroups['advanced']) ? 'true' : 'false' }}">
+              <button type="button" class="fs-exp-head">{{ t('catalog-classifier.filters.all') }} <span class="car">⌄</span></button>
+              <div class="fs-exp-body">
+                @foreach ($filterGroups['advanced'] as $attribute)
+                  @include('pages.partials.catalog-attr-filter', ['attribute' => $attribute])
+                  @if (! $loop->last)<div class="fs-div"></div>@endif
+                @endforeach
+              </div>
+            </div>
+          @endif
+        </div>
+
+        <div class="fs-div"></div>
+      @endif
+
+      @unless ($selectedClass)
+      {{-- Legacy demo filters (they grep the flat specifications JSON) — a class
+           page gets real attribute filters above instead. --}}
       <div class="fs-block" id="surfBlock">
         <p class="fs-title">{{ t('catalog.filters.surface') }}</p>
         <div class="fs-check" data-surface="matte" data-on="{{ in_array('matte', $activeSurfaces) ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ t('catalog.filters.surface_matte') }}</span></div>
@@ -139,6 +234,7 @@
       </div>
 
       <div class="fs-div"></div>
+      @endunless
 
       <div class="fs-stock">
         <span class="lbl">{{ t('catalog.filters.stock_only') }}</span>

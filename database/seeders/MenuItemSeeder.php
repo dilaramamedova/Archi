@@ -55,11 +55,13 @@ class MenuItemSeeder extends Seeder
                 'label' => ['az' => 'Məhsullar', 'ru' => 'Товары', 'en' => 'Products'],
                 'is_clickable' => false,
                 'sort_order' => 1,
+                // Four classifier sections (slugs must stay in sync with
+                // NavigationSeeder::FOOTER_SECTIONS, which corrects existing rows).
                 'children' => [
-                    ['label' => ['az' => 'Kafel & metlax', 'ru' => 'Плитка', 'en' => 'Tiles'], 'url' => '/catalog?category=kafel', 'sort_order' => 1],
-                    ['label' => ['az' => 'Boya & emal', 'ru' => 'Краски', 'en' => 'Paint'], 'url' => '/catalog?category=boya', 'sort_order' => 2],
-                    ['label' => ['az' => 'Santexnika', 'ru' => 'Сантехника', 'en' => 'Plumbing'], 'url' => '/catalog?category=santexnika', 'sort_order' => 3],
-                    ['label' => ['az' => 'İzolyasiya & istilik', 'ru' => 'Изоляция', 'en' => 'Insulation'], 'url' => '/catalog?category=izolyasiya', 'sort_order' => 4],
+                    ['label' => ['az' => 'Döşəmələr', 'ru' => 'Полы', 'en' => 'Flooring'], 'url' => '/catalog?section=dosemeler', 'sort_order' => 1],
+                    ['label' => ['az' => 'Divarlar və arakəsmələr', 'ru' => 'Стены и перегородки', 'en' => 'Walls & partitions'], 'url' => '/catalog?section=divarlar-ve-arakesmeler', 'sort_order' => 2],
+                    ['label' => ['az' => 'Santexnika', 'ru' => 'Сантехника', 'en' => 'Plumbing'], 'url' => '/catalog?section=santexnika-su-techizati-ve-kanalizasiya', 'sort_order' => 3],
+                    ['label' => ['az' => 'Elektrik və işıqlandırma', 'ru' => 'Электрика и освещение', 'en' => 'Electrical & lighting'], 'url' => '/catalog?section=elektrik-isiqlandirma-zeif-cereyan-sistemleri-ve-agilli-ev', 'sort_order' => 4],
                     ['label' => ['az' => 'Bütün kateqoriyalar', 'ru' => 'Все категории', 'en' => 'All categories'], 'url' => '/catalog', 'sort_order' => 5],
                 ],
             ],
