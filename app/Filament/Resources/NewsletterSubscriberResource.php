@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\CachesNavigationBadge;
 use App\Filament\Resources\NewsletterSubscriberResource\Pages;
 use App\Models\NewsletterSubscriber;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -17,6 +19,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 final class NewsletterSubscriberResource extends Resource
 {
+    use CachesNavigationBadge;
+
     protected static ?string $model = NewsletterSubscriber::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-envelope';
@@ -34,9 +38,10 @@ final class NewsletterSubscriberResource extends Resource
     /** Active subscribers, so the sidebar shows the size of the mailing list. */
     public static function getNavigationBadge(): ?string
     {
-        $count = static::getModel()::query()->where('is_active', true)->count();
-
-        return $count > 0 ? (string) $count : null;
+        return self::cachedBadge(
+            'newsletter:active',
+            fn () => self::getModel()::query()->where('is_active', true)->count(),
+        );
     }
 
     public static function form(Schema $form): Schema
@@ -109,7 +114,7 @@ final class NewsletterSubscriberResource extends Resource
                             ->pluck('email')
                             ->implode(', ');
 
-                        \Filament\Notifications\Notification::make()
+                        Notification::make()
                             ->title($emails === '' ? 'Aktiv abunəçi yoxdur' : 'Aktiv abunəçilər')
                             ->body($emails === '' ? null : $emails)
                             ->success()

@@ -58,8 +58,7 @@ class SpecialistController extends Controller
     {
         $query = SpecialistProfile::query()
             ->whereHas('user', fn ($q) => $q->where('status', UserStatus::Active))
-            ->with(['user', 'specialty', 'approvedPortfolioItems'])
-            ->withCount(['reviews as approved_reviews_count' => fn ($q) => $q->where('status', 'approved')]);
+            ->with(['user', 'specialty', 'approvedPortfolioItems']);
 
         // Free-text search over craft/skills/specialty/user name.
         if ($request->filled('q')) {

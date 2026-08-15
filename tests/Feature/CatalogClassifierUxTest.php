@@ -16,7 +16,7 @@ use App\Models\SearchSynonym;
 use App\Models\SubCategory;
 use App\Models\User;
 use Database\Seeders\NavigationSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Concerns\CommitsToDatabase;
 use Tests\TestCase;
 
 /**
@@ -26,7 +26,7 @@ use Tests\TestCase;
  */
 class CatalogClassifierUxTest extends TestCase
 {
-    use RefreshDatabase;
+    use CommitsToDatabase;
 
     private Category $section;
 

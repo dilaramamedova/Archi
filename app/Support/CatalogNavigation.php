@@ -40,9 +40,14 @@ class CatalogNavigation
      */
     public static function sections(): EloquentCollection
     {
-        return Category::roots()->active()->ordered()
-            ->with(['children' => fn ($q) => $q->active()->ordered()])
-            ->get();
+        return VersionedCache::remember(
+            VersionedCache::CATALOG,
+            'sections:'.app()->getLocale(),
+            VersionedCache::TTL_STRUCTURAL,
+            fn () => Category::roots()->active()->ordered()
+                ->with(['children' => fn ($q) => $q->active()->ordered()])
+                ->get(),
+        );
     }
 
     /**
@@ -141,12 +146,27 @@ class CatalogNavigation
             $sections->loadMissing(['children' => fn ($q) => $q->active()->ordered()]);
         }
 
-        $byCategory = Product::visible()->approved()->whereNull('sub_category_id')
-            ->groupBy('category_id')->selectRaw('category_id, count(*) as c')->pluck('c', 'category_id');
-        $byClass = Product::visible()->approved()->whereNotNull('sub_category_id')
-            ->groupBy('sub_category_id')->selectRaw('sub_category_id, count(*) as c')->pluck('c', 'sub_category_id');
+        // Two aggregates over the whole products table plus the full class
+        // index — cheap on a laptop, and the single most expensive thing on the
+        // catalog and homepage once the table is large. Nobody edits these
+        // numbers directly, so a short TTL is the right invalidation: a product
+        // approved now shows up in the sidebar counts within minutes. Keyed by
+        // the section ids so a different subtree gets its own entry.
+        $cacheKey = 'counts:'.md5($sections->pluck('id')->sort()->implode(','));
 
-        $classIndex = SubCategory::get(['id', 'category_id']); // class id -> group id
+        [$byCategory, $byClass, $classIndex] = VersionedCache::remember(
+            VersionedCache::CATALOG,
+            $cacheKey,
+            VersionedCache::TTL_AGGREGATE,
+            fn () => [
+                Product::visible()->approved()->whereNull('sub_category_id')
+                    ->groupBy('category_id')->selectRaw('category_id, count(*) as c')->pluck('c', 'category_id'),
+                Product::visible()->approved()->whereNotNull('sub_category_id')
+                    ->groupBy('sub_category_id')->selectRaw('sub_category_id, count(*) as c')->pluck('c', 'sub_category_id'),
+                SubCategory::get(['id', 'category_id']), // class id -> group id
+            ],
+        );
+
         $classCounts = [];
         $groupCounts = [];
         $sectionCounts = [];
@@ -155,11 +175,15 @@ class CatalogNavigation
             $classCounts[$class->id] = (int) ($byClass[$class->id] ?? 0);
         }
 
+        // Indexed once instead of re-scanning the whole class list per group —
+        // the inner where() made this quadratic in the number of classes.
+        $classesByGroup = $classIndex->groupBy('category_id');
+
         foreach ($sections as $section) {
             $total = (int) ($byCategory[$section->id] ?? 0);
             foreach ($section->children as $group) {
                 $groupTotal = (int) ($byCategory[$group->id] ?? 0);
-                foreach ($classIndex->where('category_id', $group->id) as $class) {
+                foreach ($classesByGroup->get($group->id, collect()) as $class) {
                     $groupTotal += $classCounts[$class->id];
                 }
                 $groupCounts[$group->id] = $groupTotal;

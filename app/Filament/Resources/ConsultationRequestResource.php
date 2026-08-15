@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources;
 
 use App\Enums\ConsultationRequestStatus;
+use App\Filament\Concerns\CachesNavigationBadge;
 use App\Filament\Resources\ConsultationRequestResource\Pages;
 use App\Models\ConsultationRequest;
 use Filament\Actions;
@@ -17,6 +18,8 @@ use Filament\Tables\Table;
 
 final class ConsultationRequestResource extends Resource
 {
+    use CachesNavigationBadge;
+
     protected static ?string $model = ConsultationRequest::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-inbox-arrow-down';
@@ -92,9 +95,10 @@ final class ConsultationRequestResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $count = ConsultationRequest::query()->where('status', ConsultationRequestStatus::Pending)->count();
-
-        return $count > 0 ? (string) $count : null;
+        return self::cachedBadge(
+            'consultation-requests:pending',
+            fn () => ConsultationRequest::query()->where('status', ConsultationRequestStatus::Pending)->count(),
+        );
     }
 
     public static function statusOptions(): array

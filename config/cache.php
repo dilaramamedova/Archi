@@ -1,5 +1,26 @@
 <?php
 
+use App\Models\Banner;
+use App\Models\BlogCategory;
+use App\Models\BlogPost;
+use App\Models\Brand;
+use App\Models\Category;
+use App\Models\MenuItem;
+use App\Models\Product;
+use App\Models\ProductBadge;
+use App\Models\ProductImage;
+use App\Models\PromoBanner;
+use App\Models\Review;
+use App\Models\SaleBanner;
+use App\Models\ServiceIcon;
+use App\Models\SocialLink;
+use App\Models\SpecialistPortfolioItem;
+use App\Models\SpecialistProfile;
+use App\Models\SpecialistSpecialty;
+use App\Models\SubCategory;
+use App\Models\User;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 return [
@@ -129,8 +150,48 @@ return [
     | storage. By default, no PHP classes will be unserialized from your
     | cache to prevent gadget chain attacks if your APP_KEY is leaked.
     |
+    | The storefront caches its editor-curated content — header and footer
+    | menus, homepage blocks, the classifier tree — as Eloquent collections, so
+    | those specific classes have to be allowed back in. This is an explicit
+    | allowlist rather than `true`: only the read-only content models the
+    | storefront caches are listed, none of which carry a destructor, __wakeup
+    | or other gadget-chain surface, and nothing that touches credentials,
+    | orders or payments is cacheable at all.
+    |
+    | Adding a model to a cached payload means adding it here, otherwise it
+    | comes back as __PHP_Incomplete_Class and the page 500s on first read.
+    |
     */
 
-    'serializable_classes' => false,
+    'serializable_classes' => [
+        Illuminate\Database\Eloquent\Collection::class,
+        Collection::class,
+        Carbon::class,
+
+        // Header / footer chrome
+        MenuItem::class,
+        SocialLink::class,
+
+        // Classifier tree and catalog sidebar
+        Category::class,
+        SubCategory::class,
+        Brand::class,
+
+        // Homepage blocks
+        Banner::class,
+        PromoBanner::class,
+        SaleBanner::class,
+        ServiceIcon::class,
+        BlogPost::class,
+        BlogCategory::class,
+        Product::class,
+        ProductImage::class,
+        ProductBadge::class,
+        SpecialistProfile::class,
+        SpecialistSpecialty::class,
+        SpecialistPortfolioItem::class,
+        Review::class,
+        User::class,
+    ],
 
 ];

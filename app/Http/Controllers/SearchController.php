@@ -39,10 +39,15 @@ class SearchController extends Controller
         if ($tab === 'all' || $tab === 'prod') {
             $productQuery = Product::visible()->approved();
             $productQuery = SearchService::buildProductQuery($productQuery, $searchTerm);
-            $productQuery->with(['images', 'category', 'reviews']);
-            SearchService::orderProductsByRelevance($productQuery, $searchTerm);
+            // The result cards read reviews_count / rating_avg columns, so the
+            // reviews relation no longer has to be dragged along.
+            $productQuery->with(['images', 'category']);
 
-            $productCount = $productQuery->count();
+            // Counted before the relevance ordering is attached: the ORDER BY
+            // is a per-row expression and contributes nothing to a COUNT.
+            $productCount = (clone $productQuery)->count();
+
+            SearchService::orderProductsByRelevance($productQuery, $searchTerm);
             $products = $productQuery->take(4)->get();
 
             // Classifier dead-end (sheet 8, rec. R7): a colloquial query such as
@@ -125,9 +130,12 @@ class SearchController extends Controller
 
     public function autocomplete(Request $request): JsonResponse
     {
-        $query = $request->input('q', '');
+        $query = trim((string) $request->input('q', ''));
 
-        if (mb_strlen($query) < 1) {
+        // Fires on every keystroke, so the floor matters: below three
+        // characters the full-text index cannot serve the query and the only
+        // alternative is an unindexed scan of the whole catalog.
+        if (mb_strlen($query) < SearchService::MIN_SEARCH_LENGTH) {
             return response()->json(['suggests' => [], 'products' => [], 'masters' => [], 'total' => 0]);
         }
 
@@ -135,8 +143,14 @@ class SearchController extends Controller
 
         // buildProductQuery already matches on the category name, so the
         // autocomplete list uses exactly the same predicate as the counters.
-        $productQuery = Product::visible()->approved();
-        $productQuery = SearchService::buildProductQuery($productQuery, $query);
+        //
+        // Each of the two searches below is built ONCE and then counted and
+        // fetched from the same builder. This endpoint fires on every keystroke
+        // and used to build all four separately — four full searches per
+        // keypress, which at catalog scale was seconds of database time per
+        // typed word.
+        $productQuery = SearchService::buildProductQuery(Product::visible()->approved(), $query);
+        $totalProducts = (clone $productQuery)->count();
 
         SearchService::orderProductsByRelevance($productQuery, $query);
 
@@ -155,6 +169,7 @@ class SearchController extends Controller
 
         $masterQuery = SpecialistProfile::whereHas('user', fn ($q) => $q->where('status', UserStatus::Active));
         $masterQuery = SearchService::buildSpecialistQuery($masterQuery, $query);
+        $totalMasters = (clone $masterQuery)->count();
 
         $masters = $masterQuery
             ->with(['user', 'specialty'])
@@ -167,12 +182,6 @@ class SearchController extends Controller
                 'role' => $s->craft_label,
                 'rate' => '4.9',
             ]);
-
-        $totalProducts = Product::visible()->approved();
-        $totalProducts = SearchService::buildProductQuery($totalProducts, $query)->count();
-
-        $totalMasters = SpecialistProfile::whereHas('user', fn ($q) => $q->where('status', UserStatus::Active));
-        $totalMasters = SearchService::buildSpecialistQuery($totalMasters, $query)->count();
 
         return response()->json([
             'suggests' => array_slice($suggestions, 0, 5),

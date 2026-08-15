@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Filament\Resources;
 
 use App\Enums\PortfolioStatus;
+use App\Filament\Concerns\CachesNavigationBadge;
 use App\Filament\Resources\PortfolioApprovalResource\Pages;
 use App\Models\SpecialistPortfolioItem;
 use Filament\Actions;
@@ -17,6 +18,8 @@ use Filament\Tables\Table;
 
 final class PortfolioApprovalResource extends Resource
 {
+    use CachesNavigationBadge;
+
     protected static ?string $model = SpecialistPortfolioItem::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-shield-check';
@@ -35,9 +38,10 @@ final class PortfolioApprovalResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $count = self::getModel()::query()->where('status', PortfolioStatus::Pending)->count();
-
-        return $count > 0 ? (string) $count : null;
+        return self::cachedBadge(
+            'portfolio:pending',
+            fn () => self::getModel()::query()->where('status', PortfolioStatus::Pending)->count(),
+        );
     }
 
     public static function getNavigationBadgeColor(): string|array|null

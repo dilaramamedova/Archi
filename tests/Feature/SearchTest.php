@@ -11,13 +11,13 @@ use App\Models\SpecialistProfile;
 use App\Models\SpecialistSpecialty;
 use App\Models\User;
 use App\Services\SearchService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
+use Tests\Concerns\CommitsToDatabase;
 use Tests\TestCase;
 
 class SearchTest extends TestCase
 {
-    use RefreshDatabase;
+    use CommitsToDatabase;
 
     // ─── The core bug: json columns compared case-sensitively ──────────
 

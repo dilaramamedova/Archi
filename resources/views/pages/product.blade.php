@@ -40,8 +40,8 @@
         ->map(fn ($v) => is_array($v) ? array_values(array_filter($v, fn ($x) => $x !== null && trim((string) $x) !== '')) : $v)
         ->reject(fn ($v) => $v === null || $v === [] || (is_string($v) && trim($v) === ''));
 
-    // Rating distribution from reviews
-    $ratingCounts = $product->reviews->groupBy('rating')->map->count();
+    // Rating distribution — a GROUP BY done by ProductController, not a
+    // groupBy() over every review row loaded into memory.
     $dist = [];
     for ($i = 5; $i >= 1; $i--) {
         $dist[$i] = $ratingCounts->get($i, 0);
@@ -335,7 +335,7 @@
     {{-- ===================== RATING / REVIEWS ===================== --}}
     @if (false)
     {{-- Müştəri qiymətləndirməsi bölməsi hazırda göstərilmir. --}}
-    @if ($product->reviews->isNotEmpty())
+    @if ($reviewsCount > 0)
     <div class="pd-section" id="reviews">
       <div class="sec-tag"><span class="line"></span><p>{{ t('product.reviews.tag') }}</p></div>
       <div class="sec-title mb-6">{{ t('product.reviews.title') }}</div>
@@ -345,13 +345,13 @@
         <div class="flex w-[240px] shrink-0 flex-col items-center gap-3 max-[900px]:w-full max-[900px]:flex-row max-[900px]:justify-center">
           <p class="text-[48px] font-bold leading-none text-ink">{{ number_format($product->averageRating, 1) }}</p>
           <x-ui.stars :rating="$product->averageRating" />
-          <p class="text-sm text-black/50">{{ $product->reviews->count() }} {{ t('common.reviews') }}</p>
+          <p class="text-sm text-black/50">{{ $reviewsCount }} {{ t('common.reviews') }}</p>
         </div>
 
         {{-- Rating bars --}}
         <div class="flex flex-1 flex-col gap-2">
           @for ($star = 5; $star >= 1; $star--)
-            @php $count = $product->reviews->where('rating', $star)->count(); $pct = $product->reviews->count() > 0 ? ($count / $product->reviews->count()) * 100 : 0; @endphp
+            @php $count = $dist[$star]; $pct = $totalRatings > 0 ? ($count / $totalRatings) * 100 : 0; @endphp
             <div class="flex items-center gap-3">
               <span class="w-8 text-right text-sm font-medium text-ink">{{ $star }} ★</span>
               <div class="h-2 flex-1 rounded-full bg-black/8">

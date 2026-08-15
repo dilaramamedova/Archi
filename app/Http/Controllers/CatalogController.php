@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\AttributeFieldType;
 use App\Enums\UserStatus;
+use App\Models\AttributeOption;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
@@ -12,6 +13,7 @@ use App\Models\SpecialistProfile;
 use App\Models\SubCategory;
 use App\Services\SearchService;
 use App\Support\CatalogNavigation;
+use App\Support\VersionedCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 
@@ -107,23 +109,31 @@ class CatalogController extends Controller
         // Sort — keys match the template sort menu data-sort values
         if ($request->filled('sort')) {
             match ($request->sort) {
-                'cheap'  => $query->orderBy('price'),
-                'exp'    => $query->orderByDesc('price'),
-                'new'    => $query->latest(),
-                'rating' => $query->orderByDesc('views_count'), // approximate popularity/rating
-                'pop'    => $query->popular(),
+                'cheap' => $query->orderBy('price'),
+                'exp' => $query->orderByDesc('price'),
+                'new' => $query->latest(),
+                // Now a real rating: rating_avg is a denormalized column kept by
+                // ReviewObserver, so "ən yüksək reytinq" no longer has to stand
+                // in for itself with the view counter.
+                'rating' => $query->orderByDesc('rating_avg')->orderByDesc('reviews_count'),
+                'pop' => $query->popular(),
                 // Legacy keys kept for backwards compat
-                'price_asc'  => $query->orderBy('price'),
+                'price_asc' => $query->orderBy('price'),
                 'price_desc' => $query->orderByDesc('price'),
-                'newest'     => $query->latest(),
-                'popular'    => $query->popular(),
+                'newest' => $query->latest(),
+                'popular' => $query->popular(),
                 default => $query->latest(),
             };
         } else {
             // Default listing: products an admin positioned by drag & drop in the
             // panel come first, in that order; everything still at 0 keeps the old
             // popularity ordering, so the catalog only changes once someone drags.
-            $query->orderByRaw('sort_order = 0')->orderBy('sort_order')->popular();
+            //
+            // sort_rank is the stored generated column standing in for the old
+            // `ORDER BY sort_order = 0` expression — identical ordering, but an
+            // expression cannot live in an index and a column can, so the
+            // default page no longer filesorts the entire table.
+            $query->orderBy('sort_rank')->orderBy('sort_order')->popular();
         }
 
         if ($request->filled('min_price')) {
@@ -163,29 +173,16 @@ class CatalogController extends Controller
             }
         }
 
-        // Size filter — matches against the specifications JSON column
-        if ($request->filled('size')) {
-            $sizes = array_filter(explode(',', $request->input('size')));
-            if (! empty($sizes)) {
-                $query->where(function ($q) use ($sizes) {
-                    foreach ($sizes as $size) {
-                        $q->orWhere('specifications', 'like', '%' . $size . '%');
-                    }
-                });
-            }
-        }
-
-        // Surface filter — matches against the specifications JSON column
-        if ($request->filled('surface')) {
-            $surfaces = array_filter(explode(',', $request->input('surface')));
-            if (! empty($surfaces)) {
-                $query->where(function ($q) use ($surfaces) {
-                    foreach ($surfaces as $surface) {
-                        $q->orWhere('specifications', 'like', '%' . $surface . '%');
-                    }
-                });
-            }
-        }
+        // Size and surface — the two standalone chips shown on non-class pages.
+        //
+        // These used to run `specifications LIKE '%value%'` against the legacy
+        // flat JSON column. A leading wildcard cannot use any index, so each
+        // chip cost a full scan of the products table, and it matched nothing
+        // anyway: real size/surface data lives in the classifier's attribute
+        // values (attributes `olcu`, `seth`, …), not in that column. Both now
+        // resolve through the same indexed EAV path the class filters use.
+        $this->applyOptionSlugFilter($query, $request->input('size'));
+        $this->applyOptionSlugFilter($query, $request->input('surface'));
 
         // In-stock only filter
         if ($request->boolean('in_stock')) {
@@ -206,33 +203,37 @@ class CatalogController extends Controller
             ? SubCategory::active()->ordered()->where('category_id', $selectedGroup->id)->get()
             : collect();
 
-        // Actual price range from visible/approved products (for slider defaults)
-        $priceRange = [
-            'min' => (int) Product::visible()->approved()->min('price'),
-            'max' => (int) Product::visible()->approved()->max('price'),
-        ];
-        // Guard against empty catalogue
-        if ($priceRange['max'] === 0) {
-            $priceRange = ['min' => 0, 'max' => 100];
-        }
+        // The four blocks below are identical for every visitor and every filter
+        // combination, but used to be recomputed on each request — two full
+        // aggregate scans for the price slider and a COUNT per brand chip. They
+        // are read-only summaries, so a short TTL is the right trade: a newly
+        // approved product joins the brand counts within minutes.
+        [$priceRange, $featuredSpecialists, $latestReviews, $filterBrands] = VersionedCache::remember(
+            VersionedCache::CATALOG,
+            'sidebar:'.app()->getLocale(),
+            VersionedCache::TTL_AGGREGATE,
+            fn () => [
+                $this->priceRange(),
 
-        // Featured specialists (same query as product page)
-        $featuredSpecialists = SpecialistProfile::where('is_featured', true)
-            ->whereHas('user', fn ($q) => $q->where('status', UserStatus::Active))
-            ->with(['user', 'specialty'])
-            ->take(4)
-            ->get();
+                // Featured specialists (same query as product page)
+                SpecialistProfile::where('is_featured', true)
+                    ->whereHas('user', fn ($q) => $q->where('status', UserStatus::Active))
+                    ->with(['user', 'specialty'])
+                    ->take(4)
+                    ->get(),
 
-        // Latest approved reviews (across all products)
-        $latestReviews = Review::where('status', 'approved')
-            ->with('user')
-            ->latest()
-            ->take(5)
-            ->get();
+                // Latest approved reviews (across all products)
+                Review::where('status', 'approved')
+                    ->with('user')
+                    ->latest()
+                    ->take(5)
+                    ->get(),
 
-        $filterBrands = Brand::active()->showInFilters()->ordered()
-            ->withCount(['products' => fn ($q) => $q->visible()->approved()])
-            ->get();
+                Brand::active()->showInFilters()->ordered()
+                    ->withCount(['products' => fn ($q) => $q->visible()->approved()])
+                    ->get(),
+            ],
+        );
 
         return view('pages.catalog', compact(
             'products',
@@ -253,6 +254,52 @@ class CatalogController extends Controller
             'latestReviews',
             'filterBrands',
         ));
+    }
+
+    /**
+     * Slider bounds from the live catalog. Both aggregates are served by
+     * p_live_price_index, and an empty catalogue falls back to a sane window so
+     * the slider still renders.
+     *
+     * @return array{min: int, max: int}
+     */
+    private function priceRange(): array
+    {
+        $bounds = Product::visible()->approved()
+            ->selectRaw('MIN(price) as min_price, MAX(price) as max_price')
+            ->first();
+
+        $max = (int) ($bounds->max_price ?? 0);
+
+        return $max === 0
+            ? ['min' => 0, 'max' => 100]
+            : ['min' => (int) $bounds->min_price, 'max' => $max];
+    }
+
+    /**
+     * Narrow the query to products carrying any of the given attribute-option
+     * slugs (comma separated, as the filter chips submit them).
+     *
+     * Unknown slugs are ignored rather than forced to match nothing: these
+     * chips are a fixed list in the template, so a value with no corresponding
+     * option means the catalog has no such data yet — leaving the listing
+     * unfiltered is more useful than guaranteeing an empty page.
+     */
+    private function applyOptionSlugFilter($query, ?string $value): void
+    {
+        $slugs = array_values(array_filter(explode(',', (string) $value)));
+
+        if ($slugs === []) {
+            return;
+        }
+
+        $optionIds = AttributeOption::whereIn('slug', $slugs)->pluck('id');
+
+        if ($optionIds->isEmpty()) {
+            return;
+        }
+
+        $query->whereHas('attributeValues', fn ($q) => $q->whereIn('attribute_option_id', $optionIds));
     }
 
     /**

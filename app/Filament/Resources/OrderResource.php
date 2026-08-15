@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
+use App\Filament\Concerns\CachesNavigationBadge;
 use App\Filament\Resources\OrderResource\Pages;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -19,6 +20,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class OrderResource extends Resource
 {
+    use CachesNavigationBadge;
+
     protected static ?string $model = Order::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-shopping-cart';
@@ -163,9 +166,10 @@ class OrderResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $pendingCount = static::getModel()::where('status', 'pending')->count();
-
-        return $pendingCount > 0 ? (string) $pendingCount : null;
+        return static::cachedBadge(
+            'orders:pending',
+            fn () => static::getModel()::where('status', 'pending')->count(),
+        );
     }
 
     /** @return array<string, string> */

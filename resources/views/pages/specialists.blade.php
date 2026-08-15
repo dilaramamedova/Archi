@@ -152,8 +152,10 @@
             if ($s->is_featured) { $badges[] = ['class' => 'top-master', 'label' => t('specialists.card.badge_top')]; }
             $initials = mb_strtoupper(mb_substr($s->user->first_name ?? $s->user->name, 0, 1) . mb_substr($s->user->last_name ?? '', 0, 1));
             $skillsList = is_array($s->skills) ? implode(',', $s->skills) : '';
+            // Both read denormalized columns (ReviewObserver keeps them current);
+            // the old fallback ran a COUNT query per card.
             $avgRating = $s->average_rating;
-            $revCount = $s->approved_reviews_count ?? $s->reviews()->where('status', 'approved')->count();
+            $revCount = $s->reviews_count;
         @endphp
         <a class="sp-card" href="{{ route('specialist.show', $s) }}"
            data-rate="{{ $avgRating }}"

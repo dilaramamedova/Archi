@@ -11,6 +11,7 @@ use App\Models\OrderItem;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -93,6 +94,13 @@ class AdminOrderDetailTest extends TestCase
             'delivery_fee' => 0,
             'total' => 10,
         ]);
+
+        // Sidebar badges are cached for a minute (App\Filament\Concerns\
+        // CachesNavigationBadge) — Filament asks every resource for its count on
+        // every admin page load, and recounting the orders table each time is
+        // what the cache exists to avoid. The assertNull above primed it, so
+        // this drops the entry the way the TTL would a minute later.
+        Cache::flush();
 
         $this->assertSame('1', OrderResource::getNavigationBadge());
     }

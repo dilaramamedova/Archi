@@ -6,6 +6,7 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\SearchSynonym;
 use App\Models\SubCategory;
+use App\Support\VersionedCache;
 use Illuminate\Database\Eloquent\Builder;
 
 class SearchService
@@ -121,6 +122,19 @@ class SearchService
     private const MIN_TOKEN_LENGTH = 2;
 
     /**
+     * InnoDB's innodb_ft_min_token_size — words shorter than this are not in
+     * the FULLTEXT index at all, so such queries fall back to the LIKE path.
+     */
+    private const FULLTEXT_MIN_TOKEN = 3;
+
+    /**
+     * Shortest query the search can serve. Below this the FULLTEXT index has
+     * nothing to offer and the only alternative is an unindexed scan, so the
+     * UI should not fire a search at all — see buildProductQuery().
+     */
+    public const MIN_SEARCH_LENGTH = 3;
+
+    /**
      * Expand a search query into an array of terms including synonyms
      * and diacritics-stripped variants.
      */
@@ -188,12 +202,162 @@ class SearchService
      */
     public static function buildProductQuery(Builder $baseQuery, string $query): Builder
     {
-        return self::applyMatcher(
-            $baseQuery,
-            $query,
-            self::productTermMatcher(),
-            self::findMatchingSubCategoryIds($query),
+        $expression = self::fullTextExpression($query);
+
+        // Nothing in the query reaches InnoDB's minimum indexed word length —
+        // a one or two letter search. There is deliberately no LIKE fallback
+        // here: that path is a full table scan with nested replace() per row
+        // and measured 17 seconds on 60k products, so a stray keystroke in the
+        // autocomplete would have been enough to stall the database. A search
+        // that short cannot produce a useful result in a catalog this size
+        // anyway, so it returns nothing instead. Callers should not offer
+        // product search below MIN_SEARCH_LENGTH characters.
+        if ($expression === null) {
+            return $baseQuery->whereRaw('1 = 0');
+        }
+
+        // One MATCH over both search columns and nothing else. search_text holds
+        // the product's own translatable text; search_context holds its brand,
+        // category, class and the class's colloquial synonyms, denormalized
+        // onto the row precisely so this predicate stays a single index lookup
+        // (see the 2026_08_14_100400 migration for the measurements that ruled
+        // out the OR and UNION alternatives).
+        return $baseQuery->whereFullText(
+            ['products.search_text', 'products.search_context'],
+            $expression,
+            ['mode' => 'boolean'],
         );
+    }
+
+    /**
+     * Translate a user query into a MySQL boolean-mode FULLTEXT expression that
+     * reproduces the matcher's contract:
+     *
+     *   "whole phrase"  (+(word1 word1syn*) +(word2 word2syn*))
+     *
+     * — the quoted phrase OR every word present, each word satisfiable by any
+     * of its synonyms. Trailing `*` gives prefix matching, so "lam" still finds
+     * "laminat" the way the old `LIKE '%lam%'` did for a prefix.
+     *
+     * Returns null when any token is shorter than InnoDB's indexed word length,
+     * because such a token would silently match nothing.
+     */
+    private static function fullTextExpression(string $query): ?string
+    {
+        $parts = [];
+
+        foreach (self::phraseTerms($query) as $phrase) {
+            if ($words = self::indexableWords($phrase)) {
+                $parts[] = '"'.implode(' ', $words).'"';
+            }
+        }
+
+        // Reverse containment: the QUERY contains a whole class phrase, as in
+        // "ucuz kvars vinil plitə almaq". The token branch below ANDs every
+        // word, so "ucuz" and "almaq" would rule the class's products out; the
+        // phrase is added here as a top-level alternative instead. Boolean mode
+        // ORs unprefixed terms, so this widens without weakening the AND, and
+        // it stays inside the same single MATCH — the phrases are in the
+        // products' search_context.
+        foreach (self::phrasesContainedIn($query) as $phrase) {
+            $parts[] = '"'.$phrase.'"';
+        }
+
+        $required = [];
+
+        foreach (self::tokenGroups($query) as $variants) {
+            $alternatives = [];
+
+            foreach ($variants as $variant) {
+                $words = self::indexableWords($variant);
+
+                if ($words === []) {
+                    // A synonym the index cannot represent — "su sistemi"
+                    // contains a two-letter word — is dropped, NOT escalated
+                    // into abandoning the index for the whole query. Bailing
+                    // out here is what made a search for "santexnika" fall back
+                    // to the LIKE scan and take 17 seconds on 60k products.
+                    continue;
+                }
+
+                // A multi-word synonym has to match as a phrase, a single word
+                // gets the prefix wildcard so "lam" still finds "laminat".
+                $alternatives[] = count($words) > 1
+                    ? '"'.implode(' ', $words).'"'
+                    : $words[0].'*';
+            }
+
+            if ($alternatives !== []) {
+                $required[] = '+('.implode(' ', array_unique($alternatives)).')';
+            }
+        }
+
+        if ($required !== []) {
+            $parts[] = '('.implode(' ', $required).')';
+        }
+
+        return $parts === [] ? null : implode(' ', $parts);
+    }
+
+    /**
+     * Class synonym phrases the query wholly contains, folded and ready to be
+     * quoted into a boolean-mode expression.
+     *
+     * search_synonyms holds a few hundred rows and is edited from the admin, so
+     * scanning it per search is cheap — but the autocomplete fires per
+     * keystroke, so the result is cached for the aggregate TTL anyway.
+     *
+     * @return list<string>
+     */
+    private static function phrasesContainedIn(string $query): array
+    {
+        $normalized = self::normalizeAzeri(self::lower(trim($query)));
+
+        if (mb_strlen($normalized) < self::FULLTEXT_MIN_TOKEN) {
+            return [];
+        }
+
+        return VersionedCache::remember(
+            VersionedCache::CATALOG,
+            'contained-phrases:'.md5($normalized),
+            VersionedCache::TTL_AGGREGATE,
+            function () use ($normalized) {
+                $phrases = SearchSynonym::query()
+                    ->whereRaw("? like concat('%', ".self::columnExpression('search_synonyms.phrase', $normalized).", '%')", [$normalized])
+                    ->pluck('phrase');
+
+                return $phrases
+                    ->map(fn (string $phrase) => self::normalizeAzeri(self::lower($phrase)))
+                    // A phrase whose every word is indexable; anything shorter
+                    // cannot be matched and would only break the expression.
+                    ->filter(fn (string $phrase) => self::indexableWords($phrase) !== [])
+                    ->unique()
+                    ->values()
+                    ->all();
+            },
+        );
+    }
+
+    /**
+     * Split a term into the words FULLTEXT will actually have indexed, folded
+     * the same way the generated search_text column is. Returns an empty list
+     * when any word is below the index's minimum token size, since the term as
+     * a whole could then never match.
+     *
+     * @return list<string>
+     */
+    private static function indexableWords(string $term): array
+    {
+        $folded = self::normalizeAzeri(self::lower($term));
+        $words = preg_split('/[^\p{L}\p{N}]+/u', $folded, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+
+        foreach ($words as $word) {
+            if (mb_strlen($word) < self::FULLTEXT_MIN_TOKEN) {
+                return [];
+            }
+        }
+
+        return $words;
     }
 
     /**
@@ -272,16 +436,28 @@ class SearchService
      */
     public static function buildSellerProductQuery(Builder $baseQuery, string $search): Builder
     {
-        $term = self::lower(trim($search));
+        $term = trim($search);
 
         if ($term === '') {
             return $baseQuery;
         }
 
-        return $baseQuery->where(function (Builder $q) use ($term) {
-            self::orLike($q, 'products.name', $term);
-            self::orLike($q, 'products.sku', $term);
-        });
+        $expression = self::fullTextExpression($term);
+
+        // sku is part of the generated search_text column, so one MATCH covers
+        // both the name and the article number and neither needs a LIKE.
+        if ($expression !== null) {
+            return $baseQuery->whereFullText(
+                ['products.search_text', 'products.search_context'],
+                $expression,
+                ['mode' => 'boolean'],
+            );
+        }
+
+        // One or two characters: too short for the index. A prefix LIKE on the
+        // sku still uses its unique index, which is the only thing that can be
+        // answered cheaply at this length.
+        return $baseQuery->where('products.sku', 'like', $term.'%');
     }
 
     /**

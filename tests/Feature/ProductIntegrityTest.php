@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\BlogPost;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductImage;
 use App\Models\User;
-use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Tests\Concerns\CommitsToDatabase;
 use Tests\TestCase;
 
 /**
@@ -21,7 +23,7 @@ use Tests\TestCase;
  */
 class ProductIntegrityTest extends TestCase
 {
-    use RefreshDatabase;
+    use CommitsToDatabase;
 
     // ─── Seller product cap ───────────────────────────────────
 
@@ -392,11 +394,11 @@ class ProductIntegrityTest extends TestCase
      */
     public function test_homepage_blog_grid_invents_no_posts_when_there_are_none(): void
     {
-        $this->assertSame(0, \App\Models\BlogPost::query()->count());
+        $this->assertSame(0, BlogPost::query()->count());
 
         $html = $this->get('/')->assertOk()->getContent();
 
-        $blogGrid = \Illuminate\Support\Str::between($html, 'id="blogGrid"', '</div>');
+        $blogGrid = Str::between($html, 'id="blogGrid"', '</div>');
 
         $this->assertStringNotContainsString('x-post', $blogGrid);
         $this->assertStringNotContainsString('class="post', $blogGrid);

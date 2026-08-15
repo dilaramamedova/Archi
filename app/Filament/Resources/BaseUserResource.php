@@ -7,6 +7,7 @@ namespace App\Filament\Resources;
 use App\Enums\City;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Filament\Concerns\CachesNavigationBadge;
 use App\Models\User;
 use App\Notifications\AccountApprovedNotification;
 use App\Notifications\AccountRejectedNotification;
@@ -24,6 +25,8 @@ use Illuminate\Database\Eloquent\Model;
 
 abstract class BaseUserResource extends Resource
 {
+    use CachesNavigationBadge;
+
     protected static ?string $model = User::class;
 
     protected static string|\UnitEnum|null $navigationGroup = 'İstifadəçilər';
@@ -45,12 +48,13 @@ abstract class BaseUserResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $count = User::query()
-            ->withRole(static::getManagedRole())
-            ->where('status', UserStatus::Pending)
-            ->count();
-
-        return $count > 0 ? (string) $count : null;
+        return static::cachedBadge(
+            'users:pending:'.static::getManagedRole()->value,
+            fn () => User::query()
+                ->withRole(static::getManagedRole())
+                ->where('status', UserStatus::Pending)
+                ->count(),
+        );
     }
 
     public static function getNavigationBadgeColor(): string

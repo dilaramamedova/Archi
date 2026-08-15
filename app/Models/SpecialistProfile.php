@@ -30,6 +30,8 @@ class SpecialistProfile extends Model
             'is_on_vacation' => 'boolean',
             'is_featured' => 'boolean',
             'show_on_homepage' => 'boolean',
+            'rating_avg' => 'float',
+            'reviews_count' => 'integer',
         ];
     }
 
@@ -77,13 +79,19 @@ class SpecialistProfile extends Model
         return $this->specialty?->name ?: translate_craft($this->craft);
     }
 
+    /**
+     * Denormalized — see App\Observers\ReviewObserver. Previously an AVG() and
+     * a COUNT() query per specialist, which the specialists grid paid once per
+     * card. The count keeps an accessor so the camelCase `$s->reviewsCount`
+     * form the views use still resolves.
+     */
     public function getAverageRatingAttribute(): float
     {
-        return round($this->reviews()->where('status', 'approved')->avg('rating') ?? 0, 1);
+        return round((float) $this->rating_avg, 1);
     }
 
     public function getReviewsCountAttribute(): int
     {
-        return $this->reviews()->where('status', 'approved')->count();
+        return (int) ($this->attributes['reviews_count'] ?? 0);
     }
 }

@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
+use App\Observers\ProductObserver;
 use App\Services\SearchService;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\Brand;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Spatie\Translatable\HasTranslations;
 
+#[ObservedBy(ProductObserver::class)]
 class Product extends Model
 {
     use HasTranslations;
@@ -31,6 +33,8 @@ class Product extends Model
         'show_on_homepage' => 'boolean',
         'free_delivery' => 'boolean',
         'return_14_days' => 'boolean',
+        'rating_avg' => 'float',
+        'reviews_count' => 'integer',
         'specifications' => 'array',
         'features' => 'array',
         'frequently_bought_together' => 'array',
@@ -195,16 +199,28 @@ class Product extends Model
         if (! $main?->path) {
             return null;
         }
+
         return storage_url($main->path);
     }
 
+    /**
+     * Both read denormalized columns kept current by App\Observers\ReviewObserver.
+     * They used to run an AVG() and a COUNT() query each, per product — one
+     * round trip per card in every catalog grid.
+     *
+     * getReviewsCountAttribute looks redundant next to the column of the same
+     * name, but it is not: the views address these as `$product->reviewsCount`,
+     * and Eloquent resolves that camelCase form through the accessor only.
+     * Without it the templates silently read null and every review block
+     * disappears.
+     */
     public function getAverageRatingAttribute(): float
     {
-        return round($this->reviews()->where('status', 'approved')->avg('rating') ?? 0, 1);
+        return round((float) $this->rating_avg, 1);
     }
 
     public function getReviewsCountAttribute(): int
     {
-        return $this->reviews()->where('status', 'approved')->count();
+        return (int) ($this->attributes['reviews_count'] ?? 0);
     }
 }

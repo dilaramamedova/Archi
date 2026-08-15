@@ -8,6 +8,7 @@ use App\Filament\Resources\ProductResource\Pages;
 use App\Models\Attribute;
 use App\Models\Product;
 use App\Models\SubCategory;
+use App\Services\SearchService;
 use Closure;
 use Filament\Actions;
 use Filament\Forms;
@@ -17,6 +18,7 @@ use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
 
 class ProductResource extends Resource
@@ -288,12 +290,32 @@ class ProductResource extends Resource
         ]);
     }
 
+    /**
+     * The list table shows category.name and user.name, which without this ran
+     * one query per row — fifty extra round trips per page of twenty-five.
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with(['category', 'user']);
+    }
+
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable()->width(60),
-                Tables\Columns\TextColumn::make('name')->label('Ad')->searchable()->sortable()->limit(40),
+                // The default searchable() on a translatable json column
+                // compiles to `name like '%term%'`, which cannot use an index
+                // and scanned the whole table on every keystroke of the admin
+                // search box. search_text is the folded, FULLTEXT-indexed
+                // mirror of the same content, so the search goes through the
+                // index instead. Sorting still uses the json column, which is
+                // fine: it only ever sorts one page.
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Ad')
+                    ->searchable(query: fn (Builder $query, string $search): Builder => SearchService::buildSellerProductQuery($query, $search))
+                    ->sortable()
+                    ->limit(40),
                 Tables\Columns\TextColumn::make('category.name')->label('Kateqoriya')->placeholder('—'),
                 Tables\Columns\TextColumn::make('user.name')->label('Satıcı'),
                 Tables\Columns\TextColumn::make('price')->label('Qiymət')->money('AZN')->sortable(),

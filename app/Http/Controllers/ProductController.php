@@ -2,9 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AttributeFieldType;
 use App\Enums\UserStatus;
 use App\Models\Product;
 use App\Models\SpecialistProfile;
+use App\Support\ProductViewCounter;
+use Illuminate\Support\Collection;
 
 class ProductController extends Controller
 {
@@ -16,14 +19,24 @@ class ProductController extends Controller
             ->with(['images', 'category', 'user.sellerProfile', 'badges', 'subCategory', 'attributeValues.attribute', 'attributeValues.option'])
             ->firstOrFail();
 
-        // Eager load approved reviews with their users
-        $product->load(['reviews' => fn ($q) => $q->where('status', 'approved')->with('user')->latest()]);
+        // Only the reviews the page actually renders. This used to load EVERY
+        // approved review into memory to show five of them and to count the
+        // stars — fine for a product with four reviews, a few thousand rows per
+        // request for a popular one. The star breakdown is now a GROUP BY, and
+        // the total comes from the denormalized reviews_count column.
+        $product->load(['reviews' => fn ($q) => $q->where('status', 'approved')->with('user')->latest()->limit(5)]);
+
+        $ratingCounts = $product->reviews()
+            ->where('status', 'approved')
+            ->groupBy('rating')
+            ->selectRaw('rating, count(*) as total')
+            ->pluck('total', 'rating');
 
         // Structured classifier specs (EAV attribute values), rendered above the
         // legacy flat specifications rows on the specs tab.
         $attributeSpecs = $this->buildAttributeSpecs($product);
 
-        $product->increment('views_count');
+        ProductViewCounter::record($product->id);
 
         // "Bunları da unutma" — the accessories an admin picked on the product
         // (product_accessory pivot). The older frequently_bought_together JSON
@@ -35,7 +48,7 @@ class ProductController extends Controller
             ->with(['images', 'category'])
             ->get();
 
-        if ($fbtProducts->isEmpty() && !empty($product->frequently_bought_together)) {
+        if ($fbtProducts->isEmpty() && ! empty($product->frequently_bought_together)) {
             $fbtProducts = Product::whereIn('id', $product->frequently_bought_together)
                 ->visible()
                 ->approved()
@@ -56,7 +69,7 @@ class ProductController extends Controller
             ->take(4)
             ->get();
 
-        return view('pages.product', compact('product', 'related', 'specialists', 'fbtProducts', 'attributeSpecs'));
+        return view('pages.product', compact('product', 'related', 'specialists', 'fbtProducts', 'attributeSpecs', 'ratingCounts'));
     }
 
     /**
@@ -65,9 +78,9 @@ class ProductController extends Controller
      * booleans translated, units and ordering taken from the product class's
      * attribute pivot, tooltip carried along for the professional attributes.
      *
-     * @return \Illuminate\Support\Collection<int, array{name: string, value: string, tooltip: string}>
+     * @return Collection<int, array{name: string, value: string, tooltip: string}>
      */
-    private function buildAttributeSpecs(Product $product): \Illuminate\Support\Collection
+    private function buildAttributeSpecs(Product $product): Collection
     {
         if ($product->attributeValues->isEmpty()) {
             return collect();
@@ -87,11 +100,11 @@ class ProductController extends Controller
 
                 $value = match (true) {
                     $attribute->field_type->hasOptions() => $rows->map(fn ($r) => $r->option?->value)->filter()->implode(', '),
-                    $attribute->field_type === \App\Enums\AttributeFieldType::Boolean => $rows->first()->value_bool !== null
+                    $attribute->field_type === AttributeFieldType::Boolean => $rows->first()->value_bool !== null
                         ? t('catalog-classifier.specs.'.($rows->first()->value_bool ? 'yes' : 'no'))
                         : '',
-                    $attribute->field_type === \App\Enums\AttributeFieldType::Range => $this->formatSpecRange($rows->first()),
-                    in_array($attribute->field_type, [\App\Enums\AttributeFieldType::Numeric, \App\Enums\AttributeFieldType::Decimal], true) => $this->trimNumber($rows->first()->value_numeric),
+                    $attribute->field_type === AttributeFieldType::Range => $this->formatSpecRange($rows->first()),
+                    in_array($attribute->field_type, [AttributeFieldType::Numeric, AttributeFieldType::Decimal], true) => $this->trimNumber($rows->first()->value_numeric),
                     default => (string) $rows->first()->value_text,
                 };
 
