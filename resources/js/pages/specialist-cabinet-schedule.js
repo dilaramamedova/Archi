@@ -98,13 +98,17 @@ export default function init() {
             is_on_vacation: vacation?.dataset.on === 'true',
           }),
         });
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (res.ok) {
           success(data.message);
           setSaved(true);
         } else {
-          error(data.message || Object.values(data.errors || {}).flat().join('. '));
+          error(data.message
+            || Object.values(data.errors || {}).flat().join('. ')
+            || document.body.dataset.errGeneric);
         }
+      } catch {
+        error(document.body.dataset.errNetwork);
       } finally {
         saveBtn.disabled = false;
       }

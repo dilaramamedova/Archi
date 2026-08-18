@@ -141,6 +141,11 @@
     </aside>
     <div class="fsheet-scrim" id="spFilterScrim" hidden></div>
 
+    {{-- Results column: grid + pagination. `.sp-body` is a flex ROW (sidebar | results),
+         so both have to live in one child of it — the same shape /catalog uses, where a
+         pagination block left as a direct sibling rendered as a third column beside the
+         cards. --}}
+    <div class="sp-main">
     {{-- grid --}}
     <div class="sp-grid" id="spGrid">
       @forelse ($specialists as $i => $s)
@@ -190,14 +195,15 @@
       @endforelse
       <p class="sp-empty" id="spEmpty" hidden>{{ t('specialists.empty') }}</p>
     </div>
-  </div>
 
-  {{-- pagination --}}
-  @if ($specialists->hasPages())
-    <div class="sp-pagination mt-8">
-      {{ $specialists->withQueryString()->links() }}
-    </div>
-  @endif
+    {{-- pagination --}}
+    @if ($specialists->hasPages())
+      <div class="sp-pagination">
+        {{ $specialists->withQueryString()->links() }}
+      </div>
+    @endif
+    </div>{{-- /.sp-main --}}
+  </div>
 
 </main>
 

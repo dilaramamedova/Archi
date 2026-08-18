@@ -1,27 +1,10 @@
 // Page module for "business-profile-showrooms" — the add button opens an empty
 // #showroomModal, a row's edit button opens it prefilled from the row's data-*
 // attributes, save POSTs (new) or PUTs (edit) to /business/showrooms and reloads,
-// delete confirms then DELETEs and reloads. The save bar keeps its inline confirm.
+// delete confirms then DELETEs and reloads. There is no page-level save bar: the modal
+// is the only thing that writes, so a second Save button could only mislead.
 export default function init() {
   const csrf = document.querySelector('meta[name="csrf-token"]')?.content || '';
-
-  // ---- save bar (shared contract) -----------------------------------------
-  const bar = document.querySelector('.cab-save-bar');
-  if (bar) {
-    const msg = bar.querySelector('.msg');
-    const unsavedText = msg ? msg.textContent : '';
-    const savedText = (bar.dataset.savedMessage || '').trim();
-    const setSaved = (on) => {
-      bar.dataset.saved = on ? 'true' : 'false';
-      // setSaved is only ever called in response to a real edit, so a false here means dirty.
-      bar.dataset.dirty = on ? 'false' : 'true';
-      if (msg) msg.textContent = on && savedText ? savedText : unsavedText;
-    };
-    const saveBtn = bar.querySelector('[data-save]');
-    const cancelBtn = bar.querySelector('[data-cancel]');
-    if (saveBtn) saveBtn.addEventListener('click', () => setSaved(true));
-    if (cancelBtn) cancelBtn.addEventListener('click', () => window.location.reload());
-  }
 
   // ---- modal ---------------------------------------------------------------
   const modal = document.getElementById('showroomModal');

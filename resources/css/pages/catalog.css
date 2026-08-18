@@ -131,8 +131,17 @@
   .cat-switch[data-on="true"]       { @apply bg-yellow; }
   .cat-switch[data-on="true"] .knob { @apply left-5; }
 
+  /* Results column: the grid plus the pagination under it. This is the flex child of
+     `.cat-body`, which is why the grid itself no longer needs flex-1 — min-w-0 stays
+     because a grid with long product names would otherwise refuse to shrink and push
+     the sidebar off. */
+  .cat-main { @apply flex min-w-0 flex-1 flex-col gap-6; }
+
+  /* pagination sits under the cards, centred across the results column */
+  .cat-pagination { @apply flex justify-center; }
+
   /* product grid — 4 cards per row */
-  .cat-grid { @apply grid min-w-0 flex-1 grid-cols-4 content-start gap-3
+  .cat-grid { @apply grid min-w-0 grid-cols-4 content-start gap-3
                      max-[1280px]:grid-cols-3 max-[980px]:grid-cols-2; }
   /* the card is narrower here, so the image area stays square instead of a fixed 316px */
   .cat-grid .pcard .ph     { @apply h-auto aspect-square; }

@@ -29,6 +29,14 @@ class BusinessProductController extends Controller
     /** Maximum number of products a single seller may own. Admins are exempt. */
     public const MAX_PRODUCTS_PER_SELLER = 5;
 
+    /**
+     * Units a product may be sold in. Structural, so it lives here rather than
+     * being read back out of the translations that render the dropdown — an
+     * admin editing a label must not be able to widen what the API accepts.
+     * Keep in step with the `business-product-edit.pricing.units` keys.
+     */
+    public const UNITS = ['kg', 'litre', 'lm', 'm2', 'pack', 'piece', 'roll', 'set'];
+
     // ---------------------------------------------------------------- pages
 
     public function index(Request $request)
@@ -409,7 +417,13 @@ class BusinessProductController extends Controller
             'barcode' => ['nullable', 'string', 'max:64'],
             'price' => ['required', 'numeric', 'min:0'],
             'old_price' => ['nullable', 'numeric', 'min:0'],
-            'unit' => ['nullable', 'string', 'max:20'],
+            // Stays optional — that is the established contract and the API has
+            // callers that rely on it. What changed is that it can no longer be
+            // WRONG: the select had no empty option, so an untouched field
+            // posted whichever unit sorted first ("Kq") and parquet was
+            // published by the kilogram. The form now starts blank and the
+            // fallback below is a neutral "ədəd" rather than a guess.
+            'unit' => ['nullable', Rule::in(self::UNITS)],
             'stock' => ['required', 'integer', 'min:0', 'max:1000000'],
             'min_order' => ['nullable', 'integer', 'min:1'],
             'shelf' => ['nullable', 'string', 'max:30'],
@@ -542,6 +556,7 @@ class BusinessProductController extends Controller
                         }
                         if (! in_array((int) $v, $optionIds, true)) {
                             $errors[$key] = $this->attrMsg('validation.invalid_option', ':name üçün yanlış seçim', $name);
+
                             // Skip the whole attribute (outer foreach): level 1 is this
                             // foreach, level 2 the switch, level 3 the attribute loop.
                             continue 3;

@@ -264,6 +264,11 @@
     </aside>
     <div class="fsheet-scrim" id="catFilterScrim" hidden></div>
 
+    {{-- The results column. `.cat-body` is a flex ROW (sidebar | results), so the grid
+         and the pagination have to share one child of it — as direct siblings the
+         pagination became a third column and rendered beside the cards instead of
+         under them. --}}
+    <div class="cat-main">
     <div class="cat-grid" id="catGrid">
       @forelse ($products as $product)
         <x-pcard
@@ -290,6 +295,7 @@
         {{ $products->links() }}
       </div>
     @endif
+    </div>{{-- /.cat-main --}}
 
   </div>
 

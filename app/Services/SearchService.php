@@ -244,23 +244,31 @@ class SearchService
      */
     private static function fullTextExpression(string $query): ?string
     {
-        $parts = [];
+        // ORDER MATTERS in this expression, and not for readability: MySQL's
+        // boolean mode treats a leading quoted phrase differently from a
+        // trailing one. Measured on this schema: '"parket premium" (+(parket*)
+        // +(premium*))' returned 1 row, while '(+(parket*) +(premium*))
+        // "parket premium"' returned the correct 2 — a leading optional phrase
+        // suppressed rows that only satisfied the word group. The word group
+        // therefore always goes FIRST and every phrase is appended after it as
+        // a widening alternative. (Found in end-to-end QA: a freshly published
+        // product matched every word of the query and still didn't surface.)
+        $phrases = [];
 
         foreach (self::phraseTerms($query) as $phrase) {
             if ($words = self::indexableWords($phrase)) {
-                $parts[] = '"'.implode(' ', $words).'"';
+                $phrases[] = '"'.implode(' ', $words).'"';
             }
         }
 
         // Reverse containment: the QUERY contains a whole class phrase, as in
         // "ucuz kvars vinil plitə almaq". The token branch below ANDs every
         // word, so "ucuz" and "almaq" would rule the class's products out; the
-        // phrase is added here as a top-level alternative instead. Boolean mode
-        // ORs unprefixed terms, so this widens without weakening the AND, and
-        // it stays inside the same single MATCH — the phrases are in the
-        // products' search_context.
+        // phrase is added as a widening alternative instead — it stays inside
+        // the same single MATCH because the phrases are in the products'
+        // search_context.
         foreach (self::phrasesContainedIn($query) as $phrase) {
-            $parts[] = '"'.$phrase.'"';
+            $phrases[] = '"'.$phrase.'"';
         }
 
         $required = [];
@@ -292,9 +300,14 @@ class SearchService
             }
         }
 
+        $parts = [];
+
         if ($required !== []) {
             $parts[] = '('.implode(' ', $required).')';
         }
+
+        // Phrases strictly after the word group — see the ordering note above.
+        array_push($parts, ...$phrases);
 
         return $parts === [] ? null : implode(' ', $parts);
     }

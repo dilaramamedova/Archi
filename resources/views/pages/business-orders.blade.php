@@ -76,7 +76,10 @@
   @endforelse
 
   @if ($orders->hasPages())
-    <div class="flex justify-center">{{ $orders->links() }}</div>
+    {{-- w-full: this sits directly in `.cab-main`, which is a flex column with
+         align-items:flex-start, so without a width the box shrinks to its content and
+         justify-center centres inside ~50px — the pagination ends up hard left. --}}
+    <div class="flex w-full justify-center">{{ $orders->links() }}</div>
   @endif
 
 </x-cabinet.shell>

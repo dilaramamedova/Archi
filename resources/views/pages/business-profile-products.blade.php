@@ -88,7 +88,10 @@
     @endforelse
 
     @if ($products->hasPages())
-      <div class="flex justify-center pt-2">{{ $products->links() }}</div>
+      {{-- w-full is required, not decorative: `.cab-card` is a flex column with
+           align-items:flex-start, so without it this box shrinks to its content and
+           justify-center centres inside ~50px — the pagination ends up hard left. --}}
+      <div class="flex w-full justify-center pt-2">{{ $products->links() }}</div>
     @endif
   </x-cabinet.card>
 
