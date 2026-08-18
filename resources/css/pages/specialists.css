@@ -103,7 +103,14 @@
   /* specialist grid: 4 cards per row. Two columns is kept down to 375px — one
      full-width card per row made each card ~330px tall for very little content, and
      the mobile design language elsewhere on the site pairs these cards 2-up. */
-  .sp-grid  { @apply grid min-w-0 flex-1 grid-cols-4 content-start gap-3
+  /* Results column: the grid plus the pagination under it — the flex child of
+     `.sp-body`, so the grid itself no longer carries flex-1. Mirrors `.cat-main`. */
+  .sp-main  { @apply flex min-w-0 flex-1 flex-col gap-8 max-[980px]:w-full; }
+
+  /* pagination sits under the cards, centred across the results column */
+  .sp-pagination { @apply flex justify-center; }
+
+  .sp-grid  { @apply grid min-w-0 grid-cols-4 content-start gap-3
                      max-[1280px]:grid-cols-3 max-[1040px]:grid-cols-2 max-[980px]:w-full max-[640px]:gap-2; }
   .sp-empty { @apply col-span-full py-16 text-center text-[15px] text-black/50; }
 

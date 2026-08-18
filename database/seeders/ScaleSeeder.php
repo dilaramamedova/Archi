@@ -199,7 +199,10 @@ class ScaleSeeder extends Seeder
             foreach ([true, false, false] as $index => $isMain) {
                 $rows[] = [
                     'product_id' => $id,
-                    'path' => 'assets/product-placeholder.png',
+                    // Must be a file that actually exists in public/assets — a made-up
+                    // placeholder name meant every seeded card 404'd its image and the
+                    // catalog rendered rows of empty grey boxes.
+                    'path' => 'assets/product-marble-tile.png',
                     'is_main' => $isMain,
                     'sort_order' => $index,
                     'created_at' => $now,

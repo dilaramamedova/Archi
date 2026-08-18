@@ -94,7 +94,13 @@
       @if ($posts->isEmpty())
         <p class="pt-10 text-base text-black/50" id="blogEmpty" aria-live="polite">{{ t('blog.empty') }}</p>
       @endif
-      {{ $posts->links() }}
+      @if ($posts->hasPages())
+        {{-- Wrapped and centred like every other listing; bare links() rendered
+             left-aligned and flush against the last row of cards. --}}
+        <div class="flex justify-center pt-8">
+          {{ $posts->links() }}
+        </div>
+      @endif
     </div>
 
   </div>

@@ -167,14 +167,18 @@ export default function init() {
         },
         body: formData,
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
         setSaved(true);
         // The reload waits for the popup so the confirmation stays readable.
         success(data.message, { autoClose: 1800 }).then(() => window.location.reload());
       } else {
-        error(data.message || Object.values(data.errors || {}).flat().join('. '));
+        error(data.message
+            || Object.values(data.errors || {}).flat().join('. ')
+            || document.body.dataset.errGeneric);
       }
+    } catch {
+      error(document.body.dataset.errNetwork);
     } finally {
       saveBtn.disabled = false;
     }

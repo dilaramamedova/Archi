@@ -133,7 +133,9 @@
   </div>
 
   @if ($products->hasPages())
-    <div class="flex justify-center">{{ $products->links() }}</div>
+    {{-- w-full: `.cab-card` does not stretch its children (align-items:flex-start), so
+         justify-center is a no-op without an explicit width. --}}
+    <div class="flex w-full justify-center">{{ $products->links() }}</div>
   @endif
 
   {{-- Stock update mini-modal --}}

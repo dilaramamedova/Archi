@@ -319,8 +319,15 @@
 
       <div class="cab-field-row">
         <x-cabinet.field :label="t('business-product-edit.pricing.unit') . ' *'" for="pUnit">
-          <select id="pUnit" name="unit"
+          {{-- The empty first option is load-bearing. Without it the browser
+               pre-selects whichever unit happens to sort first ("Kq"), so a
+               seller who never touches this field silently publishes parquet
+               measured in kilograms — and the listing then reads "120 Kq"
+               everywhere. Required, so an unmade choice is rejected rather
+               than guessed. --}}
+          <select id="pUnit" name="unit" required
                   class="h-[43px] w-full rounded border border-black/15 bg-white px-3.5 text-sm text-ink outline-none transition focus:border-black/40">
+            <option value="" @selected(! $isEdit || ! $product->unit)>{{ t('register.form.select_placeholder') }}</option>
             @foreach (t('business-product-edit.pricing.units') as $uk => $uv)
               <option value="{{ $uk }}" @selected($isEdit && $product->unit === $uk)>{{ $uv }}</option>
             @endforeach

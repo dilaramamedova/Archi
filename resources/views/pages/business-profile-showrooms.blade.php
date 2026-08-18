@@ -109,7 +109,11 @@
     </div>
   </div>
 
-  <x-cabinet.save-bar ns="business-profile-showrooms" />
+  {{-- No save bar here on purpose. Every write on this page goes through the
+       modal, which POSTs/PUTs to /business/showrooms and reloads on success, so a
+       page-level Save has nothing left to submit. It used to render anyway and its
+       button only flipped the bar to "saved" — two Save buttons on screen, and the
+       wrong one silently discarded the showroom the user had just filled in. --}}
 
 </x-cabinet.shell>
 
