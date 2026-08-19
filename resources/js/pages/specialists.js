@@ -128,7 +128,11 @@ export default function init() {
 
   function renderChips() {
     if (!chipWrap || !clearBtn) return;
-    $$('.sp-chip', chipWrap).forEach((c) => c.remove());
+    // :not(.sp-chip-static) — the ?type= chip is rendered by Blade, not by this
+    // function, and has no sidebar control to rebuild itself from. It shares .sp-chip
+    // for styling, so clearing the row by class alone deleted it on the first pass and
+    // left a filtered page with nothing to say it was filtered.
+    $$('.sp-chip:not(.sp-chip-static)', chipWrap).forEach((c) => c.remove());
     const items = activeFilters();
     items.forEach((it) => {
       const chip = document.createElement('span');

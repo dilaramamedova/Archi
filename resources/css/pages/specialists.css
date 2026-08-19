@@ -39,6 +39,9 @@
   .sp-chips     { @apply flex flex-wrap items-center gap-2; }
   .sp-chip      { @apply inline-flex cursor-pointer items-center rounded-ds border border-yellow-line bg-sel-bg px-3 py-2 text-[13px] font-medium text-ink hover:brightness-[.97]; }
   .sp-chip .x   { @apply ml-2; }
+  /* The ?type= chip is server-rendered and its ✕ is a real link, not a JS handler —
+     it needs the anchor to look like the span-based ✕ of the JS-built chips. */
+  .sp-chip-static .x { @apply no-underline text-ink; }
   .sp-clear     { @apply cursor-pointer border-none px-1 text-[13px] font-medium text-black/50 [background:none] [font-family:inherit] hover:text-ink; }
 
   /* body: sidebar + grid */

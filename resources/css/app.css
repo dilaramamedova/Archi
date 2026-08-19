@@ -1180,4 +1180,37 @@
   @media (prefers-reduced-motion: reduce) {
     .reveal { @apply translate-y-0 opacity-100; }
   }
+
+  /* ==========================================================================
+     PAGINATION (.pag) — resources/views/vendor/pagination/archi.blade.php
+     Shared by every listing: catalog, specialists, blog, store, seller cabinet.
+     Lives in app.css rather than a page file because it is not one page's control.
+     ========================================================================== */
+  .pag       { @apply flex w-full flex-col items-center gap-3; }
+  /* the result window is context, not navigation — it steps back on small screens
+     where the numbers alone already say where the visitor is */
+  .pag-count { @apply text-[13px] text-black/45 max-[640px]:hidden; }
+  .pag-links { @apply flex flex-wrap items-center justify-center gap-1.5; }
+
+  /* 40px hit box on both controls: these are the primary way through a long listing
+     and are routinely tapped on a phone */
+  .pag-btn   { @apply flex h-10 items-center rounded-ds border border-black/12 bg-white px-3.5
+                      text-[13px] font-semibold text-ink no-underline transition-colors duration-150
+                      hover:border-black/35; }
+  .pag-num   { @apply flex h-10 min-w-10 items-center justify-center rounded-ds border border-transparent
+                      px-2 text-[13px] font-medium text-ink no-underline transition-colors duration-150
+                      hover:border-black/20 hover:bg-gray-soft; }
+  /* the current page is a <span>, so it reads as "you are here" rather than a dead link */
+  .pag-num[data-on="true"] { @apply border-yellow-line bg-sel-bg font-bold; }
+  .pag-gap   { @apply px-1 text-[13px] text-black/35; }
+
+  /* first/last page: the arrow stays in place so the row does not reflow, but it is
+     visibly inert and aria-disabled tells assistive tech the same */
+  .pag-btn[aria-disabled="true"] { @apply cursor-default border-black/8 text-black/30 hover:border-black/8; }
+
+  @media (max-width: 480px) {
+    /* page numbers wrap to a second line rather than shrinking below a tappable size */
+    .pag-links { @apply gap-1; }
+    .pag-btn   { @apply px-3; }
+  }
 }

@@ -9,6 +9,7 @@ import './shared/popup.js'; // window.archiPopup + session-flash bridge (#archiF
 import './shared/back-button.js'; // cabinet "‹ Geri" button ([data-back-button])
 import './shared/card-slider.js'; // arrows for card rows that overflow (.grid4 …)
 import initCabinetDirty from './shared/cabinet-dirty.js';
+import initMiniCalculator from './shared/mini-calculator.js'; // homepage popover (#miniCalc)
 
 import home from './pages/home.js';
 import catalog from './pages/catalog.js';
@@ -113,3 +114,6 @@ pages[document.body.dataset.page]?.();
 
 // After the page module has bound its own handlers, so its setSaved() stays authoritative.
 initCabinetDirty();
+
+// No-ops everywhere but the homepage — it returns immediately when #miniCalc is absent.
+initMiniCalculator();

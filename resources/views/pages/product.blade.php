@@ -414,9 +414,13 @@
 
 {{-- ===================== FEATURED SPECIALISTS ===================== --}}
 <div class="wrap"><div class="inner section">
-  {{-- the old page left this "view more" without an href; it now points at /specialists --}}
+  {{-- The heading says "Seçilmiş mütəxəssislər" and ProductController only loads
+       is_featured profiles here, so the link has to carry the same filter — pointing at
+       the bare /specialists dropped the visitor into the full directory and the four
+       cards they had just been looking at were nowhere near the top. Matches the
+       identical section on /catalog. --}}
   <x-section-head :tag="t('product.specialists.tag')" :title="t('product.specialists.title')"
-                  :more="route('specialists')" />
+                  :more="route('specialists', ['featured' => 1])" />
   <div class="grid4" id="specGrid">
     @forelse ($specialists as $s)
       <x-scard :href="route('specialist.show', $s)"

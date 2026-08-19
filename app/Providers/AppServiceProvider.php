@@ -21,6 +21,7 @@ use App\Support\VersionedCache;
 use App\Support\WindowsSafeFilesystem;
 use App\Translation\DatabaseTranslationLoader;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Translatable\Facades\Translatable;
@@ -69,6 +70,13 @@ class AppServiceProvider extends ServiceProvider
     {
         // Content is authored in Azerbaijani first; ru/en fall back to az until translated.
         Translatable::fallback(fallbackLocale: 'az');
+
+        // Laravel's bundled paginator view switches its halves with sm:hidden/sm:flex,
+        // and Tailwind does not scan vendor/, so those utilities were never compiled and
+        // the numbered block was permanently display:none — every listing on the site
+        // showed prev/next only. See resources/views/vendor/pagination/archi.blade.php.
+        Paginator::defaultView('vendor.pagination.archi');
+        Paginator::defaultSimpleView('vendor.pagination.archi');
 
         $this->registerCacheInvalidation();
         $this->guardAgainstLazyLoading();

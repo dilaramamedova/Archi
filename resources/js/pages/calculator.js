@@ -3,14 +3,9 @@
 // All texts come from Blade through #qcCalc[data-labels].
 
 import popup from '../shared/popup.js';
-
-const MIN_AREA = 1; // mirrors the min="1" of #qcArea
-
-const TIERS = [
-  { key: 'economy', rate: 600 },
-  { key: 'standard', rate: 900 },
-  { key: 'premium', rate: 1500 },
-];
+// The rates and the rounding rule are shared with the homepage mini panel — see the
+// header of shared/calculator-pricing.js for why they may not live in a page module.
+import { TIERS, clampArea, priceFor as computePrice } from '../shared/calculator-pricing.js';
 
 // Tailwind classes of a tier card (the card is built in JS, so they live here).
 // Below 640px the three stacked cards turn into the frame's one-line rows — name on the
@@ -30,12 +25,53 @@ export default function init() {
 
   const state = { obj: 1, type: 1, rooms: 1.03, level: 'standard', area: 80 };
 
+  /**
+   * Continue whatever the homepage mini panel was showing.
+   *
+   * That panel's whole job is to funnel here, and it used to hand over nothing: a
+   * visitor who set 150 m² / Premium arrived back at 80 m² / Standart and had to enter
+   * it all again. The key and shape are the ones this page already wrote for the
+   * detailed calculator, so nothing new is invented — it is simply read now as well.
+   */
+  function hydrateFromMiniPanel() {
+    let saved;
+
+    try {
+      saved = JSON.parse(localStorage.getItem('archi-quickcalc') || 'null');
+    } catch {
+      return; // unparseable or storage blocked — the defaults stand
+    }
+
+    if (! saved) return;
+
+    if (Number.isFinite(parseFloat(saved.area))) {
+      state.area = clampArea(saved.area);
+      areaEl.value = String(state.area);
+    }
+
+    // The chips are the source of truth for the multipliers (they carry data-m), so a
+    // handed-over key is applied by activating its chip rather than by trusting a
+    // number from storage.
+    for (const [group, value] of [['type', saved.type], ['level', saved.level]]) {
+      if (! value) continue;
+
+      const chip = document.querySelector(`[data-key="${group}"] [data-v="${value}"]`);
+      if (! chip) continue;
+
+      chip.closest('[data-key]').querySelectorAll('[data-v]').forEach((b) => (b.dataset.on = 'false'));
+      chip.dataset.on = 'true';
+
+      if (group === 'level') state.level = value;
+      else state[group] = parseFloat(chip.dataset.m) || 1;
+    }
+  }
+
   const fmt = (n) => Math.round(n).toLocaleString('ru-RU');
 
-  function priceFor(rate) {
-    const adj = state.obj * state.type * state.rooms;
-    return Math.round((state.area * rate * adj) / 1000) * 1000;
-  }
+  // the chips carry their multipliers as numbers in data-m, so the state already holds
+  // factors rather than keys — only the arithmetic is shared
+  const priceFor = (rate) =>
+    computePrice({ area: state.area, rate, obj: state.obj, type: state.type, rooms: state.rooms });
 
   function render() {
     resultLabelEl.textContent = (labels.resultLabel || '').replace('{area}', String(state.area || 0));
@@ -73,8 +109,7 @@ export default function init() {
   // value is clamped here: an empty or below-minimum field would otherwise price at 0
   // and hand that 0 over to the detailed calculator.
   areaEl.addEventListener('input', () => {
-    const value = parseFloat(areaEl.value);
-    state.area = Number.isFinite(value) ? Math.max(MIN_AREA, value) : MIN_AREA;
+    state.area = clampArea(areaEl.value);
     render();
   });
 
@@ -112,5 +147,8 @@ export default function init() {
 
   document.getElementById('qcPdf').addEventListener('click', () => window.print());
 
+  // Before the first render, so the page paints the handed-over selection rather than
+  // flashing the defaults and correcting itself.
+  hydrateFromMiniPanel();
   render();
 }

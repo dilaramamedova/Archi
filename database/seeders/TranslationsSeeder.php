@@ -1332,6 +1332,13 @@ class TranslationsSeeder extends Seeder
             ],
             'common' => [
                 'back' => ['az' => 'Geri', 'ru' => 'Назад', 'en' => 'Back'],
+                // The site's own paginator — resources/views/vendor/pagination/archi.blade.php
+                'pagination' => ['az' => 'Səhifələmə', 'ru' => 'Постраничная навигация', 'en' => 'Pagination'],
+                'pagination_showing' => [
+                    'az' => ':from–:to / :total nəticə',
+                    'ru' => ':from–:to из :total результатов',
+                    'en' => ':from–:to of :total results',
+                ],
                 'badge_in_stock' => ['az' => 'Stokda var', 'ru' => 'В наличии', 'en' => 'In stock'],
                 'badge_new' => ['az' => 'Yeni məhsul', 'ru' => 'Новинка', 'en' => 'New'],
                 'badge_out_of_stock' => ['az' => 'Stokda yoxdur', 'ru' => 'Нет в наличии', 'en' => 'Out of stock'],
@@ -1515,6 +1522,11 @@ class TranslationsSeeder extends Seeder
                 'lead.success' => ['az' => 'Müraciətiniz qəbul edildi. Tezliklə sizinlə əlaqə saxlanılacaq.', 'ru' => 'Ваша заявка принята. Мы скоро свяжемся с вами.', 'en' => 'Your request has been received. We will contact you shortly.'],
                 'lead.tag' => ['az' => 'Pulsuz konsultasiya', 'ru' => 'Бесплатная консультация', 'en' => 'Free consultation'],
                 'lead.title' => ['az' => 'Təmir layihəniz üçün pulsuz məsləhət alın', 'ru' => 'Получите бесплатную консультацию по ремонту', 'en' => 'Get free advice for your renovation project'],
+                'mini_calc.close_aria' => ['az' => 'Kalkulyatoru bağla', 'ru' => 'Закрыть калькулятор', 'en' => 'Close the calculator'],
+                'mini_calc.cta' => ['az' => 'Dəqiq hesablamaq üçün', 'ru' => 'Для точного расчёта', 'en' => 'For an exact calculation'],
+                'mini_calc.note' => ['az' => 'Mənzil və 2 otaq üzrə hesablanır. Bütün parametrlər tam kalkulyatorda.', 'ru' => 'Расчёт для квартиры с 2 комнатами. Все параметры — в полном калькуляторе.', 'en' => 'Calculated for an apartment with 2 rooms. All parameters are in the full calculator.'],
+                'mini_calc.subtitle' => ['az' => 'Sahəni yazın, təmir və material növünü seçin — məbləği dərhal görün.', 'ru' => 'Укажите площадь, выберите тип ремонта и материалов — сумма появится сразу.', 'en' => 'Enter the area, pick the renovation and material type — see the amount instantly.'],
+                'mini_calc.title' => ['az' => 'Təmirin qiymətini indi hesabla', 'ru' => 'Рассчитайте стоимость ремонта сейчас', 'en' => 'Estimate your renovation cost now'],
                 'products.cat_tiles' => ['az' => 'Kafel & metlax', 'ru' => 'Плитка и метлах', 'en' => 'Wall & floor tiles'],
                 'products.condition_new' => ['az' => 'Yeni', 'ru' => 'Новый', 'en' => 'New'],
                 'products.fallback_discount' => ['az' => '-48%', 'ru' => '-48%', 'en' => '-48%'],
@@ -2598,6 +2610,13 @@ class TranslationsSeeder extends Seeder
                 'title' => ['az' => 'Rəşad Məmmədov — Profilim — ARCHİ', 'ru' => 'Рашад Мамедов — Мой профиль — ARCHİ', 'en' => 'Rashad Mammadov — My profile — ARCHİ'],
             ],
             'specialists' => [
+                // The four groups of the header's "Mütəxəssislər" mega panel
+                // (App\Enums\SpecialistCategory). Rendered on the active-filter chip and
+                // in the admin's specialty form.
+                'category.architect' => ['az' => 'Arxitektorlar', 'ru' => 'Архитекторы', 'en' => 'Architects'],
+                'category.company' => ['az' => 'Tikinti şirkətləri', 'ru' => 'Строительные компании', 'en' => 'Construction companies'],
+                'category.designer' => ['az' => 'İnteryer dizaynerlər', 'ru' => 'Дизайнеры интерьера', 'en' => 'Interior designers'],
+                'category.master' => ['az' => 'Ustalar', 'ru' => 'Мастера', 'en' => 'Craftsmen'],
                 'card.badge_top' => ['az' => 'Top usta', 'ru' => 'Топ мастер', 'en' => 'Top pro'],
                 'card.badge_verified' => ['az' => '✓ Təsdiqlənmiş', 'ru' => '✓ Проверен', 'en' => '✓ Verified'],
                 'card.default_role' => ['az' => 'Mütəxəssis', 'ru' => 'Специалист', 'en' => 'Specialist'],
@@ -2616,6 +2635,9 @@ class TranslationsSeeder extends Seeder
                 'filters.city.other' => ['az' => 'Digər', 'ru' => 'Другое', 'en' => 'Other'],
                 'filters.city.sumgait' => ['az' => 'Sumqayıt', 'ru' => 'Сумгаит', 'en' => 'Sumgayit'],
                 'filters.clear' => ['az' => 'Hamısını təmizlə', 'ru' => 'Очистить всё', 'en' => 'Clear all'],
+                // The category chip's ✕ removes only that one filter, so it must not
+                // reuse "clear all" — a screen reader would promise the wrong thing.
+                'filters.clear_one' => ['az' => ':filter filtrini götür', 'ru' => 'Убрать фильтр «:filter»', 'en' => 'Remove the :filter filter'],
                 'filters.exp_title' => ['az' => 'Təcrübə', 'ru' => 'Опыт', 'en' => 'Experience'],
                 'filters.free_this_week' => ['az' => 'Bu həftə boş olanlar', 'ru' => 'Свободны на этой неделе', 'en' => 'Free this week'],
                 'filters.mobile_title' => ['az' => 'Filtrlər', 'ru' => 'Фильтры', 'en' => 'Filters'],

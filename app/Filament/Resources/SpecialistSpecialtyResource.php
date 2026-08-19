@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
+use App\Enums\SpecialistCategory;
 use App\Filament\Resources\SpecialistSpecialtyResource\Pages;
 use App\Models\SpecialistSpecialty;
 use Filament\Actions;
@@ -59,6 +60,15 @@ final class SpecialistSpecialtyResource extends Resource
                     ),
                 Forms\Components\TextInput::make('slug')->label('Slug')->required()->maxLength(160)
                     ->unique(ignoreRecord: true),
+                // Decides which of the header mega panel's four cards this trade shows
+                // up under (/specialists?type=…). Editable here so a newly added trade
+                // can be filed without a deploy.
+                Forms\Components\Select::make('category')
+                    ->label('Kateqoriya')
+                    ->options(SpecialistCategory::options())
+                    ->default(SpecialistCategory::Master->value)
+                    ->required()
+                    ->helperText('Header-dəki «Mütəxəssislər» menyusunda hansı bölmədə görünəcəyini müəyyən edir.'),
                 Forms\Components\TextInput::make('sort_order')->label('Sıra')->numeric()->minValue(0)->default(0),
                 Forms\Components\Toggle::make('is_active')->label('Aktiv')->default(true),
             ])->columns(2),
@@ -70,6 +80,10 @@ final class SpecialistSpecialtyResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')->label('İxtisas')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('category')
+                    ->label('Kateqoriya')
+                    ->badge()
+                    ->formatStateUsing(fn (SpecialistCategory $state): string => $state->label()),
                 Tables\Columns\TextColumn::make('specialists_count')->label('Mütəxəssis sayı')->counts('specialists'),
                 Tables\Columns\ToggleColumn::make('is_active')->label('Aktiv'),
                 Tables\Columns\TextColumn::make('sort_order')->label('Sıra')->sortable(),

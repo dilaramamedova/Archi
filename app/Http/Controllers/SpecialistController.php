@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\City;
+use App\Enums\SpecialistCategory;
 use App\Enums\UserStatus;
 use App\Models\SpecialistProfile;
 use App\Models\SpecialistSpecialty;
@@ -75,6 +76,19 @@ class SpecialistController extends Controller
             $query->where('specialist_specialty_id', (int) $request->input('spec'));
         }
 
+        // The header's "Mütəxəssislər" mega panel links here as ?type=architect etc.
+        // Nothing used to read that parameter, so all four cards landed on the full
+        // directory and the choice the visitor had just made was thrown away.
+        // input() may hand back an array (?type[]=x) or null, and casting either to
+        // string is a fatal — the catalog already tolerates junk in ?category=, so this
+        // must not be the one filter that 500s on a malformed URL.
+        $type = $request->input('type');
+        $category = is_string($type) ? SpecialistCategory::tryFrom($type) : null;
+
+        if ($category !== null) {
+            $query->whereHas('specialty', fn ($q) => $q->category($category));
+        }
+
         // Filter by featured/top
         if ($request->boolean('featured', false)) {
             $query->where('is_featured', true);
@@ -126,6 +140,11 @@ class SpecialistController extends Controller
             ->orderBy('sort_order')
             ->get();
 
-        return view('pages.specialists', compact('specialists', 'cities', 'specialties'));
+        // Passed through so the page can show which mega-panel card the visitor
+        // arrived from. Without it a category with no active members renders as a
+        // plain "no specialists" page and looks broken rather than empty.
+        $activeCategory = $category;
+
+        return view('pages.specialists', compact('specialists', 'cities', 'specialties', 'activeCategory'));
     }
 }

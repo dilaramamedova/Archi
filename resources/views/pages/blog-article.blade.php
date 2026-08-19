@@ -72,7 +72,7 @@
       </div>
       @endif
 
-      @if ($post->author)
+      {{-- @if ($post->author)
       <div class="flex items-center gap-4 rounded-ds bg-gray-soft2 p-[22px] max-[640px]:flex-col max-[640px]:items-start">
         <span class="ba-avatar size-16 border-[2.5px] text-xl" aria-hidden="true">{{ mb_substr($post->author->name, 0, 2) }}</span>
         <div class="flex flex-1 flex-col gap-1">
@@ -82,7 +82,7 @@
         <x-ui.button variant="outline" :href="route('blog')"
                      class="h-[42px] shrink-0 px-[18px] text-[13px] font-semibold">{{ t('blog-article.author.all_posts') }}</x-ui.button>
       </div>
-      @endif
+      @endif --}}
     </section>
 
     {{-- ===================== RELATED ARTICLES ===================== --}}

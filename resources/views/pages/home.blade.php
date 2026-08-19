@@ -306,4 +306,9 @@
   </div>
 </div></div>
 
+{{-- Mini calculator popover. Last in the document, because it is position:fixed and
+     anchored to the header by script — its DOM position only decides tab order, and
+     "after the page content" is where a popover the visitor may have closed belongs. --}}
+<x-mini-calculator />
+
 </x-layout>

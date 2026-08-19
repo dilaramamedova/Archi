@@ -53,7 +53,8 @@
       <div class="flex flex-col gap-2.5">
         <label class="text-[13px] font-semibold text-ink">{{ t('calculator.area.label') }}</label>
         <div class="flex items-center gap-1.5 rounded-ds border border-black/14 px-4 py-3 transition-[border-color] duration-200 focus-within:border-ink">
-          <input class="w-full border-none text-xl font-bold text-ink outline-none [background:none] [font-family:inherit]" id="qcArea" type="number" min="1" value="80">
+          {{-- max matches the mini panel's cap — see components/mini-calculator.blade.php --}}
+          <input class="w-full border-none text-xl font-bold text-ink outline-none [background:none] [font-family:inherit]" id="qcArea" type="number" min="1" max="100000" inputmode="decimal" value="80">
           <span class="text-sm text-black/50">{{ t('calculator.area.unit') }}</span>
         </div>
       </div>

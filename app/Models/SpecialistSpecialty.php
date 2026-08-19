@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\SpecialistCategory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Translatable\HasTranslations;
@@ -36,7 +38,21 @@ final class SpecialistSpecialty extends Model
 
     protected function casts(): array
     {
-        return ['is_active' => 'boolean'];
+        return [
+            'is_active' => 'boolean',
+            'category' => SpecialistCategory::class,
+        ];
+    }
+
+    /**
+     * Narrow to one of the header mega panel's four groups. Takes the enum, not a
+     * string, so an unrecognised `?type=` cannot reach the query — the caller
+     * resolves it with tryFrom() and simply leaves the listing unfiltered, which
+     * is how an unknown ?category= slug already behaves on the catalog.
+     */
+    public function scopeCategory(Builder $query, SpecialistCategory $category): Builder
+    {
+        return $query->where('category', $category);
     }
 
     public function specialists(): HasMany

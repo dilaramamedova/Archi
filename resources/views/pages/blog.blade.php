@@ -79,7 +79,11 @@
     </div>
 
     <div>
-      <x-section-head :tag="t('blog.section.tag')" :title="t('blog.section.title')" />
+      {{-- :more="false" — this section IS the full article listing, so there is nowhere
+           for a "view all" to lead. Omitting the prop is not the same thing: the
+           component then renders the link text with no href, which reads as a button
+           that does nothing. --}}
+      <x-section-head :tag="t('blog.section.tag')" :title="t('blog.section.title')" :more="false" />
       <div class="blog-grid flex-wrap max-[640px]:flex-col" id="blogGrid"
            role="tabpanel" aria-labelledby="fchip-all" tabindex="0">
         @foreach ($posts as $post)

@@ -366,4 +366,74 @@
     .cat-row .cat-thumb .info h4,
     .cat-row .cat-thumb .info p                      { @apply whitespace-normal; }
   }
+
+  /* ==========================================================================
+     MINI CALCULATOR (#miniCalc)
+     Popover hung under the header's "Təmir kalkulyatoru" item, open on every load.
+     Its geometry — top/left/width/max-height — is written inline by
+     resources/js/shared/mini-calculator.js, because the anchor it points at is
+     display:none below 900px and a media query cannot re-target an element.
+     Only appearance lives here. Chips reuse the shared .qc-chip of the calculator page.
+     ========================================================================== */
+  .mcalc {
+    /* above .topbar (z-60): the panel overlaps the header edge it hangs from, and the
+       sticky header would otherwise paint over that overlap */
+    @apply fixed z-[70] flex flex-col gap-3.5 overflow-y-auto overscroll-contain rounded-ds
+           border border-black/10 bg-white p-5 shadow-[0_12px_32px_rgba(0,0,0,.16)];
+    /* Entrance: a slide only, never a fade. The panel is the first thing a visitor is
+       meant to see, so its visibility must not depend on a transition running — in a
+       background or uncomposited tab the animation clock can stall, and an
+       `opacity: 0 → 1` transition that never ticks leaves the panel invisible. A stalled
+       transform leaves it 6px high instead, which nobody notices. */
+    @apply -translate-y-1.5 transition-transform duration-200;
+  }
+  .mcalc.open { @apply translate-y-0; }
+  /* `display:flex` above beats the UA rule for [hidden], so closing has to be restated */
+  .mcalc[hidden] { @apply !hidden; }
+
+  .mcalc-x     { @apply absolute top-2.5 right-2.5 flex size-9 cursor-pointer items-center justify-center
+                        rounded-ds border-none text-black/45 [background:none]
+                        transition-colors duration-150 hover:bg-gray-soft hover:text-ink; }
+  /* the close button is absolutely positioned over the heading block, so the heading
+     keeps a lane clear for it */
+  .mcalc-head  { @apply flex flex-col gap-1 pr-8; }
+  .mcalc-tag   { @apply flex items-center gap-1.5 text-[11px] font-bold tracking-[1px] text-black/45 uppercase; }
+  .mcalc-tag img { @apply size-4; }
+  .mcalc-title { @apply text-lg leading-tight font-bold text-ink; }
+  .mcalc-sub   { @apply text-[13px] leading-snug text-black/50; }
+
+  .mcalc-field { @apply flex flex-col gap-2; }
+  .mcalc-label { @apply text-[13px] font-semibold text-ink; }
+  .mcalc-input { @apply flex items-center gap-1.5 rounded-ds border border-black/14 px-3.5 py-2.5
+                        transition-[border-color] duration-200 focus-within:border-ink; }
+  /* 16px floor: iOS Safari zooms the viewport when a smaller field takes focus, and a
+     zoomed viewport is a horizontally scrolling page */
+  .mcalc-input input { @apply w-full border-none text-base font-bold text-ink outline-none
+                              [background:none] [font-family:inherit]; }
+  .mcalc-input span  { @apply shrink-0 text-[13px] text-black/50; }
+  .mcalc-chips       { @apply flex flex-wrap gap-1.5; }
+  /* one notch tighter than the /calculator chips: seven of them share a 340px panel */
+  .mcalc-chips .qc-chip { @apply px-3 py-2 text-xs; }
+
+  .mcalc-result { @apply flex items-center justify-between gap-3 rounded-ds bg-sel-bg px-3.5 py-3; }
+  .mcalc-rlbl   { @apply text-xs font-medium text-black/55; }
+  .mcalc-price  { @apply flex shrink-0 items-baseline gap-1; }
+  .mcalc-price b { @apply text-xl font-bold text-ink; }
+  .mcalc-price i { @apply text-[11px] font-medium text-black/50 not-italic; }
+  .mcalc-note   { @apply text-[11px] leading-snug text-black/40; }
+  .mcalc-cta    { @apply h-11 shrink-0 text-sm font-semibold; }
+  .mcalc :focus-visible { @apply outline-2 outline-offset-2 outline-ink; }
+
+  /* Short viewports: the price and the CTA are the payoff, and on a 568px-tall phone
+     they sat below the panel's own internal fold — the visitor saw a form and had to
+     discover that the popover scrolls. The blurb and the assumptions footnote are the
+     two parts that can go: the tag line already says what this is, and the footnote
+     repeats what /calculator shows anyway. Keyed to viewport HEIGHT, not width — a
+     short landscape phone has the same problem as a small portrait one. */
+  @media (max-height: 700px) {
+    .mcalc      { @apply gap-2.5 p-4; }
+    .mcalc-sub,
+    .mcalc-note { @apply hidden; }
+    .mcalc-field { @apply gap-1.5; }
+  }
 }

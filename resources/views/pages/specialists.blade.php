@@ -68,6 +68,16 @@
 
   {{-- active filter chips (built by specialists.js from the sidebar state) --}}
   <div class="sp-chips" id="spChips">
+    {{-- The category arrives from the header mega panel as ?type=, which has no
+         sidebar control, so specialists.js knows nothing about it. It gets its own
+         class because renderChips() clears every .sp-chip on each pass and would
+         otherwise wipe this one; the ✕ is a plain link back to the unfiltered list. --}}
+    @if ($activeCategory)
+      <span class="sp-chip sp-chip-static">{{ $activeCategory->label() }}
+        <a class="x" href="{{ route('specialists', request()->except(['type', 'page'])) }}"
+           aria-label="{{ t('specialists.filters.clear_one', ['filter' => $activeCategory->label()]) }}">✕</a>
+      </span>
+    @endif
     <button class="sp-clear" id="spClear">{{ t('specialists.filters.clear') }}</button>
   </div>
 
