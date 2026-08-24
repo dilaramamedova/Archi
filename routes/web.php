@@ -32,14 +32,8 @@ use App\Models\SpecialistProfile;
 use App\Models\SpecialistSpecialty;
 use Illuminate\Support\Facades\Route;
 
-if (! function_exists('archiView')) {
-    function archiView(string $view)
-    {
-        app()->setLocale(session('locale', config('app.locale')));
-
-        return view($view);
-    }
-}
+// archiView() now lives in app/helpers.php — declaring it here meant it vanished as
+// soon as the routes were cached, because a cached route file replaces this one.
 
 // --- Dynamic pages (controller-driven) ---
 Route::get('/', [HomeController::class, 'index'])->name('home');

@@ -98,6 +98,25 @@ if (! function_exists('translate_craft')) {
     }
 }
 
+if (! function_exists('archiView')) {
+    /**
+     * Render a static page with the visitor's chosen locale applied.
+     *
+     * Lives here, not in routes/web.php where it was originally declared, because the
+     * fourteen closure routes that call it are serialized by `php artisan route:cache`.
+     * A cached route file means routes/web.php is never loaded at runtime, so the
+     * function did not exist and every one of those pages returned a 500 — in
+     * production only, since local development runs without the route cache. This file
+     * is autoloaded by Composer on every request, cached routes or not.
+     */
+    function archiView(string $view)
+    {
+        app()->setLocale(session('locale', config('app.locale')));
+
+        return view($view);
+    }
+}
+
 if (! function_exists('storage_url')) {
     /**
      * Resolve an image path from the DB to a public URL.
