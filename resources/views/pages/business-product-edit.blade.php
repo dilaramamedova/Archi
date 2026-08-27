@@ -346,6 +346,32 @@
           <x-ui.input variant="b2b" id="pShelf" name="shelf" :value="$spec['shelf'] ?? ''" :placeholder="t('business-product-edit.pricing.shelf_placeholder')" />
         </x-cabinet.field>
       </div>
+
+      {{-- Packaging and logistics. Optional everywhere else on the site, but this is
+           what lets the renovation calculator quote "21 paket" instead of "44.94 m²"
+           and count a delivery trip — a product without them still sells, its estimate
+           line simply stays at the required quantity. --}}
+      <div class="cab-field-row">
+        <x-cabinet.field :label="$tOr('business-product-edit.pricing.package_size', 'Bir paketdəki miqdar')" for="pPackageSize">
+          <x-ui.input variant="b2b" id="pPackageSize" name="package_size" type="number" step="0.0001" min="0"
+                      :value="$isEdit ? $product->package_size : ''" placeholder="2.22" />
+        </x-cabinet.field>
+        <x-cabinet.field :label="$tOr('business-product-edit.pricing.package_unit', 'Paketin adı')" for="pPackageUnit">
+          <x-ui.input variant="b2b" id="pPackageUnit" name="package_unit" maxlength="24"
+                      :value="$isEdit ? $product->package_unit : ''" placeholder="paket" />
+        </x-cabinet.field>
+      </div>
+
+      <div class="cab-field-row">
+        <x-cabinet.field :label="$tOr('business-product-edit.pricing.weight_kg', 'Çəkisi, kq')" for="pWeight">
+          <x-ui.input variant="b2b" id="pWeight" name="weight_kg" type="number" step="0.001" min="0"
+                      :value="$isEdit ? $product->weight_kg : ''" placeholder="25" />
+        </x-cabinet.field>
+        <x-cabinet.field :label="$tOr('business-product-edit.pricing.volume_m3', 'Həcmi, m³')" for="pVolume">
+          <x-ui.input variant="b2b" id="pVolume" name="volume_m3" type="number" step="0.0001" min="0"
+                      :value="$isEdit ? $product->volume_m3 : ''" placeholder="0.02" />
+        </x-cabinet.field>
+      </div>
     </x-cabinet.card>
 
     {{-- Description & specs --}}

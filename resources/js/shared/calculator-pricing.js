@@ -1,76 +1,91 @@
 /**
- * The renovation price model — the ONLY place the numbers live.
+ * Shared helpers for the two screens that quote a quick renovation price: the
+ * /calculator page and the homepage mini panel.
  *
- * Two screens now quote a price from it: the full /calculator page
- * (resources/js/pages/calculator.js) and the homepage mini panel
- * (resources/js/shared/mini-calculator.js). Both used to be able to own a copy of the
- * table; the first edit to one of them would have silently made the homepage quote a
- * different number than the page it links to, which is the one thing a price teaser
- * must never do. Anything price-shaped therefore belongs here, not in a page module.
- *
- * The chip markup of the full page still carries its multipliers in `data-m`, because
- * that page's chips are authored in Blade; the mini panel builds its chips FROM these
- * maps precisely so it cannot drift.
+ * There are deliberately NO rates in this file any more. The six prices, the area
+ * limits and the defaults live in the database and reach the browser through the
+ * page markup (CalculatorController), because an administrator has to be able to
+ * change them without a release — TZ §30 states it as a critical requirement and
+ * AC-14 tests it. What is shared here is only the arithmetic and the formatting, so
+ * the mini panel and the full page can never round or validate a number differently.
  */
 
-/** mirrors the min="1" of the area inputs — an empty field would otherwise price at 0 */
-export const MIN_AREA = 1;
+/** The localStorage key both screens use to hand a selection to the next one. */
+export const HANDOFF_KEY = 'archi-quickcalc';
 
-/** ₼ per m² of the three material levels, in the order the tier cards render them */
-export const TIERS = [
-  { key: 'economy', rate: 600 },
-  { key: 'standard', rate: 900 },
-  { key: 'premium', rate: 1500 },
-];
+/** Technical value → URL slug, for the hand-over to the detailed calculator (TZ §47). */
+export const SLUGS = {
+  WHITE_BOX: 'white-box',
+  FULL_RENOVATION: 'full-renovation',
+  ECONOMY: 'economy',
+  STANDARD: 'standard',
+  PREMIUM: 'premium',
+};
 
-/** same rates keyed by level, for callers that quote a single tier */
-export const RATES = Object.fromEntries(TIERS.map((t) => [t.key, t.rate]));
+/** Thousands separators and no qəpik — both are explicit requirements (TZ §19). */
+export function formatMoney(value) {
+  return Math.round(value).toLocaleString('ru-RU');
+}
 
-export const OBJECT_MULTIPLIERS = { apartment: 1, house: 1.1, office: 0.95, commercial: 1.05 };
-export const TYPE_MULTIPLIERS = { shell: 0.55, cosmetic: 0.7, major: 1, turnkey: 1.25 };
-/** '4' is the "4+" chip — the key is the chip's data-v, not a room count */
-export const ROOMS_MULTIPLIERS = { studio: 0.95, 1: 1, 2: 1.03, 3: 1.06, 4: 1.1 };
-
-/** the selection both screens start from, so a visitor who only changes the area
- *  sees the same number here and on /calculator */
-export const DEFAULTS = { obj: 'apartment', area: 80, type: 'major', rooms: '2', level: 'standard' };
-
-/** the largest object worth quoting — see the note in clampArea() */
-export const MAX_AREA = 100000;
-
-/**
- * Clamp a raw input value to a usable area. Neither screen wraps its number field in a
- * <form>, so the browser never enforces min/max for us — the attributes are there for
- * the spinner and the mobile keyboard, nothing more.
- *
- * The upper bound matters as much as the lower one: 999999 m² priced at 1 931 248 000 ₼,
- * which a visitor reads as a broken calculator rather than as a very large job.
- */
-export function clampArea(value) {
-  const n = parseFloat(value);
-
-  if (! Number.isFinite(n)) return MIN_AREA;
-
-  return Math.min(MAX_AREA, Math.max(MIN_AREA, n));
+export function readJson(raw, fallback = null) {
+  try {
+    return JSON.parse(raw || '');
+  } catch {
+    return fallback;
+  }
 }
 
 /**
- * Estimated price, rounded to the nearest 1000 ₼ — the estimate is an order of
- * magnitude, and a quote like "72 384 ₼" would suggest a precision it does not have.
+ * Validate an area and price it, in exactly the order the backend does.
  *
- * The multipliers default to 1 so a caller may pass only the factors it exposes.
- *
- * The floor is not cosmetic. Rounding to the nearest thousand sends anything under
- * ~900 ₼ to zero, so a 1 m² shell renovation at the economy tier quoted "0 ₼" — a
- * marketplace advertising free work. Both screens went through this function, so both
- * showed it. Below one thousand the honest answer is "about a thousand", not nothing.
+ * Returns `{ error }` rather than a number for every case where the honest answer is
+ * not a price: an empty field, a non-positive area, an area outside the configured
+ * bounds, or a package the admin has not priced yet. The caller renders the message —
+ * what matters is that no branch here can produce 0 or NaN (TZ §29, §38).
  */
-export function priceFor({ area, rate, obj = 1, type = 1, rooms = 1 }) {
-  const raw = area * rate * obj * type * rooms;
+export function quote({ area, renovationType, segment, config }) {
+  const parsed = parseFloat(area);
 
-  if (raw <= 0) {
-    return 0;
+  if (area === '' || area === null || area === undefined || Number.isNaN(parsed)) {
+    return { error: 'AREA_REQUIRED' };
   }
 
-  return Math.max(1000, Math.round(raw / 1000) * 1000);
+  if (parsed <= 0) return { error: 'AREA_MUST_BE_POSITIVE' };
+  if (parsed < config.limits.minArea) return { error: 'AREA_BELOW_MINIMUM', area: parsed };
+  if (parsed > config.limits.maxArea) return { error: 'AREA_ABOVE_MAXIMUM', area: parsed };
+
+  const pricePerM2 = config.prices?.[renovationType]?.[segment] ?? null;
+
+  if (pricePerM2 === null) return { error: 'PRICE_NOT_AVAILABLE', area: parsed };
+
+  return { area: parsed, pricePerM2, total: parsed * pricePerM2 };
+}
+
+/**
+ * Analytics events of TZ §45.
+ *
+ * Pushed to `window.dataLayer` when a tag manager is present and mirrored as a DOM
+ * CustomEvent, so the calculator does not depend on any particular analytics vendor
+ * being wired up — and works with none at all. No personal data is ever attached:
+ * the quick calculator asks for none (§46).
+ */
+export function track(event, payload = {}) {
+  const detail = { event, ...payload };
+
+  try {
+    window.dataLayer = window.dataLayer || [];
+    window.dataLayer.push(detail);
+    window.dispatchEvent(new CustomEvent('archi:calculator', { detail }));
+  } catch {
+    // Analytics must never be able to break a price. Swallowing is the point.
+  }
+}
+
+/** Query string that carries the three answers into the detailed calculator. */
+export function handoffQuery({ area, renovationType, segment }) {
+  return new URLSearchParams({
+    area: String(area),
+    type: SLUGS[renovationType] || renovationType,
+    segment: SLUGS[segment] || segment,
+  }).toString();
 }

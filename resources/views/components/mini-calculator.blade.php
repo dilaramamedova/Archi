@@ -3,37 +3,43 @@
   item, opened on every load so a first-time visitor meets the calculator before they
   scroll anything.
 
-  Only a subset of the /calculator form is here, and the subset is chosen by how much a
-  field moves the price: renovation type spans 0.55–1.25 and material level 600–1500 ₼/m²,
-  so those two plus the area decide the number almost entirely. Object type and room
-  count span ±10% each, stay at the page's own defaults (mənzil · 2 otaq) and are named
-  in the footnote — the visitor is told what was assumed instead of being asked.
+  It is the /calculator page in miniature and quotes from the same six database
+  prices: area, renovation type, price segment. Nothing is approximated here and no
+  parameter is assumed away, because the quick calculator has only three inputs to
+  begin with (TZ §1) — a teaser that dropped one of them could not agree with the
+  page it links to.
 
-  The chips are built in JS from the shared price table (shared/calculator-pricing.js) so
-  a multiplier can never be edited in one place and forgotten here; this file only ships
-  their labels through data-labels. Positioning is JS too — the anchor is hidden below
-  900px, see shared/mini-calculator.js.
+  The chips are built in JS from the price matrix shipped on data-quick, so a package
+  the admin has not priced simply does not appear as a choice.
 --}}
 @php
-    // {token} placeholders are substituted in JS
+    $quick = app(\App\Services\Calculator\QuickCalculator::class)->payload();
+
     $miniLabels = [
         'resultLabel' => t('calculator.result.label', ['area' => '{area}']),
-        'currency' => t('calculator.result.currency'),
+        'currency' => t('calculator.result.currency_plain'),
+        'fromSuffix' => t('calculator.result.currency'),
         'type' => [
-            'shell' => t('calculator.type.shell'),
-            'cosmetic' => t('calculator.type.cosmetic'),
-            'major' => t('calculator.type.major'),
-            'turnkey' => t('calculator.type.turnkey'),
+            'WHITE_BOX' => t('calculator.type.white_box'),
+            'FULL_RENOVATION' => t('calculator.type.full_renovation'),
         ],
-        'level' => [
-            'economy' => t('calculator.level.economy'),
-            'standard' => t('calculator.level.standard'),
-            'premium' => t('calculator.level.premium'),
+        'segment' => [
+            'ECONOMY' => t('calculator.level.economy'),
+            'STANDARD' => t('calculator.level.standard'),
+            'PREMIUM' => t('calculator.level.premium'),
+        ],
+        'errors' => [
+            'AREA_REQUIRED' => t('calculator.errors.required'),
+            'AREA_MUST_BE_POSITIVE' => t('calculator.errors.positive'),
+            'AREA_BELOW_MINIMUM' => t('calculator.errors.min', ['min' => $quick['limits']['minArea']]),
+            'AREA_ABOVE_MAXIMUM' => t('calculator.errors.max'),
+            'PRICE_NOT_AVAILABLE' => t('calculator.errors.unavailable'),
         ],
     ];
 @endphp
 
 <div class="mcalc" id="miniCalc" role="dialog" aria-labelledby="miniCalcTitle" tabindex="-1" hidden
+     data-quick="{{ json_encode($quick, JSON_UNESCAPED_UNICODE) }}"
      data-labels="{{ json_encode($miniLabels, JSON_UNESCAPED_UNICODE) }}">
 
   <button type="button" class="mcalc-x" id="miniCalcClose" aria-label="{{ t('home.mini_calc.close_aria') }}">
@@ -51,11 +57,12 @@
   <div class="mcalc-field">
     <label class="mcalc-label" for="miniCalcArea">{{ t('calculator.area.label') }}</label>
     <div class="mcalc-input">
-      {{-- max caps the estimate at a plausible object: without it 999999 m² quoted
-           1 931 248 000 ₼, which reads as a broken calculator rather than a big job.
-           inputmode="decimal" because the field accepts 12.5 and prices it correctly —
-           "numeric" hides the separator key on a phone. --}}
-      <input id="miniCalcArea" type="number" min="1" max="100000" inputmode="decimal" value="80">
+      {{-- min/max mirror the admin-configured bounds; inputmode="decimal" because the
+           field accepts 12.5 and prices it correctly — "numeric" hides the separator
+           key on a phone. --}}
+      <input id="miniCalcArea" type="number" inputmode="decimal"
+             min="{{ $quick['limits']['minArea'] }}" max="{{ $quick['limits']['maxArea'] }}"
+             value="{{ $quick['defaults']['area'] }}">
       <span>{{ t('calculator.area.unit') }}</span>
     </div>
   </div>
@@ -67,13 +74,13 @@
 
   <div class="mcalc-field">
     <span class="mcalc-label" id="miniCalcLevelLbl">{{ t('calculator.level.label') }}</span>
-    <div class="mcalc-chips" data-mini-key="level" role="group" aria-labelledby="miniCalcLevelLbl"></div>
+    <div class="mcalc-chips" data-mini-key="segment" role="group" aria-labelledby="miniCalcLevelLbl"></div>
   </div>
 
   {{-- aria-live so the price is announced when a chip changes it, not only seen --}}
   <div class="mcalc-result" aria-live="polite">
     <span class="mcalc-rlbl" id="miniCalcResultLabel"></span>
-    <span class="mcalc-price"><b id="miniCalcPrice">—</b><i>{{ t('calculator.result.currency') }}</i></span>
+    <span class="mcalc-price"><b id="miniCalcPrice">—</b><i id="miniCalcCurrency"></i></span>
   </div>
 
   <p class="mcalc-note">{{ t('home.mini_calc.note') }}</p>

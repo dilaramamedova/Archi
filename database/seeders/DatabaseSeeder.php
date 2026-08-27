@@ -39,6 +39,7 @@ class DatabaseSeeder extends Seeder
             DemoSeeder::class,
             CatalogClassifierSeeder::class,
             NavigationSeeder::class,
+            CalculatorSeeder::class,
         ]);
     }
 }

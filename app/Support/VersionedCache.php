@@ -28,6 +28,9 @@ class VersionedCache
 
     public const HOME = 'home';
 
+    /** Calculator rates, coefficients, norms and settings — every number the engine multiplies by. */
+    public const CALCULATOR = 'calculator';
+
     /** Structural data changes rarely; a day is safe because edits bump the version. */
     public const TTL_STRUCTURAL = 86400;
 
@@ -59,7 +62,7 @@ class VersionedCache
 
     public static function flushAll(): void
     {
-        foreach ([self::CHROME, self::CATALOG, self::HOME] as $domain) {
+        foreach ([self::CHROME, self::CATALOG, self::HOME, self::CALCULATOR] as $domain) {
             self::bump($domain);
         }
     }

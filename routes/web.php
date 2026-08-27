@@ -10,6 +10,7 @@ use App\Http\Controllers\BlogController;
 use App\Http\Controllers\Cabinet\SecurityController;
 use App\Http\Controllers\Cabinet\SpecialistCabinetController;
 use App\Http\Controllers\Cabinet\SpecialistProfileController;
+use App\Http\Controllers\CalculatorController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ConsultationRequestController;
@@ -159,14 +160,31 @@ Route::get('/api/specialist/{specialist}/phone', [SpecialistController::class, '
 // does not swallow "owner", "onboarding", or "cabinet" segments.
 Route::get('/specialist/{specialist}', [SpecialistController::class, 'show'])->name('specialist.show');
 
-Route::get('/calculator', fn () => archiView('pages.calculator'))->name('calculator');
+// Renovation calculator. The pages are controller-driven because every price they
+// show comes from the database — no rate may live in a Blade file or a JS module
+// (TZ §30, master spec §24).
+Route::get('/calculator', [CalculatorController::class, 'page'])->name('calculator');
 
 // Legal / policy pages
 Route::get('/terms', [LegalPageController::class, 'show'])->defaults('slug', 'terms')->name('legal.terms');
 Route::get('/privacy', [LegalPageController::class, 'show'])->defaults('slug', 'privacy')->name('legal.privacy');
 Route::get('/delivery', [LegalPageController::class, 'show'])->defaults('slug', 'delivery')->name('legal.delivery');
 Route::get('/cookies', [LegalPageController::class, 'show'])->defaults('slug', 'cookies')->name('legal.cookies');
-Route::get('/calculator/detailed', fn () => archiView('pages.calculator-detailed'))->name('calculator.detailed');
+Route::get('/calculator/detailed', [CalculatorController::class, 'detailedPage'])->name('calculator.detailed');
+
+// Calculator API. Read endpoints are public — the quick calculator has to work for a
+// visitor who is not logged in and collects no personal data (TZ §46).
+Route::prefix('api/calculator')->name('api.calculator.')->group(function () {
+    Route::get('/quick-rates', [CalculatorController::class, 'quickRates'])->name('quick-rates');
+    Route::post('/quick-estimate', [CalculatorController::class, 'quickEstimate'])->middleware('throttle:60,1')->name('quick-estimate');
+    Route::get('/config', [CalculatorController::class, 'config'])->name('config');
+    Route::post('/estimate', [CalculatorController::class, 'estimate'])->middleware('throttle:60,1')->name('estimate');
+    Route::post('/sessions', [CalculatorController::class, 'storeSession'])->middleware('throttle:30,1')->name('sessions.store');
+    Route::get('/sessions/{session}', [CalculatorController::class, 'showSession'])->name('sessions.show');
+    Route::put('/sessions/{session}', [CalculatorController::class, 'updateSession'])->middleware('throttle:60,1')->name('sessions.update');
+    Route::post('/sessions/{session}/snapshot', [CalculatorController::class, 'storeSnapshot'])->middleware('throttle:20,1')->name('sessions.snapshot');
+    Route::get('/snapshots/{snapshot}', [CalculatorController::class, 'showSnapshot'])->name('snapshots.show');
+});
 
 Route::get('/business/register', fn () => archiView('pages.business-register'))->name('business.register');
 Route::get('/business/onboarding/step-1', fn () => archiView('pages.business-onboarding-step1'))->name('business.onboarding.step1');

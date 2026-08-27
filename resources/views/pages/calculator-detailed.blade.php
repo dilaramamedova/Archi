@@ -1,116 +1,36 @@
 {{--
-  Detailed renovation calculator. In the old page every screen was built by an inline
-  script from ~60 `dc-*` templates, so the markup stays in JS (resources/js/pages/
-  calculator-detailed.js) and only the shell is server-rendered here. All strings and
-  all demo data are handed to the module on #dcPage as data-* JSON, which keeps the
-  page fully translatable without touching the template strings.
+  Detailed renovation calculator (master specification, "Kalkulyator ремонта").
+
+  The wizard's markup is built in resources/js/pages/calculator-detailed.js, but not a
+  single price is: every figure on this page comes back from
+  POST /api/calculator/estimate, which runs the one formula the whole engine is made
+  of — quantity × unit price × coefficients, floored by the minimum charge.
+
+  Blade's job here is to hand the module three things: the classifiers and limits the
+  form is built from, the visitor's cart, and whatever the quick calculator already
+  learned about the object so nothing has to be entered twice (TZ §47).
 --}}
 @php
     $tr = t('calculator-detailed');
-
-    $cats = $tr['cats'];
-    $floors = $tr['rooms']['floors'];
-    $walls = $tr['rooms']['walls'];
-    $stock = $tr['cart']['stock'];
-    $cartItems = $tr['cart']['items'];
-
-    // Prices, units and default flags are data, not text — they live here, the labels
-    // come from the translation file.
-    // TODO: Replace with dynamic data from controller (e.g. WorkType model or config)
-    $works = [
-        ['key' => 'demolition', 'price' => 8, 'unit' => 'm2', 'on' => true],
-        ['key' => 'wall_leveling', 'price' => 14, 'unit' => 'm2', 'on' => true],
-        ['key' => 'plaster', 'price' => 11, 'unit' => 'm2', 'on' => true],
-        ['key' => 'putty', 'price' => 9, 'unit' => 'm2', 'on' => true],
-        ['key' => 'screed', 'price' => 13, 'unit' => 'm2', 'on' => true],
-        ['key' => 'waterproofing', 'price' => 10, 'unit' => 'm2', 'on' => false],
-        ['key' => 'soundproofing', 'price' => 16, 'unit' => 'm2', 'on' => false],
-        ['key' => 'electrical', 'price' => 28, 'unit' => 'point', 'on' => true],
-        ['key' => 'plumbing', 'price' => 35, 'unit' => 'point', 'on' => true],
-        ['key' => 'ventilation', 'price' => 22, 'unit' => 'm2', 'on' => false],
-        ['key' => 'air_conditioning', 'price' => 180, 'unit' => 'pc', 'on' => false],
-        ['key' => 'tile_prep', 'price' => 12, 'unit' => 'm2', 'on' => true],
-        ['key' => 'paint_prep', 'price' => 7, 'unit' => 'm2', 'on' => true],
-    ];
-
-    $defaults = [
-        'area' => 80,
-        'city' => $tr['object']['default_city'],
-        'floor' => $tr['object']['default_floor'],
-
-        'objectTypes' => array_values($tr['object']['types']),
-        'propertyTypes' => array_values($tr['object']['properties']),
-        'conditions' => array_values($tr['object']['conditions']),
-        'floorCovers' => array_values($floors),
-        'wallCovers' => array_values($walls),
-
-        // Finish rates per m² for each floor and wall cover, keyed by translated label.
-        // computeEstimate() uses these when the cart has no matching finish materials.
-        'floorRates' => array_combine(array_values($floors), [180, 350, 220, 250]),
-        'wallRates'  => array_combine(array_values($walls),  [80, 120, 200, 250]),
-
-        // Labour multipliers, positionally parallel to the three chip groups above.
-        // The object-type values match the quick calculator (calculator.blade.php).
-        'objectFactors' => [1, 1.1, 0.95, 1.05],
-        'propertyFactors' => [1, 1.06],
-        'conditionFactors' => [1, 0.95, 0.88],
-
-        'rooms' => [
-            ['name' => $tr['rooms']['defaults']['living'], 'area' => 24, 'h' => 2.9, 'per' => 20, 'doors' => 1, 'win' => 2, 'floor' => $floors['laminate'], 'wall' => $walls['paint'], 'heat' => true],
-            ['name' => $tr['rooms']['defaults']['kitchen'], 'area' => 12, 'h' => 2.9, 'per' => 16, 'doors' => 1, 'win' => 1, 'floor' => $floors['tile'], 'wall' => $walls['paint'], 'heat' => false],
-            ['name' => $tr['rooms']['defaults']['bathroom'], 'area' => 6, 'h' => 2.7, 'per' => 11, 'doors' => 1, 'win' => 0, 'floor' => $floors['tile'], 'wall' => $walls['tile'], 'heat' => true],
-        ],
-        'newRoom' => ['name' => $tr['rooms']['defaults']['new'], 'area' => 12, 'h' => 2.8, 'per' => 14, 'doors' => 1, 'win' => 1, 'floor' => $floors['laminate'], 'wall' => $walls['paint'], 'heat' => false],
-
-        'works' => array_map(fn ($w) => [
-            'key' => $w['key'],
-            'name' => $tr['works']['items'][$w['key']],
-            'price' => $w['price'],
-            'unit' => $w['unit'],
-            'unitLabel' => $tr['units'][$w['unit']],
-            'on' => $w['on'],
-        ], $works),
-
-        // Fees behind the step-1 switches. Both labels read "I already have it", so the
-        // fee lands in the estimate while the switch is OFF and disappears when it is on.
-        // TODO: Replace with dynamic data from controller (service pricing config)
-        'services' => ['design' => 2400, 'drawings' => 1500],
-
-        // Fallback cart, used when localStorage has no 'archi-cart' entry.
-        // TODO: Replace with dynamic data from controller (product catalog / default cart items)
-        'cart' => [
-            ['name' => $cartItems['laminate']['name'], 'brand' => 'Quick-Step', 'cat' => $cats['floor'], 'calc' => $cartItems['laminate']['calc'], 'price' => 1840, 'stock' => $stock['in'], 'inStock' => true],
-            ['name' => $cartItems['tile']['name'], 'brand' => 'Marca Corona', 'cat' => $cats['tile'], 'calc' => $cartItems['tile']['calc'], 'price' => 765, 'stock' => $stock['in'], 'inStock' => true],
-            ['name' => $cartItems['paint']['name'], 'brand' => 'Caparol', 'cat' => $cats['paint'], 'calc' => $cartItems['paint']['calc'], 'price' => 420, 'stock' => $stock['in'], 'inStock' => true],
-            ['name' => $cartItems['door']['name'], 'brand' => 'Portalux', 'cat' => $cats['doors'], 'calc' => $cartItems['door']['calc'], 'price' => 2000, 'stock' => $stock['order'], 'inStock' => false],
-            ['name' => $cartItems['toilet']['name'], 'brand' => 'Roca', 'cat' => $cats['plumbing'], 'calc' => $cartItems['toilet']['calc'], 'price' => 640, 'stock' => $stock['in'], 'inStock' => true],
-            ['name' => $cartItems['mixer']['name'], 'brand' => 'Grohe', 'cat' => $cats['plumbing'], 'calc' => $cartItems['mixer']['calc'], 'price' => 390, 'stock' => $stock['in'], 'inStock' => true],
-        ],
-
-        // Step 4 rows: visible label + the cart category it is matched against.
-        'materials' => [
-            ['label' => $tr['materials']['labels']['floor'], 'cat' => $cats['floor']],
-            ['label' => $tr['materials']['labels']['tile'], 'cat' => $cats['tile']],
-            ['label' => $tr['materials']['labels']['paint'], 'cat' => $cats['paint']],
-            ['label' => $tr['materials']['labels']['doors'], 'cat' => $cats['doors']],
-            ['label' => $tr['materials']['labels']['plumbing'], 'cat' => $cats['plumbing']],
-            ['label' => $tr['materials']['labels']['lighting'], 'cat' => ''],
-        ],
-
-        'cats' => $cats,
-    ];
 @endphp
 <x-layout page="calculator-detailed" :title="t('calculator-detailed.title')">
 
 <section class="dc-page" id="dcPage"
          data-url-catalog="{{ route('catalog') }}"
+         data-url-estimate="{{ route('api.calculator.estimate') }}"
+         data-url-sessions="{{ route('api.calculator.sessions.store') }}"
+         data-url-cart="{{ route('api.cart.store') }}"
+         data-url-login="{{ route('login') }}"
+         data-csrf="{{ csrf_token() }}"
+         data-authenticated="{{ auth()->check() ? '1' : '0' }}"
          {{-- popup buttons shown after "add all to cart" (shared/popup.js) --}}
          data-goto-cart="{{ t('common.go_to_cart') }}"
          data-continue="{{ t('common.continue') }}"
-         data-i18n="{{ json_encode($tr) }}"
-         data-defaults="{{ json_encode($defaults) }}">
+         data-i18n="{{ json_encode($tr, JSON_UNESCAPED_UNICODE) }}"
+         data-config="{{ json_encode($calculatorConfig, JSON_UNESCAPED_UNICODE) }}"
+         data-prefill="{{ json_encode($prefill, JSON_UNESCAPED_UNICODE) }}"
+         data-cart="{{ json_encode($cartProducts, JSON_UNESCAPED_UNICODE) }}">
   <div class="wrap-narrow dc-inner">
-    {{-- the frame opens every step on a crumb trail back to the quick calculator --}}
     <x-ui.breadcrumbs class="dc-crumbs" :items="[
         ['label' => t('common.home'), 'href' => route('home')],
         ['label' => t('calculator.breadcrumb'), 'href' => route('calculator')],

@@ -8,22 +8,12 @@
 //    on phones and tablets — where the product owner still wants the calculator on
 //    landing. Fixed + measured therefore serves both cases: hung under the nav item when
 //    that item is on screen, centred under the sticky header when it is not.
-// 2. Every price constant comes from shared/calculator-pricing.js, including the chip
-//    multipliers — the chips are built here from those maps so the panel cannot quote a
-//    number the /calculator page disagrees with.
+// 2. Not one price lives in this file. The six approved rates, the area bounds and the
+//    defaults arrive on #miniCalc[data-quick] straight from the database, and the
+//    chips are built from that matrix — so the panel cannot offer a package Archi has
+//    not priced, and cannot quote a number the /calculator page disagrees with.
 
-import {
-  RATES,
-  TYPE_MULTIPLIERS,
-  OBJECT_MULTIPLIERS,
-  ROOMS_MULTIPLIERS,
-  DEFAULTS,
-  clampArea,
-  priceFor,
-} from './calculator-pricing.js';
-
-// The key /calculator already uses for the quick-calc hand-off — see calculator.js.
-const HANDOFF_KEY = 'archi-quickcalc';
+import { HANDOFF_KEY, formatMoney, quote, readJson } from './calculator-pricing.js';
 
 const GUTTER = 16; // matches the .wrap gutter at 375px, so the panel lines up with the page
 const MAX_WIDTH = 380;
@@ -32,85 +22,106 @@ export default function initMiniCalculator() {
   const panel = document.getElementById('miniCalc');
   if (!panel) return;
 
-  const labels = JSON.parse(panel.dataset.labels || '{}');
+  const labels = readJson(panel.dataset.labels, {});
+  const config = readJson(panel.dataset.quick, null);
+  if (!config) return;
+
   const areaEl = document.getElementById('miniCalcArea');
   const priceEl = document.getElementById('miniCalcPrice');
+  const currencyEl = document.getElementById('miniCalcCurrency');
   const resultLabelEl = document.getElementById('miniCalcResultLabel');
   const closeEl = document.getElementById('miniCalcClose');
 
-  // Only the two high-leverage factors are selectable; the rest keep the defaults the
-  // /calculator page starts from, so the two screens agree until the visitor changes
-  // something the mini panel does not expose.
-  const state = { area: DEFAULTS.area, type: DEFAULTS.type, level: DEFAULTS.level };
-  const fixedObj = OBJECT_MULTIPLIERS[DEFAULTS.obj];
-  const fixedRooms = ROOMS_MULTIPLIERS[DEFAULTS.rooms];
+  const state = {
+    area: config.defaults.area,
+    renovationType: config.defaults.renovationType,
+    segment: config.defaults.segment,
+  };
 
-  const fmt = (n) => Math.round(n).toLocaleString('ru-RU');
+  const priceFor = (type, segment) => config.prices?.[type]?.[segment] ?? null;
 
   // ---- chips -------------------------------------------------------------------
-  // Built from the shared multiplier maps rather than authored in Blade: Blade would
-  // have to repeat 0.55 / 0.7 / 1 / 1.25 as data-m, which is the duplication this whole
-  // module is arranged to avoid. Blade ships only the labels.
-  function buildChips(key, entries) {
+  // Built from the price matrix rather than authored in Blade, so the panel's options
+  // are exactly the combinations that have a price. Blade ships only the labels.
+  function buildChips(key) {
     const box = panel.querySelector(`[data-mini-key="${key}"]`);
     if (!box) return;
-    box.innerHTML = entries
-      .map(
-        (v) =>
-          `<button type="button" class="qc-chip" data-v="${v}" data-on="${v === state[key]}"` +
-          ` aria-pressed="${v === state[key]}">${labels[key]?.[v] ?? v}</button>`
-      )
-      .join('');
 
-    box.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-v]');
-      if (!btn) return;
-      state[key] = btn.dataset.v;
-      box.querySelectorAll('[data-v]').forEach((b) => {
-        const on = b.dataset.v === state[key];
-        b.dataset.on = String(on);
-        b.setAttribute('aria-pressed', String(on));
-      });
-      render();
-    });
+    const values = key === 'type'
+      ? Object.keys(config.prices || {})
+      : Object.keys(config.prices?.[state.renovationType] || {});
+    const current = key === 'type' ? state.renovationType : state.segment;
+
+    box.innerHTML = values
+      .map((v) => {
+        const disabled = key === 'segment' && priceFor(state.renovationType, v) === null;
+        return (
+          `<button type="button" class="qc-chip" data-v="${v}" data-on="${v === current}"` +
+          ` aria-pressed="${v === current}"${disabled ? ' disabled' : ''}>` +
+          `${labels[key]?.[v] ?? v}</button>`
+        );
+      })
+      .join('');
   }
 
-  function render() {
-    const price = priceFor({
-      area: state.area,
-      rate: RATES[state.level],
-      obj: fixedObj,
-      type: TYPE_MULTIPLIERS[state.type],
-      rooms: fixedRooms,
-    });
-    priceEl.textContent = fmt(price);
-    resultLabelEl.textContent = (labels.resultLabel || '').replace('{area}', String(state.area));
+  panel.querySelectorAll('[data-mini-key]').forEach((box) => {
+    box.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-v]');
+      if (!btn || btn.disabled) return;
 
-    // Hand the selection to /calculator. Same key and shape the full page already
-    // writes for the detailed calculator, so the CTA continues the session instead of
-    // resetting it to the defaults.
+      if (box.dataset.miniKey === 'type') {
+        state.renovationType = btn.dataset.v;
+        // A renovation type that does not price the current segment moves it; every
+        // other selection is left alone (TZ §26).
+        if (priceFor(state.renovationType, state.segment) === null) {
+          const fallback = Object.keys(config.prices[state.renovationType] || {})
+            .find((key) => priceFor(state.renovationType, key) !== null);
+          if (fallback) state.segment = fallback;
+        }
+      } else {
+        state.segment = btn.dataset.v;
+      }
+
+      render();
+    });
+  });
+
+  function render() {
+    buildChips('type');
+    buildChips('segment');
+
+    const result = quote({
+      area: areaEl.value,
+      renovationType: state.renovationType,
+      segment: state.segment,
+      config,
+    });
+
+    // An em dash and the reason, never 0 or NaN — the panel is the first thing a
+    // visitor sees, and a wrong number there costs more than no number (TZ §38).
+    priceEl.textContent = result.error ? '—' : formatMoney(result.total);
+    currencyEl.textContent = result.error
+      ? ''
+      : (config.showFromPrefix ? labels.fromSuffix : labels.currency);
+
+    resultLabelEl.textContent = result.error
+      ? (labels.errors?.[result.error] || '')
+      : (labels.resultLabel || '').replace('{area}', formatMoney(result.area));
+
+    // Hand the selection to /calculator, which reads the same key.
     try {
-      localStorage.setItem(
-        HANDOFF_KEY,
-        JSON.stringify({ area: state.area, level: state.level, type: state.type })
-      );
+      localStorage.setItem(HANDOFF_KEY, JSON.stringify({
+        area: parseFloat(areaEl.value) || state.area,
+        renovationType: state.renovationType,
+        segment: state.segment,
+      }));
     } catch {
       // Private mode / storage disabled: the panel still prices correctly, the
       // hand-off is simply lost. Not worth breaking render() over.
     }
   }
 
-  buildChips('type', Object.keys(TYPE_MULTIPLIERS));
-  buildChips('level', Object.keys(RATES));
-
-  areaEl.addEventListener('input', () => {
-    state.area = clampArea(areaEl.value);
-    render();
-  });
-  // write the clamped value back once the field is left, so field and price agree
-  areaEl.addEventListener('change', () => {
-    if (parseFloat(areaEl.value) !== state.area) areaEl.value = String(state.area);
-  });
+  areaEl.addEventListener('input', render);
 
   // ---- placement ---------------------------------------------------------------
   // Re-measured on resize/scroll instead of being computed once: .topbar is sticky, so

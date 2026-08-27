@@ -109,11 +109,11 @@ if (! function_exists('archiView')) {
      * production only, since local development runs without the route cache. This file
      * is autoloaded by Composer on every request, cached routes or not.
      */
-    function archiView(string $view)
+    function archiView(string $view, array $data = [])
     {
         app()->setLocale(session('locale', config('app.locale')));
 
-        return view($view);
+        return view($view, $data);
     }
 }
 

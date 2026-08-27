@@ -195,6 +195,38 @@ class ProductResource extends Resource
                         ->numeric()
                         ->minValue(1)
                         ->default(1),
+
+                    // Used by the renovation calculator. Without a package size an
+                    // estimate can only ask for "44.94 m² of SPC" instead of the 21
+                    // packs the client is actually charged for; without weight and
+                    // volume the delivery and lifting lines cannot be computed and
+                    // report themselves as incomplete rather than quoting 0 AZN.
+                    Forms\Components\TextInput::make('package_size')
+                        ->label('Bir paketdəki miqdar')
+                        ->helperText('Kalkulyator üçün: 1 paket neçə m² / p.m / kq örtür. Boş buraxsanız, miqdar paketsiz hesablanır.')
+                        ->numeric()
+                        ->minValue(0)
+                        ->nullable(),
+
+                    Forms\Components\TextInput::make('package_unit')
+                        ->label('Paketin adı')
+                        ->helperText('Smetada göstərilir: paket, qutu, rulon, kisə …')
+                        ->maxLength(24)
+                        ->nullable(),
+
+                    Forms\Components\TextInput::make('weight_kg')
+                        ->label('Çəkisi (1 vahid)')
+                        ->suffix('kq')
+                        ->numeric()
+                        ->minValue(0)
+                        ->nullable(),
+
+                    Forms\Components\TextInput::make('volume_m3')
+                        ->label('Həcmi (1 vahid)')
+                        ->suffix('m³')
+                        ->numeric()
+                        ->minValue(0)
+                        ->nullable(),
                 ]),
 
                 Tabs\Tab::make('Statuslar')->schema([

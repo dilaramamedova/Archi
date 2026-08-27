@@ -424,6 +424,15 @@ class BusinessProductController extends Controller
             // published by the kilogram. The form now starts blank and the
             // fallback below is a neutral "ədəd" rather than a guess.
             'unit' => ['nullable', Rule::in(self::UNITS)],
+            // Packaging and logistics data the renovation calculator bills by: how
+            // much one pack covers, and what one unit weighs and takes up. Optional,
+            // because most catalogues do not have it — the estimate then quotes the
+            // required quantity and flags its logistics as incomplete instead of
+            // inventing a delivery price.
+            'package_size' => ['nullable', 'numeric', 'min:0', 'max:100000'],
+            'package_unit' => ['nullable', 'string', 'max:24'],
+            'weight_kg' => ['nullable', 'numeric', 'min:0', 'max:100000'],
+            'volume_m3' => ['nullable', 'numeric', 'min:0', 'max:1000'],
             'stock' => ['required', 'integer', 'min:0', 'max:1000000'],
             'min_order' => ['nullable', 'integer', 'min:1'],
             'shelf' => ['nullable', 'string', 'max:30'],
@@ -705,6 +714,10 @@ class BusinessProductController extends Controller
             'price' => $validated['price'],
             'old_price' => $validated['old_price'] ?? null,
             'unit' => $validated['unit'] ?? 'piece',
+            'package_size' => $validated['package_size'] ?? null,
+            'package_unit' => $validated['package_unit'] ?? null,
+            'weight_kg' => $validated['weight_kg'] ?? null,
+            'volume_m3' => $validated['volume_m3'] ?? null,
             'stock' => $validated['stock'],
             'min_order' => $validated['min_order'] ?? 1,
             'specifications' => $fixed + $custom,

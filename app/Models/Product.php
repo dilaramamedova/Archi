@@ -25,6 +25,10 @@ class Product extends Model
     protected $casts = [
         'price' => 'decimal:2',
         'old_price' => 'decimal:2',
+        // Packaging and logistics data the renovation calculator bills by.
+        'package_size' => 'decimal:4',
+        'weight_kg' => 'decimal:3',
+        'volume_m3' => 'decimal:4',
         'rejected_at' => 'datetime',
         'is_visible' => 'boolean',
         'is_approved' => 'boolean',

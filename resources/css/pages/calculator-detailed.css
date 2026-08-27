@@ -21,9 +21,13 @@
 
   /* stepper — the box is the outer element, the scrolling strip of steps is `.dc-strip`
      inside it, so the mobile caption can sit under the dots without joining their row */
-  .dc-stepper           { @apply rounded-ds border border-black/10 bg-white px-5 py-4; }
+  .dc-stepper           { @apply relative rounded-ds border border-black/10 bg-white px-5 py-4; }
   .dc-strip             { @apply flex items-center justify-between overflow-x-auto; }
   .dc-stepcap           { @apply hidden; }
+  /* "Sıfırla" — quiet on purpose: it discards every answer, so it must be findable
+     without ever competing with the wizard's own controls. Floated off the stepper's
+     top-right corner so the six steps keep their full row. */
+  .dc-reset             { @apply absolute -top-8 right-0 cursor-pointer border-none bg-transparent p-1 text-[13px] font-medium text-black/40 [font-family:inherit] hover:text-red-600; }
   .dc-step              { @apply flex items-center gap-2 whitespace-nowrap; }
   .dc-step .c           { @apply flex size-7 shrink-0 items-center justify-center rounded-full bg-[#e6e8eb] text-[13px] font-bold text-black/50; }
   .dc-step.done .c      { @apply bg-yellow-line text-ink; }
@@ -133,8 +137,11 @@
   .dc-sum .big b      { @apply text-[32px] font-bold text-ink; }
   .dc-sum .big span   { @apply text-[15px] font-semibold text-black/50; }
   .dc-sum .rows       { @apply flex flex-col gap-[9px] border-t border-black/8 pt-3; }
-  .dc-sum .rows .r    { @apply flex justify-between text-sm text-black/60; }
-  .dc-sum .rows .r b  { @apply font-semibold text-ink; }
+  .dc-sum .rows .r    { @apply flex justify-between gap-3 text-sm text-black/60; }
+  .dc-sum .rows .r b  { @apply font-semibold whitespace-nowrap text-ink tabular-nums; }
+  /* The closing line: the rows above have to visibly add up to it. */
+  .dc-sum .rows .r.total    { @apply mt-1 border-t border-black/10 pt-2.5 text-[15px] font-semibold text-ink; }
+  .dc-sum .rows .r.total b  { @apply text-[15px]; }
   .dc-nav             { @apply flex gap-3; }
   .dc-back            { @apply cursor-pointer rounded-ds border border-black/15 bg-white px-6 py-3.5 text-[15px] font-semibold text-ink [font-family:inherit]; }
   .dc-next            { @apply flex-1 cursor-pointer rounded-ds border-none bg-yellow p-3.5 text-[15px] font-semibold text-ink transition-[filter] duration-200 [font-family:inherit] hover:brightness-[.93]; }

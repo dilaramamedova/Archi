@@ -6,6 +6,13 @@ use App\Models\Banner;
 use App\Models\BlogCategory;
 use App\Models\BlogPost;
 use App\Models\Brand;
+use App\Models\CalculatorCity;
+use App\Models\CalculatorCoefficient;
+use App\Models\CalculatorMaterialFallback;
+use App\Models\CalculatorMaterialNorm;
+use App\Models\CalculatorQuickRate;
+use App\Models\CalculatorSetting;
+use App\Models\CalculatorWorkRate;
 use App\Models\CartItem;
 use App\Models\Category;
 use App\Models\MenuItem;
@@ -50,6 +57,16 @@ class AppServiceProvider extends ServiceProvider
         ServiceIcon::class => [VersionedCache::HOME],
         BlogCategory::class => [VersionedCache::HOME],
         BlogPost::class => [VersionedCache::CHROME, VersionedCache::HOME],
+        // Every number the renovation calculator multiplies by. An edited rate has
+        // to reach the next calculation immediately — the whole point of keeping
+        // the six quick prices and ~130 work rates out of the code (TZ §34).
+        CalculatorQuickRate::class => [VersionedCache::CALCULATOR],
+        CalculatorWorkRate::class => [VersionedCache::CALCULATOR],
+        CalculatorMaterialFallback::class => [VersionedCache::CALCULATOR],
+        CalculatorCoefficient::class => [VersionedCache::CALCULATOR],
+        CalculatorMaterialNorm::class => [VersionedCache::CALCULATOR],
+        CalculatorSetting::class => [VersionedCache::CALCULATOR],
+        CalculatorCity::class => [VersionedCache::CALCULATOR],
     ];
 
     public function register(): void

@@ -18,6 +18,19 @@
     @apply data-[on=true]:border-ink data-[on=true]:bg-ink data-[on=true]:text-white;
   }
 
+  /* Segmented control of the quick calculator (TZ §7, §9). The two renovation types
+     and the three price segments are the same control at two widths, so they share
+     one class; the selected state is data-on, as everywhere else on this page.
+     min-h-11 keeps every option a comfortable touch target on a phone without
+     changing the desktop rhythm — the buttons are already taller than 44px there. */
+  .qc-seg {
+    @apply flex min-h-11 cursor-pointer items-center justify-center rounded-ds border border-black/12 bg-white px-3 py-2.5 text-center text-sm font-semibold text-black/70 transition-[color,background-color,border-color] duration-150;
+    @apply hover:border-black/35;
+    @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink;
+    @apply data-[on=true]:border-ink data-[on=true]:bg-ink data-[on=true]:text-white;
+    @apply disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-black/12;
+  }
+
   /* Mobile tier rows (Figma "calculator-html — Mobile", 375). Stacked full-width cards
      read as a price list rather than three budget options, so below 640px each card is
      laid out as one line: level on the left, price on the right, and the "Tövsiyə" note

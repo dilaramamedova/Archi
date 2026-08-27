@@ -13,7 +13,17 @@ class TranslationsSeeder extends Seeder
 {
     public function run(): void
     {
-        foreach ($this->translations() as $group => $items) {
+        $groups = $this->translations();
+
+        // The renovation calculator's copy is kept in its own file: it is a few hundred
+        // keys of classifiers (finishes, surface states, room types, work categories)
+        // that grow with the work catalog, and folding them into the array below would
+        // bury the rest of the site's strings.
+        foreach (require database_path('seeders/data/calculator_translations.php') as $group => $items) {
+            $groups[$group] = array_merge($groups[$group] ?? [], $items);
+        }
+
+        foreach ($groups as $group => $items) {
             foreach ($items as $key => $value) {
                 Translation::updateOrCreate(
                     ['group' => $group, 'key' => $key],
