@@ -118,6 +118,46 @@ export default function init() {
   if (!Array.isArray(cart)) cart = [];
   cart = cart.map((c) => ({ ...c, qty: c.qty || 1 }));
 
+  // A logged-in visitor's cart also lives on the server (it is what the calculator
+  // and other devices see). Rows the server has but this browser does not — added
+  // on another device, or before localStorage was cleared — join the list here, so
+  // both stores always show the same basket.
+  const serverCart = readJson(page.dataset.serverCart, []) || [];
+  serverCart.forEach((s) => {
+    if (!cart.some((c) => +c.id === +s.id)) {
+      cart.push({ id: s.id, name: s.name || '', price: +s.price || 0, qty: s.qty || 1, img: s.img || '', cat: s.cat || '' });
+    }
+  });
+
+  // Mirror a local mutation to the account cart. Fire-and-forget: the localStorage
+  // cart is already updated, and a lost request only means the server catches up on
+  // the next change instead of this one.
+  const cartApiUrl = page.dataset.urlCartApi || '/api/cart';
+  const cartRemoveUrl = page.dataset.urlCartRemove || '/api/cart/product';
+
+  function syncServer(action, item) {
+    if (!authUser || !item || !Number.isFinite(+item.id) || +item.id <= 0) return;
+
+    if (action === 'rm') {
+      fetch(`${cartRemoveUrl}/${Math.trunc(+item.id)}`, {
+        method: 'DELETE',
+        headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrf() },
+      }).catch(() => {});
+      return;
+    }
+
+    // Quantity changes reuse the add endpoint — it upserts by product.
+    fetch(cartApiUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        'X-CSRF-TOKEN': csrf(),
+      },
+      body: JSON.stringify({ product_id: Math.trunc(+item.id), quantity: item.qty || 1 }),
+    }).catch(() => {});
+  }
+
   function save() {
     try {
       localStorage.setItem('archi-cart', JSON.stringify(cart));
@@ -184,6 +224,7 @@ export default function init() {
       const a = btn.dataset.a;
 
       if (a === 'rm') {
+        syncServer('rm', item);
         const next = row.nextElementSibling || row.previousElementSibling;
         cart.splice(i, 1);
         row.remove();
@@ -201,6 +242,7 @@ export default function init() {
         }
       } else if (a === 'inc' || a === 'dec') {
         item.qty = a === 'inc' ? item.qty + 1 : Math.max(1, item.qty - 1);
+        syncServer('qty', item);
         const qtyEl = row.querySelector('[data-qty]');
         const lineEl = row.querySelector('[data-line]');
         if (qtyEl) qtyEl.textContent = item.qty;

@@ -15,6 +15,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * The work catalog and its rates — the numbers behind every "İşlər" line of an
@@ -37,6 +38,28 @@ class CalculatorWorkRateResource extends Resource
     protected static ?string $modelLabel = 'iş qiyməti';
     protected static ?string $pluralModelLabel = 'İş qiymətləri';
     protected static ?int $navigationSort = 2;
+
+    /**
+     * The admin panel's top search bar. The name is a translated JSON column, so
+     * the locale paths are listed explicitly — a plain LIKE over the raw JSON
+     * misses every Azerbaijani letter, because Laravel stores it \u-escaped.
+     */
+    protected static ?string $recordTitleAttribute = 'name';
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name->az', 'name->ru', 'name->en', 'search_keywords', 'work_id'];
+    }
+
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return [
+            'Bölmə' => self::CATEGORY_LABELS[$record->category?->value ?? $record->category] ?? '',
+            'Qiymət' => $record->rate !== null
+                ? number_format((float) $record->rate, 2).' AZN / '.$record->unit
+                : 'dəqiqləşdirilir',
+        ];
+    }
 
     private const CATEGORY_LABELS = [
         'DEMOLITION' => 'Demontaj (sökülmə)',

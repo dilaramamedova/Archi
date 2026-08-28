@@ -34,6 +34,22 @@ class CalculatorRequestResource extends Resource
     protected static ?string $pluralModelLabel = 'Kalkulyator müraciətləri';
     protected static ?int $navigationSort = 0;
 
+    /** Top search bar: a manager looks a request up by the caller, not the id. */
+    protected static ?string $recordTitleAttribute = 'name';
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name', 'phone', 'email'];
+    }
+
+    public static function getGlobalSearchResultDetails(\Illuminate\Database\Eloquent\Model $record): array
+    {
+        return array_filter([
+            'Telefon' => $record->phone,
+            'Məbləğ' => $record->total_amount !== null ? number_format((float) $record->total_amount, 2).' AZN' : null,
+        ]);
+    }
+
     /** Unhandled requests are a to-do list, so the count belongs in the sidebar. */
     public static function getNavigationBadge(): ?string
     {

@@ -12,6 +12,8 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Category prices used while the visitor has not chosen a real product yet
@@ -30,6 +32,24 @@ class CalculatorMaterialFallbackResource extends Resource
     protected static ?string $modelLabel = 'material qiyməti';
     protected static ?string $pluralModelLabel = 'Material qiymətləri';
     protected static ?int $navigationSort = 3;
+
+    /** Top search bar: locale paths listed explicitly — see CalculatorWorkRateResource. */
+    protected static ?string $recordTitleAttribute = 'name';
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name->az', 'name->ru', 'name->en', 'material_category_id'];
+    }
+
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return [
+            'Qrup' => self::GROUPS[$record->surface_group] ?? $record->surface_group,
+            'Standart qiymət' => $record->standard_price !== null
+                ? number_format((float) $record->standard_price, 2).' AZN / '.$record->unit
+                : 'dəqiqləşdirilir',
+        ];
+    }
 
     private const GROUPS = [
         'FLOOR' => 'Döşəmə materialları',
@@ -131,7 +151,15 @@ class CalculatorMaterialFallbackResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label('Material')
-                    ->searchable()
+                    // Translated JSON column: search every locale path, or
+                    // Azerbaijani letters never match.
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(
+                        fn (Builder $q) => $q
+                            ->where('name->az', 'like', "%{$search}%")
+                            ->orWhere('name->ru', 'like', "%{$search}%")
+                            ->orWhere('name->en', 'like', "%{$search}%")
+                            ->orWhere('material_category_id', 'like', "%{$search}%")
+                    ))
                     ->wrap(),
 
                 Tables\Columns\TextColumn::make('surface_group')

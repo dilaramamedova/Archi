@@ -268,5 +268,18 @@ return [
             'ru' => 'Площадь объекта отличается от суммы комнат (:deviation%).',
             'en' => 'The stated area differs from the sum of the rooms (:deviation%).',
         ],
+
+        // The PDF button downloads a real file now, so the label says so.
+        'actions.pdf' => ['az' => 'PDF yüklə', 'ru' => 'Скачать PDF', 'en' => 'Download PDF'],
+        'notice.valid_until' => [
+            'az' => 'Qiymətlər :date tarixinədək qüvvədədir',
+            'ru' => 'Цены действительны до :date',
+            'en' => 'Prices are valid until :date',
+        ],
+        'notice.pdf_disclaimer' => [
+            'az' => 'Smeta təxminidir və ilkin məlumatlar əsasında hesablanıb. Yekun qiymət obyektə baxışdan sonra dəqiqləşdirilir.',
+            'ru' => 'Смета ориентировочная и рассчитана по исходным данным. Итоговая цена уточняется после осмотра объекта.',
+            'en' => 'This estimate is approximate and based on the details provided. The final price is confirmed after a site visit.',
+        ],
     ],
 ];

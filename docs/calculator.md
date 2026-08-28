@@ -64,6 +64,7 @@ santexnikanın miqdar mənbəyi deyil (§11.1).
 | `PUT` | `/api/calculator/sessions/{uuid}` | Sessiyanı yenilə |
 | `POST` | `/api/calculator/sessions/{uuid}/snapshot` | Smetanı dondur |
 | `GET` | `/api/calculator/snapshots/{uuid}` | Dondurulmuş versiyanı oxu (yenidən hesablanmır) |
+| `GET` | `/api/calculator/snapshots/{uuid}/pdf` | Smetanı PDF kimi yüklə (dompdf, snapshot-dan render olunur — yenidən hesablanmır) |
 
 Snapshot = giriş məlumatları + hesablanmış kəmiyyətlər + sətirlər + istifadə olunmuş
 qiymətlər + konfiqurasiya versiyası. Tarif sonradan dəyişsə belə snapshot dəyişmir —
@@ -123,6 +124,19 @@ sətrə toxunmur. Ona görə:
 Diqqət: `->helperText()` həmişə `->translatable()`-dan **əvvəl** yazılmalıdır —
 tərcümə plagini sahəni `Tabs`-a bükür və sonrakı metodlar həmin bükümə düşür.
 
+### Axtarış
+
+- Bütün kalkulyator resursları admin panelin **yuxarı qlobal axtarışına** qoşulub
+  (`$recordTitleAttribute` + `getGloballySearchableAttributes()`).
+- Tərcüməli sütunlar JSON-da `\u`-escape saxlandığı üçün adi `LIKE` Azərbaycan
+  hərflərini tapmır — həm qlobal, həm cədvəl axtarışı **`name->az` / `name->ru` /
+  `name->en`** yollarını ayrıca gəzir. Yeni tərcüməli sütun axtarışa qoşulanda eyni
+  qayda ilə yazılmalıdır.
+- Saytdakı klassifikator etiketləri («Mayak / qara divar», «Laminat», «Gərilmə
+  tavan»…) onları işə salan iş qiymətlərinin `search_keywords`-una yazılıb —
+  seed faylında və `2026_08_28_110000_append_site_labels…` miqrasiyasında.
+  Kalkulyatora yeni görünən ad əlavə edəndə onu da müvafiq işin açar sözlərinə yaz.
+
 ## Səbətlə iş (vacib qaydalar)
 
 Səbət iki yerdə yaşayır: qonaq üçün brauzerin yaddaşında (`localStorage` →
@@ -136,6 +150,13 @@ birləşdirir.
 - Bir məhsul həm material kimi seçilibsə, həm də səbətdədirsə, **iki dəfə hesablanmır**:
   kalkulyatorun hesabladığı miqdar əsas götürülür, səbət sətrində
   «Material kimi hesablanıb» yazılır.
+- **İki səbət heç vaxt ayrılmır.** `/cart` səhifəsində silmə və say dəyişikliyi
+  qeydiyyatlı istifadəçi üçün serverə də yazılır (`DELETE /api/cart/product/{id}`,
+  `POST /api/cart` upsert), server səbətindəki əlavə sətirlər isə `/cart` açılanda
+  localStorage-a birləşdirilir. Kalkulyatorun 5-ci addımı səhifə yenidən yüklənmədən
+  də təzələnir: başqa tabdakı dəyişiklik `storage` hadisəsi ilə, geri düyməsi ilə
+  qayıdış (bfcache) `pageshow` ilə tutulur və siyahı `GET /api/cart/items` +
+  localStorage-dan yenidən qurulur.
 
 ## Analitika (TZ §45)
 

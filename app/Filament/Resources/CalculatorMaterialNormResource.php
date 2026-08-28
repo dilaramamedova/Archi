@@ -12,6 +12,8 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Consumption norms and technological waste percentages (master spec §12.1).
@@ -32,6 +34,22 @@ class CalculatorMaterialNormResource extends Resource
     protected static ?string $modelLabel = 'sərfiyyat norması';
     protected static ?string $pluralModelLabel = 'Material sərfiyyatı və ehtiyatı';
     protected static ?int $navigationSort = 5;
+
+    /** Top search bar: locale paths listed explicitly — see CalculatorWorkRateResource. */
+    protected static ?string $recordTitleAttribute = 'name';
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name->az', 'name->ru', 'name->en', 'rule_id'];
+    }
+
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return [
+            'Nəyi ölçür' => self::PARAMETERS[$record->parameter] ?? $record->parameter,
+            'Dəyər' => rtrim(rtrim(number_format((float) $record->value, 4, '.', ''), '0'), '.').($record->unit ? ' '.$record->unit : ''),
+        ];
+    }
 
     /** What each parameter means in a sentence a manager can check against reality. */
     private const PARAMETERS = [
@@ -111,7 +129,15 @@ class CalculatorMaterialNormResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label('Material')
-                    ->searchable()
+                    // Translated JSON column: search every locale path, or
+                    // Azerbaijani letters never match.
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(
+                        fn (Builder $q) => $q
+                            ->where('name->az', 'like', "%{$search}%")
+                            ->orWhere('name->ru', 'like', "%{$search}%")
+                            ->orWhere('name->en', 'like', "%{$search}%")
+                            ->orWhere('rule_id', 'like', "%{$search}%")
+                    ))
                     ->wrap(),
 
                 Tables\Columns\TextColumn::make('parameter')

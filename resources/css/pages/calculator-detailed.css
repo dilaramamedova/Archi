@@ -156,6 +156,8 @@
   .dc-bd                { @apply flex flex-col gap-3.5; }
   .dc-bd .row .top      { @apply mb-1.5 flex justify-between text-sm; }
   .dc-bd .row .top .l   { @apply font-medium text-black/75; }
+  /* which room a repeated work line belongs to, in the category view */
+  .dc-room              { @apply text-xs font-normal text-black/40; }
   .dc-bd .row .top .v   { @apply font-bold text-ink; }
   .dc-bar               { @apply h-2 overflow-hidden rounded-ds bg-[#e9edf1]; }
   .dc-bar i             { @apply block h-2 rounded-ds bg-[#d1d5db]; }

@@ -12,6 +12,8 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * The scalar knobs: contingency percent, VAT mode, area limits, free lift floors,
@@ -34,6 +36,22 @@ class CalculatorSettingResource extends Resource
     protected static ?string $modelLabel = 'parametr';
     protected static ?string $pluralModelLabel = 'Ümumi parametrlər';
     protected static ?int $navigationSort = 6;
+
+    /** Top search bar: locale paths listed explicitly — see CalculatorWorkRateResource. */
+    protected static ?string $recordTitleAttribute = 'description';
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['description->az', 'description->ru', 'description->en', 'key'];
+    }
+
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        return [
+            'Bölmə' => self::GROUPS[$record->group] ?? $record->group,
+            'Dəyər' => (string) $record->value.($record->unit ? ' '.$record->unit : ''),
+        ];
+    }
 
     private const GROUPS = [
         'QUICK' => 'Sürətli kalkulyator',
@@ -155,7 +173,15 @@ class CalculatorSettingResource extends Resource
                 Tables\Columns\TextColumn::make('description')
                     ->label('Parametr')
                     ->description(fn (CalculatorSetting $record): string => self::EXPLANATIONS[$record->key] ?? '')
-                    ->searchable()
+                    // Translated JSON column: search every locale path, or
+                    // Azerbaijani letters never match.
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(
+                        fn (Builder $q) => $q
+                            ->where('description->az', 'like', "%{$search}%")
+                            ->orWhere('description->ru', 'like', "%{$search}%")
+                            ->orWhere('description->en', 'like', "%{$search}%")
+                            ->orWhere('key', 'like', "%{$search}%")
+                    ))
                     ->wrap(),
 
                 Tables\Columns\TextColumn::make('group')

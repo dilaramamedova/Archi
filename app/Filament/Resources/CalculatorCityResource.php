@@ -12,6 +12,8 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * City coefficients (master spec audit §2.10). Baku is the 1.00 base; a city that is
@@ -30,6 +32,27 @@ class CalculatorCityResource extends Resource
     protected static ?string $modelLabel = 'Şəhər əmsalı';
     protected static ?string $pluralModelLabel = 'Şəhər əmsalları';
     protected static ?int $navigationSort = 7;
+
+    /** Top search bar: locale paths listed explicitly — see CalculatorWorkRateResource. */
+    protected static ?string $recordTitleAttribute = 'name';
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['name->az', 'name->ru', 'name->en', 'city_key'];
+    }
+
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        $percent = round(((float) $record->coefficient - 1) * 100);
+
+        return [
+            'İşlərə təsiri' => match (true) {
+                $percent > 0 => "işlər +{$percent}% baha",
+                $percent < 0 => 'işlər '.abs($percent).'% ucuz',
+                default => 'Bakı ilə eyni',
+            },
+        ];
+    }
 
     public static function explanationParts(): array
     {
@@ -87,7 +110,17 @@ class CalculatorCityResource extends Resource
             ->description('Şəhər əmsalı yalnız iş haqqına tətbiq olunur, material qiymətlərinə yox. '
                 .'Bakı 1.00 bazadır; siyahıda olmayan şəhər də 1.00 sayılır.')
             ->columns([
-                Tables\Columns\TextColumn::make('name')->label('Şəhər')->searchable(),
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Şəhər')
+                    // Translated JSON column: search every locale path, or
+                    // Azerbaijani letters never match.
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(
+                        fn (Builder $q) => $q
+                            ->where('name->az', 'like', "%{$search}%")
+                            ->orWhere('name->ru', 'like', "%{$search}%")
+                            ->orWhere('name->en', 'like', "%{$search}%")
+                            ->orWhere('city_key', 'like', "%{$search}%")
+                    )),
 
                 Tables\Columns\TextInputColumn::make('coefficient')
                     ->label('Əmsal')

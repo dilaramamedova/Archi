@@ -59,6 +59,21 @@
     $itemImages = $items
         ->mapWithKeys(fn ($item) => [$item->product_id => $item->product?->mainImageUrl])
         ->filter();
+
+    // The account cart as rows cart.js can merge into the localStorage cart, so a
+    // logged-in visitor sees the same basket on every device — not only the rows
+    // this particular browser saved.
+    $serverCart = $items
+        ->filter(fn ($item) => $item->product)
+        ->map(fn ($item) => [
+            'id' => $item->product_id,
+            'name' => $item->product->name,
+            'price' => (float) $item->product->price,
+            'qty' => max(1, (int) $item->quantity),
+            'img' => $item->product->mainImageUrl,
+            'cat' => $item->product->category?->name ?? '',
+        ])
+        ->values();
 @endphp
 <x-layout page="cart" :title="t('cart.title')">
 
@@ -69,6 +84,9 @@
          data-i18n="{{ json_encode($strings) }}"
          data-auth="{{ json_encode($authData) }}"
          data-images="{{ json_encode($itemImages) }}"
+         data-server-cart="{{ json_encode($serverCart, JSON_UNESCAPED_UNICODE) }}"
+         data-url-cart-api="{{ route('api.cart.store') }}"
+         data-url-cart-remove="{{ url('/api/cart/product') }}"
          data-order-url="{{ route('api.orders.store') }}">
   <div class="wrap-narrow flex flex-col gap-6 max-[560px]:gap-4 max-[560px]:px-4">
     {{-- geometry + type come from the caller; the shared .ui-crumbs owns tone and state.

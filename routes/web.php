@@ -185,6 +185,7 @@ Route::prefix('api/calculator')->name('api.calculator.')->group(function () {
     Route::post('/sessions/{session}/snapshot', [CalculatorController::class, 'storeSnapshot'])->middleware('throttle:20,1')->name('sessions.snapshot');
     Route::post('/sessions/{session}/request', [CalculatorController::class, 'storeRequest'])->middleware('throttle:10,1')->name('sessions.request');
     Route::get('/snapshots/{snapshot}', [CalculatorController::class, 'showSnapshot'])->name('snapshots.show');
+    Route::get('/snapshots/{snapshot}/pdf', [CalculatorController::class, 'snapshotPdf'])->middleware('throttle:20,1')->name('snapshots.pdf');
 });
 
 Route::get('/business/register', fn () => archiView('pages.business-register'))->name('business.register');
@@ -273,6 +274,8 @@ Route::post('/reset-password', [NewPasswordController::class, 'store'])
 Route::get('/api/search', [SearchController::class, 'autocomplete'])->name('api.search');
 Route::post('/api/newsletter/subscribe', [NewsletterController::class, 'subscribe'])->name('api.newsletter.subscribe');
 Route::get('/api/cart/count', [CartController::class, 'count'])->name('api.cart.count');
+// Public on purpose: guests get an empty list, so the calculator can always ask.
+Route::get('/api/cart/items', [CartController::class, 'items'])->name('api.cart.items');
 
 // Placing an order requires an account: the cart opens the login modal for guests, and
 // this guard is what actually enforces it.
@@ -296,6 +299,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/cart', [CartController::class, 'store'])->name('api.cart.store');
     Route::put('/api/cart/{cartItem}', [CartController::class, 'update'])->name('api.cart.update');
     Route::delete('/api/cart/{cartItem}', [CartController::class, 'destroy'])->name('api.cart.destroy');
+    // localStorage rows only know the product id, so removals from /cart use this.
+    Route::delete('/api/cart/product/{productId}', [CartController::class, 'destroyByProduct'])
+        ->whereNumber('productId')->name('api.cart.destroyProduct');
 
     // Security (shared by all user types)
     Route::post('/cabinet/password', [SecurityController::class, 'changePassword'])->name('cabinet.password');

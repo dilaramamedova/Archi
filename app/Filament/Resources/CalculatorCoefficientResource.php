@@ -12,6 +12,8 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Multipliers applied to a line total: ceiling height, tile format and layout,
@@ -32,6 +34,28 @@ class CalculatorCoefficientResource extends Resource
     protected static ?string $modelLabel = 'çətinlik əmsalı';
     protected static ?string $pluralModelLabel = 'Çətinlik əmsalları';
     protected static ?int $navigationSort = 4;
+
+    /** Top search bar: locale paths listed explicitly — see CalculatorWorkRateResource. */
+    protected static ?string $recordTitleAttribute = 'description';
+
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['description->az', 'description->ru', 'description->en', 'coefficient_id'];
+    }
+
+    public static function getGlobalSearchResultDetails(Model $record): array
+    {
+        $percent = round(((float) $record->value - 1) * 100);
+
+        return [
+            'Qrup' => self::GROUPS[$record->group] ?? $record->group,
+            'Təsiri' => match (true) {
+                $percent > 0 => "+{$percent}% bahalaşdırır",
+                $percent < 0 => abs($percent).'% ucuzlaşdırır',
+                default => 'qiyməti dəyişmir',
+            },
+        ];
+    }
 
     private const GROUPS = [
         'GLOBAL' => 'Ümumi',
@@ -132,7 +156,15 @@ class CalculatorCoefficientResource extends Resource
                 Tables\Columns\TextColumn::make('description')
                     ->label('Nə üçündür')
                     ->description(fn (CalculatorCoefficient $record): string => self::WHEN_APPLIED[$record->coefficient_id] ?? '')
-                    ->searchable()
+                    // The description is a translated JSON column: search every
+                    // locale path, or Azerbaijani letters never match.
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(
+                        fn (Builder $q) => $q
+                            ->where('description->az', 'like', "%{$search}%")
+                            ->orWhere('description->ru', 'like', "%{$search}%")
+                            ->orWhere('description->en', 'like', "%{$search}%")
+                            ->orWhere('coefficient_id', 'like', "%{$search}%")
+                    ))
                     ->wrap(),
 
                 Tables\Columns\TextColumn::make('group')

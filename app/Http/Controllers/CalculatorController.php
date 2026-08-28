@@ -332,6 +332,20 @@ class CalculatorController extends Controller
         ], 201);
     }
 
+    /**
+     * The frozen estimate as a downloadable PDF. Built from the snapshot, never from
+     * a recalculation — the file a client forwards must show the sum they saw
+     * (master spec §22), even if a rate was edited a minute after they clicked.
+     */
+    public function snapshotPdf(CalculatorSnapshot $snapshot)
+    {
+        return \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.calculator-estimate', [
+                'snapshot' => $snapshot,
+            ])
+            ->setPaper('a4')
+            ->download('archi-smeta-'.now()->format('Y-m-d').'-'.substr($snapshot->uuid, 0, 8).'.pdf');
+    }
+
     /** A snapshot is served exactly as it was stored — never recalculated. */
     public function showSnapshot(CalculatorSnapshot $snapshot): JsonResponse
     {

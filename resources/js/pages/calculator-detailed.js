@@ -89,8 +89,7 @@ export default function init() {
    * product id, server first. Display uses these rows; the estimate itself sends
    * only ids and quantities, and the server re-prices everything from the catalog.
    */
-  const cartProducts = (() => {
-    const server = readJson(page.dataset.cart, []) || [];
+  const mergeCart = (server) => {
     const seen = new Set(server.map((p) => p.id));
     const local = (readJson(localStorage.getItem('archi-cart'), []) || [])
       // A row without a usable product id is from an older storefront build and
@@ -109,7 +108,9 @@ export default function init() {
       }));
 
     return [...server, ...local];
-  })();
+  };
+
+  let cartProducts = mergeCart(readJson(page.dataset.cart, []) || []);
   // Line and group amounts keep their qəpik so they match the trace beneath them.
   // Only the headline totals — the grand total and the side panel — are rounded to
   // whole manats, because the estimate as a whole is an approximation.
@@ -366,6 +367,50 @@ export default function init() {
       }
     }, immediate ? 0 : 300);
   }
+
+  /**
+   * Re-read both carts and redraw. Needed when the basket changes without this
+   * page being re-initialised: the visitor removes a product on /cart in another
+   * tab (storage event fires here), or comes back to this page through the
+   * browser's back/forward cache (pageshow with persisted=true) — in both cases
+   * the list built at load time would keep showing the deleted product.
+   */
+  let refreshingCart = false;
+
+  async function refreshCartProducts() {
+    if (refreshingCart) return;
+    refreshingCart = true;
+
+    let server = [];
+    if (page.dataset.authenticated === '1' && page.dataset.urlCartItems) {
+      try {
+        const response = await fetch(page.dataset.urlCartItems, { headers: { Accept: 'application/json' } });
+        if (response.ok) server = (await response.json()).items || [];
+      } catch {
+        // Offline — merge the browser cart alone rather than keep a stale list.
+      }
+    }
+
+    const next = mergeCart(server);
+    const key = (list) => JSON.stringify(list.map((p) => [p.id, p.quantity]));
+    refreshingCart = false;
+
+    if (key(next) === key(cartProducts)) return;
+
+    cartProducts = next;
+    const ids = new Set(cartProducts.map((p) => p.id));
+    state.basket.excluded = state.basket.excluded.filter((id) => ids.has(id));
+    if (! cartProducts.length) state.basket.useCart = false;
+    render();
+    recalculate({ immediate: true });
+  }
+
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) refreshCartProducts();
+  });
+  window.addEventListener('storage', (event) => {
+    if (event.key === 'archi-cart') refreshCartProducts();
+  });
 
   const totals = () => state.estimate?.totals || null;
   const lines = () => state.estimate?.lines || [];
@@ -687,7 +732,13 @@ export default function init() {
     const blocks = grouped
       .map((group) => {
         const rows = group.lines
-          .map((line) => `<div class="row"><div class="top"><span class="l">${esc(line.name)}${line.precisionClass === 'ESTIMATED' ? ' *' : ''}</span><span class="v">${esc(line.unitPrice === null ? T.notice.price_missing : money(line.lineTotal))}</span></div><div class="${CLS.trace}">${esc(line.trace)}</div></div>`)
+          // In the category view the same work repeats once per room ("Divarların
+          // suvanması" × 4) and reads like a duplicate; the room name says why.
+          .map((line) => {
+            const room = state.summaryView === 'category' && line.roomName ? ` · ${line.roomName}` : '';
+
+            return `<div class="row"><div class="top"><span class="l">${esc(line.name)}${line.precisionClass === 'ESTIMATED' ? ' *' : ''}<span class="dc-room">${esc(room)}</span></span><span class="v">${esc(line.unitPrice === null ? T.notice.price_missing : money(line.lineTotal))}</span></div><div class="${CLS.trace}">${esc(line.trace)}</div></div>`;
+          })
           .join('');
 
         return `<div class="dc-bd">
@@ -841,20 +892,30 @@ export default function init() {
     sideEl.innerHTML = `
   <div class="dc-act">
     ${ADD_ALL_TO_CART_ENABLED ? `<button class="dc-next ${CLS.addAll}" id="dcAddAll">${esc(a.add_all)}</button>` : ''}
-    <div class="dc-sec"><button id="dcPdf">${esc(a.pdf)}</button><button id="dcWa">${esc(a.whatsapp)}</button><button id="dcSave">${esc(a.save)}</button></div>
+    <div class="dc-sec"><button id="dcPdf">${esc(a.pdf)}</button><button id="dcWa">${esc(a.whatsapp)}</button></div>
     <button class="dc-outline" id="dcTurnkey">${esc(a.turnkey)}</button>
   </div>`;
 
-    // PDF and WhatsApp print/share immediately — waiting on a network round trip
-    // would make the button feel broken. The request is recorded behind them, so
-    // Archi still sees which estimates left the site.
-    sideEl.querySelector('#dcPdf').addEventListener('click', () => {
-      submitRequest('PDF');
-      window.print();
+    // The PDF is generated server-side from a frozen snapshot, so the figures in
+    // the file can never differ from the ones on this screen — even if an admin
+    // edits a rate a second later. The click waits for the snapshot, then starts
+    // the download.
+    sideEl.querySelector('#dcPdf').addEventListener('click', async (event) => {
+      const button = event.currentTarget;
+      if (button.disabled) return;
+      button.disabled = true;
+
+      const result = await submitRequest('PDF');
+      button.disabled = false;
+
+      if (result?.snapshotUuid && page.dataset.urlSnapshotPdf) {
+        window.location.href = page.dataset.urlSnapshotPdf.replace('__UUID__', result.snapshotUuid);
+      } else {
+        popup.info(T.error?.failed || '');
+      }
     });
 
     sideEl.querySelector('#dcAddAll')?.addEventListener('click', addAllToCart);
-    sideEl.querySelector('#dcSave').addEventListener('click', saveEstimate);
     sideEl.querySelector('#dcTurnkey').addEventListener('click', requestTurnkey);
 
     sideEl.querySelector('#dcWa').addEventListener('click', () => {
@@ -914,13 +975,6 @@ export default function init() {
     }
   }
 
-  async function saveEstimate() {
-    const result = await submitRequest('SAVED_ESTIMATE');
-
-    if (result) popup.success(T.alerts.saved);
-    else popup.info(T.error?.failed || '');
-  }
-
   /**
    * The turnkey request is the one action that is a real lead, so it asks for a name
    * and a phone number first — everything else on this page deliberately collects
@@ -973,6 +1027,10 @@ export default function init() {
         body: JSON.stringify({ product_id: line.meta.productId, quantity: Math.max(1, Math.round(line.quantity)) }),
       }).catch(() => null);
     }
+
+    // The server cart just changed; the cart step should show the new rows without
+    // waiting for a reload.
+    refreshCartProducts();
 
     const gotoCart = page.dataset.gotoCart;
     const cont = page.dataset.continue;

@@ -20,6 +20,8 @@
          data-url-estimate="{{ route('api.calculator.estimate') }}"
          data-url-sessions="{{ route('api.calculator.sessions.store') }}"
          data-url-cart="{{ route('api.cart.store') }}"
+         data-url-cart-items="{{ route('api.cart.items') }}"
+         data-url-snapshot-pdf="{{ route('api.calculator.snapshots.pdf', ['snapshot' => '__UUID__']) }}"
          data-url-login="{{ route('login') }}"
          data-csrf="{{ csrf_token() }}"
          data-authenticated="{{ auth()->check() ? '1' : '0' }}"

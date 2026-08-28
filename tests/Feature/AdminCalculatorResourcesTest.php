@@ -157,6 +157,44 @@ class AdminCalculatorResourcesTest extends TestCase
     }
 
     /**
+     * The panel's TOP search bar has to find calculator data by the words the
+     * admin saw on the site — «Elektrik isti döşəmə» is a work rate's own name,
+     * «Gərilmə tavan» a finish label routed through search_keywords. Both are
+     * stored in translated JSON columns, so this also proves the locale-path
+     * search handles Azerbaijani letters.
+     */
+    public function test_the_global_search_finds_calculator_prices(): void
+    {
+        $this->signInAsAdmin();
+
+        $found = CalculatorWorkRateResource::getGlobalSearchResults('Elektrik isti döşəmə')
+            ->map(fn ($result) => $result->title);
+        $this->assertTrue(
+            $found->contains('Elektrik isti döşəmə'),
+            'Global search did not find the work rate by its site name. Got: '.$found->implode(', '),
+        );
+
+        $stretch = CalculatorWorkRateResource::getGlobalSearchResults('Gərilmə tavan')
+            ->map(fn ($result) => $result->title);
+        $this->assertTrue(
+            $stretch->contains('Gərilmə tavan'),
+            'Global search did not find the stretch-ceiling rate by its finish label.',
+        );
+
+        // A surface-state chip («Mayak / qara divar») is interface text, but the
+        // works it switches on must surface for it.
+        $this->assertNotEmpty(
+            CalculatorWorkRateResource::getGlobalSearchResults('Mayak / qara divar')->all(),
+            'Global search found nothing for a surface-state label.',
+        );
+
+        $this->assertNotEmpty(
+            CalculatorCoefficientResource::getGlobalSearchResults('İriformatlı')->all(),
+            'Global search found no coefficient for «İriformatlı».',
+        );
+    }
+
+    /**
      * The six quick prices are fixed rows: a seventh combination cannot be created,
      * because the calculator has no way to reach it.
      */
