@@ -101,6 +101,9 @@ export default function init() {
         name: c.name || '',
         price: +c.price || 0,
         unit: null,
+        // The storefront saves the thumbnail with the cart row, so a guest's basket
+        // shows the same picture here as it does on /cart.
+        image: c.img || null,
         packageSize: null,
         quantity: Math.max(1, Math.ceil(+c.qty || 1)),
       }));
@@ -640,8 +643,12 @@ export default function init() {
           ? `${qty(asMaterial.quantity)} ${asMaterial.unit} · ${asMaterial.name}`
           : `${qty(line ? line.quantity : product.quantity)} × ${money(line?.unitPrice ?? product.price)}`;
 
+        const thumb = product.image
+          ? `<img class="dc-thumb" src="${esc(product.image)}" alt="" loading="lazy">`
+          : '<div class="dc-thumb"></div>';
+
         return `<div class="dc-cart-row ${excluded ? 'off' : ''}" data-c="${product.id}">
-      <div class="cbx">${CHK}</div><div class="dc-thumb"></div>
+      <div class="cbx">${CHK}</div>${thumb}
       <div class="info"><b>${esc(line?.name || product.name)}</b><div class="calc">${esc(detail)}</div></div>
       <div class="rr">${right}</div>
     </div>`;
@@ -803,7 +810,7 @@ export default function init() {
   </div>
   ${
     state.step >= 3 && cartProducts.length
-      ? `<div class="dc-banner ${CLS.sideBanner}"><b>${esc(tr(s.cart_banner, { count: cartProducts.length }))}</b><div class="${CLS.sideBannerRow}"><span class="${CLS.sideBannerHint}">${esc(s.use_in_calc)}</span><div class="dc-tg grn ${state.basket.useCart ? 'on' : ''}" data-basket="useCart"><div class="dc-sw"></div></div></div></div>`
+      ? `<div class="dc-banner ${CLS.sideBanner}"><b>${esc(tr(s.cart_banner, { count: cartProducts.length }))}</b><div class="${CLS.sideBannerRow}"><span class="${CLS.sideBannerHint}">${esc(s.use_in_calc)}</span><div class="dc-tg grn bare ${state.basket.useCart ? 'on' : ''}" data-basket="useCart"><div class="dc-sw"></div></div></div></div>`
       : ''
   }
   <div class="dc-nav">
@@ -820,26 +827,43 @@ export default function init() {
     lines().some((l) => l.source === 'FALLBACK_CATEGORY_PRICE') &&
     ! lines().some((l) => l.source === 'CATALOG_PRICE');
 
+  /**
+   * "Bütün materialları səbətə at" is switched off for now at Archi's request: the
+   * quantities it would push are only as good as the packaging data on the products,
+   * and most of the catalog has none yet. Set ADD_ALL_TO_CART_ENABLED to true to
+   * bring it back — addAllToCart() below is intact.
+   */
+  const ADD_ALL_TO_CART_ENABLED = false;
+
   function renderSummaryActions() {
     const a = T.actions;
 
     sideEl.innerHTML = `
   <div class="dc-act">
-    <button class="dc-next ${CLS.addAll}" id="dcAddAll">${esc(a.add_all)}</button>
+    ${ADD_ALL_TO_CART_ENABLED ? `<button class="dc-next ${CLS.addAll}" id="dcAddAll">${esc(a.add_all)}</button>` : ''}
     <div class="dc-sec"><button id="dcPdf">${esc(a.pdf)}</button><button id="dcWa">${esc(a.whatsapp)}</button><button id="dcSave">${esc(a.save)}</button></div>
     <button class="dc-outline" id="dcTurnkey">${esc(a.turnkey)}</button>
   </div>`;
 
-    sideEl.querySelector('#dcPdf').addEventListener('click', () => window.print());
-    sideEl.querySelector('#dcAddAll').addEventListener('click', addAllToCart);
+    // PDF and WhatsApp print/share immediately — waiting on a network round trip
+    // would make the button feel broken. The request is recorded behind them, so
+    // Archi still sees which estimates left the site.
+    sideEl.querySelector('#dcPdf').addEventListener('click', () => {
+      submitRequest('PDF');
+      window.print();
+    });
+
+    sideEl.querySelector('#dcAddAll')?.addEventListener('click', addAllToCart);
     sideEl.querySelector('#dcSave').addEventListener('click', saveEstimate);
-    sideEl.querySelector('#dcTurnkey').addEventListener('click', () => popup.info(T.alerts.turnkey));
+    sideEl.querySelector('#dcTurnkey').addEventListener('click', requestTurnkey);
+
     sideEl.querySelector('#dcWa').addEventListener('click', () => {
       const total = totals();
       if (! total) return;
 
+      submitRequest('WHATSAPP');
       window.open(
-        `https://wa.me/?text=${encodeURIComponent(tr(T.alerts.whatsapp, { total: formatMoney(total.grandTotalRounded) }))}`,
+        `https://wa.me/?text=${encodeURIComponent(tr(T.alerts.whatsapp, { total: num(total.grandTotalRounded) }))}`,
         '_blank',
       );
     });
@@ -850,17 +874,25 @@ export default function init() {
    * quote the same sum even if a rate is edited a minute later, and only a stored
    * snapshot can guarantee that (master spec §22).
    */
-  async function saveEstimate() {
-    if (! state.estimate) return;
+  const jsonHeaders = () => ({
+    'Content-Type': 'application/json',
+    Accept: 'application/json',
+    'X-CSRF-TOKEN': page.dataset.csrf || '',
+  });
+
+  /**
+   * Store the answers and freeze the estimate, then raise a request of the given
+   * type so it appears in the admin panel.
+   *
+   * @returns {Promise<object|null>} the created request, or null when it failed
+   */
+  async function submitRequest(type, extra = {}) {
+    if (! state.estimate) return null;
 
     try {
       const created = await fetch(page.dataset.urlSessions, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-          'X-CSRF-TOKEN': page.dataset.csrf || '',
-        },
+        headers: jsonHeaders(),
         body: JSON.stringify({ ...payload(), currentStep: 'SUMMARY' }),
       });
 
@@ -868,15 +900,49 @@ export default function init() {
 
       const { uuid } = await created.json();
 
-      await fetch(`${page.dataset.urlSessions}/${uuid}/snapshot`, {
+      const raised = await fetch(`${page.dataset.urlSessions}/${uuid}/request`, {
         method: 'POST',
-        headers: { Accept: 'application/json', 'X-CSRF-TOKEN': page.dataset.csrf || '' },
+        headers: jsonHeaders(),
+        body: JSON.stringify({ type, ...extra }),
       });
 
-      popup.success(T.alerts.saved);
+      if (! raised.ok) throw new Error(`HTTP ${raised.status}`);
+
+      return await raised.json();
     } catch {
-      popup.info(T.error?.failed || '');
+      return null;
     }
+  }
+
+  async function saveEstimate() {
+    const result = await submitRequest('SAVED_ESTIMATE');
+
+    if (result) popup.success(T.alerts.saved);
+    else popup.info(T.error?.failed || '');
+  }
+
+  /**
+   * The turnkey request is the one action that is a real lead, so it asks for a name
+   * and a phone number first — everything else on this page deliberately collects
+   * nothing (TZ §46).
+   */
+  async function requestTurnkey() {
+    const name = window.prompt(T.alerts.turnkey_name);
+    if (name === null) return;
+
+    const phone = window.prompt(T.alerts.turnkey_phone);
+    if (phone === null) return;
+
+    if (! String(phone).trim()) {
+      popup.info(T.alerts.turnkey_phone_required);
+
+      return;
+    }
+
+    const result = await submitRequest('TURNKEY', { name: String(name).trim(), phone: String(phone).trim() });
+
+    if (result) popup.success(T.alerts.turnkey);
+    else popup.info(T.error?.failed || '');
   }
 
   /** Add every priced material line to the cart, in the quantity the estimate needs. */
@@ -1181,6 +1247,15 @@ export default function init() {
   } else {
     if (prefill.area !== undefined) state.object.area = prefill.area;
     if (prefill.segment !== undefined) state.object.segment = prefill.segment;
+  }
+
+  // ?step=1..6 opens the wizard on a given step. Used for deep links from support
+  // material and for the admin panel's screenshots, which are captured from the real
+  // page so they can never drift from what the visitor sees.
+  const requestedStep = parseInt(new URLSearchParams(window.location.search).get('step'), 10);
+
+  if (Number.isFinite(requestedStep)) {
+    state.step = Math.min(STEPS.length - 1, Math.max(0, requestedStep - 1));
   }
 
   render();

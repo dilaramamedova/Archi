@@ -11,6 +11,7 @@ use App\Filament\Resources\CalculatorMaterialNormResource;
 use App\Filament\Resources\CalculatorQuickRateResource;
 use App\Filament\Resources\CalculatorSettingResource;
 use App\Filament\Resources\CalculatorWorkRateResource;
+use App\Filament\Resources\CalculatorWorkRateResource\Pages\ListCalculatorWorkRates;
 use App\Models\CalculatorQuickRate;
 use App\Models\CalculatorSetting;
 use App\Models\CalculatorWorkRate;
@@ -19,6 +20,7 @@ use App\Services\Calculator\QuickCalculator;
 use Database\Seeders\CalculatorSeeder;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
@@ -85,9 +87,9 @@ class AdminCalculatorResourcesTest extends TestCase
         $response = $this->get(CalculatorWorkRateResource::getUrl('index'));
 
         $response->assertOk()
-            // The intro answers what / where / when, on the list itself.
-            ->assertSee('Bu səhifə nədir?', false)
-            ->assertSee('Saytda harada görünür?', false)
+            // One short sentence and a screenshot of the page these numbers land on.
+            ->assertSee('1 vahidə düşən iş haqqı', false)
+            ->assertSee('assets/admin/calculator/work-rates.png', false)
             // The list leads with the work's name, not its technical id.
             ->assertSee('Divarların boyanması')
             // …and says in words where the quantity it is multiplied by comes from.
@@ -117,6 +119,41 @@ class AdminCalculatorResourcesTest extends TestCase
             ->assertOk()
             ->assertSee('bahalaşır')
             ->assertSee('Otağın hündürlüyü 3.01–3.50 m olduqda divar və tavan işlərinə.', false);
+    }
+
+    /**
+     * An admin searches with the words they just saw on the site, not with the
+     * catalog's own wording. "Yeni qapı quraşdırılsın" is a toggle on the rooms step;
+     * it has to lead to the door installation rate.
+     */
+    public function test_the_work_rate_search_finds_a_row_by_its_frontend_label(): void
+    {
+        $this->signInAsAdmin();
+
+        Livewire::test(ListCalculatorWorkRates::class)
+            ->searchTable('Yeni qapı quraşdırılsın')
+            ->assertCanSeeTableRecords(CalculatorWorkRate::where('work_id', 'DOOR_INSTALL_INTERIOR')->get())
+            ->assertCanNotSeeTableRecords(CalculatorWorkRate::where('work_id', 'WALL_PAINT')->get());
+    }
+
+    /** The object-condition chips carry no price; they pick which works apply. */
+    public function test_searching_a_condition_label_finds_the_works_it_turns_on(): void
+    {
+        $this->signInAsAdmin();
+
+        Livewire::test(ListCalculatorWorkRates::class)
+            ->searchTable('Təmirsiz (mayak)')
+            ->assertCanSeeTableRecords(CalculatorWorkRate::where('work_id', 'WALL_PLASTER')->get());
+    }
+
+    /** Everyday words have to work too — most admins will not type the full label. */
+    public function test_the_work_rate_search_matches_everyday_words(): void
+    {
+        $this->signInAsAdmin();
+
+        Livewire::test(ListCalculatorWorkRates::class)
+            ->searchTable('kafel')
+            ->assertCanSeeTableRecords(CalculatorWorkRate::where('work_id', 'FLOOR_TILE_INSTALL')->get());
     }
 
     /**

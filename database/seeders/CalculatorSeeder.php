@@ -256,6 +256,7 @@ class CalculatorSeeder extends Seeder
                     'precision_class' => $row['precision'] ?? 'CALCULATED',
                     'contingency_eligible' => $row['contingency'] ?? true,
                     'notes' => $row['notes'] ?? $draft,
+                    'search_keywords' => $row['keywords'] ?? null,
                     'sort_order' => $sort++,
                     'is_active' => true,
                 ],

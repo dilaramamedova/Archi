@@ -96,16 +96,10 @@ class CalculatorSettingResource extends Resource
     public static function explanationParts(): array
     {
         return [
-            'what' => 'Kalkulyatorun ümumi qaydaları: ehtiyat faizi, ƏDV, sahə həddləri, '
-                .'standart qapı-pəncərə ölçüləri, boyanın qat sayı və s. '
-                .'Bunlar qiymət deyil — <strong>hesablama qaydalarıdır</strong>.',
-            'where' => 'Hər ikisində: sürətli kalkulyatorda (həddlər, ilkin dəyərlər) '
-                .'və ətraflı kalkulyatorda (ehtiyat, ƏDV, ölçülər).',
-            'rules' => [
-                'Hər sətrin altında nə etdiyi izah olunub — dəyişməzdən əvvəl oxuyun.',
-                'Bu siyahıya yeni sətir əlavə etmək olmaz: hər açar proqramın müəyyən yerinə bağlıdır.',
-                'Açar/söndür tipli parametrlərdə <strong>1 = açıq, 0 = bağlı</strong> yazılır.',
-            ],
+            'text' => 'Qiymət deyil, <strong>hesablama qaydaları</strong>: ehtiyat faizi, ƏDV, sahə həddləri, '
+                .'standart qapı-pəncərə ölçüləri. Hər sətrin altında nə etdiyi yazılıb; '
+                .'açar/söndür parametrlərində 1 = açıq, 0 = bağlı.',
+            'shot' => 'settings',
         ];
     }
 

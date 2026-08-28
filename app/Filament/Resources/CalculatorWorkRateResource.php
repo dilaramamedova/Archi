@@ -14,6 +14,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * The work catalog and its rates — the numbers behind every "İşlər" line of an
@@ -169,17 +170,9 @@ class CalculatorWorkRateResource extends Resource
     public static function explanationParts(): array
     {
         return [
-            'what' => 'Ustaların gördüyü hər bir işin qiyməti. Burada <strong>yalnız iş haqqı</strong> var — '
-                .'material ayrıca «Material qiymətləri» səhifəsindədir. Məsələn «Divarların boyanması» '
-                .'sətri boyanın özünün deyil, boyama işinin 1 m²-ə düşən qiymətidir.',
-            'where' => 'Ətraflı kalkulyatorun yekun smetasında və sağ tərəfdəki «Cari smeta» blokunda. '
-                .'«İşlər» addımında qiymət göstərilmir — müştəri orada yalnız nəyin lazım olduğunu seçir.',
-            'rules' => [
-                'Qiymət <strong>bir vahidə görədir</strong>: m², ədəd, nöqtə və ya metr. Bütün işin qiyməti deyil.',
-                self::emptyPriceHint(),
-                '«Texniki ID» proqramın açarıdır. Mövcud sətirdə dəyişmək olmaz — dəyişsəniz həmin iş hesablamadan düşər.',
-                'Bir işi müvəqqəti dayandırmaq üçün onu <strong>silməyin</strong>, «Aktiv» açarını söndürün.',
-            ],
+            'text' => 'Aşağıdakı işlərin <strong>1 vahidə düşən iş haqqı</strong> (material ayrıdır). '
+                .'Müştəri bunları «İşlər» addımında seçir, qiymətini isə yekun smetada görür.',
+            'shot' => 'work-rates',
         ];
     }
 
@@ -274,6 +267,14 @@ class CalculatorWorkRateResource extends Resource
 
             Section::make('Digər')
                 ->schema([
+                    Forms\Components\Textarea::make('search_keywords')
+                        ->label('Axtarış sözləri')
+                        ->rows(2)
+                        ->helperText('Bu işi tapmaq üçün yaza biləcəyiniz digər sözlər — nöqtəli vergüllə ayırın. '
+                            .'Məsələn «Yeni qapı quraşdırılsın; qapı montajı». Saytda gördüyünüz yazını buraya '
+                            .'əlavə etsəniz, sonra axtarışda dərhal tapılır.')
+                        ->columnSpanFull(),
+
                     Forms\Components\Textarea::make('notes')
                         ->label('Daxili qeyd')
                         ->rows(2)
@@ -302,10 +303,20 @@ class CalculatorWorkRateResource extends Resource
                 .'Qiyməti birbaşa cədvəldə dəyişə bilərsiniz — xanaya klikləyin, rəqəmi yazın, Enter basın. '
                 .'Boş qiymət «qiymət dəqiqləşdirilir» deməkdir; 0 isə «pulsuz» deməkdir.')
             ->columns([
+                // Searching has to work from whatever the admin remembers: the name,
+                // the label they saw on the site ("Yeni qapı quraşdırılsın"), or the
+                // technical id. All three hit this one column.
                 Tables\Columns\TextColumn::make('name')
                     ->label('İşin adı')
                     ->description(fn (CalculatorWorkRate $record): string => self::QUANTITY_SOURCES[$record->quantity_source] ?? $record->quantity_source)
-                    ->searchable()
+                    ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(
+                        fn (Builder $q) => $q
+                            ->where('name->az', 'like', "%{$search}%")
+                            ->orWhere('name->ru', 'like', "%{$search}%")
+                            ->orWhere('name->en', 'like', "%{$search}%")
+                            ->orWhere('search_keywords', 'like', "%{$search}%")
+                            ->orWhere('work_id', 'like', "%{$search}%")
+                    ))
                     ->wrap(),
 
                 Tables\Columns\TextColumn::make('category')
@@ -354,6 +365,14 @@ class CalculatorWorkRateResource extends Resource
                     ->query(fn ($query) => $query->whereNull('rate')),
             ])
             ->defaultSort('sort_order')
+            // A search that finds nothing must not be a dead end: half the labels an
+            // admin remembers from the site are interface text, not prices, and they
+            // live in a different module entirely.
+            ->emptyStateHeading('Tapılmadı')
+            ->emptyStateDescription('Axtardığınız yazı burada yoxdursa, çox güman ki, o, qiymət deyil — '
+                .'interfeys mətnidir (məsələn «Yeni tikili», «Obyektin vəziyyəti»). Belə yazılar '
+                .'«Sistem → Tərcümələr» bölməsindən dəyişilir. Qiymət axtarırsınızsa, işin adını '
+                .'və ya sadə sözlə yazmağa çalışın: «kafel», «boya», «qapı».')
             ->actions([Actions\EditAction::make()->label('Redaktə')])
             ->bulkActions([Actions\DeleteBulkAction::make()])
             ->paginated([25, 50, 100, 'all'])

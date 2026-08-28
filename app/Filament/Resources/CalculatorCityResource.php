@@ -34,16 +34,9 @@ class CalculatorCityResource extends Resource
     public static function explanationParts(): array
     {
         return [
-            'what' => 'Şəhərə görə iş haqqının artımı. Bakıdan kənarda usta və nəqliyyat '
-                .'baha başa gəlirsə, o fərqi burada bir əmsalla verirsiniz.',
-            'where' => 'Ətraflı kalkulyatorun 1-ci addımındakı «Şəhər» siyahısında. '
-                .'Müştəri şəhəri seçdikdə bütün <strong>iş qiymətləri</strong> bu əmsala vurulur '
-                .'(materialın qiyməti dəyişmir).',
-            'rules' => [
-                '<strong>Bakı = 1.00</strong> baza sayılır. 1.10 = həmin şəhərdə işlər 10% baha.',
-                'Siyahıda olmayan şəhər avtomatik 1.00 sayılır — hesablama heç vaxt dayanmır.',
-                '«Defolt şəhər» — kalkulyator açılanda hazır seçili gələn şəhər.',
-            ],
+            'text' => 'Müştərinin 1-ci addımda seçdiyi şəhər. Əmsal yalnız <strong>iş haqqına</strong> '
+                .'tətbiq olunur (materiala yox). Bakı = 1.00 bazadır.',
+            'shot' => 'cities',
         ];
     }
 

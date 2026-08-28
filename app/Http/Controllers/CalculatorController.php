@@ -8,9 +8,12 @@ use App\Enums\Calculator\ObjectCondition;
 use App\Enums\Calculator\ObjectType;
 use App\Enums\Calculator\PriceSegment;
 use App\Enums\Calculator\RenovationType;
+use App\Enums\Calculator\RequestStatus;
+use App\Enums\Calculator\RequestType;
 use App\Enums\Calculator\RoomType;
 use App\Enums\Calculator\SurfaceState;
 use App\Enums\Calculator\WarmFloorType;
+use App\Models\CalculatorRequest;
 use App\Models\CalculatorSession;
 use App\Models\CalculatorSnapshot;
 use App\Models\Product;
@@ -22,6 +25,7 @@ use App\Services\Calculator\QuickCalculator;
 use App\Services\Calculator\WorkRate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 /**
  * Backend of the renovation calculator (master spec §18).
@@ -69,6 +73,7 @@ class CalculatorController extends Controller
                 'name' => $item['product']->name,
                 'price' => (float) $item['product']->price,
                 'unit' => $item['product']->unit,
+                'image' => $item['product']->mainImageUrl,
                 'packageSize' => $item['product']->package_size ? (float) $item['product']->package_size : null,
                 'quantity' => $item['quantity'],
             ], $this->cartItems($request)),
@@ -248,6 +253,18 @@ class CalculatorController extends Controller
     {
         $this->authorizeSession($request, $session);
 
+        $snapshot = $this->freeze($session, $request);
+
+        return response()->json([
+            'uuid' => $snapshot->uuid,
+            'version' => $snapshot->version,
+            'totals' => $snapshot->totals,
+        ], 201);
+    }
+
+    /** Recalculate once and store the result as the next immutable version. */
+    private function freeze(CalculatorSession $session, Request $request): CalculatorSnapshot
+    {
         $estimate = $this->build($session->inputs ?? [], $request);
         $validDays = $this->config->int('ESTIMATE_VALID_DAYS', 0);
 
@@ -266,9 +283,51 @@ class CalculatorController extends Controller
 
         $session->update(['status' => 'SAVED', 'totals' => $estimate['totals']]);
 
+        return $snapshot;
+    }
+
+    /**
+     * A request raised from the finished estimate: a turnkey order, a saved estimate,
+     * a PDF or a WhatsApp share. Everything Archi needs to call the client back lands
+     * in the admin panel under "Kalkulyator müraciətləri".
+     *
+     * The snapshot is created here rather than referenced: by the time someone asks
+     * for a call back, the figure they are asking about has to stop moving.
+     */
+    public function storeRequest(Request $request, CalculatorSession $session): JsonResponse
+    {
+        $this->authorizeSession($request, $session);
+
+        $validated = $request->validate([
+            'type' => ['required', Rule::enum(RequestType::class)],
+            'name' => ['nullable', 'string', 'max:120'],
+            'phone' => ['nullable', 'string', 'max:32'],
+            'email' => ['nullable', 'email', 'max:190'],
+            'message' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $snapshot = $this->freeze($session, $request);
+        $estimate = $snapshot->totals;
+
+        $calculatorRequest = CalculatorRequest::create([
+            'type' => $validated['type'],
+            'status' => RequestStatus::New,
+            'user_id' => auth()->id(),
+            'calculator_session_id' => $session->id,
+            'calculator_snapshot_id' => $snapshot->id,
+            'name' => $validated['name'] ?? auth()->user()?->name,
+            'phone' => $validated['phone'] ?? auth()->user()?->phone,
+            'email' => $validated['email'] ?? auth()->user()?->email,
+            'message' => $validated['message'] ?? null,
+            'total_amount' => $estimate['grandTotal'] ?? null,
+            'area' => data_get($session->inputs, 'object.area'),
+            'city_key' => data_get($session->inputs, 'object.cityKey'),
+            'room_count' => count((array) data_get($session->inputs, 'rooms', [])),
+        ]);
+
         return response()->json([
-            'uuid' => $snapshot->uuid,
-            'version' => $snapshot->version,
+            'id' => $calculatorRequest->id,
+            'snapshotUuid' => $snapshot->uuid,
             'totals' => $snapshot->totals,
         ], 201);
     }
@@ -403,6 +462,9 @@ class CalculatorController extends Controller
         }
 
         return Product::query()
+            // The cart step shows a thumbnail per row; without this the images are an
+            // N+1 across the whole basket.
+            ->with('images')
             ->whereIn('id', array_slice(array_keys($wanted), 0, 60))
             ->where('is_visible', true)
             ->where('is_approved', true)

@@ -250,6 +250,13 @@ return [
         'error.failed' => ['az' => 'Hesablama alınmadı. Bir qədər sonra yenidən cəhd edin.', 'ru' => 'Расчёт не выполнен. Попробуйте позже.', 'en' => 'The calculation failed. Please try again shortly.'],
 
         'actions.reset' => ['az' => 'Sıfırla', 'ru' => 'Сбросить', 'en' => 'Reset'],
+        'alerts.turnkey_name' => ['az' => 'Adınız və soyadınız:', 'ru' => 'Ваше имя и фамилия:', 'en' => 'Your full name:'],
+        'alerts.turnkey_phone' => ['az' => 'Telefon nömrəniz:', 'ru' => 'Ваш номер телефона:', 'en' => 'Your phone number:'],
+        'alerts.turnkey_phone_required' => [
+            'az' => 'Sizinlə əlaqə saxlaya bilməyimiz üçün telefon nömrəsi lazımdır.',
+            'ru' => 'Чтобы связаться с вами, нужен номер телефона.',
+            'en' => 'We need a phone number to be able to call you back.',
+        ],
         'alerts.reset_confirm' => [
             'az' => 'Bütün daxil etdiyiniz məlumatlar silinsin və kalkulyator başdan başlasın?',
             'ru' => 'Удалить все введённые данные и начать расчёт заново?',

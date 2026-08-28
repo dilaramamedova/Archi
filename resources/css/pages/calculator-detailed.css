@@ -69,6 +69,10 @@
                                 after:absolute after:top-[3px] after:left-[3px] after:size-[18px] after:rounded-full after:bg-white after:transition-[left] after:duration-200 after:content-['']; }
   .dc-tg.on .dc-sw    { @apply bg-yellow-line after:left-[23px]; }
   .dc-tg.grn.on .dc-sw{ @apply bg-[#4caf50]; }
+  /* A toggle that carries no label of its own is just the switch: the boxed variant
+     rendered a 180px white slab hard against the caption beside it, which read as a
+     rendering fault rather than a control. */
+  .dc-tg.bare         { @apply min-w-0 flex-none border-0 bg-transparent p-0; }
 
   /* rooms */
   .dc-room        { @apply flex flex-col gap-3.5 rounded-ds border border-black/10 p-[18px]; }
@@ -118,7 +122,9 @@
   .dc-cart-row.off .cbx     { @apply border border-black/30 bg-white; }
   .dc-cart-row .cbx svg     { @apply size-[13px]; }
   .dc-cart-row.off .cbx svg { @apply hidden; }
-  .dc-thumb                 { @apply size-[54px] shrink-0 rounded-ds bg-[#eceef1]; }
+  /* object-cover so a non-square product photo fills the tile instead of letterboxing;
+     the grey stays as the background for rows whose product has no image yet */
+  .dc-thumb                 { @apply size-[54px] shrink-0 rounded-ds bg-[#eceef1] object-cover; }
   .dc-cart-row .info        { @apply min-w-0 flex-1; }
   .dc-cart-row .info b      { @apply block text-[15px] font-semibold text-ink; }
   .dc-cart-row .info .meta  { @apply text-[13px] text-black/50; }

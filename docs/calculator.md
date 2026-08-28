@@ -82,6 +82,23 @@ PDF, WhatsApp və sifariş eyni məbləği göstərir (§22).
 | Yaş zona divarları | Hidroizolyasiya defoltu yalnız hamam/sanitar qovşaq üçün; mətbəxdə yalnız döşəmə. İstifadəçi zonanı əl ilə yaş işarələyə bilər. |
 | Qaba materialların (qrunt, şpaklyovka, yapışqan…) qiyməti | Müştərinin matrisində yox idi; motor miqdarı hesabladığına görə DRAFT fallback qiymətlərlə seed edilib və admin paneldə təsdiqlənməlidir. |
 
+## Admin paneldəki skrinşotlar
+
+Hər kalkulyator ekranının başında bir cümlə və saytın həmin hissəsinin şəkli var.
+Şəkillər `public/assets/admin/calculator/*.png` altındadır və **canlı səhifədən**
+çəkilir — köhnəldikdə yenidən çəkmək lazımdır:
+
+```bash
+C="/c/Program Files/Google/Chrome/Application/chrome.exe"
+B='C:\Users\User\Herd\Archi\public\assets\admin\calculator'
+"$C" --headless=new --disable-gpu --hide-scrollbars --window-size=1000,1050 \
+     --virtual-time-budget=7000 --screenshot="$B\work-rates.png" \
+     "http://archi.test/calculator/detailed?step=3"
+```
+
+`?step=1..6` ətraflı kalkulyatoru istənilən addımda açır. Fayl adları resursun
+`explanationParts()` metodundakı `shot` açarına uyğun olmalıdır.
+
 ## Admin panel niyə belə yazılıb
 
 `app/Filament/Resources/Concerns/ExplainsCalculator.php` — hər kalkulyator ekranının

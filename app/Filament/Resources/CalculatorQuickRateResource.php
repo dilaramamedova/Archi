@@ -47,17 +47,9 @@ class CalculatorQuickRateResource extends Resource
     public static function explanationParts(): array
     {
         return [
-            'what' => 'Sürətli kalkulyatorun altı qiyməti. İki təmir növü (White Box, Tam təmir) × '
-                .'üç kateqoriya (Ekonom, Standart, Premium). Hər biri <strong>1 m²-in qiymətidir</strong>.',
-            'where' => 'Saytın <strong>/calculator</strong> səhifəsində və ana səhifədə açılan '
-                .'kiçik kalkulyator pəncərəsində. Hesablama sadədir: müştərinin yazdığı sahə × bu qiymət.',
-            'rules' => [
-                'Müştəri 80 m² yazıb «White Box + Standart» seçsə və burada 450 yazılıbsa, '
-                    .'ona <strong>36 000 AZN</strong> göstərilir (80 × 450).',
-                'Bu altı sətir sabitdir: yenisini yaratmaq və ya silmək olmaz, çünki '
-                    .'kalkulyatorda onlara uyğun düymə yoxdur.',
-                self::emptyPriceHint(),
-            ],
+            'text' => 'Sürətli kalkulyatorun altı qiyməti — hər biri <strong>1 m² üçün</strong>. '
+                .'Hesablama: müştərinin yazdığı sahə × seçdiyi variantın qiyməti.',
+            'shot' => 'quick-rates',
         ];
     }
 

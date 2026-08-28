@@ -183,6 +183,7 @@ Route::prefix('api/calculator')->name('api.calculator.')->group(function () {
     Route::get('/sessions/{session}', [CalculatorController::class, 'showSession'])->name('sessions.show');
     Route::put('/sessions/{session}', [CalculatorController::class, 'updateSession'])->middleware('throttle:60,1')->name('sessions.update');
     Route::post('/sessions/{session}/snapshot', [CalculatorController::class, 'storeSnapshot'])->middleware('throttle:20,1')->name('sessions.snapshot');
+    Route::post('/sessions/{session}/request', [CalculatorController::class, 'storeRequest'])->middleware('throttle:10,1')->name('sessions.request');
     Route::get('/snapshots/{snapshot}', [CalculatorController::class, 'showSnapshot'])->name('snapshots.show');
 });
 

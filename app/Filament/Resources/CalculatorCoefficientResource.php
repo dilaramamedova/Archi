@@ -64,18 +64,10 @@ class CalculatorCoefficientResource extends Resource
     public static function explanationParts(): array
     {
         return [
-            'what' => 'İşin qiymətini <strong>artıran və ya azaldan vurğu əmsalları</strong>. '
-                .'Eyni iş bəzi şəraitdə daha çətindir — yüksək tavan, iriformatlı kafel, '
-                .'diaqonal düzülüş. Bu səhifə həmin fərqi idarə edir.',
-            'where' => 'Ətraflı kalkulyatorun smetasında. Əmsal tətbiq olunanda sətrin altındakı '
-                .'izahda görünür: «50 m² × 9 ₼/m² × 1.15 = 517.50 ₼».',
-            'rules' => [
-                '<strong>1.00 = dəyişiklik yoxdur.</strong> 1.15 = 15% bahalaşır. 0.90 = 10% ucuzlaşır.',
-                'Əmsalı söndürsəniz və ya silsəniz, o 1.00 kimi işləyir — yəni qiymət dəyişmir. '
-                    .'Heç vaxt sıfıra düşmür.',
-                'Bu əmsallar <strong>avtomatik</strong> tətbiq olunur: müştəri otağın hündürlüyünü '
-                    .'və ya kafel formatını seçəndə sistem özü lazım olanı işə salır.',
-            ],
+            'text' => 'Çətin şəraitdə işin qiymətini artıran əmsallar — yüksək tavan, iriformatlı kafel, '
+                .'diaqonal düzülüş. Müştəri otaqları doldurduqca <strong>avtomatik</strong> tətbiq olunur. '
+                .'1.00 = dəyişiklik yoxdur.',
+            'shot' => 'coefficients',
         ];
     }
 

@@ -45,20 +45,9 @@ class CalculatorMaterialFallbackResource extends Resource
     public static function explanationParts(): array
     {
         return [
-            'what' => 'Materialların <strong>orta qiymətləri</strong>. Müştəri kataloqdan konkret məhsul '
-                .'seçməyibsə, kalkulyator smetanı bu qiymətlərlə bağlayır ki, rəqəm yarımçıq qalmasın.',
-            'where' => 'Ətraflı kalkulyatorun «Materiallar» addımında və yekun smetada. '
-                .'Müştəri kataloqdan real məhsul seçən kimi bu qiymət həmin məhsulun öz qiyməti ilə '
-                .'əvəz olunur — buradakı rəqəm yalnız ehtiyat variantdır.',
-            'rules' => [
-                'Hər material üçün üç qiymət var, çünki müştəri 1-ci addımda '
-                    .'<strong>Ekonom / Standart / Premium</strong> seçir. Hansını seçibsə, o sütun işləyir.',
-                'Qiymət <strong>yalnız materialındır</strong> — quraşdırma haqqı «İş qiymətləri» səhifəsindədir.',
-                '«Qaba materiallar» qrupu (qrunt, şpaklyovka, yapışqan, hidroizolyasiya) müştərinin '
-                    .'gözü ilə görünmür, amma smetaya düşür. Bunlar bazar araşdırması əsasında '
-                    .'ilkin doldurulub — <strong>öz qiymətlərinizlə əvəz edin</strong>.',
-                self::emptyPriceHint(),
-            ],
+            'text' => 'Müştəri kataloqdan konkret məhsul seçmədikdə istifadə olunan <strong>orta '
+                .'material qiymətləri</strong>. Seçdiyi səviyyəyə (Ekonom/Standart/Premium) uyğun sütun işləyir.',
+            'shot' => 'material-fallbacks',
         ];
     }
 

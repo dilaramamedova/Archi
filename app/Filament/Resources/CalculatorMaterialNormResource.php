@@ -47,20 +47,10 @@ class CalculatorMaterialNormResource extends Resource
     public static function explanationParts(): array
     {
         return [
-            'what' => 'Materialın <strong>nə qədər lazım olduğunu</strong> hesablayan normalar. '
-                .'İki cür var: kəsim ehtiyatı (kafelin neçə faizi artıq alınmalıdır) və '
-                .'sərfiyyat (1 m²-ə neçə kq yapışqan gedir).',
-            'where' => 'Ətraflı kalkulyatorun «Materiallar» addımında və yekun smetada — '
-                .'material sətrinin miqdarında. Məsələn: 30 m² kafel + 10% ehtiyat = 33 m².',
-            'rules' => [
-                'Kəsim ehtiyatı <strong>materialın miqdarının içindədir</strong>. '
-                    .'Smetanın sonundakı «Maliyyə ehtiyatı» isə ayrı bir şeydir — '
-                    .'onu «Ümumi parametrlər» səhifəsində idarə edirsiniz. İkisi bir-birinin üstünə gəlmir.',
-                'Sərfiyyat normaları texniki rəqəmlərdir — adətən materialın qablaşdırmasında yazılır. '
-                    .'Şübhə etsəniz, təchizatçınızdan soruşun.',
-                'Rəqəmi böyütsəniz material çox alınır (smeta bahalaşır), kiçiltsəniz az alınır '
-                    .'(iş yarımçıq qala bilər).',
-            ],
+            'text' => 'Materialın <strong>miqdarını</strong> hesablayan normalar: kəsim ehtiyatı '
+                .'(30 m² kafel + 10% = 33 m²) və sərfiyyat (1 m²-ə neçə kq yapışqan). '
+                .'Smetanın sonundakı maliyyə ehtiyatı ilə qarışdırmayın — o, «Ümumi parametrlər»dədir.',
+            'shot' => 'material-norms',
         ];
     }
 

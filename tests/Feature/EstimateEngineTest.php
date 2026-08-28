@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\Calculator\RequestStatus;
+use App\Enums\Calculator\RequestType;
+use App\Models\CalculatorRequest;
 use App\Models\CalculatorSetting;
 use App\Models\CalculatorWorkRate;
 use App\Models\Category;
@@ -509,6 +512,76 @@ class EstimateEngineTest extends TestCase
         $response = $this->postJson('/api/calculator/estimate', $inputs);
 
         $this->assertNull(collect($response->json('lines'))->firstWhere('itemId', 'CART_'.$product->id));
+    }
+
+    /**
+     * A turnkey order has to reach Archi with the sum the client saw frozen behind
+     * it — a manager calling back cannot be quoting a recalculation.
+     */
+    public function test_a_turnkey_request_lands_in_the_admin_panel_with_a_frozen_total(): void
+    {
+        $user = User::factory()->create();
+
+        $created = $this->actingAs($user)->postJson('/api/calculator/sessions', $this->inputs());
+        $created->assertCreated();
+
+        $uuid = $created->json('uuid');
+
+        $response = $this->actingAs($user)->postJson("/api/calculator/sessions/{$uuid}/request", [
+            'type' => 'TURNKEY',
+            'name' => 'Rəşad Məmmədov',
+            'phone' => '+994501234567',
+        ]);
+
+        $response->assertCreated();
+
+        $request = CalculatorRequest::latest('id')->first();
+
+        $this->assertSame(RequestType::Turnkey, $request->type);
+        $this->assertSame(RequestStatus::New, $request->status);
+        $this->assertSame('Rəşad Məmmədov', $request->name);
+        $this->assertSame('+994501234567', $request->phone);
+        $this->assertNotNull($request->calculator_snapshot_id);
+        $this->assertEqualsWithDelta($created->json('estimate.totals.grandTotal'), (float) $request->total_amount, 0.01);
+
+        // The frozen figure does not follow a later rate change.
+        $frozen = (float) $request->total_amount;
+
+        CalculatorWorkRate::where('work_id', 'WALL_PAINT')->update(['rate' => 99]);
+        VersionedCache::bump(VersionedCache::CALCULATOR);
+
+        $this->assertSame($frozen, (float) $request->fresh()->total_amount);
+    }
+
+    /** Saving and sharing are recorded too, so Archi sees which estimates went out. */
+    public function test_saving_an_estimate_records_a_request(): void
+    {
+        $user = User::factory()->create();
+
+        $uuid = $this->actingAs($user)
+            ->postJson('/api/calculator/sessions', $this->inputs())
+            ->json('uuid');
+
+        $this->actingAs($user)
+            ->postJson("/api/calculator/sessions/{$uuid}/request", ['type' => 'SAVED_ESTIMATE'])
+            ->assertCreated();
+
+        $this->assertSame(RequestType::SavedEstimate, CalculatorRequest::latest('id')->first()->type);
+    }
+
+    /** Somebody else's session cannot be turned into a request. */
+    public function test_a_request_cannot_be_raised_on_another_visitors_session(): void
+    {
+        $owner = User::factory()->create();
+        $stranger = User::factory()->create();
+
+        $uuid = $this->actingAs($owner)
+            ->postJson('/api/calculator/sessions', $this->inputs())
+            ->json('uuid');
+
+        $this->actingAs($stranger)
+            ->postJson("/api/calculator/sessions/{$uuid}/request", ['type' => 'TURNKEY'])
+            ->assertForbidden();
     }
 
     /** Every configurable number really is configurable (master spec §21). */
