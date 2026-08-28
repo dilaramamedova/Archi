@@ -109,7 +109,8 @@
   .dc-mr .ml span     { @apply text-[13px] text-black/50; }
   .dc-mr .ml span.no  { @apply text-[#b7791f]; }
   .dc-mr .mr-r        { @apply flex items-center gap-3; }
-  .dc-mr .price       { @apply text-sm font-bold text-ink; }
+  /* whitespace-nowrap: "2 306.79 ₼" must never break after the thousands group */
+  .dc-mr .price       { @apply text-sm font-bold whitespace-nowrap text-ink; }
   .dc-badge           { @apply rounded-ds bg-[#fff8cc] px-[9px] py-1 text-[11px] font-semibold text-[#8c7f0d]; }
   .dc-pick            { @apply inline-block cursor-pointer rounded-ds border border-ink bg-white px-3.5 py-[9px] text-[13px] font-semibold whitespace-nowrap text-ink no-underline [font-family:inherit]; }
   .dc-banner          { @apply flex items-center justify-between gap-3 rounded-ds border border-yellow-line bg-[#fffdf0] px-[18px] py-4; }
@@ -157,8 +158,10 @@
   .dc-bd .row .top      { @apply mb-1.5 flex justify-between text-sm; }
   .dc-bd .row .top .l   { @apply font-medium text-black/75; }
   /* which room a repeated work line belongs to, in the category view */
-  .dc-room              { @apply text-xs font-normal text-black/40; }
-  .dc-bd .row .top .v   { @apply font-bold text-ink; }
+  /* NOT .dc-room — that class is the bordered room card on step 2, and reusing
+     it here painted empty boxes under every object-level summary line. */
+  .dc-lroom             { @apply text-xs font-normal text-black/40; }
+  .dc-bd .row .top .v   { @apply font-bold whitespace-nowrap text-ink; }
   .dc-bar               { @apply h-2 overflow-hidden rounded-ds bg-[#e9edf1]; }
   .dc-bar i             { @apply block h-2 rounded-ds bg-[#d1d5db]; }
   .dc-bar.hi i          { @apply bg-yellow-line; }
@@ -241,12 +244,13 @@
     .dc-cart-row .rr .p      { @apply text-base; }
     .dc-stock                { @apply mt-0; }
 
-    /* 3 · material rows stay on one line as the frame draws them. They only broke
-       because `.ml` had no min-width floor, so a long product sub-line ("Keramik kafel
-       60×60, mat") pushed the price and the badge out of the row. */
-    .dc-mr       { @apply gap-3 p-3.5; }
-    .dc-mr .ml   { @apply min-w-0; }
-    .dc-mr .mr-r { @apply shrink-0; }
+    /* 3 · material rows stack at 375: the pricing select alone is ~228px, so the
+       name+quantity line takes the full width and the price + select sit on their
+       own row beneath it. Keeping everything on one line either overflowed the
+       page (price nowrap) or broke "2 306.79 ₼" into three lines (price wrap). */
+    .dc-mr       { @apply flex-wrap gap-x-3 gap-y-2 p-3.5; }
+    .dc-mr .ml   { @apply w-full min-w-0; }
+    .dc-mr .mr-r { @apply w-full justify-between; }
 
     /* 4 · the step-4 banner. It is a `justify-between` row holding the headline and a
        `.dc-tg` switch card, and `.dc-tg` is `min-w-[180px] flex-1` — so at 375 the

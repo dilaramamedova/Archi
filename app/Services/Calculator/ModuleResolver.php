@@ -371,6 +371,17 @@ class ModuleResolver
 
         $requests = [];
 
+        // In a flat with an old renovation, every doorway that gets a new door still
+        // holds the old one — its removal is suggested by default (and stays a
+        // suggestion the visitor can untick). An explicit count always wins, and no
+        // door is invented for a bare shell someone demolishes partitions in.
+        $defaultDoors = $condition === ObjectCondition::OldRenovation
+            ? array_sum(array_map(
+                fn (RoomGeometry $room) => array_sum($room->newDoorCounts()),
+                $rooms,
+            ))
+            : 0;
+
         foreach ([
             'wallTileArea' => 'DEM_WALL_TILE',
             'wallPlasterArea' => 'DEM_WALL_PLASTER',
@@ -382,7 +393,7 @@ class ModuleResolver
             'plumbingFixtures' => 'DEM_PLUMB_FIXTURE',
             'electricPoints' => 'DEM_ELECTRIC_POINT',
         ] as $key => $workId) {
-            $qty = (float) ($input[$key] ?? 0);
+            $qty = (float) ($input[$key] ?? ($key === 'doors' ? $defaultDoors : 0));
 
             if ($qty > 0) {
                 $requests[] = new WorkRequest($workId, $qty);

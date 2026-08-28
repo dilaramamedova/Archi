@@ -154,15 +154,24 @@ class DependencyEngine
         $area = $zone->area;
         $steps = [];
 
-        // The visitor tells us what is on the floor now; without that we cannot
-        // guess which demolition rate applies, so nothing is suggested.
+        // What is on the floor now decides which removal rate applies. The explicit
+        // existingCover option is the most precise answer; without it the zone's own
+        // state still says enough — an OLD_FINISH floor cannot take a new covering
+        // until the old one comes off, and skipping that step silently priced every
+        // old flat as if its floors were bare (the wall chain never had this gap).
         $existing = strtoupper((string) $zone->option('existingCover', ''));
 
         $steps = array_merge($steps, match ($existing) {
             'LAMINATE', 'SPC' => [['workId' => 'DEM_FLOOR_LAMINATE', 'quantity' => $area]],
             'PARQUET' => [['workId' => 'DEM_FLOOR_PARQUET', 'quantity' => $area]],
             'TILE', 'STONE' => [['workId' => 'DEM_FLOOR_TILE', 'quantity' => $area]],
-            default => [],
+            default => match ($zone->currentState) {
+                // Soft coverings share the laminate rate; the exact material can be
+                // corrected via existingCover, the step itself must not be missing.
+                SurfaceState::OldFinish => [['workId' => 'DEM_FLOOR_LAMINATE', 'quantity' => $area]],
+                SurfaceState::OldTile => [['workId' => 'DEM_FLOOR_TILE', 'quantity' => $area]],
+                default => [],
+            },
         });
 
         if ($zone->currentState === SurfaceState::RoughFloor || $zone->option('screed', false)) {

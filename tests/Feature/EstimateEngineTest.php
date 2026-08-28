@@ -615,6 +615,57 @@ class EstimateEngineTest extends TestCase
      * One 5×4×3 living room with a door and a window, bare walls, laminate floor and
      * a painted ceiling — the shape scenario A of the specification describes.
      */
+    /**
+     * Master spec §9: the chain starts from what is on the surface NOW. A floor
+     * that carries an old covering cannot take a new one until it comes off — the
+     * wall chain always stripped old finishes, the floor chain used to skip them.
+     */
+    public function test_an_old_floor_covering_is_removed_before_the_new_one(): void
+    {
+        $inputs = $this->inputs();
+        $inputs['object']['condition'] = 'OLD_RENOVATION';
+        $inputs['rooms'][0]['zones'] = [
+            ['surface' => 'FLOOR', 'area' => 20, 'finish' => 'LAMINATE', 'currentState' => 'OLD_FINISH'],
+        ];
+
+        $lines = $this->linesById($this->estimateViaApi($inputs));
+
+        $this->assertArrayHasKey('DEM_FLOOR_LAMINATE', $lines);
+        $this->assertEquals(20, $lines['DEM_FLOOR_LAMINATE']['quantity']);
+
+        // An old tiled floor takes the tile-removal rate, not the soft-cover one.
+        $inputs['rooms'][0]['zones'] = [
+            ['surface' => 'FLOOR', 'area' => 20, 'finish' => 'FLOOR_TILE', 'currentState' => 'OLD_TILE'],
+        ];
+
+        $lines = $this->linesById($this->estimateViaApi($inputs));
+
+        $this->assertArrayHasKey('DEM_FLOOR_TILE', $lines);
+        $this->assertArrayNotHasKey('DEM_FLOOR_LAMINATE', $lines);
+    }
+
+    /**
+     * A doorway that receives a new door in an old flat still holds the old one:
+     * its removal is suggested automatically. A bare shell has no old doors, so
+     * demolition being switched on there must not invent any.
+     */
+    public function test_old_doors_are_removed_when_a_new_door_goes_into_an_old_flat(): void
+    {
+        $inputs = $this->inputs();
+        $inputs['object']['condition'] = 'OLD_RENOVATION';
+        $inputs['object']['demolitionRequired'] = true;
+
+        $lines = $this->linesById($this->estimateViaApi($inputs));
+
+        $this->assertArrayHasKey('DEM_DOOR', $lines);
+        $this->assertEquals(1, $lines['DEM_DOOR']['quantity']);
+
+        $shell = $this->inputs();
+        $shell['object']['demolitionRequired'] = true; // condition stays SHELL
+
+        $this->assertArrayNotHasKey('DEM_DOOR', $this->linesById($this->estimateViaApi($shell)));
+    }
+
     private function inputs(): array
     {
         return [

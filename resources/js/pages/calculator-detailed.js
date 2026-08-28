@@ -474,6 +474,31 @@ export default function init() {
   </div>`;
   }
 
+  /**
+   * Rozetka, açar, su nöqtəsi… — the per-room point counts. The engine has always
+   * billed them (rate × count) from the room type's defaults, but until this editor
+   * existed the visitor could neither see nor change the counts their estimate was
+   * built on. Only the keys that exist for this room type are shown, defaults
+   * pre-filled, and one edited key never resets the others.
+   */
+  function pointsEditor(room, index) {
+    const defaults = (enums.roomTypes.find((r) => r.value === room.roomType) || {}).defaultPoints || {};
+    const keys = Object.keys(defaults);
+
+    if (! keys.length) return '';
+
+    const labels = T.points || {};
+    const inputs = keys
+      .map((key) => {
+        const value = room.points?.[key] ?? defaults[key];
+
+        return field(labels[key] || key, numberInput(`data-pt="${index}" data-pk="${esc(key)}" step="1"`, value));
+      })
+      .join('');
+
+    return `<div class="dc-group"><label>${esc(T.rooms.points_label || '')}</label><div class="dc-fields">${inputs}</div></div>`;
+  }
+
   function stepRooms() {
     const t = T.rooms;
     const derived = roomsDerived();
@@ -527,6 +552,7 @@ export default function init() {
         ${field(t.window_height, numberInput(`data-op="${index}" data-ot="WINDOW" data-of="height" step="0.05"`, win.height ?? 0, T.units.m))}
       </div>
       ${derivedLine}
+      ${pointsEditor(room, index)}
       <div class="dc-tg ${door.installNewDoor ? 'on' : ''}" data-newdoor="${index}"><span>${esc(t.install_door)}</span><div class="dc-sw"></div></div>
       <div class="dc-group"><label>${esc(t.state)}</label>${chips('currentState', enums.surfaceStates, room.currentState, `data-ri="${index}"`)}</div>
       <div class="dc-group"><label>${esc(t.floor_cover)}</label>${chips('floorFinish', finishesFor('FLOOR'), room.floorFinish, `data-ri="${index}"`)}</div>
@@ -653,8 +679,14 @@ export default function init() {
       })
       .join('');
 
+    // "Səbətinizdəki 0 məhsul…" is not information, it is noise — the banner and
+    // its toggle only appear when there actually is a basket to include.
+    const cartBanner = cartProducts.length
+      ? `<div class="dc-banner"><b>${esc(tr(t.banner, { count: cartProducts.length }))}</b><div class="dc-tg grn ${state.basket.useCart ? 'on' : ''}" data-basket="useCart"><span>${esc(T.side.use_in_calc)}</span><div class="dc-sw"></div></div></div>`
+      : '';
+
     return `<div class="dc-sh"><div class="k">${esc(t.k)}</div><h2>${esc(t.h)}</h2><div class="d">${esc(t.d)}</div></div>
-  <div class="dc-banner"><b>${esc(tr(t.banner, { count: cartProducts.length }))}</b><div class="dc-tg grn ${state.basket.useCart ? 'on' : ''}" data-basket="useCart"><span>${esc(T.side.use_in_calc)}</span><div class="dc-sw"></div></div></div>
+  ${cartBanner}
   ${rows || `<p class="${CLS.note}">${esc(t.not_selected)}</p>`}
   <a class="dc-pick" href="${esc(catalogUrl)}">${esc(t.pick)}</a>`;
   }
@@ -735,9 +767,13 @@ export default function init() {
           // In the category view the same work repeats once per room ("Divarların
           // suvanması" × 4) and reads like a duplicate; the room name says why.
           .map((line) => {
-            const room = state.summaryView === 'category' && line.roomName ? ` · ${line.roomName}` : '';
+            // Only rendered when there is a room to name — an empty span would
+            // still be a styled element in the layout.
+            const room = state.summaryView === 'category' && line.roomName
+              ? `<span class="dc-lroom"> · ${esc(line.roomName)}</span>`
+              : '';
 
-            return `<div class="row"><div class="top"><span class="l">${esc(line.name)}${line.precisionClass === 'ESTIMATED' ? ' *' : ''}<span class="dc-room">${esc(room)}</span></span><span class="v">${esc(line.unitPrice === null ? T.notice.price_missing : money(line.lineTotal))}</span></div><div class="${CLS.trace}">${esc(line.trace)}</div></div>`;
+            return `<div class="row"><div class="top"><span class="l">${esc(line.name)}${line.precisionClass === 'ESTIMATED' ? ' *' : ''}${room}</span><span class="v">${esc(line.unitPrice === null ? T.notice.price_missing : money(line.lineTotal))}</span></div><div class="${CLS.trace}">${esc(line.trace)}</div></div>`;
           })
           .join('');
 
@@ -1113,7 +1149,12 @@ export default function init() {
           room[key] = value;
           state.roomsTouched = true;
 
-          if (key === 'roomType') room.name = labelOf(enums.roomTypes, value);
+          if (key === 'roomType') {
+            room.name = labelOf(enums.roomTypes, value);
+            // The point counts belong to the old room type; keeping them would
+            // give the new bathroom a living room's eight sockets.
+            room.points = {};
+          }
         } else if (key === 'hvacSystem') {
           state.modules.hvac.systemType = value;
         } else {
@@ -1166,6 +1207,15 @@ export default function init() {
     mainEl.querySelectorAll('input[data-o]').forEach((el) =>
       el.addEventListener('input', () => {
         state.object[el.dataset.o] = +el.value || 0;
+
+        // The seeded rooms exist to match the stated area. While the visitor has
+        // not edited them, a new area re-seeds them — otherwise typing 80 over the
+        // default 120 leaves 120 m² worth of rooms behind the visitor's back, and
+        // the whole estimate is silently 50% too big.
+        if (el.dataset.o === 'area' && ! state.roomsTouched && state.object.area > 0) {
+          seedRooms();
+        }
+
         recalculate();
       }),
     );
@@ -1173,6 +1223,17 @@ export default function init() {
     mainEl.querySelectorAll('input[data-r]').forEach((el) =>
       el.addEventListener('input', () => {
         state.rooms[+el.dataset.r][el.dataset.f] = +el.value || 0;
+        state.roomsTouched = true;
+        recalculate();
+      }),
+    );
+
+    mainEl.querySelectorAll('input[data-pt]').forEach((el) =>
+      el.addEventListener('input', () => {
+        const room = state.rooms[+el.dataset.pt];
+        if (! room) return;
+
+        room.points = { ...(room.points || {}), [el.dataset.pk]: Math.max(0, Math.trunc(+el.value || 0)) };
         state.roomsTouched = true;
         recalculate();
       }),

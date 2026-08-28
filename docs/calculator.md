@@ -81,6 +81,10 @@ PDF, WhatsApp və sifariş eyni məbləği göstərir (§22).
 | Divar kağızı rulon hesabı (§2.9) | MVP-də m² üzrə; rulon hesabı backlog-da. |
 | Şəhər əmsalları (§2.10) | `calculator_cities` cədvəli; naməlum şəhər = 1.00, bloklama yoxdur. |
 | Yaş zona divarları | Hidroizolyasiya defoltu yalnız hamam/sanitar qovşaq üçün; mətbəxdə yalnız döşəmə. İstifadəçi zonanı əl ilə yaş işarələyə bilər. |
+| Köhnə döşəmə örtüyünün sökülməsi | Döşəmə zonasının vəziyyəti `OLD_FINISH` → `DEM_FLOOR_LAMINATE` (yumşaq örtük tarifi), `OLD_TILE` → `DEM_FLOOR_TILE`. `existingCover` opsiyası dəqiq örtüyü deyirsə, o üstün gəlir. |
+| Köhnə qapıların sökülməsi | `OLD_RENOVATION` obyektdə `installNewDoor` işarəli hər qapı yeri üçün `DEM_DOOR` avtomatik təklif olunur (istifadəçi çıxara bilər); SHELL-də heç vaxt. |
+| Nöqtə sayları | Otaq addımında redaktə olunur (rozetka, açar, işıq, su, kanalizasiya…). Defolt `RoomType::defaultPoints()`-dən, otaq növü dəyişəndə sıfırlanır. |
+| Sahə dəyişəndə otaqlar | İstifadəçi otaqlara toxunmayıbsa, obyekt sahəsi dəyişəndə otaqlar yenidən seed olunur — əks halda 120 m²-lik defolt otaqlar 80 yazan müştərinin smetasını sakitcə 50% şişirdirdi. |
 | Qaba materialların (qrunt, şpaklyovka, yapışqan…) qiyməti | Müştərinin matrisində yox idi; motor miqdarı hesabladığına görə DRAFT fallback qiymətlərlə seed edilib və admin paneldə təsdiqlənməlidir. |
 
 ## Admin paneldəki skrinşotlar

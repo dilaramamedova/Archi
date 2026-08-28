@@ -269,6 +269,23 @@ return [
             'en' => 'The stated area differs from the sum of the rooms (:deviation%).',
         ],
 
+        // The per-room point editor on the rooms step.
+        'rooms.points_label' => [
+            'az' => 'Elektrik və santexnika nöqtələri',
+            'ru' => 'Точки электрики и сантехники',
+            'en' => 'Electrical and plumbing points',
+        ],
+        'points.sockets' => ['az' => 'Rozetka', 'ru' => 'Розетки', 'en' => 'Sockets'],
+        'points.switches' => ['az' => 'Açar (vıklyuçatel)', 'ru' => 'Выключатели', 'en' => 'Switches'],
+        'points.lights' => ['az' => 'Tavan işığı', 'ru' => 'Потолочный свет', 'en' => 'Ceiling lights'],
+        'points.wall_lights' => ['az' => 'Bra / divar işığı', 'ru' => 'Бра', 'en' => 'Wall lights'],
+        'points.tv' => ['az' => 'TV nöqtəsi', 'ru' => 'TV-точки', 'en' => 'TV points'],
+        'points.data' => ['az' => 'İnternet nöqtəsi', 'ru' => 'Интернет-точки', 'en' => 'Data points'],
+        'points.ac_power' => ['az' => 'Kondisioner xətti', 'ru' => 'Линия кондиционера', 'en' => 'AC power line'],
+        'points.appliance' => ['az' => 'Məişət texnikası xətti', 'ru' => 'Линии бытовой техники', 'en' => 'Appliance lines'],
+        'points.water_points' => ['az' => 'Su nöqtəsi', 'ru' => 'Точки воды', 'en' => 'Water points'],
+        'points.sewer_points' => ['az' => 'Kanalizasiya nöqtəsi', 'ru' => 'Точки канализации', 'en' => 'Sewer points'],
+
         // The PDF button downloads a real file now, so the label says so.
         'actions.pdf' => ['az' => 'PDF yüklə', 'ru' => 'Скачать PDF', 'en' => 'Download PDF'],
         'notice.valid_until' => [
