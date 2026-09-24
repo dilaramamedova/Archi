@@ -1,7 +1,8 @@
 {{--
   Specialists catalogue (Figma 1105:26941). Dynamic version — data comes from the
-  specialist_profiles table via SpecialistController. The JS sort/filter still works
-  via data-* attributes on each card.
+  specialist_profiles table via SpecialistController, which hands the page one section
+  per App\Enums\SpecialistCategoryGroup ($groups) alongside the paginator. Filtering and
+  sorting are entirely server-side: the cards carry no data-* payload any more.
 --}}
 @php
     // Card tints repeat every 4 cards, exactly like the old JS array.
@@ -156,50 +157,88 @@
          pagination block left as a direct sibling rendered as a third column beside the
          cards. --}}
     <div class="sp-main">
-    {{-- grid --}}
-    <div class="sp-grid" id="spGrid">
-      @forelse ($specialists as $i => $s)
-        @php
-            // Only the admin-set feature flag earns a badge. "Təsdiqlənmiş" is off until
-            // a real verification column exists — the index already filters to active
-            // users, so isActive() marked every single card.
-            $badges = [];
-            if ($s->is_featured) { $badges[] = ['class' => 'top-master', 'label' => t('specialists.card.badge_top')]; }
-            $initials = mb_strtoupper(mb_substr($s->user->first_name ?? $s->user->name, 0, 1) . mb_substr($s->user->last_name ?? '', 0, 1));
-            $skillsList = is_array($s->skills) ? implode(',', $s->skills) : '';
-            // Both read denormalized columns (ReviewObserver keeps them current);
-            // the old fallback ran a COUNT query per card.
-            $avgRating = $s->average_rating;
-            $revCount = $s->reviews_count;
-        @endphp
-        <a class="sp-card" href="{{ route('specialist.show', $s) }}"
-           data-rate="{{ $avgRating }}"
-           data-reviews="{{ $revCount }}"
-           data-years="{{ $s->experience_years ?? 0 }}"
-           data-projects="{{ $s->approvedPortfolioItems ? $s->approvedPortfolioItems->count() : 0 }}"
-           data-price="0"
-           data-city="{{ \App\Enums\City::display($s->city) ?? '' }}"
-           data-specs="{{ $skillsList }}"
-           data-verified="{{ $s->is_featured ? 'true' : 'false' }}"
-           data-free="{{ $s->is_on_vacation ? 'false' : 'true' }}">
-          <div class="top" style="background:{{ $tints[$i % 4] }}">
-            <div class="badges">@foreach ($badges as $b)<span class="b {{ $b['class'] }}">{{ $b['label'] }}</span>@endforeach</div>
-            @if ($s->avatar_path)
-              <img class="avatar" src="{{ storage_url($s->avatar_path) }}" alt="{{ $s->user->name }}">
-            @else
-              <div class="avatar">{{ $initials }}</div>
+    {{-- Sections: one block per SpecialistCategoryGroup, in the enum's order. `#spGrid`
+         is the id specialists.js guards on (it never reads the cards themselves), so it
+         moves to the sections wrapper and the per-section `.sp-grid` keeps the card
+         layout it always had. --}}
+    <div class="sp-sections" id="spGrid">
+      @forelse ($groups as $section)
+        @php $sectionItems = $section['items']; @endphp
+        <section class="sp-sec" data-group="{{ $section['group']->value }}">
+          <div class="sp-sec-head">
+            <div class="sp-sec-head-l">
+              <span class="sp-sec-rule" aria-hidden="true"></span>
+              <h2 class="sp-sec-title">{{ $section['group']->label() }}</h2>
+              <p class="sp-sec-tag">{{ $section['group']->tagline() }}</p>
+            </div>
+            {{-- The section's full total, not this page's slice: paging must not make
+                 the same section appear to shrink. --}}
+            @if ($section['total'] > 0)
+              <span class="sp-sec-count">{{ t('specialists.group.count', ['count' => $section['total']]) }}</span>
             @endif
-            <div class="role">{{ $s->craft_label ?: t('specialists.card.default_role') }}</div>
-            <div class="rate"><img class="st" src="/assets/icon-star-yellow.svg" alt=""><span class="v">{{ $avgRating > 0 ? number_format($avgRating, 1) : '0.0' }}</span><span class="r">{{ t('specialists.card.reviews', ['count' => $revCount]) }}</span></div>
           </div>
-          <div class="name">{{ $s->user->name }}</div>
-          <div class="meta"><span class="m">{{ t('specialists.card.exp', ['years' => $s->experience_years ?? 0]) }}</span><span class="d">·</span><span class="m">{{ \App\Enums\City::display($s->city) ?? '' }}</span></div>
-          <div class="foot">
-            <span class="price"></span>
-            <span class="ui-btn ui-btn-primary h-[38px] px-4 text-[13px] font-semibold whitespace-nowrap duration-200"
-                  data-hover="true">{{ t('specialists.card.view_profile') }}</span>
-          </div>
-        </a>
+
+          @if ($sectionItems->isEmpty())
+            {{-- Only the unfiltered directory keeps an empty section (the controller drops
+                 them once a filter is on): it tells a visitor which trades ARCHİ covers
+                 even before anyone in that trade has signed up. One quiet line, never a box
+                 tall enough to compete with a section that has cards. --}}
+            <p class="sp-sec-empty">
+              <span class="t">{{ t('specialists.group.empty') }}</span>
+              <a class="cta" href="{{ route('register') }}">{{ t('specialists.group.empty_cta') }}</a>
+            </p>
+          @else
+            <div class="sp-grid">
+              @foreach ($sectionItems as $s)
+                @php
+                    // Card tints repeat every 4 cards, restarting per section so the first
+                    // card of every block carries the same tint.
+                    $tint = $tints[$loop->index % 4];
+                    $badges = [];
+                    if ($s->is_featured) { $badges[] = ['class' => 'top-master', 'label' => t('specialists.card.badge_top')]; }
+                    // is_verified is the admin-set editorial flag, not the promotion one.
+                    if ($s->is_verified) { $badges[] = ['class' => 'ok', 'label' => t('specialists.card.badge_verified')]; }
+                    $initials = mb_strtoupper(mb_substr($s->user->first_name ?? $s->user->name, 0, 1) . mb_substr($s->user->last_name ?? '', 0, 1));
+                    // Both read denormalized columns (ReviewObserver keeps them current);
+                    // the old fallback ran a COUNT query per card.
+                    $avgRating = $s->average_rating;
+                    $revCount = $s->reviews_count;
+                @endphp
+                <a class="sp-card" href="{{ route('specialist.show', $s) }}">
+                  {{-- The badge row is only rendered when the card actually carries a
+                       badge: on a phone it sits in the tint block's flow (see the ≤640px
+                       block of specialists.css), so an empty div would still reserve a
+                       row and push the avatar of an unbadged card off centre. --}}
+                  <div class="top" style="background:{{ $tint }}">
+                    @if ($badges)
+                      <div class="badges">@foreach ($badges as $b)<span class="b {{ $b['class'] }}">{{ $b['label'] }}</span>@endforeach</div>
+                    @endif
+                    {{-- avatar + role + rating are one flow item, so the badge row can be
+                         taken out of the absolute overlay without splitting the group. --}}
+                    <div class="stack">
+                      @if ($s->avatar_path)
+                        <img class="avatar" src="{{ storage_url($s->avatar_path) }}" alt="{{ $s->user->name }}">
+                      @else
+                        <div class="avatar">{{ $initials }}</div>
+                      @endif
+                      <div class="role">{{ $s->craft_label ?: t('specialists.card.default_role') }}</div>
+                      <div class="rate"><img class="st" src="/assets/icon-star-yellow.svg" alt=""><span class="v">{{ $avgRating > 0 ? number_format($avgRating, 1) : '0.0' }}</span><span class="r">{{ t('specialists.card.reviews', ['count' => $revCount]) }}</span></div>
+                    </div>
+                  </div>
+                  <div class="name">{{ $s->user->name }}</div>
+                  <div class="meta"><span class="m">{{ t('specialists.card.exp', ['years' => $s->experience_years ?? 0]) }}</span><span class="d">·</span><span class="m">{{ \App\Enums\City::display($s->city) ?? '' }}</span></div>
+                  <div class="foot">
+                    {{-- "from X ₼", not the "/m²" wording: the cheapest active service may be
+                         priced per job just as easily as per metre. --}}
+                    <span class="price">@if ($s->min_service_price !== null){{ t('specialists.card.price_from', ['price' => number_format($s->min_service_price, 0)]) }}@endif</span>
+                    <span class="ui-btn ui-btn-primary h-[38px] px-4 text-[13px] font-semibold whitespace-nowrap duration-200"
+                          data-hover="true">{{ t('specialists.card.view_profile') }}</span>
+                  </div>
+                </a>
+              @endforeach
+            </div>
+          @endif
+        </section>
       @empty
         <p class="sp-empty">{{ t('specialists.empty') }}</p>
       @endforelse

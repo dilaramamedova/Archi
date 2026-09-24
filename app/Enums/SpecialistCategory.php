@@ -43,6 +43,20 @@ enum SpecialistCategory: string
         };
     }
 
+    /**
+     * The directory section this category is rendered under. Architecture and interior
+     * design answer the same visitor question ("who designs it?"), so they share a
+     * section; a trade and a construction company each keep their own.
+     */
+    public function group(): SpecialistCategoryGroup
+    {
+        return match ($this) {
+            self::Architect, self::Designer => SpecialistCategoryGroup::Design,
+            self::Master => SpecialistCategoryGroup::Master,
+            self::Company => SpecialistCategoryGroup::Company,
+        };
+    }
+
     /** @return array<string, string> value => label, for Filament selects */
     public static function options(): array
     {

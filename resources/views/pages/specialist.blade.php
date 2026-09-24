@@ -53,9 +53,13 @@
           <button type="button" class="pp-fav" id="ppFav" data-on="false" aria-pressed="false" aria-label="{{ t('specialist.id.fav_aria') }}"><img src="/assets/icon-heart-pointed.svg" alt=""></button>
         </div>
         <div class="pp-id-r">
-          {{-- "Təsdiqlənmiş" needs a real admin-set verification flag; the page already
-               404s for non-active accounts, so isActive() said nothing. Hidden until
-               specialist_profiles.is_verified exists. --}}
+          {{-- The chip is back: specialist_profiles.is_verified now exists and is set by
+               an admin. It stayed hidden while the only candidate flag was isActive(),
+               which is true for every profile the page will render at all and so said
+               nothing. .pp-verified has been waiting in specialist.css for it. --}}
+          @if ($specialist->is_verified)
+            <span class="pp-verified"><img src="/assets/icon-shield-check.svg" alt="">{{ t('specialist.id.verified') }}</span>
+          @endif
           <div class="pp-name">
             <div>
               <h1>{{ $fullName }}</h1>

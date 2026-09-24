@@ -29,6 +29,7 @@ class SpecialistProfile extends Model
             'skills' => 'array',
             'is_on_vacation' => 'boolean',
             'is_featured' => 'boolean',
+            'is_verified' => 'boolean',
             'show_on_homepage' => 'boolean',
             'rating_avg' => 'float',
             'reviews_count' => 'integer',

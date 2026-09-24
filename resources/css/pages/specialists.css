@@ -117,6 +117,31 @@
                      max-[1280px]:grid-cols-3 max-[1040px]:grid-cols-2 max-[980px]:w-full max-[640px]:gap-2; }
   .sp-empty { @apply col-span-full py-16 text-center text-[15px] text-black/50; }
 
+  /* ---- directory sections ----
+     One block per SpecialistCategoryGroup. The header repeats the `.sp-head` idea a
+     level down — the same flat yellow rule, a heading, and a number pinned right — so a
+     section reads as a smaller sibling of the page title rather than a stray <h2>. The
+     hairline between blocks does the scanning work; `#spGrid` lives on this wrapper. */
+  .sp-sections    { @apply flex min-w-0 flex-col gap-7; }
+  .sp-sec         { @apply flex min-w-0 flex-col gap-4; }
+  .sp-sec + .sp-sec { @apply border-t border-black/8 pt-7; }
+
+  /* items-end keeps the count on the baseline of the tagline; it wraps under the title
+     on a phone (and in ru, where "специалистов: 4" is far wider than "4 mütəxəssis"). */
+  .sp-sec-head    { @apply flex flex-wrap items-end justify-between gap-x-4 gap-y-2; }
+  .sp-sec-head-l  { @apply flex min-w-0 flex-col gap-1.5; }
+  /* same geometry as <x-ui.eyebrow variant="flat">'s rule, without a label over it */
+  .sp-sec-rule    { @apply h-0.5 w-8 shrink-0 bg-yellow; }
+  /* `text-balance`: a two-line ru heading splits evenly instead of leaving one orphan */
+  .sp-sec-title   { @apply text-[22px] leading-[1.25] font-semibold text-balance text-ink max-[640px]:text-[19px]; }
+  .sp-sec-tag     { @apply text-[13px] leading-[1.4] text-black/55 max-[640px]:text-xs; }
+  .sp-sec-count   { @apply shrink-0 rounded-pill border border-black/10 bg-white px-3 py-1.5 text-xs font-semibold whitespace-nowrap text-black/55; }
+
+  /* Empty section — one quiet line. Three of these must not out-shout the one section
+     that actually has cards, so it stays at list height with no box around the text. */
+  .sp-sec-empty     { @apply flex flex-wrap items-center gap-x-2 gap-y-1 rounded-ds bg-black/[.02] px-3.5 py-3 text-[13px] text-black/50; }
+  .sp-sec-empty .cta { @apply font-semibold text-ink underline decoration-yellow-line decoration-2 underline-offset-[3px] hover:decoration-yellow; }
+
   /* Cards filtered out by specialists.js are hidden with the `hidden` attribute; the
      attribute selector outranks the display rule of the base class. */
   .sp-card[hidden],
@@ -125,7 +150,11 @@
   /* position:relative + overflow:hidden — so the round "view details" cursor stays inside
      the card. On hover the card does not move, only the border darkens. */
   .sp-card                       { @apply relative flex flex-col gap-3.5 overflow-hidden rounded-ds border border-black/10 bg-white px-3 pt-3 pb-4 transition-[border-color] duration-[250ms] hover:border-black/18; }
-  .sp-card .top                  { @apply relative flex h-[170px] flex-col items-center justify-center gap-2 overflow-hidden rounded-ds; }
+  /* `.top` holds two children: the badge overlay and `.stack` (avatar + role + rating).
+     The old three-child gap-2 moved onto `.stack`, so above 640px — where the badge row
+     is absolute and out of flow — the rendering is byte-for-byte what it was. */
+  .sp-card .top                  { @apply relative flex h-[170px] flex-col items-center justify-center overflow-hidden rounded-ds; }
+  .sp-card .stack                { @apply flex w-full flex-col items-center gap-2; }
   .sp-card .avatar               { @apply flex size-14 items-center justify-center rounded-full border-[2.5px] border-yellow bg-white text-[17px] font-bold text-ink; }
   /* at 4 columns a card is ~261px — a long role name wraps instead of being clipped */
   .sp-card .role                 { @apply px-2.5 text-center text-base leading-[1.2] font-semibold text-black; }
@@ -133,7 +162,10 @@
   .sp-card .rate .st             { @apply size-4 shrink-0; }
   .sp-card .rate .v              { @apply text-[13px] font-semibold text-black; }
   .sp-card .rate .r              { @apply text-xs text-black/40; }
-  .sp-card .badges               { @apply absolute top-2 left-2 flex gap-1; }
+  /* `right-2` + `flex-wrap`: a card can now carry two badges ("Top usta" AND the verified
+     one). Left-anchored only, the pair measured 164px inside a 150px tint block on a 2-up
+     phone card and the second badge was silently clipped by the block's overflow-hidden. */
+  .sp-card .badges               { @apply absolute top-2 right-2 left-2 flex flex-wrap gap-1; }
   .sp-card .badges .b            { @apply rounded-ds px-2 py-[3px] text-[11px] font-semibold whitespace-nowrap text-ink; }
   /* NOTE: the badge class cannot be called "top" — the .sp-card .top rule (170px) would catch it */
   .sp-card .badges .b.top-master { @apply bg-yellow; }
@@ -162,7 +194,20 @@
     /* a 2-up card is ~168px wide: the 170px tint block and the 16px role line were
        measured for a 261px card and have to come down with it */
     .sp-card             { @apply gap-2.5 px-2 pt-2 pb-3; }
-    .sp-card .top        { @apply h-[132px] gap-1.5; }
+    /* A 2-up card is ~168px wide, so the two-badge pair wraps onto a second line no
+       matter how small the type gets — and an absolute overlay then covered the avatar
+       (measured: badge row bottom 54px vs avatar top 18px). Below 640px the badge row
+       therefore leaves the overlay and becomes the first flow item of the tint block;
+       `.stack` takes the rest of the height and centres the avatar group inside it, so
+       the two can never meet. `h-auto min-h` keeps the block at its 132px for the 0- and
+       1-badge cards and lets only a wrapped pair push it taller. */
+    .sp-card .top        { @apply h-auto min-h-[132px] justify-start; }
+    .sp-card .badges     { @apply static w-full p-2 pb-1.5; }
+    /* `py-1` is what keeps the rating line off the bottom edge of the tint block and the
+       avatar ring off the badge above it; being symmetric it leaves the centred stack of
+       a card without badges exactly where it was. */
+    .sp-card .stack      { @apply flex-1 justify-center gap-1.5 py-1; }
+    .sp-card .badges .b  { @apply px-1.5 text-[10px]; }
     .sp-card .avatar     { @apply size-12 text-[15px]; }
     .sp-card .role       { @apply px-1 text-[13px]; }
     .sp-card .rate .r    { @apply hidden; }

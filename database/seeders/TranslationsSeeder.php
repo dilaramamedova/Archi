@@ -2627,11 +2627,34 @@ class TranslationsSeeder extends Seeder
                 'category.company' => ['az' => 'Tikinti şirkətləri', 'ru' => 'Строительные компании', 'en' => 'Construction companies'],
                 'category.designer' => ['az' => 'İnteryer dizaynerlər', 'ru' => 'Дизайнеры интерьера', 'en' => 'Interior designers'],
                 'category.master' => ['az' => 'Ustalar', 'ru' => 'Мастера', 'en' => 'Craftsmen'],
+                // Section headings of the grouped directory (App\Enums\SpecialistCategoryGroup).
+                // Architects and interior designers share one section: a visitor choosing
+                // who will DESIGN the space is answering a different question from one
+                // hiring the trade that will build it.
+                'group.design' => ['az' => 'Memarlar və dizaynerlər', 'ru' => 'Архитекторы и дизайнеры', 'en' => 'Architects & designers'],
+                'group.design_tagline' => ['az' => 'Layihə, planlaşdırma və interyer həlləri', 'ru' => 'Проект, планировка и решения интерьера', 'en' => 'Plans, layouts and interior design'],
+                'group.master' => ['az' => 'Ustalar', 'ru' => 'Мастера', 'en' => 'Craftsmen'],
+                'group.master_tagline' => ['az' => 'Təmir və quraşdırma işlərini görən peşəkarlar', 'ru' => 'Профессионалы ремонта и монтажа', 'en' => 'The trades who do the renovation and fitting'],
+                'group.company' => ['az' => 'Tikinti şirkətləri', 'ru' => 'Строительные компании', 'en' => 'Construction companies'],
+                'group.company_tagline' => ['az' => 'Tam dövrlü tikinti və təmir şirkətləri', 'ru' => 'Компании полного цикла строительства и ремонта', 'en' => 'Full-cycle construction and renovation firms'],
+                'group.other' => ['az' => 'Digər mütəxəssislər', 'ru' => 'Другие специалисты', 'en' => 'Other specialists'],
+                'group.other_tagline' => ['az' => 'İxtisası hələ təyin olunmamış mütəxəssislər', 'ru' => 'Специалисты без указанной специализации', 'en' => 'Specialists with no trade set yet'],
+                'group.count' => ['az' => ':count mütəxəssis', 'ru' => 'специалистов: :count', 'en' => ':count specialists'],
+                // Shown under a section heading that has no members on the unfiltered
+                // directory. The section still renders so a visitor can see what ARCHİ
+                // covers; the line says plainly that nobody has registered yet.
+                'group.empty' => ['az' => 'Bu bölmədə hələ mütəxəssis yoxdur.', 'ru' => 'В этом разделе пока нет специалистов.', 'en' => 'No specialists in this section yet.'],
+                'group.empty_cta' => ['az' => 'Bu sahədə işləyirsən? Qeydiyyatdan keç', 'ru' => 'Работаете в этой сфере? Зарегистрируйтесь', 'en' => 'Work in this field? Register'],
                 'card.badge_top' => ['az' => 'Top usta', 'ru' => 'Топ мастер', 'en' => 'Top pro'],
                 'card.badge_verified' => ['az' => '✓ Təsdiqlənmiş', 'ru' => '✓ Проверен', 'en' => '✓ Verified'],
                 'card.default_role' => ['az' => 'Mütəxəssis', 'ru' => 'Специалист', 'en' => 'Specialist'],
                 'card.exp' => ['az' => ':years il təcrübə', 'ru' => ':years лет опыта', 'en' => ':years years of experience'],
                 'card.price' => ['az' => '≈ :price ₼/m²-dən', 'ru' => '≈ от :price ₼/м²', 'en' => '≈ from :price ₼/m²'],
+                // Unit-free variant. A specialist's cheapest service may be priced per
+                // m², per running metre or per job, so the card cannot promise "/m²" for
+                // whichever one happens to be lowest — card.price is kept for the pages
+                // that really do quote a square-metre rate.
+                'card.price_from' => ['az' => '≈ :price ₼-dən', 'ru' => '≈ от :price ₼', 'en' => '≈ from :price ₼'],
                 'card.projects' => ['az' => ':count layihə', 'ru' => ':count проектов', 'en' => ':count projects'],
                 'card.reviews' => ['az' => '(:count rəy)', 'ru' => '(:count отзывов)', 'en' => '(:count reviews)'],
                 'card.view_profile' => ['az' => 'Profilə bax', 'ru' => 'Смотреть профиль', 'en' => 'View profile'],

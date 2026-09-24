@@ -200,6 +200,8 @@ abstract class BaseUserResource extends Resource
                 Infolists\Components\TextEntry::make('specialistProfile.about')->label('Haqqında')->placeholder('—')->columnSpanFull(),
                 Infolists\Components\TextEntry::make('specialistProfile.available_slots')->label('Boş slotlar')->placeholder('0'),
                 Infolists\Components\IconEntry::make('specialistProfile.is_on_vacation')->label('Məzuniyyət rejimi')->boolean(),
+                Infolists\Components\IconEntry::make('specialistProfile.is_featured')->label('Seçilmiş')->boolean(),
+                Infolists\Components\IconEntry::make('specialistProfile.is_verified')->label('Təsdiqlənmiş')->boolean(),
                 Infolists\Components\RepeatableEntry::make('specialistProfile.services')
                     ->label('Xidmətlər')
                     ->schema([
@@ -295,6 +297,12 @@ abstract class BaseUserResource extends Resource
                 Forms\Components\TextInput::make('available_slots')->label('Həftəlik boş slot')->numeric()->minValue(0)->maxValue(20),
                 Forms\Components\Toggle::make('is_on_vacation')->label('Məzuniyyət rejimi'),
                 Forms\Components\Toggle::make('is_featured')->label('Seçilmiş mütəxəssis'),
+                // Two different claims, deliberately two toggles: "featured" promotes a
+                // profile, "verified" says the documents behind it were checked. The
+                // public filter and the card badge read this one.
+                Forms\Components\Toggle::make('is_verified')
+                    ->label('Təsdiqlənmiş mütəxəssis')
+                    ->helperText('Sənədləri yoxlanılıb — profil kartında "Təsdiqlənmiş" nişanı göstərilir.'),
                 Forms\Components\Toggle::make('show_on_homepage')
                     ->label('Ana səhifədə göstər')
                     ->helperText('Yalnız seçilmiş mütəxəssislər üçün keçərlidir — ana səhifə bölməsində görünəcək.'),

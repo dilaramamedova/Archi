@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\SpecialistCategory;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Models\Banner;
@@ -40,32 +41,44 @@ class DemoSeeder extends Seeder
      * The canonical trade list. Keyed on slug and only filling attributes that
      * are missing, so re-running never duplicates rows nor overwrites names the
      * admin edited in the panel.
+     *
+     * Every row carries its category. Leaving it off used to hand the column its
+     * `master` default, which is how the interior designer ended up filed as a trade
+     * and the header's "İnteryer dizaynerlər" card returned an empty directory — see
+     * the 2026_09_24 recategorise migration, which repairs installs seeded before this.
      */
     private function seedSpecialties(): void
     {
         $specialties = [
-            ['slug' => 'kafelci', 'name' => ['az' => 'Kafelçi', 'ru' => 'Плиточник', 'en' => 'Tiler']],
-            ['slug' => 'santexnik', 'name' => ['az' => 'Santexnik', 'ru' => 'Сантехник', 'en' => 'Plumber']],
-            ['slug' => 'elektrik-ustasi', 'name' => ['az' => 'Elektrik ustası', 'ru' => 'Электрик', 'en' => 'Electrician']],
-            ['slug' => 'dam-ustasi', 'name' => ['az' => 'Dam ustası', 'ru' => 'Кровельщик', 'en' => 'Roofer']],
-            ['slug' => 'boyaci', 'name' => ['az' => 'Boyaçı', 'ru' => 'Маляр', 'en' => 'Painter']],
-            ['slug' => 'suvaqci', 'name' => ['az' => 'Suvaqçı', 'ru' => 'Штукатур', 'en' => 'Plasterer']],
-            ['slug' => 'gips-karton-ustasi', 'name' => ['az' => 'Gips-karton ustası', 'ru' => 'Мастер по гипсокартону', 'en' => 'Drywall installer']],
-            ['slug' => 'laminat-parket-ustasi', 'name' => ['az' => 'Laminat/parket ustası', 'ru' => 'Укладчик ламината и паркета', 'en' => 'Laminate & parquet fitter']],
-            ['slug' => 'pencere-qapi-ustasi', 'name' => ['az' => 'Pəncərə & qapı ustası', 'ru' => 'Мастер по окнам и дверям', 'en' => 'Window & door fitter']],
-            ['slug' => 'mebel-ustasi', 'name' => ['az' => 'Mebel ustası', 'ru' => 'Мебельщик', 'en' => 'Carpenter']],
-            ['slug' => 'qaynaqci', 'name' => ['az' => 'Qaynaqçı', 'ru' => 'Сварщик', 'en' => 'Welder']],
-            ['slug' => 'interyer-dizayner', 'name' => ['az' => 'İnteryer dizayner', 'ru' => 'Дизайнер интерьера', 'en' => 'Interior designer']],
-            ['slug' => 'kondisioner-ventilyasiya-ustasi', 'name' => ['az' => 'Kondisioner & ventilyasiya ustası', 'ru' => 'Мастер по кондиционерам и вентиляции', 'en' => 'HVAC technician']],
-            ['slug' => 'hovuz-ustasi', 'name' => ['az' => 'Hovuz ustası', 'ru' => 'Мастер по бассейнам', 'en' => 'Pool installer']],
-            ['slug' => 'landsaft-ustasi', 'name' => ['az' => 'Landşaft ustası', 'ru' => 'Ландшафтный мастер', 'en' => 'Landscaper']],
+            ['slug' => 'memar', 'category' => SpecialistCategory::Architect, 'name' => ['az' => 'Memar', 'ru' => 'Архитектор', 'en' => 'Architect']],
+            ['slug' => 'interyer-dizayner', 'category' => SpecialistCategory::Designer, 'name' => ['az' => 'İnteryer dizayner', 'ru' => 'Дизайнер интерьера', 'en' => 'Interior designer']],
+            ['slug' => 'tikinti-sirketi', 'category' => SpecialistCategory::Company, 'name' => ['az' => 'Tikinti şirkəti', 'ru' => 'Строительная компания', 'en' => 'Construction company']],
+            ['slug' => 'kafelci', 'category' => SpecialistCategory::Master, 'name' => ['az' => 'Kafelçi', 'ru' => 'Плиточник', 'en' => 'Tiler']],
+            ['slug' => 'santexnik', 'category' => SpecialistCategory::Master, 'name' => ['az' => 'Santexnik', 'ru' => 'Сантехник', 'en' => 'Plumber']],
+            ['slug' => 'elektrik-ustasi', 'category' => SpecialistCategory::Master, 'name' => ['az' => 'Elektrik ustası', 'ru' => 'Электрик', 'en' => 'Electrician']],
+            ['slug' => 'dam-ustasi', 'category' => SpecialistCategory::Master, 'name' => ['az' => 'Dam ustası', 'ru' => 'Кровельщик', 'en' => 'Roofer']],
+            ['slug' => 'boyaci', 'category' => SpecialistCategory::Master, 'name' => ['az' => 'Boyaçı', 'ru' => 'Маляр', 'en' => 'Painter']],
+            ['slug' => 'suvaqci', 'category' => SpecialistCategory::Master, 'name' => ['az' => 'Suvaqçı', 'ru' => 'Штукатур', 'en' => 'Plasterer']],
+            ['slug' => 'gips-karton-ustasi', 'category' => SpecialistCategory::Master, 'name' => ['az' => 'Gips-karton ustası', 'ru' => 'Мастер по гипсокартону', 'en' => 'Drywall installer']],
+            ['slug' => 'laminat-parket-ustasi', 'category' => SpecialistCategory::Master, 'name' => ['az' => 'Laminat/parket ustası', 'ru' => 'Укладчик ламината и паркета', 'en' => 'Laminate & parquet fitter']],
+            ['slug' => 'pencere-qapi-ustasi', 'category' => SpecialistCategory::Master, 'name' => ['az' => 'Pəncərə & qapı ustası', 'ru' => 'Мастер по окнам и дверям', 'en' => 'Window & door fitter']],
+            ['slug' => 'mebel-ustasi', 'category' => SpecialistCategory::Master, 'name' => ['az' => 'Mebel ustası', 'ru' => 'Мебельщик', 'en' => 'Carpenter']],
+            ['slug' => 'qaynaqci', 'category' => SpecialistCategory::Master, 'name' => ['az' => 'Qaynaqçı', 'ru' => 'Сварщик', 'en' => 'Welder']],
+            ['slug' => 'kondisioner-ventilyasiya-ustasi', 'category' => SpecialistCategory::Master, 'name' => ['az' => 'Kondisioner & ventilyasiya ustası', 'ru' => 'Мастер по кондиционерам и вентиляции', 'en' => 'HVAC technician']],
+            ['slug' => 'hovuz-ustasi', 'category' => SpecialistCategory::Master, 'name' => ['az' => 'Hovuz ustası', 'ru' => 'Мастер по бассейнам', 'en' => 'Pool installer']],
+            ['slug' => 'landsaft-ustasi', 'category' => SpecialistCategory::Master, 'name' => ['az' => 'Landşaft ustası', 'ru' => 'Ландшафтный мастер', 'en' => 'Landscaper']],
         ];
 
         foreach ($specialties as $index => $data) {
             $specialty = SpecialistSpecialty::firstOrNew(['slug' => $data['slug']]);
 
             if (! $specialty->exists) {
-                $specialty->fill(['name' => $data['name'], 'is_active' => true, 'sort_order' => $index]);
+                $specialty->fill([
+                    'name' => $data['name'],
+                    'category' => $data['category'],
+                    'is_active' => true,
+                    'sort_order' => $index,
+                ]);
                 $specialty->save();
 
                 continue;
@@ -600,11 +613,13 @@ class DemoSeeder extends Seeder
                 'email' => 'ramil.aliyev@archi.test',
                 'phone' => '+994503456789',
                 'craft' => 'Kafelçi',
+                'specialty' => 'kafelci',
                 'experience' => 12,
                 'city' => 'Bakı',
                 'about' => 'Təcrübəli kafelçi. 12 ildən artıq təcrübə. Hamam otağı, mətbəx və döşəmə kafel işləri.',
                 'skills' => ['Kafel döşəmə', 'Divar kafelləmə', 'Mozaika', 'Hidroizolyasiya'],
                 'avatar' => 'assets/bricklayer-at-work.jpg',
+                'homepage' => true,
             ],
             [
                 'first_name' => 'Tural',
@@ -612,11 +627,13 @@ class DemoSeeder extends Seeder
                 'email' => 'tural.hasanov@archi.test',
                 'phone' => '+994504567890',
                 'craft' => 'Elektrik ustası',
+                'specialty' => 'elektrik-ustasi',
                 'experience' => 8,
                 'city' => 'Bakı',
                 'about' => 'Peşəkar elektrik ustası. Elektrik quraşdırma, təmir və texniki xidmət.',
                 'skills' => ['Elektrik quraşdırma', 'Kabel çəkilişi', 'İşıqlandırma', 'Siqnalizasiya'],
                 'avatar' => 'assets/avatar-placeholder.png',
+                'homepage' => true,
             ],
             [
                 'first_name' => 'Orxan',
@@ -624,11 +641,13 @@ class DemoSeeder extends Seeder
                 'email' => 'orxan.mammadov@archi.test',
                 'phone' => '+994505678901',
                 'craft' => 'Dam ustası',
+                'specialty' => 'dam-ustasi',
                 'experience' => 15,
                 'city' => 'Sumqayıt',
                 'about' => 'Dam örtüyü quraşdırılması və təmiri üzrə mütəxəssis. Metal, bitum və keramik dam örtükləri.',
                 'skills' => ['Metal dam', 'Bitum dam', 'Hidroizolyasiya', 'Yağış suyu sistemi'],
                 'avatar' => 'assets/avatar-placeholder.png',
+                'homepage' => true,
             ],
             [
                 'first_name' => 'Vüsal',
@@ -636,11 +655,162 @@ class DemoSeeder extends Seeder
                 'email' => 'vusal.quliyev@archi.test',
                 'phone' => '+994506789012',
                 'craft' => 'Santexnik',
+                'specialty' => 'santexnik',
                 'experience' => 10,
                 'city' => 'Bakı',
                 'about' => 'Santexnika quraşdırılması və təmiri. Su və kanalizasiya sistemləri, isitmə sistemləri.',
                 'skills' => ['Su təchizatı', 'Kanalizasiya', 'İsitmə sistemi', 'Kran təmiri'],
                 'avatar' => 'assets/avatar-placeholder.png',
+                'homepage' => true,
+            ],
+
+            // ─── Memarlar (architect) ───
+            // The directory renders one block per category group, and until these
+            // existed two of the three blocks were headings over an empty state: nobody
+            // could register as an architect or a designer either, because the sign-up
+            // dropdown is built from the same specialty table. avatar is null on
+            // purpose — the card draws initials in a yellow ring, which reads better
+            // than the same grey placeholder photo repeated nine times.
+            [
+                'first_name' => 'Nigar',
+                'last_name' => 'Əliyeva',
+                'email' => 'nigar.aliyeva@archi.test',
+                'phone' => '+994507890123',
+                'craft' => 'Memar',
+                'specialty' => 'memar',
+                'category' => SpecialistCategory::Architect,
+                'experience' => 14,
+                'city' => 'Bakı',
+                'about' => 'Yaşayış və kommersiya obyektləri üzrə memar. Eskiz layihədən icra sənədlərinə qədər tam dövrü aparıram.',
+                'skills' => ['Eskiz layihə', 'İş layihəsi', 'Fasad həlli', '3D vizuallaşdırma'],
+                'avatar' => null,
+                'verified' => true,
+            ],
+            [
+                'first_name' => 'Elçin',
+                'last_name' => 'Rzayev',
+                'email' => 'elchin.rzayev@archi.test',
+                'phone' => '+994508901234',
+                'craft' => 'Memar',
+                'specialty' => 'memar',
+                'category' => SpecialistCategory::Architect,
+                'experience' => 9,
+                'city' => 'Bakı',
+                'about' => 'Fərdi evlər və həyət evləri üzrə memarlıq layihələri. Planlaşdırma, konstruktiv həllər və icazə sənədləri.',
+                'skills' => ['Fərdi ev layihəsi', 'Planlaşdırma', 'Konstruktiv hesabat', 'İcazə sənədləri'],
+                'avatar' => null,
+                'featured' => false,
+            ],
+            [
+                'first_name' => 'Ayşən',
+                'last_name' => 'Kərimova',
+                'email' => 'aysen.kerimova@archi.test',
+                'phone' => '+994509012345',
+                'craft' => 'Memar',
+                'specialty' => 'memar',
+                'category' => SpecialistCategory::Architect,
+                'experience' => 6,
+                'city' => 'Gəncə',
+                'about' => 'Ofis və ictimai məkanların memarlıq həlləri. Məkan planlaşdırması və işıq layihəsi.',
+                'skills' => ['Ofis layihəsi', 'Məkan planlaşdırması', 'İşıq layihəsi'],
+                'avatar' => null,
+                'featured' => false,
+            ],
+
+            // ─── İnteryer dizaynerlər (designer) ───
+            [
+                'first_name' => 'Leyla',
+                'last_name' => 'Hüseynova',
+                'email' => 'leyla.huseynova@archi.test',
+                'phone' => '+994551234567',
+                'craft' => 'İnteryer dizayner',
+                'specialty' => 'interyer-dizayner',
+                'category' => SpecialistCategory::Designer,
+                'experience' => 11,
+                'city' => 'Bakı',
+                'about' => 'Mənzil və villa interyerləri. Konsepsiya, material seçimi və müəllif nəzarəti.',
+                'skills' => ['İnteryer konsepsiyası', 'Material seçimi', '3D vizuallaşdırma', 'Müəllif nəzarəti'],
+                'avatar' => null,
+                'verified' => true,
+            ],
+            [
+                'first_name' => 'Kamran',
+                'last_name' => 'Səfərov',
+                'email' => 'kamran.safarov@archi.test',
+                'phone' => '+994552345678',
+                'craft' => 'İnteryer dizayner',
+                'specialty' => 'interyer-dizayner',
+                'category' => SpecialistCategory::Designer,
+                'experience' => 7,
+                'city' => 'Bakı',
+                'about' => 'Kafe, restoran və mağaza interyerləri üzrə dizayner. Brend kimliyinə uyğun məkan həlləri.',
+                'skills' => ['Kommersiya interyeri', 'Mebel layihəsi', 'Brend məkanı'],
+                'avatar' => null,
+                'featured' => false,
+            ],
+            [
+                'first_name' => 'Günel',
+                'last_name' => 'Nəbiyeva',
+                'email' => 'gunel.nabiyeva@archi.test',
+                'phone' => '+994553456789',
+                'craft' => 'İnteryer dizayner',
+                'specialty' => 'interyer-dizayner',
+                'category' => SpecialistCategory::Designer,
+                'experience' => 5,
+                'city' => 'Sumqayıt',
+                'about' => 'Kiçik mənzillər üzrə praktik dizayn. Az büdcə ilə funksional planlaşdırma və rəng həlli.',
+                'skills' => ['Kiçik mənzil', 'Rəng həlli', 'Anbar-qarderob planı'],
+                'avatar' => null,
+                'featured' => false,
+            ],
+
+            // ─── Tikinti şirkətləri (company) ───
+            // A company registers as one account: first_name holds the trade name and
+            // last_name the legal form, so `users.name` reads "Aztikinti Group MMC".
+            [
+                'first_name' => 'Aztikinti Group',
+                'last_name' => 'MMC',
+                'email' => 'info@aztikinti.archi.test',
+                'phone' => '+994124567890',
+                'craft' => 'Tikinti şirkəti',
+                'specialty' => 'tikinti-sirketi',
+                'category' => SpecialistCategory::Company,
+                'experience' => 18,
+                'city' => 'Bakı',
+                'about' => 'Tam dövrlü tikinti şirkəti. Sıfırdan təhvilə qədər yaşayış və kommersiya obyektləri.',
+                'skills' => ['Açar təslimi', 'Monolit tikinti', 'Fasad işləri', 'Layihə idarəetməsi'],
+                'avatar' => null,
+                'verified' => true,
+            ],
+            [
+                'first_name' => 'Inşa Servis',
+                'last_name' => 'MMC',
+                'email' => 'info@insaservis.archi.test',
+                'phone' => '+994125678901',
+                'craft' => 'Tikinti şirkəti',
+                'specialty' => 'tikinti-sirketi',
+                'category' => SpecialistCategory::Company,
+                'experience' => 12,
+                'city' => 'Bakı',
+                'about' => 'Mənzil və ofis təmiri üzrə briqada. Qiymətləndirmə, smeta və mərhələli təhvil.',
+                'skills' => ['Açar təslimi təmir', 'Smeta', 'Ofis təmiri', 'Dizayn nəzarəti'],
+                'avatar' => null,
+                'featured' => false,
+            ],
+            [
+                'first_name' => 'Xəzər Tikinti',
+                'last_name' => 'MMC',
+                'email' => 'info@xezertikinti.archi.test',
+                'phone' => '+994126789012',
+                'craft' => 'Tikinti şirkəti',
+                'specialty' => 'tikinti-sirketi',
+                'category' => SpecialistCategory::Company,
+                'experience' => 8,
+                'city' => 'Gəncə',
+                'about' => 'Fərdi evlərin tikintisi və bərpası. Bünövrədən dam örtüyünə qədər bütün mərhələlər.',
+                'skills' => ['Fərdi ev tikintisi', 'Bünövrə', 'Bərpa işləri'],
+                'avatar' => null,
+                'featured' => false,
             ],
         ];
 
@@ -658,9 +828,18 @@ class DemoSeeder extends Seeder
                 ],
             );
 
+            // Looked up by the slug the entry names, never by Str::slug($craft):
+            // transliterating "İnteryer dizayner" does not reliably land on the
+            // `interyer-dizayner` row, and a miss would mint a duplicate specialty on
+            // the default `master` category — the exact bug the recategorise migration
+            // exists to clean up.
             $specialty = SpecialistSpecialty::firstOrCreate(
-                ['slug' => Str::slug($data['craft'])],
-                ['name' => ['az' => $data['craft']], 'is_active' => true],
+                ['slug' => $data['specialty']],
+                [
+                    'name' => ['az' => $data['craft']],
+                    'category' => $data['category'] ?? SpecialistCategory::Master,
+                    'is_active' => true,
+                ],
             );
 
             SpecialistProfile::firstOrCreate(
@@ -674,9 +853,12 @@ class DemoSeeder extends Seeder
                     'about' => $data['about'],
                     'skills' => $data['skills'],
                     'avatar_path' => $data['avatar'],
-                    'is_featured' => true,
-                    'show_on_homepage' => true,
-                    'show_in_header' => true,
+                    'is_featured' => $data['featured'] ?? true,
+                    'is_verified' => $data['verified'] ?? false,
+                    // Only the original four are curated onto the homepage and the
+                    // header; the rest exist to fill the directory's sections.
+                    'show_on_homepage' => $data['homepage'] ?? false,
+                    'show_in_header' => $data['homepage'] ?? false,
                     'is_on_vacation' => false,
                     'available_slots' => rand(3, 8),
                 ],
@@ -713,6 +895,61 @@ class DemoSeeder extends Seeder
                 ['name' => 'Kanalizasiya sistemi', 'description' => 'Kanalizasiya boru quraşdırma', 'price' => 22.00, 'unit' => 'sqm'],
                 ['name' => 'Kran və qarışdırıcı', 'description' => 'Quraşdırma və təmir', 'price' => 40.00, 'unit' => 'piece'],
                 ['name' => 'İsitmə sistemi', 'description' => 'Radiator və boru quraşdırma', 'price' => 30.00, 'unit' => 'sqm'],
+            ],
+
+            // Design and construction work is quoted per m² of the object or per job,
+            // never per running metre — the card prints "≈ from X ₼" without a unit for
+            // exactly this reason, and the "ən ucuz" sort reads the lowest of these.
+            'nigar.aliyeva@archi.test' => [
+                ['name' => 'Eskiz layihə', 'description' => 'Planlaşdırma və həcm həlli', 'price' => 12.00, 'unit' => 'sqm'],
+                ['name' => 'İş layihəsi', 'description' => 'İcra sənədlərinin tam dəsti', 'price' => 28.00, 'unit' => 'sqm'],
+                ['name' => 'Fasad həlli', 'description' => 'Material və rəng passportu', 'price' => 18.00, 'unit' => 'sqm'],
+                ['name' => 'Müəllif nəzarəti', 'description' => 'Tikinti boyu aylıq nəzarət', 'price' => 400.00, 'unit' => 'piece'],
+            ],
+            'elchin.rzayev@archi.test' => [
+                ['name' => 'Fərdi ev layihəsi', 'description' => 'Bünövrədən dama tam layihə', 'price' => 22.00, 'unit' => 'sqm'],
+                ['name' => 'Planlaşdırma həlli', 'description' => 'Mərtəbə planları, 2 variant', 'price' => 9.00, 'unit' => 'sqm'],
+                ['name' => 'Konstruktiv hesabat', 'description' => 'Daşıyıcı elementlərin hesabatı', 'price' => 14.00, 'unit' => 'sqm'],
+                ['name' => 'İcazə sənədlərinin hazırlanması', 'description' => 'Tikinti icazəsi üçün dəst', 'price' => 650.00, 'unit' => 'piece'],
+            ],
+            'aysen.kerimova@archi.test' => [
+                ['name' => 'Ofis planlaşdırması', 'description' => 'İş yerlərinin yerləşdirilməsi', 'price' => 10.00, 'unit' => 'sqm'],
+                ['name' => 'İctimai məkan layihəsi', 'description' => 'Qəbul, dəhliz və zal həlli', 'price' => 20.00, 'unit' => 'sqm'],
+                ['name' => 'İşıq layihəsi', 'description' => 'İşıqlandırma sxemi və hesabat', 'price' => 7.00, 'unit' => 'sqm'],
+            ],
+
+            'leyla.huseynova@archi.test' => [
+                ['name' => 'İnteryer konsepsiyası', 'description' => 'Üslub, rəng və material lövhəsi', 'price' => 15.00, 'unit' => 'sqm'],
+                ['name' => 'Tam interyer layihəsi', 'description' => 'Çertyojlar, 3D və spesifikasiya', 'price' => 35.00, 'unit' => 'sqm'],
+                ['name' => '3D vizuallaşdırma', 'description' => 'Otaq başına foto-real render', 'price' => 180.00, 'unit' => 'piece'],
+                ['name' => 'Müəllif nəzarəti', 'description' => 'Təmir boyu aylıq nəzarət', 'price' => 350.00, 'unit' => 'piece'],
+            ],
+            'kamran.safarov@archi.test' => [
+                ['name' => 'Kommersiya interyeri', 'description' => 'Kafe, mağaza və restoran', 'price' => 30.00, 'unit' => 'sqm'],
+                ['name' => 'Mebel layihəsi', 'description' => 'Sifarişlə mebel çertyojları', 'price' => 25.00, 'unit' => 'sqm'],
+                ['name' => 'Brend məkanı həlli', 'description' => 'Naviqasiya və vitrin konsepsiyası', 'price' => 220.00, 'unit' => 'piece'],
+            ],
+            'gunel.nabiyeva@archi.test' => [
+                ['name' => 'Kiçik mənzil planı', 'description' => '1-2 otaqlı mənzil üçün həll', 'price' => 11.00, 'unit' => 'sqm'],
+                ['name' => 'Rəng və material həlli', 'description' => 'Hazır alış siyahısı ilə', 'price' => 6.00, 'unit' => 'sqm'],
+                ['name' => 'Qarderob və anbar planı', 'description' => 'Daxili bölgü çertyoju', 'price' => 90.00, 'unit' => 'piece'],
+            ],
+
+            'info@aztikinti.archi.test' => [
+                ['name' => 'Açar təslimi tikinti', 'description' => 'Sıfırdan təhvilə qədər', 'price' => 620.00, 'unit' => 'sqm'],
+                ['name' => 'Monolit karkas', 'description' => 'Bünövrə və daşıyıcı karkas', 'price' => 240.00, 'unit' => 'sqm'],
+                ['name' => 'Fasad işləri', 'description' => 'İstilik izolyasiyası və üzlük', 'price' => 85.00, 'unit' => 'sqm'],
+                ['name' => 'Layihə idarəetməsi', 'description' => 'Aylıq icra və smeta nəzarəti', 'price' => 900.00, 'unit' => 'piece'],
+            ],
+            'info@insaservis.archi.test' => [
+                ['name' => 'Açar təslimi təmir', 'description' => 'Mənzil və ofis, material daxil', 'price' => 310.00, 'unit' => 'sqm'],
+                ['name' => 'Təmir smetası', 'description' => 'Obyektə baxış və qiymətləndirmə', 'price' => 120.00, 'unit' => 'piece'],
+                ['name' => 'Ofis təmiri', 'description' => 'Açıq ofis və iclas otaqları', 'price' => 260.00, 'unit' => 'sqm'],
+            ],
+            'info@xezertikinti.archi.test' => [
+                ['name' => 'Fərdi ev tikintisi', 'description' => 'Bünövrədən dam örtüyünə qədər', 'price' => 540.00, 'unit' => 'sqm'],
+                ['name' => 'Bünövrə işləri', 'description' => 'Qazıntı, armatur və beton', 'price' => 150.00, 'unit' => 'sqm'],
+                ['name' => 'Bərpa işləri', 'description' => 'Köhnə tikilinin gücləndirilməsi', 'price' => 190.00, 'unit' => 'sqm'],
             ],
         ];
 
