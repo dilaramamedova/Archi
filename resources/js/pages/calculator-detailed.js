@@ -362,7 +362,9 @@ export default function init() {
         if (inflight === controller) {
           state.loading = false;
           inflight = null;
-          render();
+          // The one automatic re-render: it must not snatch the field the visitor
+          // is still typing into. See render().
+          render({ deferWhileTyping: true });
         }
       }
     }, immediate ? 0 : 300);
@@ -1109,12 +1111,61 @@ export default function init() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function render() {
+  /**
+   * Is the visitor typing into a field of the current step?
+   *
+   * Only fields inside `mainEl` count. The side panel holds buttons, and the stepper
+   * holds none, so rebuilding either one interrupts nothing.
+   */
+  function editingMainField() {
+    const el = document.activeElement;
+
+    return !! el
+      && mainEl.contains(el)
+      && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT');
+  }
+
+  // Set when an automatic re-render was skipped because a field had focus, so the
+  // step knows it still owes itself a rebuild once the visitor leaves that field.
+  let mainRenderPending = false;
+
+  /**
+   * @param {{deferWhileTyping?: boolean}} options
+   *   `deferWhileTyping` is passed only by recalculate(): every other caller is a
+   *   deliberate click that changes what the step must show — a new room, a removed
+   *   line, a step change — and those must always rebuild.
+   */
+  function render({ deferWhileTyping = false } = {}) {
     renderStepper();
+
+    // recalculate() lands ~300ms after the last keystroke and rebuilt the whole step
+    // through innerHTML, which replaces the very <input> being typed into. The field
+    // lost focus mid-word; worse, on `type="number"` a half-typed decimal reads back
+    // as "" (the browser rejects "4." as an incomplete number), so the rebuild wiped
+    // the entry as well. Nothing in the step is worth that: the results panel keeps
+    // updating live, and the step's own markup waits for the field to be released.
+    if (deferWhileTyping && editingMainField()) {
+      mainRenderPending = true;
+      renderSide();
+
+      return;
+    }
+
     mainEl.innerHTML = [stepObject, stepRooms, stepWorks, stepMaterials, stepCart, stepSummary][state.step]();
     bindMain();
+    mainRenderPending = false;
     renderSide();
   }
+
+  // `mainEl` outlives every render, so this is bound once here rather than inside
+  // bindMain(). The timeout lets focus settle first: tabbing from one field to the
+  // next fires focusout before focusin, and rebuilding in between would destroy the
+  // field the visitor has just reached.
+  mainEl.addEventListener('focusout', () => {
+    setTimeout(() => {
+      if (mainRenderPending && ! editingMainField()) render();
+    }, 0);
+  });
 
   function bindBasketToggles(root) {
     root.querySelectorAll('[data-basket]').forEach((el) =>
