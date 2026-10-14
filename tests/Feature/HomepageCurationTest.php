@@ -116,6 +116,11 @@ class HomepageCurationTest extends TestCase
             'user_id' => $user->id,
             'specialist_specialty_id' => $specialty->id,
             'city' => 'Bakı',
+            // Enough to clear SpecialistProfile::scopeListable, which the public
+            // directory applies — this test is about the featured filter, not about
+            // the completeness gate (that has its own tests in SpecialistDirectoryTest).
+            'phone' => '+994500000000',
+            'about' => 'Test ustası.',
         ], $overrides));
 
         return [$user, $profile];

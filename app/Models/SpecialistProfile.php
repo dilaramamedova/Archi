@@ -52,6 +52,11 @@ class SpecialistProfile extends Model
      * contact, and a word about the work. It is NOT moderation — nobody approves a
      * profile, the master clears it themselves by filling the form, and their own
      * profile URL keeps working the whole time so they can preview and share it.
+     *
+     * Applied to the automatic listings only — the directory and search. The homepage
+     * row is not gated on purpose: it needs both `is_featured` and `show_on_homepage`,
+     * which are two explicit admin choices, and an editor who picks somebody has
+     * already made the judgement this scope exists to make on their behalf.
      */
     public function scopeListable(Builder $query): Builder
     {
