@@ -104,7 +104,10 @@ abstract class BaseUserResource extends Resource
                 Forms\Components\Select::make('status')
                     ->label('Status')
                     ->options(self::statusOptions())
-                    ->default(static::getManagedRole() === UserRole::Admin ? UserStatus::Active->value : UserStatus::Pending->value)
+                    // Accounts are no longer vetted on creation — matching public
+                    // registration, which signs every role in immediately. The admin can
+                    // still pick pending/rejected/blocked from the select.
+                    ->default(UserStatus::Active->value)
                     ->required()
                     ->disabled(fn (?User $record): bool => $record !== null
                         && static::getManagedRole() === UserRole::Admin

@@ -4,11 +4,16 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\PortfolioStatus;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Models\SpecialistPortfolioItem;
 use App\Models\SpecialistSpecialty;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Notification;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class UserRegistrationTest extends TestCase
@@ -46,18 +51,31 @@ class UserRegistrationTest extends TestCase
         $this->assertAuthenticated();
     }
 
-    public function test_seller_registration_creates_a_pending_seller_profile(): void
+    public function test_seller_registration_creates_an_active_seller_signed_in_immediately(): void
     {
         $data = $this->registrationData(UserRole::Seller) + ['company_name' => 'ARCHI Store'];
 
-        $this->postJson('/register', $data)->assertCreated();
+        $this->postJson('/register', $data)
+            ->assertCreated()
+            ->assertJsonPath('redirect', route('business.profile'));
 
         $user = User::query()->where('email', 'new-user@example.com')->firstOrFail();
 
         $this->assertSame(UserRole::Seller, $user->role);
-        $this->assertSame(UserStatus::Pending, $user->status);
+        // No admin approval for the account itself — only for what the seller publishes.
+        $this->assertSame(UserStatus::Active, $user->status);
+        $this->assertNotNull($user->approved_at);
         $this->assertSame('ARCHI Store', $user->sellerProfile?->brand_name);
-        $this->assertGuest();
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_freshly_registered_seller_reaches_the_business_cabinet(): void
+    {
+        $data = $this->registrationData(UserRole::Seller) + ['company_name' => 'ARCHI Store'];
+        $this->postJson('/register', $data)->assertCreated();
+
+        $this->get('/business/profile')->assertOk();
+        $this->get('/business/profile/company')->assertOk();
     }
 
     public function test_master_registration_creates_specialist_profile(): void
@@ -77,8 +95,77 @@ class UserRegistrationTest extends TestCase
         $this->assertSame('Elektrik', $user->specialistProfile?->craft);
         $this->assertTrue($user->specialistProfile?->specialty->is($specialty));
         $this->assertSame('Bakı', $user->specialistProfile?->city);
-        $this->assertSame(UserStatus::Pending, $user->status);
+        // No admin approval for the account itself — only for the portfolio they publish.
+        $this->assertSame(UserStatus::Active, $user->status);
+        $this->assertNotNull($user->approved_at);
+        $this->assertAuthenticatedAs($user);
+    }
+
+    public function test_freshly_registered_master_reaches_the_specialist_cabinet(): void
+    {
+        $this->registerMaster();
+
+        // A brand-new master has an all-but-empty profile row; the cabinet must render it.
+        $this->get('/specialist/cabinet')->assertOk();
+        $this->get('/specialist/cabinet/portfolio')->assertOk();
+        $this->get('/specialist/onboarding')->assertOk();
+        $this->get('/specialist/owner')->assertOk();
+    }
+
+    public function test_registration_does_not_notify_anybody_about_an_approval(): void
+    {
+        Notification::fake();
+
+        $this->registerMaster();
+
+        // Nobody approved this account, so the "your account was approved" mail that the
+        // admin approve action sends must not go out on self-registration.
+        Notification::assertNothingSent();
+    }
+
+    public function test_portfolio_of_a_freshly_registered_master_still_waits_for_approval(): void
+    {
+        Storage::fake('public');
+        $this->registerMaster();
+
+        $this->post('/specialist/cabinet/portfolio', [
+            'items' => json_encode([
+                ['id' => null, 'title' => 'İlk iş', 'file_index' => 0],
+            ], JSON_THROW_ON_ERROR),
+            'images' => [UploadedFile::fake()->image('work.jpg')],
+        ], ['Accept' => 'application/json'])->assertOk();
+
+        $item = SpecialistPortfolioItem::query()->firstOrFail();
+
+        $this->assertSame(PortfolioStatus::Pending, $item->status);
+        $this->assertNull($item->approved_at);
+    }
+
+    public function test_an_account_blocked_or_rejected_by_an_admin_still_cannot_log_in(): void
+    {
+        $data = $this->registrationData(UserRole::Seller) + ['company_name' => 'ARCHI Store'];
+        $this->postJson('/register', $data)->assertCreated();
+        $this->post('/logout');
+
+        $user = User::query()->where('email', 'new-user@example.com')->firstOrFail();
+        $credentials = ['identifier' => 'new-user@example.com', 'password' => 'secure-password'];
+
+        $user->block();
+        $this->postJson('/login', $credentials)->assertUnprocessable()->assertJsonValidationErrors('identifier');
         $this->assertGuest();
+
+        $user->reject('Sənədlər natamamdır');
+        $this->postJson('/login', $credentials)->assertUnprocessable()->assertJsonValidationErrors('identifier');
+        $this->assertGuest();
+
+        $user->update(['status' => UserStatus::Pending]);
+        $this->postJson('/login', $credentials)->assertUnprocessable()->assertJsonValidationErrors('identifier');
+        $this->assertGuest();
+
+        // ...and an admin can let them back in.
+        $user->approve();
+        $this->postJson('/login', $credentials)->assertOk();
+        $this->assertAuthenticatedAs($user->fresh());
     }
 
     public function test_master_registration_normalizes_a_city_slug_to_its_label(): void
@@ -117,6 +204,21 @@ class UserRegistrationTest extends TestCase
             ->assertJsonValidationErrors('role');
 
         $this->assertDatabaseMissing('users', ['email' => 'new-user@example.com']);
+    }
+
+    /**
+     * Registers a master through the public endpoint and leaves them signed in.
+     */
+    private function registerMaster(): User
+    {
+        $specialty = SpecialistSpecialty::query()->create(['name' => 'Elektrik', 'slug' => 'elektrik']);
+
+        $this->postJson('/register', $this->registrationData(UserRole::Master) + [
+            'specialist_specialty_id' => (string) $specialty->id,
+            'city' => 'baku',
+        ])->assertCreated()->assertJsonPath('redirect', route('specialist.cabinet'));
+
+        return User::query()->where('email', 'new-user@example.com')->firstOrFail();
     }
 
     private function registrationData(UserRole $role): array

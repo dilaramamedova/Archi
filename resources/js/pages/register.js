@@ -52,15 +52,15 @@ export default function init() {
     const res = await authFetch('/register', data);
 
     if (res.ok) {
-      // Buyers are signed in straight away — send them on when the popup closes
-      // (autoClose and manual close both resolve the promise).
-      if (res.data.redirect && role === 'buyer') {
+      // Every role is signed in straight away — send them on when the popup closes
+      // (autoClose and manual close both resolve the promise). The redirect is the
+      // role's own landing page: home for a buyer, the cabinet for a seller/master.
+      if (res.data.redirect) {
         popup.success(res.data.message, { autoClose: 1800 }).then(() => {
           window.location.href = res.data.redirect;
         });
         return;
       }
-      // Sellers/masters wait for approval — no redirect, just the pending message.
       form.reset();
       pick('buyer');
       popup.success(res.data.message);

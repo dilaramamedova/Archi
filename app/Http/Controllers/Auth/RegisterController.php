@@ -46,10 +46,12 @@ class RegisterController extends Controller
         ]);
 
         $role = UserRole::from($validated['role']);
-        // Buyers need no vetting — only sellers and masters wait for admin approval.
-        $status = $role === UserRole::Buyer ? UserStatus::Active : UserStatus::Pending;
-
-        $user = DB::transaction(function () use ($validated, $status): User {
+        // No account-level vetting at sign-up: every role is active immediately and can
+        // sign in. Moderation moved to what they publish — a product is created with
+        // `is_approved = false` and a portfolio item with `PortfolioStatus::Pending`, so
+        // nothing a seller or master posts is public before an admin approves it. An admin
+        // can still move an existing account to pending/rejected/blocked from the panel.
+        $user = DB::transaction(function () use ($validated): User {
             $user = User::create([
                 'name' => $validated['first_name'].' '.$validated['last_name'],
                 'first_name' => $validated['first_name'],
@@ -58,8 +60,8 @@ class RegisterController extends Controller
                 'phone' => $validated['phone'],
                 'password' => $validated['password'],
                 'role' => $validated['role'],
-                'status' => $status,
-                'approved_at' => $status === UserStatus::Active ? now() : null,
+                'status' => UserStatus::Active,
+                'approved_at' => now(),
                 'terms_accepted' => true,
             ]);
 
@@ -82,29 +84,31 @@ class RegisterController extends Controller
             return $user;
         });
 
-        if ($status === UserStatus::Active) {
-            Auth::login($user);
-            $request->session()->regenerate();
+        Auth::login($user);
+        $request->session()->regenerate();
 
-            if ($request->expectsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => t('register.buyer_message'),
-                    'redirect' => route('home'),
-                ], 201);
-            }
-
-            return redirect()->route('home')->with('success', t('register.buyer_message'));
-        }
+        $redirect = $this->redirectTo($role);
 
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => t('register.pending_message'),
-                'redirect' => route('login'),
+                'message' => t('register.active_message'),
+                'redirect' => $redirect,
             ], 201);
         }
 
-        return redirect()->route('login')->with('success', t('register.pending_message'));
+        return redirect()->to($redirect)->with('success', t('register.active_message'));
+    }
+
+    /**
+     * Same landing page the user would get by signing in (see LoginController).
+     */
+    private function redirectTo(UserRole $role): string
+    {
+        return match ($role) {
+            UserRole::Seller => route('business.profile'),
+            UserRole::Master => route('specialist.cabinet'),
+            default => route('home'),
+        };
     }
 }

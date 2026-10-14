@@ -1974,8 +1974,9 @@ class TranslationsSeeder extends Seeder
                 'head.subtitle' => ['az' => 'Hesab növünü seç — alıcı, satıcı, yoxsa usta/mütəxəssis kimi davam et.', 'ru' => 'Выберите тип аккаунта — покупатель, продавец или мастер.', 'en' => 'Choose an account type — buyer, seller or master/specialist.'],
                 'head.tag' => ['az' => 'ARCHİ-yə qoşul', 'ru' => 'Присоединиться к ARCHİ', 'en' => 'Join ARCHİ'],
                 'head.title' => ['az' => 'Qeydiyyatdan keç', 'ru' => 'Зарегистрироваться', 'en' => 'Sign up'],
-                'buyer_message' => ['az' => 'Qeydiyyat uğurla tamamlandı! Hesabınıza daxil olundu.', 'ru' => 'Регистрация завершена! Вы вошли в свой аккаунт.', 'en' => 'Registration complete! You are now signed in.'],
-                'pending_message' => ['az' => 'Qeydiyyat uğurla tamamlandı! Hesabınız admin tərəfindən təsdiqləndikdən sonra daxil ola bilərsiniz.', 'ru' => 'Регистрация завершена! Вы сможете войти после подтверждения аккаунта администратором.', 'en' => 'Registration complete! You can sign in after your account is approved by an administrator.'],
+                // Shown to every role: registration no longer waits for admin approval,
+                // so there is no separate pending message any more.
+                'active_message' => ['az' => 'Qeydiyyat uğurla tamamlandı! Hesabınıza daxil olundu.', 'ru' => 'Регистрация завершена! Вы вошли в свой аккаунт.', 'en' => 'Registration complete! You are now signed in.'],
                 'roles.buyer.desc' => ['az' => 'Material al, usta tap, sifariş ver.', 'ru' => 'Покупайте материалы, находите мастеров, заказывайте.', 'en' => 'Buy materials, find masters, place orders.'],
                 'roles.buyer.title' => ['az' => 'Alıcı', 'ru' => 'Покупатель', 'en' => 'Buyer'],
                 'roles.label' => ['az' => 'Hesab növü', 'ru' => 'Тип аккаунта', 'en' => 'Account type'],
