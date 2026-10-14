@@ -82,6 +82,12 @@ final class SpecialistCategoryFilterTest extends TestCase
             'user_id' => $user->id,
             'specialist_specialty_id' => $specialty->id,
             'city' => 'Bakı',
+            // Enough to clear SpecialistProfile::scopeListable, which the public
+            // directory and search apply. These tests are about filtering, search and
+            // specialty naming — the completeness gate has its own tests in
+            // SpecialistDirectoryTest.
+            'phone' => '+994500000000',
+            'about' => 'Test ustası.',
         ]);
     }
 }
