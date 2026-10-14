@@ -26,6 +26,13 @@ class CatalogController extends Controller
      */
     public function index(Request $request)
     {
+        // Every filter below — and the blade's `$sortOptions[request('sort')]`
+        // lookup — expects a scalar. A hand-edited or crawled URL such as
+        // `?sort[]=cheap`, `?q[]=x`, `?brand[]=x` or `?size[]=x` handed them an
+        // array and returned a 500. Such a value cannot mean anything here, so
+        // it is dropped and the page renders unfiltered.
+        $this->dropArrayParams($request);
+
         $query = Product::visible()->approved()->with(['images', 'category']);
 
         // ── Classifier drill-down: ?class= > ?group= > ?section= ──────────
@@ -136,12 +143,15 @@ class CatalogController extends Controller
             $query->orderBy('sort_rank')->orderBy('sort_order')->popular();
         }
 
-        if ($request->filled('min_price')) {
-            $query->where('price', '>=', $request->min_price);
+        // Compared as numbers, never as the raw string: `?min_price=abc` used to
+        // reach MySQL as a string and only survived because the column
+        // comparison silently casts it to 0.
+        if (is_numeric($request->input('min_price'))) {
+            $query->where('price', '>=', (float) $request->input('min_price'));
         }
 
-        if ($request->filled('max_price')) {
-            $query->where('price', '<=', $request->max_price);
+        if (is_numeric($request->input('max_price'))) {
+            $query->where('price', '<=', (float) $request->input('max_price'));
         }
 
         if ($request->boolean('free_delivery')) {
@@ -219,6 +229,9 @@ class CatalogController extends Controller
                 SpecialistProfile::where('is_featured', true)
                     ->whereHas('user', fn ($q) => $q->where('status', UserStatus::Active))
                     ->with(['user', 'specialty'])
+                    // The card prints a project count; without this the block
+                    // cost one COUNT per specialist on every catalog render.
+                    ->withCount(['approvedPortfolioItems as portfolio_count'])
                     ->take(4)
                     ->get(),
 
@@ -254,6 +267,32 @@ class CatalogController extends Controller
             'latestReviews',
             'filterBrands',
         ));
+    }
+
+    /**
+     * Strip array values from the query parameters that are read as scalars,
+     * both here and in the catalog blade. `attr`, `attr_min` and `attr_max` are
+     * excluded on purpose — those are arrays by contract.
+     */
+    private function dropArrayParams(Request $request): void
+    {
+        $scalarKeys = [
+            'q', 'sort', 'page', 'category', 'section', 'group', 'class',
+            'brand', 'size', 'surface', 'min_price', 'max_price',
+            'in_stock', 'free_delivery', 'on_sale', 'sale', 'featured',
+        ];
+
+        // InputBag::get() itself throws on a non-scalar value, so the raw
+        // arrays are what gets inspected here.
+        $get = $request->query->all();
+        $post = $request->request->all();
+
+        foreach ($scalarKeys as $key) {
+            if (is_array($get[$key] ?? null) || is_array($post[$key] ?? null)) {
+                $request->query->remove($key);
+                $request->request->remove($key);
+            }
+        }
     }
 
     /**

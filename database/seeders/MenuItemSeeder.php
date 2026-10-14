@@ -117,7 +117,10 @@ class MenuItemSeeder extends Seeder
             ['label' => ['az' => 'Gizlilik siyasəti', 'ru' => 'Политика конфиденциальности', 'en' => 'Privacy policy'], 'url' => '/privacy', 'sort_order' => 2],
             ['label' => ['az' => 'Çatdırılma & qaytarma', 'ru' => 'Доставка & возврат', 'en' => 'Delivery & returns'], 'url' => '/delivery', 'sort_order' => 3],
             ['label' => ['az' => 'Cookie siyasəti', 'ru' => 'Политика cookie', 'en' => 'Cookie policy'], 'url' => '/cookies', 'sort_order' => 4],
-            ['label' => ['az' => 'Sayt xəritəsi', 'ru' => 'Карта сайта', 'en' => 'Sitemap'], 'url' => '/sitemap', 'sort_order' => 5],
+            // "Sayt xəritəsi" pointed at /sitemap, which has never existed — a 404 in
+            // the footer of every single page. Removed rather than repointed: there is
+            // nothing to point it at yet. Put it back here the day a sitemap route
+            // exists; the label is still in the translations as `footer.legal_sitemap`.
         ];
 
         foreach ($legal as $item) {

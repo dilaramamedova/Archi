@@ -3,7 +3,7 @@
 
 {{-- ===================== HERO ===================== --}}
 <section class="about-hero relative flex items-end overflow-hidden" style="height:460px">
-  <img class="absolute inset-0 size-full object-cover" src="{{ storage_url(Setting::get('about_hero_image'), '/assets/about-hero.jpg') }}" alt="">
+  <img class="absolute inset-0 size-full object-cover" src="{{ storage_url(Setting::get('about_hero_image'), '/assets/architecture-concrete-villa.jpg') }}" alt="">
   <div class="absolute inset-0 bg-black/[.58]"></div>
   <div class="wrap relative z-10 pb-14 max-[900px]:pb-10 max-[560px]:pb-8">
     <div class="inner flex flex-col gap-[18px]">
@@ -15,10 +15,12 @@
       <h1 class="max-w-[620px] text-[46px] leading-[1.18] font-bold text-white max-[900px]:text-[36px] max-[560px]:text-[28px]">{{ Setting::get('about_hero_title') }}</h1>
       <p class="max-w-[560px] text-[17px] leading-[1.55] text-white/70">{{ Setting::get('about_hero_subtitle') }}</p>
       <div class="flex gap-3 pt-2">
-        <x-ui.button variant="primary" :href="Setting::get('about_cta1_url', '/catalog')"
+        <x-ui.button variant="primary" :href="Setting::get('about_cta1_url', route('catalog'))"
                      class="h-12 rounded px-7 text-[15px] font-semibold">{{ Setting::get('about_cta1_text', t('about.hero.btn1')) }}</x-ui.button>
-        <x-ui.button variant="outline" :href="Setting::get('about_cta2_url', '/specialists')"
-                     class="h-12 rounded border-white/45 px-7 text-[15px] font-semibold text-white">{{ Setting::get('about_cta2_text', t('about.hero.btn2')) }}</x-ui.button>
+        {{-- bg-transparent: .ui-btn-outline is white-on-white once the caller sets text-white,
+             and this button sits on the dark hero photo. --}}
+        <x-ui.button variant="outline" :href="Setting::get('about_cta2_url', route('specialists'))"
+                     class="h-12 rounded border-white/45 bg-transparent px-7 text-[15px] font-semibold text-white hover:bg-white/10">{{ Setting::get('about_cta2_text', t('about.hero.btn2')) }}</x-ui.button>
       </div>
     </div>
   </div>
@@ -71,7 +73,7 @@
       </div>
       <div class="w-[688px] shrink-0 max-[1100px]:w-full">
         <img class="h-[440px] w-full rounded object-cover max-[1100px]:h-[320px]"
-             src="{{ storage_url(Setting::get('about_mission_image'), '/assets/about-mission.jpg') }}" alt="">
+             src="{{ storage_url(Setting::get('about_mission_image'), '/assets/renovation-before-after-wide.jpg') }}" alt="">
       </div>
     </div>
   </div>

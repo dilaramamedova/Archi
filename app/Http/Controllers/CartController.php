@@ -13,19 +13,35 @@ class CartController extends Controller
         if (auth()->check()) {
             $items = auth()->user()->cartItems()
                 ->with('product.images', 'product.category')
-                ->get();
+                ->get()
+                // A product the seller has hidden, or one an admin has not approved,
+                // used to keep rendering here with a price on it — and then block the
+                // whole order at checkout with "bu məhsul hazırda satışda deyil". The
+                // items() endpoint already filtered them; the page did not.
+                ->filter(fn (CartItem $item) => $item->product
+                    && $item->product->is_visible
+                    && $item->product->is_approved)
+                ->values();
         } else {
             $items = collect();
         }
 
-        return view('pages.cart', compact('items'));
+        return view('pages.cart', [
+            'items' => $items,
+            // One source for the delivery rule — see OrderController. The cart used to
+            // keep its own copy in JavaScript.
+            'deliveryRule' => [
+                'freeFrom' => OrderController::DELIVERY_FREE_FROM,
+                'fee' => OrderController::DELIVERY_FEE,
+            ],
+        ]);
     }
 
     public function store(Request $request): JsonResponse
     {
         $request->validate([
             'product_id' => 'required|exists:products,id',
-            'quantity' => 'integer|min:1|max:99',
+            'quantity' => 'integer|min:1|max:'.OrderController::MAX_LINE_QTY,
         ]);
 
         $item = CartItem::updateOrCreate(
@@ -45,7 +61,7 @@ class CartController extends Controller
             abort(403);
         }
 
-        $request->validate(['quantity' => 'required|integer|min:1|max:99']);
+        $request->validate(['quantity' => 'required|integer|min:1|max:'.OrderController::MAX_LINE_QTY]);
         $cartItem->update(['quantity' => $request->quantity]);
 
         return response()->json(['success' => true]);
@@ -93,7 +109,7 @@ class CartController extends Controller
         }
 
         $items = auth()->user()->cartItems()
-            ->with('product.images')
+            ->with('product.images', 'product.category')
             ->get()
             ->filter(fn (CartItem $item) => $item->product
                 && $item->product->is_visible
@@ -106,6 +122,9 @@ class CartController extends Controller
                 'image' => $item->product->mainImageUrl,
                 'packageSize' => $item->product->package_size ? (float) $item->product->package_size : null,
                 'quantity' => max(1, (int) $item->quantity),
+                // The cart page caps its +/- stepper with this; the calculator ignores it.
+                'stock' => (int) $item->product->stock,
+                'cat' => (string) ($item->product->category?->name ?? ''),
             ])
             ->values();
 
@@ -115,6 +134,7 @@ class CartController extends Controller
     public function count(): JsonResponse
     {
         $count = auth()->check() ? auth()->user()->cartItems()->count() : 0;
+
         return response()->json(['count' => $count]);
     }
 }

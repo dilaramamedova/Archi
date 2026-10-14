@@ -250,7 +250,7 @@
                :reviews="null"
                :name="$s->user?->name"
                :exp="$s->experience_years ? $s->experience_years . ' ' . t('home.specialists.years') : null"
-               :proj="$s->approvedPortfolioItems()->count() . ' ' . t('home.specialists.projects')" />
+               :proj="($s->portfolio_count ?? 0) . ' ' . t('home.specialists.projects')" />
     @empty
       <p class="w-full py-8 text-sm text-black/45">{{ $tOr('home.specialists.empty', 'Hələ seçilmiş mütəxəssis yoxdur.') }}</p>
     @endforelse

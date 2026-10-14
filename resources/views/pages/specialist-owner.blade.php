@@ -20,8 +20,26 @@
     $initials = mb_substr($user->first_name ?? '', 0, 1) . mb_substr($user->last_name ?? '', 0, 1);
     $portfolioItems = $profile?->portfolioItems ?? collect();
     $services = $profile?->services ?? collect();
+
+    // This page is the PUBLIC profile seen by its owner ("müştərilər onu belə görür"),
+    // so every number on it has to be the number a visitor sees on specialist.blade.php.
+    // The rating, the review count and the two review cards used to come straight from
+    // the Figma copy deck, which told a brand-new master they had 4.9 stars and 416
+    // reviews. Queried explicitly rather than through $profile->reviews because lazy
+    // loading is disabled globally.
+    $ownerReviews = $profile
+        ? \App\Models\Review::query()
+            ->where('reviewable_type', \App\Models\SpecialistProfile::class)
+            ->where('reviewable_id', $profile->id)
+            ->where('status', 'approved')
+            ->with('user')
+            ->latest()
+            ->get()
+        : collect();
+    $reviewsCount = $ownerReviews->count();
+    $avgRating = $reviewsCount > 0 ? round((float) $ownerReviews->avg('rating'), 1) : 0.0;
 @endphp
-<x-layout page="specialist-owner" :title="t('specialist-owner.title')">
+<x-layout page="specialist-owner" :title="t('specialist-owner.title', ['name' => $user->name])">
 
 {{-- owner banner (831:11530) — full-bleed yellow strip, 64px --}}
 <div class="spo-banner">
@@ -44,7 +62,15 @@
   </div>
 </div>
 
-{{-- stats strip (831:11542) --}}
+{{-- stats strip (831:11542) — DISABLED until the metrics behind it exist.
+     The four tiles printed the Figma copy deck verbatim for every account:
+     "1,284 baxış bu ay / +12%", "36 müraciət bu ay / +8%", "98% cavab nisbəti",
+     "4.9 reytinq · 416 rəy". A master who registered a minute ago was shown all of
+     it as their own performance. There is no profile-view, enquiry or response-time
+     tracking in the schema yet, so none of these four can be rendered honestly;
+     only `rating` is derivable, and a one-tile strip is not the Figma frame.
+     Re-enable this block once real counters land, reading them from the profile. --}}
+@if (false)
 <div class="spo-statsbar">
   <div class="in">
     @foreach ($stats as $stat)
@@ -62,6 +88,7 @@
     @endforeach
   </div>
 </div>
+@endif
 
 <main class="spo">
 
@@ -87,14 +114,21 @@
             @if($profile?->is_featured)
               <span class="spo-badge">{{ t('specialist-owner.id.badge_top') }}</span>
             @endif
-            <span class="spo-badge ok">{{ t('specialist-owner.id.badge_verified') }}</span>
+            {{-- specialist_profiles.is_verified, same gate the public page uses.
+                 It used to render for everyone, so an unverified brand-new master
+                 was shown a green "Təsdiqlənmiş" chip on their own profile. --}}
+            @if ($profile?->is_verified)
+              <span class="spo-badge ok">{{ t('specialist-owner.id.badge_verified') }}</span>
+            @endif
           </div>
           <h1 class="spo-name">{{ $user->name }}</h1>
           <p class="spo-role">{{ $profile?->craft_label ?: t('specialist-owner.id.role') }}</p>
+          @if ($reviewsCount > 0)
           <div class="spo-rate">
-            <span class="v"><x-ui.stars :count="1" :rating="1" :icon="$starIcon" />{{ t('specialist-owner.id.rate') }}</span>
-            <span class="r">{{ t('specialist-owner.id.reviews') }}</span>
+            <span class="v"><x-ui.stars :count="1" :rating="1" :icon="$starIcon" />{{ number_format($avgRating, 1) }}</span>
+            <span class="r">({{ $reviewsCount }} {{ t('specialist.reviews.count_label', ['count' => $reviewsCount]) }})</span>
           </div>
+          @endif
         </div>
       </div>
 
@@ -116,7 +150,8 @@
       </div>
       <x-ui.button variant="primary" class="w-full rounded-none px-6 py-4 text-base leading-[normal] font-medium duration-200">{{ t('specialist-owner.book.consult') }}</x-ui.button>
       <div class="div"></div>
-      <div class="spo-stat-row"><span class="k">{{ t('specialist-owner.book.response_k') }}</span><span class="v">{{ t('specialist-owner.book.response_v') }}</span></div>
+      {{-- "Cavab vaxtı ~1 saat" is Figma copy, not a measurement: nothing tracks how fast
+           a master answers. Hidden with the stats strip until that data exists. --}}
       <div class="spo-stat-row"><span class="k">{{ t('specialist-owner.book.done_k') }}</span><span class="v">{{ $portfolioItems->count() }}</span></div>
       <div class="spo-stat-row"><span class="k">{{ t('specialist-owner.book.member_k') }}</span><span class="v">{{ $profile?->created_at?->format('M Y') ?? '-' }}</span></div>
     </aside>
@@ -203,33 +238,38 @@
   </section>
   @endif
 
-  {{-- reviews --}}
+  @if ($reviewsCount > 0)
+  {{-- reviews — real approved reviews only. The two cards here used to be the Figma
+       copy deck ("Aysel H.", "Elvin M."), shown to every master including one with no
+       reviews at all, under a hardcoded 4.9 / 416-review summary. Empty now hides the
+       section, exactly like the portfolio and services sections above. --}}
   <section class="spo-sec">
     <div class="spo-sechead">
       <x-ui.eyebrow variant="flat" class="spo-eyebrow gap-3" :label="t('specialist-owner.reviews.eyebrow')" />
       <h2>{{ t('specialist-owner.reviews.title') }}</h2>
     </div>
     <div class="spo-summ">
-      <span class="n">{{ t('specialist-owner.reviews.score') }}</span>
+      <span class="n">{{ number_format($avgRating, 1) }}</span>
       <span class="c">
-        <span class="ss"><x-ui.stars :rating="5" :icon="$starIcon" /></span>
-        <span class="cnt">{{ t('specialist-owner.reviews.count') }}</span>
+        <span class="ss"><x-ui.stars :rating="$avgRating" :icon="$starIcon" /></span>
+        <span class="cnt">{{ $reviewsCount }} {{ t('specialist.reviews.count_label', ['count' => $reviewsCount]) }}</span>
       </span>
     </div>
     <div class="spo-revs">
-      @foreach (['r1', 'r2'] as $rev)
+      @foreach ($ownerReviews as $rev)
         <article class="spo-rev">
           <div class="hd">
-            <span class="av" aria-hidden="true">{{ t('specialist-owner.reviews.items.' . $rev . '.initial') }}</span>
-            <span class="nm"><span class="n">{{ t('specialist-owner.reviews.items.' . $rev . '.name') }}</span><span class="d">{{ t('specialist-owner.reviews.items.' . $rev . '.date') }}</span></span>
+            <span class="av" aria-hidden="true">{{ mb_strtoupper(mb_substr($rev->user->first_name ?? $rev->user->name ?? '?', 0, 1)) }}</span>
+            <span class="nm"><span class="n">{{ $rev->user->name ?? t('specialist.reviews.anonymous') }}</span><span class="d">{{ $rev->created_at->translatedFormat('d M Y') }}</span></span>
           </div>
-          <div class="st"><x-ui.stars :rating="5" :icon="$starIcon" /></div>
-          <p class="tx">{{ t('specialist-owner.reviews.items.' . $rev . '.text') }}</p>
+          <div class="st"><x-ui.stars :rating="$rev->rating" :icon="$starIcon" /></div>
+          <p class="tx">{{ $rev->comment }}</p>
         </article>
       @endforeach
     </div>
     <a class="spo-edit" href="{{ route('specialist.cabinet.reviews') }}">{!! $pencil !!}{{ t('specialist-owner.edit') }}</a>
   </section>
+  @endif
 
 </main>
 

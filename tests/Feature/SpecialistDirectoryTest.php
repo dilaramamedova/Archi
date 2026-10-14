@@ -215,6 +215,70 @@ final class SpecialistDirectoryTest extends TestCase
         $this->assertSame(1, $masters['total']);
     }
 
+    public function test_a_profile_with_nothing_on_it_is_not_offered_in_the_directory(): void
+    {
+        // Registration is approved automatically now, so account status no longer keeps
+        // an unfinished profile out of the grid — scopeListable does.
+        $empty = $this->specialist('empty@example.com', ['phone' => null, 'about' => null]);
+        $ready = $this->specialist('ready@example.com');
+
+        $ids = $this->idsFrom('/specialists');
+
+        $this->assertContains($ready->id, $ids);
+        $this->assertNotContains($empty->id, $ids);
+    }
+
+    public function test_an_unlisted_specialist_can_still_open_their_own_profile_page(): void
+    {
+        // The gate decides what the directory offers, not who may be seen. A master
+        // has to be able to preview and share their page while they fill it in.
+        $empty = $this->specialist('empty@example.com', ['phone' => null, 'about' => null]);
+
+        // The heading is first + last name, not users.name — the factory generates the
+        // three independently, so asserting on `name` would test nothing.
+        $this->get("/specialist/{$empty->id}")->assertOk()->assertSee($empty->user->first_name);
+    }
+
+    public function test_a_contact_route_alone_is_not_enough_to_be_listed(): void
+    {
+        // Reachable, but says nothing about the work — a card a visitor cannot act on.
+        $contactOnly = $this->specialist('contact@example.com', ['about' => null]);
+
+        $this->assertNotContains($contactOnly->id, $this->idsFrom('/specialists'));
+
+        // One active service is enough to describe the work.
+        $this->service($contactOnly, 20);
+
+        $this->assertContains($contactOnly->id, $this->idsFrom('/specialists'));
+    }
+
+    public function test_a_description_without_a_way_to_make_contact_is_not_listed(): void
+    {
+        $noContact = $this->specialist('nocontact@example.com', ['phone' => null]);
+
+        $this->assertNotContains($noContact->id, $this->idsFrom('/specialists'));
+
+        $noContact->update(['whatsapp' => '+994500000001']);
+
+        $this->assertContains($noContact->id, $this->idsFrom('/specialists'));
+    }
+
+    public function test_search_applies_the_same_gate_as_the_directory(): void
+    {
+        $empty = $this->specialist('empty@example.com', ['phone' => null, 'about' => null]);
+        $ready = $this->specialist('ready@example.com');
+
+        // The specialty name is what the specialist matcher actually searches; the
+        // helper names it after the category, so both profiles are candidates and the
+        // gate is the only thing separating them.
+        // Asserting on the profile URL rather than a name: two faker first names could
+        // collide, and a link either is on the page or it is not.
+        $this->get('/search?q=Master')
+            ->assertOk()
+            ->assertSee(route('specialist.show', $ready), false)
+            ->assertDontSee(route('specialist.show', $empty), false);
+    }
+
     public function test_the_profile_page_shows_the_verified_chip_only_for_a_verified_specialist(): void
     {
         $verified = $this->specialist('v@example.com', ['is_verified' => true]);
@@ -282,6 +346,11 @@ final class SpecialistDirectoryTest extends TestCase
             'user_id' => $user->id,
             'specialist_specialty_id' => $specialty->id,
             'city' => 'Bakı',
+            // Enough to clear SpecialistProfile::scopeListable, so these tests stay
+            // about ordering, grouping and filtering rather than about the gate. The
+            // gate has its own tests below.
+            'phone' => '+994500000000',
+            'about' => 'Test ustası.',
             ...$attributes,
         ]);
     }

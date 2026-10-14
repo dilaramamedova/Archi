@@ -94,6 +94,9 @@ class HomeController extends Controller
             ->where('show_on_homepage', true)
             ->whereHas('user', fn ($q) => $q->where('status', UserStatus::Active))
             ->with(['user', 'specialty'])
+            // The card prints the portfolio count. Calling the relation in Blade issued
+            // one COUNT per card (same fix as SpecialistController::index).
+            ->withCount(['approvedPortfolioItems as portfolio_count'])
             ->take(4)
             ->get();
 

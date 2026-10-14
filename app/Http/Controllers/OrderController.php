@@ -18,12 +18,27 @@ use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
-    private const DELIVERY_FREE_FROM = 100;
+    /**
+     * The delivery rule, and the only copy of it.
+     *
+     * The cart page used to carry its own `DELIVERY_FREE = 100` / `DELIVERY_FEE = 10`
+     * in JavaScript. The two agreed, so nothing looked wrong — but changing one would
+     * have made the total the buyer reads differ from the total they are charged, which
+     * is exactly the class of bug that costs a shop its credibility. The cart now
+     * receives these from Blade.
+     */
+    public const DELIVERY_FREE_FROM = 100;
 
-    private const DELIVERY_FEE = 10;
+    public const DELIVERY_FEE = 10;
 
-    /** Upper bound for a single order line — a sanity guard, stock is checked separately. */
-    private const MAX_LINE_QTY = 999;
+    /**
+     * Upper bound for a single line — a sanity guard, stock is checked separately.
+     *
+     * Public because the cart has to agree with it: CartController used to cap a row at
+     * 99 while an order allowed 999, so a row between the two could be ordered but
+     * never stored, and the account cart silently drifted away from the browser's.
+     */
+    public const MAX_LINE_QTY = 999;
 
     private const MAX_LINES = 50;
 

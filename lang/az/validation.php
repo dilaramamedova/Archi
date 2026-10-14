@@ -29,6 +29,36 @@ return [
     'string' => ':attribute mətn olmalıdır.',
     'unique' => 'Bu :attribute artıq istifadə olunur.',
 
+    // These rules are used by the app's form requests but had no message, so Laravel
+    // printed the raw key (e.g. "validation.regex" showed in the home lead form popup).
+    'between' => [
+        'numeric' => ':attribute :min ilə :max arasında olmalıdır.',
+        'file' => ':attribute :min ilə :max kilobayt arasında olmalıdır.',
+        'string' => ':attribute :min ilə :max simvol arasında olmalıdır.',
+        'array' => ':attribute :min ilə :max element arasında olmalıdır.',
+    ],
+    'date_format' => ':attribute :format formatına uyğun deyil.',
+    'decimal' => ':attribute :decimal onluq rəqəmə malik olmalıdır.',
+    'dimensions' => ':attribute şəklinin ölçüləri uyğun deyil.',
+    'distinct' => ':attribute təkrarlanan dəyərə malikdir.',
+    'password' => [
+        'letters' => ':attribute ən azı bir hərf daxil etməlidir.',
+        'mixed' => ':attribute ən azı bir böyük və bir kiçik hərf daxil etməlidir.',
+        'numbers' => ':attribute ən azı bir rəqəm daxil etməlidir.',
+        'symbols' => ':attribute ən azı bir simvol daxil etməlidir.',
+        'uncompromised' => 'Bu :attribute məlumat sızmasında aşkarlanıb. Zəhmət olmasa başqa bir dəyər seçin.',
+    ],
+    'present' => ':attribute sahəsi mövcud olmalıdır.',
+    'regex' => ':attribute formatı düzgün deyil.',
+    'size' => [
+        'numeric' => ':attribute :size olmalıdır.',
+        'file' => ':attribute :size kilobayt olmalıdır.',
+        'string' => ':attribute :size simvol olmalıdır.',
+        'array' => ':attribute :size element olmalıdır.',
+    ],
+    'url' => ':attribute düzgün keçid olmalıdır.',
+    'uuid' => ':attribute düzgün UUID olmalıdır.',
+
     'attributes' => [
         'first_name' => 'Ad',
         'last_name' => 'Soyad',

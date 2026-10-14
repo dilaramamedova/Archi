@@ -1177,6 +1177,8 @@ class TranslationsSeeder extends Seeder
                 'tips.top.t2' => ['az' => 'üzlük materiallarıdır', 'ru' => 'это отделочные материалы', 'en' => 'is the finishing materials'],
                 'title' => ['az' => 'Ətraflı təmir kalkulyatoru — ARCHİ', 'ru' => 'Подробный калькулятор ремонта — ARCHİ', 'en' => 'Detailed renovation calculator — ARCHİ'],
                 'units.m' => ['az' => 'm', 'ru' => 'м', 'en' => 'm'],
+                // Room and opening dimensions are entered in millimetres.
+                'units.mm' => ['az' => 'mm', 'ru' => 'мм', 'en' => 'mm'],
                 'units.m2' => ['az' => 'm²', 'ru' => 'м²', 'en' => 'm²'],
                 'units.pc' => ['az' => 'əd', 'ru' => 'шт', 'en' => 'pc'],
                 'units.point' => ['az' => 'nöqtə', 'ru' => 'точка', 'en' => 'point'],
@@ -1450,6 +1452,8 @@ class TranslationsSeeder extends Seeder
             ],
             'help' => [
                 'contact_chat' => ['az' => 'Canlı söhbət', 'ru' => 'Онлайн-чат', 'en' => 'Live chat'],
+                'contact_email' => ['az' => 'salam@archi.az', 'ru' => 'salam@archi.az', 'en' => 'salam@archi.az'],
+                'contact_number' => ['az' => '+994 12 555 00 12', 'ru' => '+994 12 555 00 12', 'en' => '+994 12 555 00 12'],
                 'contact_subtitle' => ['az' => 'B.e. — həftə içi 09:00-dan 18:00-dək dəstək xəttimiz aktivdir', 'ru' => 'Наша линия поддержки работает по будням с 09:00 до 18:00', 'en' => 'Our support line is active on weekdays from 09:00 to 18:00'],
                 'contact_title' => ['az' => 'Cavabını tapmadın?', 'ru' => 'Не нашли ответ?', 'en' => 'Didn\'t find your answer?'],
                 'faq_title' => ['az' => 'Ən çox verilən suallar', 'ru' => 'Часто задаваемые вопросы', 'en' => 'Frequently asked questions'],
@@ -2509,7 +2513,9 @@ class TranslationsSeeder extends Seeder
             ],
             'specialist-onboarding' => [
                 'banner.cta' => ['az' => 'Profili tamamla', 'ru' => 'Заполнить профиль', 'en' => 'Complete profile'],
-                'banner.note' => ['az' => 'Profilin 40% hazırdır — tamamla, axtarışda görünsün', 'ru' => 'Профиль готов на 40% — заполни его, чтобы попасть в поиск', 'en' => 'Your profile is 40% ready — finish it to show up in search'],
+                // :percent is the real ProfileCompleteness score — it used to be a
+                // literal 40 for every master, which contradicted the cabinet sidebar.
+                'banner.note' => ['az' => 'Profilin :percent% hazırdır — tamamla, axtarışda görünsün', 'ru' => 'Профиль готов на :percent% — заполни его, чтобы попасть в поиск', 'en' => 'Your profile is :percent% ready — finish it to show up in search'],
                 'banner.progress_label' => ['az' => 'Profil tamlığı', 'ru' => 'Заполненность профиля', 'en' => 'Profile completeness'],
                 'checklist.desc' => ['az' => 'Bu addımları bitirəndən sonra profilin mütəxəssis axtarışında görünəcək və sifariş qəbul edə biləcəksən.', 'ru' => 'После этих шагов твой профиль появится в поиске мастеров и сможет принимать заказы.', 'en' => 'Once these steps are done your profile will appear in the specialist search and can take orders.'],
                 'checklist.title' => ['az' => 'Profili tamamla — 4 addım', 'ru' => 'Заполни профиль — 4 шага', 'en' => 'Complete your profile — 4 steps'],
@@ -2618,7 +2624,9 @@ class TranslationsSeeder extends Seeder
                 'stats.views.delta' => ['az' => '+12%', 'ru' => '+12%', 'en' => '+12%'],
                 'stats.views.label' => ['az' => 'baxış bu ay', 'ru' => 'просмотров за месяц', 'en' => 'views this month'],
                 'stats.views.value' => ['az' => '1,284', 'ru' => '1 284', 'en' => '1,284'],
-                'title' => ['az' => 'Rəşad Məmmədov — Profilim — ARCHİ', 'ru' => 'Рашад Мамедов — Мой профиль — ARCHİ', 'en' => 'Rashad Mammadov — My profile — ARCHİ'],
+                // :name is the signed-in master. The browser tab used to read the Figma
+                // demo person's name ("Rəşad Məmmədov") for every account.
+                'title' => ['az' => ':name — Profilim — ARCHİ', 'ru' => ':name — Мой профиль — ARCHİ', 'en' => ':name — My profile — ARCHİ'],
             ],
             'specialists' => [
                 // The four groups of the header's "Mütəxəssislər" mega panel

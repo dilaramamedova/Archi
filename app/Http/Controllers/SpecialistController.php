@@ -93,6 +93,10 @@ class SpecialistController extends Controller
                 'specialist_profiles.specialist_specialty_id',
             )
             ->whereHas('user', fn ($q) => $q->where('status', UserStatus::Active))
+            // Complete enough to be worth showing — see SpecialistProfile::scopeListable.
+            // Registration no longer waits for an admin, so without this a master who
+            // signed up seconds ago would sit in the grid with nothing on their card.
+            ->listable()
             ->with(['user', 'specialty'])
             // Both feed a sort AND the card: the grid prints "from X ₼" and the portfolio
             // count. The card used to load the whole approvedPortfolioItems relation just

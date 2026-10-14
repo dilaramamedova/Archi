@@ -1,16 +1,49 @@
 {{-- Specialist onboarding (profile completion) — Figma node 1054:9643 (1440x1560; navbar + banner + content).
      The navbar comes from the layout; the frame has no footer of its own. --}}
 @php
-    // TODO: Replace with dynamic data from controller — step completion states should come from the user's profile progress.
     // The checklist rows. `done` renders the yellow check pill + the green completed label;
     // every other row gets the gray number pill and the yellow add button.
     // Targets follow ARCHITECTURE §3.1: the checklist is the hub of the specialist cabinet.
+    //
+    // These used to be hardcoded (`basics` done, the other three never done) and the
+    // banner was a constant 40%, so a master who had filled in everything still saw an
+    // untouched checklist — and it contradicted the cabinet sidebar, which has shown the
+    // real score from ProfileCompleteness since it was wired. Both now read the profile.
+    $portfolioCount = (int) ($profile?->portfolioItems()->count() ?? 0);
+    $scheduleCount = (int) ($profile?->schedules()->count() ?? 0);
+    $serviceCount = (int) ($profile?->services()->count() ?? 0);
+
     $steps = [
-        ['key' => 'basics',    'n' => '✓', 'done' => true,  'href' => null],
-        ['key' => 'specialty', 'n' => '2', 'done' => false, 'href' => route('specialist.cabinet')],
-        ['key' => 'portfolio', 'n' => '3', 'done' => false, 'href' => route('specialist.cabinet.portfolio')],
-        ['key' => 'schedule',  'n' => '4', 'done' => false, 'href' => route('specialist.cabinet.schedule')],
+        [
+            'key' => 'basics',
+            'done' => filled($user?->first_name) && filled($user?->last_name) && filled($user?->phone),
+            'href' => null,
+        ],
+        [
+            'key' => 'specialty',
+            'done' => filled($profile?->specialist_specialty_id) && filled($profile?->city),
+            'href' => route('specialist.cabinet'),
+        ],
+        [
+            'key' => 'portfolio',
+            'done' => $portfolioCount > 0,
+            'href' => route('specialist.cabinet.portfolio'),
+        ],
+        [
+            // The row is "İş qrafiki və qiymət" — it is only done once both halves are.
+            'key' => 'schedule',
+            'done' => $scheduleCount > 0 && $serviceCount > 0,
+            'href' => route('specialist.cabinet.schedule'),
+        ],
     ];
+
+    // Number pill: a tick once the row is done, otherwise its position in the list.
+    foreach ($steps as $i => $step) {
+        $steps[$i]['n'] = $step['done'] ? '✓' : (string) ($i + 1);
+    }
+
+    // Same source as the cabinet sidebar, so the two can never disagree.
+    $progressPercent = \App\Support\ProfileCompleteness::forSpecialist($user)['percent'];
 @endphp
 <x-layout page="specialist-onboarding" :title="t('specialist-onboarding.title')">
 
@@ -21,11 +54,18 @@
   <div class="mx-auto flex max-w-[1440px] items-center justify-between gap-4 px-7 py-4 max-[640px]:flex-col max-[640px]:items-start">
     {{-- min-w-0 (not shrink-0): the RU string is longer than the AZ one and must wrap
          instead of pushing the CTA off the row. At 1440 nothing moves. --}}
-    <div class="flex min-w-0 flex-col items-start gap-2">
-      <p class="text-[15px] font-semibold leading-[normal] text-ink">{{ t('specialist-onboarding.banner.note') }}</p>
-      {{-- 420x6 track, 40% (168px) yellow fill. Not <x-ui.progress>: that bar is 6px with a
-           rounded-ds-sm fill and no track tint. --}}
-      <div class="relative h-1.5 w-[420px] max-w-full shrink-0 overflow-hidden rounded-ds bg-black/8" role="progressbar"
+    {{-- The 420px of the Figma frame lives here, on the column, not on the progress
+         track: a definite width on the track made it the column's min-content, which
+         `max-w-full` could not shrink. On the column, max-w-full resolves against the
+         banner row and the whole block collapses cleanly on a phone. --}}
+    <div class="flex w-[420px] max-w-full min-w-0 flex-col items-start gap-2">
+      <p class="text-[15px] font-semibold leading-[normal] text-ink">{{ t('specialist-onboarding.banner.note', ['percent' => $progressPercent]) }}</p>
+      {{-- 420x6 track, yellow fill at the real percentage. Not <x-ui.progress>: that bar is
+           6px with a rounded-ds-sm fill and no track tint.
+           The width is a cap, not a fixed size: a definite w-[420px] gave this column a
+           420px min-content, so `max-w-full` could never shrink it and the page scrolled
+           sideways on every phone (448px wide inside a 375px viewport). --}}
+      <div class="relative h-1.5 w-full max-w-[420px] shrink-0 overflow-hidden rounded-ds bg-black/8" role="progressbar"
            aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ $progressPercent ?? 40 }}" aria-label="{{ t('specialist-onboarding.banner.progress_label') }}">
         <div class="absolute top-0 left-0 h-1.5 max-w-full rounded-ds bg-yellow" style="width: {{ $progressPercent ?? 40 }}%"></div>
       </div>

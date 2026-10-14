@@ -31,6 +31,11 @@ export default function initFilterSheet({ sheet, btn, scrim, close }) {
     else if (!on && locked) { unlockScroll(); locked = false; }
   }
 
+  // Everything focusable inside the sheet, in DOM order.
+  const FOCUSABLE = 'a[href],button:not([disabled]),input:not([disabled]),select,textarea,[tabindex]:not([tabindex="-1"])';
+  const focusables = () =>
+    [...sheetEl.querySelectorAll(FOCUSABLE)].filter((el) => el.offsetParent !== null);
+
   function setOpen(open) {
     if (open === (sheetEl.dataset.open === 'true')) return;
     sheetEl.dataset.open = open ? 'true' : 'false';
@@ -40,14 +45,34 @@ export default function initFilterSheet({ sheet, btn, scrim, close }) {
       // one frame with the scrim mounted but still transparent, so the fade runs
       requestAnimationFrame(() => { scrimEl.dataset.open = 'true'; });
       setLock(true);
+      // The sheet covers the page, so focus has to come with it — otherwise the
+      // next Tab walks the hidden page behind the scrim.
+      if (!wide.matches) requestAnimationFrame(() => (closeEl || focusables()[0])?.focus());
     } else {
       scrimEl.dataset.open = 'false';
       setLock(false);
+      if (!wide.matches && sheetEl.contains(document.activeElement)) btnEl.focus();
       window.setTimeout(() => {
         if (sheetEl.dataset.open !== 'true') scrimEl.hidden = true;
       }, 300);
     }
   }
+
+  // Tab trap, only while the CSS actually renders the sidebar as a sheet.
+  sheetEl.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab' || wide.matches || sheetEl.dataset.open !== 'true') return;
+    const items = focusables();
+    if (!items.length) return;
+    const first = items[0];
+    const last = items[items.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  });
 
   btnEl.addEventListener('click', () => setOpen(sheetEl.dataset.open !== 'true'));
   scrimEl.addEventListener('click', () => setOpen(false));

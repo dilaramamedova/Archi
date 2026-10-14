@@ -14,7 +14,10 @@
   $initials = mb_strtoupper(mb_substr($displayName, 0, 2));
   $memberYear = $seller->created_at->format('Y');
   $langLabels = ['az' => 'AZ', 'ru' => 'RU', 'en' => 'EN', 'tr' => 'TR'];
-  $bizPhone = $profile?->contact_phone ?: ($profile?->whatsapp ?: $seller->phone);
+  // Only a phone the seller deliberately published in the contact tab is public.
+  // Falling back to $seller->phone put the personal number used at sign-up on an
+  // anonymous page without the seller ever opting in.
+  $bizPhone = $profile?->contact_phone ?: $profile?->whatsapp;
 @endphp
 <x-layout page="store" :title="$displayName . ' — ' . t('common.site_name')">
 
@@ -146,8 +149,6 @@
             <p class="sb-kicker">{{ t('business-profile.contact.kicker') }}</p>
             @if ($profile?->contact_phone)
                 <div class="sb-row"><p class="k">{{ t('business-profile.contact.phone') }}</p><p class="v">{{ $profile->contact_phone }}</p></div>
-            @elseif ($seller->phone)
-                <div class="sb-row"><p class="k">{{ t('business-profile.contact.phone') }}</p><p class="v">{{ $seller->phone }}</p></div>
             @endif
             @if ($profile?->whatsapp)
                 <div class="sb-row"><p class="k">{{ t('business-profile.contact.whatsapp') }}</p><p class="v">{{ $profile->whatsapp }}</p></div>

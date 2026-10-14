@@ -20,19 +20,19 @@ class AboutController extends Controller
                 'title' => Setting::get('about_feat1_title', t('about.what.f1_title')),
                 'desc' => Setting::get('about_feat1_desc', t('about.what.f1_desc')),
                 'link' => Setting::get('about_feat1_link', t('about.what.f1_link')),
-                'url' => Setting::get('about_feat1_url', '/catalog'),
+                'url' => Setting::get('about_feat1_url', route('catalog')),
             ],
             [
                 'title' => Setting::get('about_feat2_title', t('about.what.f2_title')),
                 'desc' => Setting::get('about_feat2_desc', t('about.what.f2_desc')),
                 'link' => Setting::get('about_feat2_link', t('about.what.f2_link')),
-                'url' => Setting::get('about_feat2_url', '/specialists'),
+                'url' => Setting::get('about_feat2_url', route('specialists')),
             ],
             [
                 'title' => Setting::get('about_feat3_title', t('about.what.f3_title')),
                 'desc' => Setting::get('about_feat3_desc', t('about.what.f3_desc')),
                 'link' => Setting::get('about_feat3_link', t('about.what.f3_link')),
-                'url' => Setting::get('about_feat3_url', '/calculator'),
+                'url' => Setting::get('about_feat3_url', route('calculator')),
             ],
         ];
 
@@ -41,13 +41,13 @@ class AboutController extends Controller
                 'title' => Setting::get('about_join_card1_title', t('about.join.c1_title')),
                 'desc' => Setting::get('about_join_card1_desc', t('about.join.c1_desc')),
                 'btn' => Setting::get('about_join_card1_btn', t('about.join.c1_btn')),
-                'url' => Setting::get('about_join_card1_url', '/register?role=specialist'),
+                'url' => Setting::get('about_join_card1_url', route('register', ['role' => 'master'])),
             ],
             [
                 'title' => Setting::get('about_join_card2_title', t('about.join.c2_title')),
                 'desc' => Setting::get('about_join_card2_desc', t('about.join.c2_desc')),
                 'btn' => Setting::get('about_join_card2_btn', t('about.join.c2_btn')),
-                'url' => Setting::get('about_join_card2_url', '/business-register'),
+                'url' => Setting::get('about_join_card2_url', route('business.register')),
             ],
         ];
 

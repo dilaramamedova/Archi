@@ -11,9 +11,25 @@
 @endphp
 <x-layout page="catalog" :title="$classifierNode ? $pageTitle . ' — ' . t('catalog.head.eyebrow') . ' — ARCHİ' : t('catalog.title')">
 @php
-    // Ghost labels that reserve the widest sort option, so picking one cannot resize
-    // the control (the widths differ per locale, hence the rendered list).
-    $sizes = ['30×30', '60×60', '60×120', '80×80', '20×20'];
+    // Size chips: label (cm, as Figma draws it) => the attribute-option slug the
+    // classifier actually stores (mm). They used to submit the LABEL as the
+    // filter value, which matches no option slug at all, so every size chip was
+    // a no-op that left the listing unfiltered. 80×80 is gone because no
+    // `800x800` option exists — a chip that can never match is worse than four.
+    $sizes = [
+        '30×30' => '300x300',
+        '60×60' => '600x600',
+        '60×120' => '600x1200',
+        '20×20' => '200x200',
+    ];
+
+    // Same story for the surface chips: the real option slugs are the
+    // Azerbaijani words, not the English ones the markup used to send.
+    $surfaces = [
+        'mat' => 'surface_matte',
+        'parlaq' => 'surface_glossy',
+        'teksturali' => 'surface_structured',
+    ];
 
     $sortOptions = [
         'pop' => t('catalog.sort.popular'),
@@ -83,16 +99,17 @@
         <span class="t">{{ t('catalog.filters.mobile_title') }}</span>
         <span class="n" id="catFilterCount" hidden></span>
       </button>
-      <div class="fsort cat-sort" id="catSort" data-open="false">
+      <div class="fsort cat-sort" id="catSort" data-open="false"
+           role="button" tabindex="0" aria-haspopup="listbox" aria-expanded="false" aria-controls="sortMenu">
         <span class="lbl">{{ t('catalog.sort.label') }}</span>
         <span class="val-wrap">
-          <span class="val" id="sortVal">{{ $sortOptions[$activeSort] ?? t('catalog.sort.popular') }}</span>
+          <span class="val" id="sortVal">{{ is_string($activeSort) ? ($sortOptions[$activeSort] ?? t('catalog.sort.popular')) : t('catalog.sort.popular') }}</span>
           <span class="val-ghost" aria-hidden="true">@foreach ($sortOptions as $label)<i>{{ $label }}</i>@endforeach</span>
         </span>
-        <span class="car">⌄</span>
-        <ul class="fsort-menu sort-menu" id="sortMenu">
+        <span class="car" aria-hidden="true">⌄</span>
+        <ul class="fsort-menu sort-menu" id="sortMenu" role="listbox" aria-label="{{ t('catalog.sort.label') }}">
           @foreach ($sortOptions as $key => $label)
-            <li data-sort="{{ $key }}" data-on="{{ $key === $activeSort ? 'true' : 'false' }}">{{ $label }}</li>
+            <li role="option" tabindex="-1" data-sort="{{ $key }}" data-on="{{ $key === $activeSort ? 'true' : 'false' }}" aria-selected="{{ $key === $activeSort ? 'true' : 'false' }}">{{ $label }}</li>
           @endforeach
         </ul>
       </div>
@@ -179,9 +196,10 @@
       <div class="fs-block" id="brandBlock">
         <p class="fs-title">{{ t('catalog.filters.brand') }}</p>
         @forelse ($filterBrands as $brandItem)
-          <div class="fs-check" data-brand="{{ $brandItem->slug }}" data-on="{{ in_array($brandItem->slug, $activeBrands) ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ $brandItem->name }}</span><span class="n">{{ $brandItem->products_count }}</span></div>
+          @php $on = in_array($brandItem->slug, $activeBrands); @endphp
+          <div class="fs-check" role="checkbox" tabindex="0" aria-checked="{{ $on ? 'true' : 'false' }}" data-brand="{{ $brandItem->slug }}" data-on="{{ $on ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ $brandItem->name }}</span><span class="n">{{ $brandItem->products_count }}</span></div>
         @empty
-          <div class="fs-check" data-brand="no-brands" data-on="false"><span class="fside-box fs-box"></span><span class="lbl">—</span><span class="n">0</span></div>
+          <div class="fs-check" data-brand="no-brands" data-on="false" aria-disabled="true"><span class="fside-box fs-box"></span><span class="lbl">—</span><span class="n">0</span></div>
         @endforelse
       </div>
 
@@ -232,9 +250,10 @@
            page gets real attribute filters above instead. --}}
       <div class="fs-block" id="surfBlock">
         <p class="fs-title">{{ t('catalog.filters.surface') }}</p>
-        <div class="fs-check" data-surface="matte" data-on="{{ in_array('matte', $activeSurfaces) ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ t('catalog.filters.surface_matte') }}</span></div>
-        <div class="fs-check" data-surface="glossy" data-on="{{ in_array('glossy', $activeSurfaces) ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ t('catalog.filters.surface_glossy') }}</span></div>
-        <div class="fs-check" data-surface="structured" data-on="{{ in_array('structured', $activeSurfaces) ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ t('catalog.filters.surface_structured') }}</span></div>
+        @foreach ($surfaces as $slug => $labelKey)
+          @php $on = in_array($slug, $activeSurfaces); @endphp
+          <div class="fs-check" role="checkbox" tabindex="0" aria-checked="{{ $on ? 'true' : 'false' }}" data-surface="{{ $slug }}" data-on="{{ $on ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ t('catalog.filters.'.$labelKey) }}</span></div>
+        @endforeach
       </div>
 
       <div class="fs-div"></div>
@@ -242,10 +261,12 @@
       <div class="fs-block">
         <p class="fs-title">{{ t('catalog.filters.size') }}</p>
         <div class="fs-sizes">
-          @foreach ($sizes as $size)
+          @foreach ($sizes as $size => $optionSlug)
             {{-- data-size doubles as the bold ghost label (catalog.css) so selecting a
-                 chip cannot change its width and rewrap the row. --}}
-            <span class="fs-size" data-size="{{ $size }}" data-on="{{ in_array($size, $activeSizes) ? 'true' : 'false' }}"><span class="t">{{ $size }}</span></span>
+                 chip cannot change its width and rewrap the row; data-slug carries
+                 the value that actually goes into the URL. --}}
+            @php $on = in_array($optionSlug, $activeSizes); @endphp
+            <span class="fs-size" role="checkbox" tabindex="0" aria-checked="{{ $on ? 'true' : 'false' }}" data-size="{{ $size }}" data-slug="{{ $optionSlug }}" data-on="{{ $on ? 'true' : 'false' }}"><span class="t">{{ $size }}</span></span>
           @endforeach
         </div>
       </div>
@@ -254,8 +275,8 @@
       @endunless
 
       <div class="fs-stock">
-        <span class="lbl">{{ t('catalog.filters.stock_only') }}</span>
-        <div class="cat-switch" id="stockSwitch" data-on="{{ $activeInStock ? 'true' : 'false' }}"><span class="knob"></span></div>
+        <span class="lbl" id="stockSwitchLabel">{{ t('catalog.filters.stock_only') }}</span>
+        <div class="cat-switch" id="stockSwitch" role="switch" tabindex="0" aria-labelledby="stockSwitchLabel" aria-checked="{{ $activeInStock ? 'true' : 'false' }}" data-on="{{ $activeInStock ? 'true' : 'false' }}"><span class="knob"></span></div>
       </div>
      </div>{{-- /.fside-scroll --}}
 
@@ -316,7 +337,7 @@
                  :reviews="t('product.specialists.reviews_416')"
                  :name="$s->user?->name ?? t('product.specialists.name_1')"
                  :exp="$s->experience_years ? $s->experience_years . ' ' . t('home.specialists.years') : t('product.specialists.exp_12')"
-                 :proj="$s->approvedPortfolioItems()->count() . ' ' . t('home.specialists.projects')" />
+                 :proj="($s->portfolio_count ?? $s->approvedPortfolioItems()->count()) . ' ' . t('home.specialists.projects')" />
       @endforeach
     @else
       @php

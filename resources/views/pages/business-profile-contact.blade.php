@@ -63,7 +63,11 @@
 
   {{-- Languages card --}}
   <x-cabinet.card gap="gap-[18px]" :title="t('business-profile-contact.languages.title')">
-    @php($langs = $profile->languages ?? ['az', 'ru', 'en'])
+    {{-- Default must match what the public storefront assumes for an unset profile
+         (store.blade.php: ['az']). Pre-ticking az+ru+en meant a brand-new seller's
+         first save silently claimed three service languages they never chose, while
+         their public page still advertised only AZ. --}}
+    @php($langs = $profile?->languages ?: ['az'])
     <div class="flex w-full flex-wrap items-start content-start gap-2 overflow-hidden">
       @foreach (['az', 'ru', 'en', 'tr', 'other'] as $lang)
         <x-ui.chip size="sm" tick="svg" :data-lang="$lang" :on="in_array($lang, $langs)" :label="t('business-profile-contact.languages.' . $lang)" />

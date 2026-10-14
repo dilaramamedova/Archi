@@ -103,8 +103,11 @@
               $expLabel = $m->experience_years
                   ? $m->experience_years . ' ' . trans_choice('search.experience_years', $m->experience_years)
                   : null;
-              $projLabel = $m->approvedPortfolioItems()->count() > 0
-                  ? $m->approvedPortfolioItems()->count() . ' ' . trans_choice('search.project_word', $m->approvedPortfolioItems()->count())
+              // Counted once, by the controller's withCount — this used to run
+              // three COUNT queries per card.
+              $projCount = (int) ($m->portfolio_count ?? 0);
+              $projLabel = $projCount > 0
+                  ? $projCount . ' ' . trans_choice('search.project_word', $projCount)
                   : null;
           @endphp
           <x-scard

@@ -24,7 +24,17 @@
         @if ($profile?->logo_path)
           <img src="{{ storage_url($profile->logo_path) }}" alt="" class="h-full w-full object-cover">
         @else
-          <p>{{ t('business-profile-company.media.logo_initials') }}</p>
+          {{-- Same rule as the storefront (store.blade.php / business-profile.blade.php):
+               the placeholder is the profile's own initials. It used to print a
+               hardcoded "AB" for every seller, which disagreed with the "QA" the
+               storefront drew for the same account. --}}
+          @php
+            $logoName = $profile?->brand_name ?: ($profile?->legal_name ?: auth()->user()->name);
+            $logoInitials = filled($logoName)
+                ? mb_strtoupper(mb_substr($logoName, 0, 2))
+                : t('business-profile-company.media.logo_initials');
+          @endphp
+          <p>{{ $logoInitials }}</p>
         @endif
       </div>
       <input type="file" id="logoInput" accept="image/*" class="hidden" hidden>
@@ -57,9 +67,14 @@
 
     <div class="cab-field-row">
       <x-cabinet.field :label="t('business-profile-company.company.tax_id')" for="bpc-tax-id">
-        <x-slot:badge>
-          <x-ui.badge tone="green" size="sm" class="px-2 py-[3px] font-medium">{{ t('business-profile-company.company.tax_id_verified') }}</x-ui.badge>
-        </x-slot:badge>
+        {{-- The badge claims the VÖEN was checked, so it may only render when it
+             actually was. It used to be unconditional: a brand-new seller with an
+             empty VÖEN field was shown "✓ Təsdiqlənib". --}}
+        @if ($profile?->tax_id_verified)
+          <x-slot:badge>
+            <x-ui.badge tone="green" size="sm" class="px-2 py-[3px] font-medium">{{ t('business-profile-company.company.tax_id_verified') }}</x-ui.badge>
+          </x-slot:badge>
+        @endif
         <x-ui.input variant="b2b" id="bpc-tax-id" name="tax_id" :value="$profile->tax_id ?? ''" />
       </x-cabinet.field>
       <x-cabinet.field :label="t('business-profile-company.company.city')" for="bpc-city">

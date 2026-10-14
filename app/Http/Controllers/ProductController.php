@@ -6,6 +6,7 @@ use App\Enums\AttributeFieldType;
 use App\Enums\UserStatus;
 use App\Models\Product;
 use App\Models\SpecialistProfile;
+use App\Models\Wishlist;
 use App\Support\ProductViewCounter;
 use Illuminate\Support\Collection;
 
@@ -38,6 +39,14 @@ class ProductController extends Controller
 
         ProductViewCounter::record($product->id);
 
+        // The two heart buttons used to render data-liked="false" unconditionally,
+        // so a product the visitor had already favourited came back looking
+        // un-favourited and the next click silently REMOVED it (the API is a
+        // toggle) while the icon turned on.
+        $isWished = auth()->check() && Wishlist::where('user_id', auth()->id())
+            ->where('product_id', $product->id)
+            ->exists();
+
         // "Bunları da unutma" — the accessories an admin picked on the product
         // (product_accessory pivot). The older frequently_bought_together JSON
         // column is kept as a fallback for products filled in before that field
@@ -66,10 +75,13 @@ class ProductController extends Controller
         $specialists = SpecialistProfile::where('is_featured', true)
             ->whereHas('user', fn ($q) => $q->where('status', UserStatus::Active))
             ->with(['user', 'specialty'])
+            // The card prints a project count; without this the block cost one
+            // COUNT per specialist on every product page render.
+            ->withCount(['approvedPortfolioItems as portfolio_count'])
             ->take(4)
             ->get();
 
-        return view('pages.product', compact('product', 'related', 'specialists', 'fbtProducts', 'attributeSpecs', 'ratingCounts'));
+        return view('pages.product', compact('product', 'related', 'specialists', 'fbtProducts', 'attributeSpecs', 'ratingCounts', 'isWished'));
     }
 
     /**

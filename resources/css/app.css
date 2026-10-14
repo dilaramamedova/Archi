@@ -371,7 +371,11 @@
   /* ==========================================================================
      FOOTER
      ========================================================================== */
-  footer                 { @apply ml-[calc(50%-50vw)] w-screen bg-black text-white; }
+  /* The footer is a direct child of <body>, which is already full-width, so it needs no
+     breakout. The old `ml-[calc(50%-50vw)] w-screen` mixed % (excludes the scrollbar)
+     with vw (includes it): the footer came out scrollbar-width too wide, sat ~7.5px left
+     of the page content above it and had its right edge clipped. */
+  footer                 { @apply w-full bg-black text-white; }
   footer .inner          { @apply px-7 pt-16 pb-12; }
   /* Figma 628:8305 — the logo row is a fixed 64-tall band and the divider sits
      directly under it, so the row height (not a margin) sets the divider offset. */

@@ -6,8 +6,9 @@
 import { open as openLoginModal } from '../shared/login-modal.js';
 import popup from '../shared/popup.js';
 
-const DELIVERY_FREE = 100;
-const DELIVERY_FEE = 10;
+// The delivery rule is handed over by Blade from OrderController — the class that
+// actually charges it. Keeping a second copy here is how a cart ends up showing one
+// total and the placed order charging another.
 
 // Row classes live here so the JS templates stay readable; Tailwind picks them up
 // through the `@source "../js"` rule in app.css.
@@ -98,6 +99,8 @@ export default function init() {
   const IMAGES = readJson(page.dataset.images, {});
   const authUser = readJson(page.dataset.auth, null);
   const orderUrl = page.dataset.orderUrl || '/api/orders';
+  // Free over freeFrom, otherwise fee — the same two numbers OrderController charges.
+  const DELIVERY = readJson(page.dataset.delivery, { freeFrom: 100, fee: 10 });
   const fmt = makeFmt(T.locale);
   const money = (n) => tr(T.money, { amount: fmt(n) });
 
@@ -123,9 +126,29 @@ export default function init() {
   // on another device, or before localStorage was cleared — join the list here, so
   // both stores always show the same basket.
   const serverCart = readJson(page.dataset.serverCart, []) || [];
+
+  // Stock per product id, filled from whatever the server told us about a row.
+  const stockById = new Map();
+
+  // The database price is the one the order is charged at, so it also has to be
+  // the one the cart shows. A localStorage row keeps the price (and the locale)
+  // it was saved with, which goes stale the moment the seller edits the product —
+  // the basket would then quietly total up to something else than the order.
+  function adoptServerRow(row, s) {
+    row.price = +s.price || 0;
+    if (s.name) row.name = s.name;
+    if (s.cat) row.cat = s.cat;
+    if (s.img) row.img = s.img;
+    if (Number.isFinite(+s.stock)) stockById.set(+row.id, +s.stock);
+    return row;
+  }
+
   serverCart.forEach((s) => {
-    if (!cart.some((c) => +c.id === +s.id)) {
-      cart.push({ id: s.id, name: s.name || '', price: +s.price || 0, qty: s.qty || 1, img: s.img || '', cat: s.cat || '' });
+    const existing = cart.find((c) => +c.id === +s.id);
+    if (existing) {
+      adoptServerRow(existing, s);
+    } else {
+      cart.push(adoptServerRow({ id: s.id, qty: s.qty || 1, name: '', price: 0, img: '', cat: '' }, s));
     }
   });
 
@@ -133,6 +156,7 @@ export default function init() {
   // cart is already updated, and a lost request only means the server catches up on
   // the next change instead of this one.
   const cartApiUrl = page.dataset.urlCartApi || '/api/cart';
+  const cartItemsUrl = page.dataset.urlCartItems || '/api/cart/items';
   const cartRemoveUrl = page.dataset.urlCartRemove || '/api/cart/product';
 
   function syncServer(action, item) {
@@ -191,7 +215,7 @@ export default function init() {
 
   function renderSum() {
     const sub = subtotal();
-    const delivery = cart.length ? (sub >= DELIVERY_FREE ? 0 : DELIVERY_FEE) : 0;
+    const delivery = cart.length ? (sub >= DELIVERY.freeFrom ? 0 : DELIVERY.fee) : 0;
     const total = sub + delivery;
 
     if (subLabelEl) subLabelEl.textContent = tr(T.subtotal, { count: cart.reduce((s, c) => s + c.qty, 0) });
@@ -241,6 +265,13 @@ export default function init() {
           if (cta) cta.focus();
         }
       } else if (a === 'inc' || a === 'dec') {
+        const stock = stockById.get(+item.id);
+        if (a === 'inc' && Number.isFinite(stock) && item.qty >= stock) {
+          // Stock is known only for rows the account cart could price; stop here
+          // instead of letting checkout be the first place that says no.
+          popup.error(tr(T.errOutOfStock, { name: item.name, available: stock }));
+          return;
+        }
         item.qty = a === 'inc' ? item.qty + 1 : Math.max(1, item.qty - 1);
         syncServer('qty', item);
         const qtyEl = row.querySelector('[data-qty]');
@@ -450,6 +481,58 @@ export default function init() {
     });
   }
 
+  /**
+   * Rows this browser saved while signed out never reached the account cart, so
+   * Blade could not price them. Push them up, read the account cart back, and
+   * reprice everything from it — after this the basket on screen and the order
+   * the server will build are made of the same numbers.
+   */
+  async function reconcileWithServer() {
+    if (!authUser) return;
+
+    const unknown = cart.filter((c) => +c.id > 0 && !stockById.has(+c.id));
+    if (!unknown.length) return;
+
+    await Promise.all(
+      unknown.map((c) =>
+        fetch(cartApiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'application/json',
+            'X-CSRF-TOKEN': csrf(),
+          },
+          body: JSON.stringify({ product_id: Math.trunc(+c.id), quantity: c.qty || 1 }),
+        }).catch(() => {})
+      )
+    );
+
+    let items = [];
+    try {
+      const res = await fetch(cartItemsUrl, { headers: { Accept: 'application/json' } });
+      if (!res.ok) return;
+      items = (await res.json()).items || [];
+    } catch (e) {
+      // Offline: the rows keep the price they were saved with, and the order
+      // endpoint still prices from the database — nothing is charged silently.
+      return;
+    }
+
+    let changed = false;
+    items.forEach((s) => {
+      const row = cart.find((c) => +c.id === +s.id);
+      if (!row) return;
+      if (row.price !== (+s.price || 0) || row.name !== s.name) changed = true;
+      adoptServerRow(row, { ...s, img: s.image });
+    });
+
+    if (changed) {
+      save();
+      render();
+    }
+  }
+
   save();
   render();
+  reconcileWithServer();
 }

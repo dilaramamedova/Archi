@@ -44,6 +44,9 @@
         'checkoutAddrReq' => t('cart.checkout_form.address_required'),
         'checkoutError' => t('cart.checkout_form.error'),
         'checkoutSending' => t('cart.checkout_form.sending'),
+        // Reused verbatim from the order endpoint, so the cart warns with the same
+        // wording the server would answer with. Placeholders stay in place.
+        'errOutOfStock' => t('cart.errors.out_of_stock'),
     ];
 
     $user = auth()->user();
@@ -62,7 +65,8 @@
 
     // The account cart as rows cart.js can merge into the localStorage cart, so a
     // logged-in visitor sees the same basket on every device — not only the rows
-    // this particular browser saved.
+    // this particular browser saved. `price` is also what the row is *repriced*
+    // with: the database is the only price the order will be charged at.
     $serverCart = $items
         ->filter(fn ($item) => $item->product)
         ->map(fn ($item) => [
@@ -72,6 +76,7 @@
             'qty' => max(1, (int) $item->quantity),
             'img' => $item->product->mainImageUrl,
             'cat' => $item->product->category?->name ?? '',
+            'stock' => (int) $item->product->stock,
         ])
         ->values();
 @endphp
@@ -85,7 +90,11 @@
          data-auth="{{ json_encode($authData) }}"
          data-images="{{ json_encode($itemImages) }}"
          data-server-cart="{{ json_encode($serverCart, JSON_UNESCAPED_UNICODE) }}"
+         {{-- The delivery rule comes from OrderController, which is also what charges
+              it. The JS used to keep its own copy of the two numbers. --}}
+         data-delivery="{{ json_encode($deliveryRule) }}"
          data-url-cart-api="{{ route('api.cart.store') }}"
+         data-url-cart-items="{{ route('api.cart.items') }}"
          data-url-cart-remove="{{ url('/api/cart/product') }}"
          data-order-url="{{ route('api.orders.store') }}">
   <div class="wrap-narrow flex flex-col gap-6 max-[560px]:gap-4 max-[560px]:px-4">

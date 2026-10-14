@@ -39,9 +39,10 @@ function buildFilterUrl() {
     .map((el) => el.dataset.surface);
   if (surfaces.length) params.set('surface', surfaces.join(','));
 
-  // Sizes (comma-separated)
+  // Sizes (comma-separated). data-size is the chip LABEL (and the CSS ghost
+  // width); data-slug is the attribute-option slug the server filters on.
   const sizes = [...document.querySelectorAll('.fs-size[data-on="true"]')]
-    .map((el) => el.dataset.size);
+    .map((el) => el.dataset.slug || el.dataset.size);
   if (sizes.length) params.set('size', sizes.join(','));
 
   // In-stock only
@@ -84,26 +85,86 @@ function initSort() {
   const sortMenu = document.getElementById('sortMenu');
   if (!sortEl || !sortVal || !sortMenu) return;
 
+  const items = [...sortMenu.querySelectorAll('li')];
+
+  function setOpen(open) {
+    sortEl.dataset.open = open ? 'true' : 'false';
+    sortEl.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+
+  function choose(li) {
+    items.forEach((x) => {
+      x.dataset.on = 'false';
+      x.setAttribute('aria-selected', 'false');
+    });
+    li.dataset.on = 'true';
+    li.setAttribute('aria-selected', 'true');
+    sortVal.textContent = li.textContent;
+    setOpen(false);
+    window.location.href = buildFilterUrl();
+  }
+
   sortEl.addEventListener('click', (e) => {
     const li = e.target.closest('li');
     if (li) {
-      // Update visual state then navigate
-      sortMenu.querySelectorAll('li').forEach((x) => (x.dataset.on = 'false'));
-      li.dataset.on = 'true';
-      sortVal.textContent = li.textContent;
-      sortEl.dataset.open = 'false';
-      // Navigate with new sort
-      window.location.href = buildFilterUrl();
+      choose(li);
       return;
     }
-    sortEl.dataset.open = sortEl.dataset.open === 'true' ? 'false' : 'true';
+    setOpen(sortEl.dataset.open !== 'true');
+  });
+
+  // The control is a div with role="button" and the options are <li> — neither
+  // raises a click from the keyboard the way a native control does, so the
+  // whole sort menu used to be unreachable without a mouse.
+  sortEl.addEventListener('keydown', (e) => {
+    const open = sortEl.dataset.open === 'true';
+
+    if (e.key === 'Escape') {
+      if (open) {
+        setOpen(false);
+        sortEl.focus();
+      }
+      return;
+    }
+
+    const li = e.target.closest('li');
+
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      if (li) {
+        choose(li);
+      } else if (!open) {
+        setOpen(true);
+        (items.find((x) => x.dataset.on === 'true') || items[0])?.focus();
+      } else {
+        setOpen(false);
+      }
+
+      return;
+    }
+
+    if (e.key !== 'ArrowDown' && e.key !== 'ArrowUp') return;
+    e.preventDefault();
+    if (!open) {
+      setOpen(true);
+      (items.find((x) => x.dataset.on === 'true') || items[0])?.focus();
+
+      return;
+    }
+    const i = items.indexOf(li);
+    const next = e.key === 'ArrowDown' ? i + 1 : i - 1;
+    items[(next + items.length) % items.length]?.focus();
   });
 
   document.addEventListener('click', (e) => {
-    if (!e.target.closest('#catSort')) sortEl.dataset.open = 'false';
+    if (!e.target.closest('#catSort')) setOpen(false);
   });
 
-  window.addEventListener('scroll', () => { sortEl.dataset.open = 'false'; }, { passive: true });
+  document.addEventListener('focusin', (e) => {
+    if (!e.target.closest('#catSort')) setOpen(false);
+  });
+
+  window.addEventListener('scroll', () => { setOpen(false); }, { passive: true });
 }
 
 function initFilters(sheet) {
@@ -153,6 +214,16 @@ function initFilters(sheet) {
       const title = el.closest('.fs-attr')?.querySelector('.fs-title .t')?.textContent.trim() || el.dataset.attr;
       out.push({ range: el, label: `${title}: ${vMinT || '…'} – ${vMaxT || '…'}` });
     });
+    // "In stock only" is a filter like any other, but it used to produce no
+    // chip and was missing from the mobile "Filtrlər (n)" badge, so on a phone
+    // it could be on with nothing on screen saying so.
+    const stockEl = document.getElementById('stockSwitch');
+    if (stockEl && stockEl.dataset.on === 'true') {
+      out.push({
+        stock: stockEl,
+        label: document.getElementById('stockSwitchLabel')?.textContent.trim() || '',
+      });
+    }
     // Show price chip only when the range differs from the full product range
     // (i.e. user has explicitly narrowed it via URL params or slider drag)
     if (!(Math.round(vMin) === PRICE_MIN && Math.round(vMax) === PRICE_MAX)) {
@@ -244,6 +315,10 @@ function initFilters(sheet) {
     } else if (chip._filter.range) {
       chip._filter.range.querySelectorAll('input').forEach((i) => (i.value = ''));
       renderChips();
+    } else if (chip._filter.stock) {
+      chip._filter.stock.dataset.on = 'false';
+      chip._filter.stock.setAttribute('aria-checked', 'false');
+      renderChips();
     } else {
       chip._filter.el.dataset.on = 'false';
       renderChips();
@@ -283,13 +358,24 @@ function initFilters(sheet) {
     window.location.href = window.location.pathname + (qs ? '?' + qs : '');
   });
 
-  // Toggle sidebar filter controls (brands, surfaces, dynamic attribute options)
-  document.querySelectorAll('.fs-check, .fs-size').forEach((el) =>
-    el.addEventListener('click', () => {
-      el.dataset.on = el.dataset.on === 'true' ? 'false' : 'true';
-      renderChips();
-    })
-  );
+  // Toggle sidebar filter controls (brands, surfaces, sizes, dynamic attribute
+  // options). They are divs/spans with role="checkbox", so Enter and Space have
+  // to be wired by hand — without this the whole sidebar was mouse-only.
+  function toggleCheck(el) {
+    const on = el.dataset.on !== 'true';
+    el.dataset.on = on ? 'true' : 'false';
+    el.setAttribute('aria-checked', on ? 'true' : 'false');
+    renderChips();
+  }
+
+  document.querySelectorAll('.fs-check, .fs-size').forEach((el) => {
+    el.addEventListener('click', () => toggleCheck(el));
+    el.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      toggleCheck(el);
+    });
+  });
 
   // Attribute range inputs feed the chips band too
   document.querySelectorAll('.fs-attr-range input').forEach((i) =>
@@ -306,8 +392,17 @@ function initFilters(sheet) {
 
   const stock = document.getElementById('stockSwitch');
   if (stock) {
-    stock.addEventListener('click', () => {
-      stock.dataset.on = stock.dataset.on === 'true' ? 'false' : 'true';
+    const flip = () => {
+      const on = stock.dataset.on !== 'true';
+      stock.dataset.on = on ? 'true' : 'false';
+      stock.setAttribute('aria-checked', on ? 'true' : 'false');
+      renderChips();
+    };
+    stock.addEventListener('click', flip);
+    stock.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' && e.key !== ' ') return;
+      e.preventDefault();
+      flip();
     });
   }
 

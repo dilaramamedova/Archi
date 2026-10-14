@@ -83,7 +83,10 @@
             </div>
         </div>
         @php
-            $bizPhone = $profile?->contact_phone ?: ($profile?->whatsapp ?: $user->phone);
+            // Mirror of store.blade.php: this is the seller's preview of the PUBLIC
+            // storefront, so it must show exactly what a visitor sees. The personal
+            // sign-up number is never published, only the contact tab's own fields.
+            $bizPhone = $profile?->contact_phone ?: $profile?->whatsapp;
         @endphp
         @if ($bizPhone)
         <div class="id-actions">
@@ -192,8 +195,6 @@
             <p class="sb-kicker">{{ t('business-profile.contact.kicker') }}</p>
             @if ($profile?->contact_phone)
                 <div class="sb-row"><p class="k">{{ t('business-profile.contact.phone') }}</p><p class="v">{{ $profile->contact_phone }}</p></div>
-            @elseif ($user->phone)
-                <div class="sb-row"><p class="k">{{ t('business-profile.contact.phone') }}</p><p class="v">{{ $user->phone }}</p></div>
             @endif
             @if ($profile?->whatsapp)
                 <div class="sb-row"><p class="k">{{ t('business-profile.contact.whatsapp') }}</p><p class="v">{{ $profile->whatsapp }}</p></div>

@@ -6,20 +6,72 @@
 
 import { lockScroll, unlockScroll } from './scroll-lock.js';
 
-function initCartBadge() {
+function readLocalCart() {
   try {
     const cart = JSON.parse(localStorage.getItem('archi-cart') || '[]');
-    const badge = document.getElementById('navCartCount');
-    if (!badge) return;
-    if (cart.length) {
-      badge.textContent = cart.length;
-      badge.style.display = 'flex';
-    } else {
-      badge.style.display = 'none';
-    }
+    return Array.isArray(cart) ? cart : [];
   } catch (e) {
-    // localStorage blocked — skip silently
+    // localStorage blocked
+    return [];
   }
+}
+
+function paintCartBadge(count) {
+  const badge = document.getElementById('navCartCount');
+  if (!badge) return;
+  badge.textContent = count;
+  badge.style.display = count ? 'flex' : 'none';
+}
+
+/**
+ * A signed-in visitor also has a cart on the server — that is the one the cart
+ * page shows, by merging it into localStorage. The badge used to count only
+ * what this browser had saved, so rows added on another device (or before the
+ * site data was cleared) left the icon reading empty everywhere except /cart.
+ * Pull the account cart in here too, with the same union the cart page uses.
+ */
+async function mergeServerCart() {
+  if (!document.body.dataset.user) return;
+
+  let items = [];
+  try {
+    const res = await fetch('/api/cart/items', { headers: { Accept: 'application/json' } });
+    if (!res.ok) return;
+    items = (await res.json()).items || [];
+  } catch (e) {
+    return; // offline — the local count stays on screen
+  }
+
+  const cart = readLocalCart();
+  let added = false;
+
+  items.forEach((s) => {
+    if (cart.some((c) => +c.id === +s.id)) return;
+    cart.push({
+      id: s.id,
+      name: s.name || '',
+      price: +s.price || 0,
+      qty: s.quantity || 1,
+      img: s.image || '',
+      cat: s.cat || '',
+    });
+    added = true;
+  });
+
+  if (added) {
+    try {
+      localStorage.setItem('archi-cart', JSON.stringify(cart));
+    } catch (e) {
+      // localStorage blocked — the badge still shows the real count
+    }
+  }
+
+  paintCartBadge(cart.length);
+}
+
+function initCartBadge() {
+  paintCartBadge(readLocalCart().length);
+  mergeServerCart();
 }
 
 function initSearch() {
@@ -130,13 +182,21 @@ function initSearch() {
     drop.innerHTML = html;
   }
 
+  // Mirrors App\Services\SearchService::MIN_SEARCH_LENGTH. Below it the API
+  // always answers with empty lists (the FULLTEXT index cannot serve a one or
+  // two letter token), so firing on every keystroke only bought a request per
+  // keypress and a dropdown that claimed "no results" for a query that was
+  // never actually run. The navbar mount lives in components/ and cannot take
+  // a new data-* attribute, hence the literal.
+  const MIN_SEARCH_LENGTH = 3;
+
   // Debounce + fetch
   let timer = null;
   let abortCtrl = null;
 
   function fetchResults() {
     const q = (input.value || '').trim();
-    if (q.length < 1) { close(); return; }
+    if (q.length < MIN_SEARCH_LENGTH) { close(); return; }
 
     // Show loading state
     drop.innerHTML = '<div class="sd-head" style="text-align:center;padding:18px 0">' + esc(L_LOADING) + '</div>';
@@ -165,7 +225,7 @@ function initSearch() {
   function scheduleSearch() {
     if (timer) clearTimeout(timer);
     const q = (input.value || '').trim();
-    if (q.length < 1) { close(); return; }
+    if (q.length < MIN_SEARCH_LENGTH) { close(); return; }
     timer = setTimeout(fetchResults, 300);
   }
 
@@ -175,7 +235,7 @@ function initSearch() {
   }
 
   input.addEventListener('focus', () => {
-    if ((input.value || '').trim().length >= 1) scheduleSearch();
+    if ((input.value || '').trim().length >= MIN_SEARCH_LENGTH) scheduleSearch();
   });
   input.addEventListener('input', scheduleSearch);
   input.addEventListener('keydown', (e) => {

@@ -1,3 +1,4 @@
+@use('App\Models\Setting')
 <x-layout page="help" :title="t('help.title')">
 
 {{-- HERO --}}
@@ -69,8 +70,14 @@
       </div>
       <div class="flex flex-wrap gap-3">
 
-        <a href="tel:+994125550012" class="rounded border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15">{{ t('help.contact_number') }}</a>
-        <a href="mailto:salam@archi.az" class="rounded border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15">{{ t('help.contact_emailt') }}</a>
+        @php
+            // Same source of truth as the /about contact block — the number and address
+            // were hardcoded here while /about already read them from settings.
+            $helpPhone = Setting::get('about_contact_phone', t('help.contact_number'));
+            $helpEmail = Setting::get('about_contact_email', t('help.contact_email'));
+        @endphp
+        <a href="tel:{{ preg_replace('/[^0-9+]/', '', $helpPhone) }}" class="rounded border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15">{{ $helpPhone }}</a>
+        <a href="mailto:{{ $helpEmail }}" class="rounded border border-white/20 bg-white/10 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/15">{{ $helpEmail }}</a>
       </div>
     </div>
   </div>

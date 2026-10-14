@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -34,6 +35,31 @@ class SpecialistProfile extends Model
             'rating_avg' => 'float',
             'reviews_count' => 'integer',
         ];
+    }
+
+    /**
+     * Profiles complete enough to be offered in the public directory and in search.
+     *
+     * Account approval used to be the de facto publication gate: a master waited in
+     * `UserStatus::Pending` until an admin let them in, and by then they had usually
+     * filled the profile in. Registration is approved automatically now, so without
+     * this scope a master who signed up ten seconds ago would be listed next to a
+     * professional with a portfolio — no avatar, no description, no price, nothing a
+     * visitor could act on. The onboarding page has always promised exactly this
+     * behaviour ("tamamla, axtarışda görünsün"); the scope makes the promise true.
+     *
+     * The bar is deliberately low and is about usefulness, not quality: a way to make
+     * contact, and a word about the work. It is NOT moderation — nobody approves a
+     * profile, the master clears it themselves by filling the form, and their own
+     * profile URL keeps working the whole time so they can preview and share it.
+     */
+    public function scopeListable(Builder $query): Builder
+    {
+        return $query
+            ->where(fn (Builder $q) => $q->whereNotNull('phone')->where('phone', '!=', '')
+                ->orWhere(fn (Builder $w) => $w->whereNotNull('whatsapp')->where('whatsapp', '!=', '')))
+            ->where(fn (Builder $q) => $q->whereNotNull('about')->where('about', '!=', '')
+                ->orWhereHas('services', fn (Builder $s) => $s->where('is_active', true)));
     }
 
     public function user(): BelongsTo

@@ -61,9 +61,15 @@ class SearchController extends Controller
 
         // Masters -- fetch when showing "all" or "usta" tab
         if ($tab === 'all' || $tab === 'usta') {
-            $masterQuery = SpecialistProfile::whereHas('user', fn ($q) => $q->where('status', UserStatus::Active));
+            $masterQuery = SpecialistProfile::listable()->whereHas('user', fn ($q) => $q->where('status', UserStatus::Active));
             $masterQuery = SearchService::buildSpecialistQuery($masterQuery, $searchTerm);
-            $masterQuery->with('user');
+            // `specialty` is what craft_label reads, and the result cards print
+            // it — without it the page died on the lazy-loading guard as soon
+            // as a single specialist matched the query.
+            $masterQuery->with(['user', 'specialty'])
+                // The card prints a project count; it used to be three COUNT
+                // queries per card, run from the blade.
+                ->withCount(['approvedPortfolioItems as portfolio_count']);
 
             $masterCount = $masterQuery->count();
             $masters = $masterQuery->take(4)->get();
@@ -130,7 +136,11 @@ class SearchController extends Controller
 
     public function autocomplete(Request $request): JsonResponse
     {
-        $query = trim((string) $request->input('q', ''));
+        // `?q[]=x` reaches here as an array; casting it to string raised an
+        // "Array to string conversion" and returned a 500 to the header search
+        // box. Anything that is not a plain string is treated as no query.
+        $raw = $request->input('q');
+        $query = is_string($raw) ? trim($raw) : '';
 
         // Fires on every keystroke, so the floor matters: below three
         // characters the full-text index cannot serve the query and the only
@@ -167,7 +177,7 @@ class SearchController extends Controller
                 'img' => $p->main_image_url,
             ]);
 
-        $masterQuery = SpecialistProfile::whereHas('user', fn ($q) => $q->where('status', UserStatus::Active));
+        $masterQuery = SpecialistProfile::listable()->whereHas('user', fn ($q) => $q->where('status', UserStatus::Active));
         $masterQuery = SearchService::buildSpecialistQuery($masterQuery, $query);
         $totalMasters = (clone $masterQuery)->count();
 

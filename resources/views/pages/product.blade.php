@@ -86,7 +86,7 @@
               <span class="b">{{ $inStock ? t('common.badge_in_stock') : t('common.badge_out_of_stock') }}</span>
             @endif
           </div>
-          <div class="heart" id="pdHeartTop" data-liked="false"><img src="/assets/icon-heart-pointed.svg" alt="{{ t('product.gallery.favorite') }}"></div>
+          <div class="heart" id="pdHeartTop" role="button" tabindex="0" aria-pressed="{{ $isWished ? 'true' : 'false' }}" data-liked="{{ $isWished ? 'true' : 'false' }}" aria-label="{{ t('product.gallery.favorite') }}"><img src="/assets/icon-heart-pointed.svg" alt=""></div>
           @if ($mainImg)
             <img id="pdMainImg" src="{{ $mainImg }}" alt="{{ $product->name }}">
           @else
@@ -169,7 +169,11 @@
         <div class="pd-buy">
           <div class="pd-qty">
             <button type="button" id="qtyMinus" aria-label="{{ t('product.info.qty_minus') }}">−</button>
-            <input type="number" id="qtyVal" value="1" min="1" aria-label="{{ t('product.info.qty') }}">
+            {{-- The seller's minimum order, not a flat 1. For cement (10) or brick
+                 (100) the buyer used to find out only by having the whole order
+                 rejected at checkout. --}}
+            @php $minOrder = max(1, (int) $product->min_order); @endphp
+            <input type="number" id="qtyVal" value="{{ $minOrder }}" min="{{ $minOrder }}" aria-label="{{ t('product.info.qty') }}">
             <button type="button" id="qtyPlus" aria-label="{{ t('product.info.qty_plus') }}">+</button>
           </div>
           {{-- The labels/values the "add to cart" behaviour needs come from data-* --}}
@@ -186,7 +190,7 @@
                   data-cart-brand="{{ $product->brand?->name ?? $product->category?->name ?? t('common.site_name') }}"
                   data-cart-img="{{ $mainImg ?? '' }}"
                   data-cart-stock="{{ $inStock ? t('common.badge_in_stock') : t('common.badge_out_of_stock') }}"><img src="/assets/icon-cart.svg" alt="">{{ t('product.info.add_cart') }}</button>
-          <button class="pd-wish" id="pdWish" data-liked="false" aria-label="{{ t('product.info.wish') }}"><img src="/assets/icon-heart-pointed.svg" alt=""></button>
+          <button class="pd-wish" id="pdWish" data-liked="{{ $isWished ? 'true' : 'false' }}" aria-pressed="{{ $isWished ? 'true' : 'false' }}" aria-label="{{ t('product.info.wish') }}"><img src="/assets/icon-heart-pointed.svg" alt=""></button>
         </div>
 
         <div class="pd-assure">
@@ -431,7 +435,7 @@
                :reviews="null"
                :name="$s->user?->name"
                :exp="$s->experience_years ? $s->experience_years . ' ' . t('home.specialists.years') : null"
-               :proj="$s->approvedPortfolioItems()->count() . ' ' . t('home.specialists.projects')" />
+               :proj="($s->portfolio_count ?? $s->approvedPortfolioItems()->count()) . ' ' . t('home.specialists.projects')" />
     @empty
       <p class="w-full py-8 text-sm text-black/45">{{ $tOr('home.specialists.empty', 'Hələ seçilmiş mütəxəssis yoxdur.') }}</p>
     @endforelse

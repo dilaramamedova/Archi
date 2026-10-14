@@ -29,6 +29,36 @@ return [
     'string' => ':attribute должен быть строкой.',
     'unique' => 'Такой :attribute уже используется.',
 
+    // These rules are used by the app's form requests but had no message, so Laravel
+    // printed the raw key (e.g. "validation.regex" showed in the home lead form popup).
+    'between' => [
+        'numeric' => ':attribute должен быть между :min и :max.',
+        'file' => ':attribute должен быть между :min и :max килобайт.',
+        'string' => ':attribute должен содержать от :min до :max символов.',
+        'array' => ':attribute должен содержать от :min до :max элементов.',
+    ],
+    'date_format' => ':attribute не соответствует формату :format.',
+    'decimal' => ':attribute должен содержать :decimal знаков после запятой.',
+    'dimensions' => 'Недопустимые размеры изображения :attribute.',
+    'distinct' => ':attribute содержит повторяющееся значение.',
+    'password' => [
+        'letters' => ':attribute должен содержать хотя бы одну букву.',
+        'mixed' => ':attribute должен содержать хотя бы одну заглавную и одну строчную букву.',
+        'numbers' => ':attribute должен содержать хотя бы одну цифру.',
+        'symbols' => ':attribute должен содержать хотя бы один символ.',
+        'uncompromised' => 'Данный :attribute обнаружен в утечке данных. Пожалуйста, выберите другое значение.',
+    ],
+    'present' => 'Поле :attribute должно присутствовать.',
+    'regex' => 'Неверный формат :attribute.',
+    'size' => [
+        'numeric' => ':attribute должен быть равен :size.',
+        'file' => ':attribute должен быть равен :size килобайт.',
+        'string' => ':attribute должен содержать :size символов.',
+        'array' => ':attribute должен содержать :size элементов.',
+    ],
+    'url' => ':attribute должен быть корректной ссылкой.',
+    'uuid' => ':attribute должен быть корректным UUID.',
+
     'attributes' => [
         'first_name' => 'Имя',
         'last_name' => 'Фамилия',

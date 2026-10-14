@@ -29,6 +29,36 @@ return [
     'string' => 'The :attribute must be a string.',
     'unique' => 'The :attribute has already been taken.',
 
+    // These rules are used by the app's form requests but had no message, so Laravel
+    // printed the raw key (e.g. "validation.regex" showed in the home lead form popup).
+    'between' => [
+        'numeric' => 'The :attribute must be between :min and :max.',
+        'file' => 'The :attribute must be between :min and :max kilobytes.',
+        'string' => 'The :attribute must be between :min and :max characters.',
+        'array' => 'The :attribute must have between :min and :max items.',
+    ],
+    'date_format' => 'The :attribute does not match the format :format.',
+    'decimal' => 'The :attribute must have :decimal decimal places.',
+    'dimensions' => 'The :attribute has invalid image dimensions.',
+    'distinct' => 'The :attribute field has a duplicate value.',
+    'password' => [
+        'letters' => 'The :attribute must contain at least one letter.',
+        'mixed' => 'The :attribute must contain at least one uppercase and one lowercase letter.',
+        'numbers' => 'The :attribute must contain at least one number.',
+        'symbols' => 'The :attribute must contain at least one symbol.',
+        'uncompromised' => 'The given :attribute has appeared in a data leak. Please choose a different :attribute.',
+    ],
+    'present' => 'The :attribute field must be present.',
+    'regex' => 'The :attribute format is invalid.',
+    'size' => [
+        'numeric' => 'The :attribute must be :size.',
+        'file' => 'The :attribute must be :size kilobytes.',
+        'string' => 'The :attribute must be :size characters.',
+        'array' => 'The :attribute must contain :size items.',
+    ],
+    'url' => 'The :attribute must be a valid URL.',
+    'uuid' => 'The :attribute must be a valid UUID.',
+
     'attributes' => [
         'first_name' => 'first name',
         'last_name' => 'last name',

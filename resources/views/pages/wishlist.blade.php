@@ -34,7 +34,7 @@
           <div class="wl-row flex items-center gap-5 rounded-ds border border-black/10 bg-white p-4 transition-opacity max-[560px]:flex-wrap max-[560px]:gap-3"
                data-id="{{ $item->id }}" data-product-id="{{ $product->id }}">
             {{-- product image --}}
-            <a href="{{ route('product', $product->slug ?? $product->id) }}" class="shrink-0">
+            <a href="{{ route('product.show', $product->slug) }}" class="shrink-0">
               <img src="{{ $img }}" alt="{{ $product->name }}" class="h-[100px] w-[100px] rounded-[8px] object-cover max-[560px]:h-[72px] max-[560px]:w-[72px]">
             </a>
 
@@ -43,7 +43,7 @@
               @if ($product->category)
                 <span class="text-xs uppercase tracking-wide text-black/45">{{ $product->category->name }}</span>
               @endif
-              <a href="{{ route('product', $product->slug ?? $product->id) }}" class="truncate text-sm font-semibold text-ink hover:underline">{{ $product->name }}</a>
+              <a href="{{ route('product.show', $product->slug) }}" class="truncate text-sm font-semibold text-ink hover:underline">{{ $product->name }}</a>
               <div class="flex items-baseline gap-2">
                 <span class="text-base font-bold text-ink">{{ $price }} &#8380;</span>
                 @if ($oldPrice)

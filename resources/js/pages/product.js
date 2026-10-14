@@ -33,10 +33,15 @@ function initQty() {
   const plus = document.getElementById('qtyPlus');
   if (!qty || !minus || !plus) return;
 
-  const value = () => +qty.value || 1;
-  minus.addEventListener('click', () => { qty.value = Math.max(1, value() - 1); });
+  // The floor is the seller's minimum order, which Blade puts on the input's `min`.
+  // Stepping below it used to be allowed all the way down to 1, and the order was
+  // then rejected at checkout for a rule the buyer was never shown.
+  const floor = Math.max(1, +qty.min || 1);
+  const value = () => +qty.value || floor;
+
+  minus.addEventListener('click', () => { qty.value = Math.max(floor, value() - 1); });
   plus.addEventListener('click', () => { qty.value = value() + 1; });
-  qty.addEventListener('change', () => { if (value() < 1) qty.value = 1; });
+  qty.addEventListener('change', () => { if (value() < floor) qty.value = floor; });
 }
 
 // The navbar badge is rendered on load by shared/navbar.js; after a cart write the
@@ -74,6 +79,12 @@ function initAddToCart() {
   const d = btn.dataset;
   let resetTimer = 0;
 
+  // The quantity the localStorage row ends up holding after the last store().
+  // POST /api/cart replaces the stored quantity, so this — not the input value —
+  // is what has to be sent, otherwise a second "add" leaves the account cart
+  // holding less than the basket shows and the two carts drift apart.
+  let storedQty = 1;
+
   // Writes the product into the cart. Returns true only when it was really pushed,
   // so a repeat click can say "already in cart" instead of faking a success.
   function store() {
@@ -91,12 +102,14 @@ function initAddToCart() {
       if (existing) {
         // Update quantity instead of silently ignoring
         existing.qty = (existing.qty || 1) + qty;
+        storedQty = existing.qty;
         if (id) existing.id = id;
         // Backfill the image for rows saved before it was stored
         if (!existing.img && d.cartImg) existing.img = d.cartImg;
         localStorage.setItem('archi-cart', JSON.stringify(cart));
         return false;
       }
+      storedQty = qty;
       cart.push({
         id,
         name: name.trim(),
@@ -113,6 +126,8 @@ function initAddToCart() {
       return true;
     } catch (e) {
       // localStorage blocked — nothing is persisted, but the click is still a fresh add
+      const qtyInput = document.getElementById('qtyVal');
+      storedQty = qtyInput ? Math.max(1, +qtyInput.value || 1) : 1;
       return true;
     }
   }
@@ -140,7 +155,6 @@ function initAddToCart() {
 
     // Persist to the server for logged-in users
     const productId = d.productId;
-    const qty = document.getElementById('qtyVal');
     if (productId) {
       try {
         const res = await fetch('/api/cart', {
@@ -152,7 +166,8 @@ function initAddToCart() {
           },
           body: JSON.stringify({
             product_id: +productId,
-            quantity: qty ? +qty.value || 1 : 1,
+            // The row's new total, not this click's amount — the endpoint upserts.
+            quantity: Math.max(1, storedQty),
           }),
         });
         if (res.ok) {
@@ -280,33 +295,58 @@ function initWish() {
   const els = [document.getElementById('pdWish'), document.getElementById('pdHeartTop')].filter(Boolean);
   if (!els.length) return;
 
-  // Both heart buttons share state — keep them in sync.
+  // Both heart buttons share state — keep them in sync. The server's answer is
+  // authoritative: the endpoint is a toggle, so an optimistic flip that the
+  // request then contradicts would leave the icon lying about the wishlist.
   function setAll(liked) {
-    els.forEach((e) => (e.dataset.liked = liked ? 'true' : 'false'));
+    els.forEach((e) => {
+      e.dataset.liked = liked ? 'true' : 'false';
+      e.setAttribute('aria-pressed', liked ? 'true' : 'false');
+    });
   }
 
   // Read product_id from the add-to-cart button (it carries data-product-id).
   const productId = document.getElementById('addCart')?.dataset?.productId;
 
-  els.forEach((el) => {
-    el.addEventListener('click', async () => {
-      if (requireAuth()) return;
-      const nowLiked = el.dataset.liked !== 'true';
-      setAll(nowLiked);
+  async function toggle(el) {
+    if (requireAuth()) return;
+    const nowLiked = el.dataset.liked !== 'true';
+    setAll(nowLiked);
 
-      if (!productId) return;
-      try {
-        await fetch('/api/wishlist/toggle', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'X-CSRF-TOKEN': csrf(),
-          },
-          body: JSON.stringify({ product_id: +productId }),
-        });
-      } catch { /* guest or network error — optimistic toggle stays */ }
-    });
+    if (!productId) return;
+    try {
+      const res = await fetch('/api/wishlist/toggle', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          'X-CSRF-TOKEN': csrf(),
+        },
+        body: JSON.stringify({ product_id: +productId }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (typeof data.added === 'boolean') setAll(data.added);
+      } else {
+        setAll(!nowLiked);
+      }
+    } catch {
+      // network error — put the icon back rather than claim a saved favourite
+      setAll(!nowLiked);
+    }
+  }
+
+  els.forEach((el) => {
+    el.addEventListener('click', () => toggle(el));
+    // #pdHeartTop is a div with role="button": Enter / Space do not raise a
+    // click event on it the way they do on a real <button>.
+    if (el.tagName !== 'BUTTON') {
+      el.addEventListener('keydown', (e) => {
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        toggle(el);
+      });
+    }
   });
 }
 
