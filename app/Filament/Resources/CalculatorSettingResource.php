@@ -102,11 +102,12 @@ class CalculatorSettingResource extends Resource
         'SCREED_DEFAULT_THICKNESS_MM' => 'Stəjkanın orta qalınlığı.',
         'SELF_LEVEL_DEFAULT_THICKNESS_MM' => 'Özüyayılan döşəmənin orta qalınlığı.',
 
-        'DEFAULT_ROOM_HEIGHT' => 'Yeni otaq əlavə ediləndə tavan hündürlüyü kimi hazır gələn rəqəm.',
-        'DEFAULT_DOOR_WIDTH' => 'Qapının standart eni. Divar sahəsindən qapının yeri bu ölçü ilə çıxılır.',
-        'DEFAULT_DOOR_HEIGHT' => 'Qapının standart hündürlüyü.',
-        'DEFAULT_WINDOW_WIDTH' => 'Pəncərənin standart eni.',
-        'DEFAULT_WINDOW_HEIGHT' => 'Pəncərənin standart hündürlüyü.',
+        // Kalkulyatorda bütün ölçülər millimetrlədir, bu defoltlar da.
+        'DEFAULT_ROOM_HEIGHT_MM' => 'Yeni otaq əlavə ediləndə tavan hündürlüyü kimi hazır gələn rəqəm. Millimetrlə: 2800 = 2.8 m.',
+        'DEFAULT_DOOR_WIDTH_MM' => 'Qapının standart eni, millimetrlə (900 = 0.9 m). Divar sahəsindən qapının yeri bu ölçü ilə çıxılır.',
+        'DEFAULT_DOOR_HEIGHT_MM' => 'Qapının standart hündürlüyü, millimetrlə (2100 = 2.1 m).',
+        'DEFAULT_WINDOW_WIDTH_MM' => 'Pəncərənin standart eni, millimetrlə (1500 = 1.5 m).',
+        'DEFAULT_WINDOW_HEIGHT_MM' => 'Pəncərənin standart hündürlüyü, millimetrlə (1400 = 1.4 m).',
 
         'ESTIMATE_VALID_DAYS' => 'Saxlanmış smeta neçə gün etibarlı sayılsın. 0 yazsanız müddət qoyulmur.',
     ];

@@ -29,6 +29,60 @@ Qeyd: **boş qiymət silinmiş qiymət demək deyil.** Tarif və ya fallback qiy
 qalarsa, smetada həmin sətir `PRICE_MISSING` statusu ilə «qiymət dəqiqləşdirilir»
 kimi görünür — heç vaxt 0 AZN kimi yox (Master Spec §19).
 
+## Ölçü vahidləri — millimetr / metr sərhədi
+
+**Qayda:** istifadəçi **millimetr** yazır, motor **metr**lə hesablayır. Çevirmə
+bütün sistemdə **bir yerdə** baş verir: `app/Services/Calculator/Units.php`.
+Kodda 1000-ə bölən başqa sətir yoxdur.
+
+Səbəb: `calculator_work_rates`-dəki bütün tariflər **m²** və **p.m** üzrədir,
+material normaları da m² üzrə. Motoru mm²-ə keçirmək adminin əl ilə yazdığı hər
+qiyməti mənasız edərdi. Ona görə yalnız **giriş sərhədi** dəyişir.
+
+| Nə | Vahid | Açar |
+|---|---|---|
+| Otağın uzunluğu / eni / hündürlüyü | **mm** | `lengthMm`, `widthMm`, `heightMm` |
+| Qapı / pəncərə eni və hündürlüyü | **mm** | `openings[].widthMm`, `.heightMm` |
+| Əl ilə həndəsə — perimetr | **mm** | `perimeterMm` |
+| Obyektin sahəsi | m² | `object.area` |
+| Əl ilə həndəsə — sahələr | m² | `floorArea`, `netWallArea` |
+| İsti döşəmə sahəsi | m² | `warmFloor.area` |
+| Kondisionerlənən sahə | m² | `hvac.conditionedArea` |
+| Trassa, drenaj, kabel, boru uzunluqları | **m** | `routeMeters`, `drainMeters`, `cableMeters`… |
+
+Son sətir qəsdən belədir: bunlar həndəsə deyil, **tarifin öz vahidində miqdar**dır
+(p.m üzrə qiymətlənir) və birbaşa tarifə vurulur. Onları mm-ə keçirmək ikinci
+çevirmə nöqtəsi yaradardı. Açarın adı vahidi deyir: **`Mm` ilə bitən hər açar
+millimetrdir**, qalanı öz tarif vahidindədir.
+
+Cavabda (`estimate.rooms[]`) **millimetr yalnız istifadəçinin yazdığı ölçülərdir**
+(`openings[].widthMm`). `floorArea`, `netWallArea`, `perimeter`, `skirtingLength`
+— hamısı m² / m, çünki tarif onları belə qiymətləndirir. Daxil edilmiş
+uzunluq/en/hündürlük cavabda **təkrarlanmır**: eyni ekranda həm 4500 mm, həm 4.5 m
+görmək oxucunu yanlış rəqəmə inandırır.
+
+### Köhnə məlumatların miqrasiyası
+
+Payload-ın **versiya nişanı** var: `v`. `v: 1` = metr, `v: 2` = millimetr.
+
+- `calculator_sessions.inputs` — `CalculatorController::build()` hər hesablamadan
+  əvvəl `Units::upgradePayload()` çağırır. Bir yol var, ona görə həm brauzerdən
+  gələn sorğu, həm aylar əvvəl saxlanmış sessiya eyni yerdən keçir. Çevirmə
+  **rəqəmin böyüklüyünə görə yox, versiya nişanına görə** olur.
+- Brauzer gələn sorğuda **müştərinin elan etdiyi** `v`-ni oxuyur (nişan yoxdursa 1):
+  keşlənmiş köhnə JS bundle hələ metr göndərirsə, o da düzgün çevrilir.
+- `localStorage` (`archi-detailed-calc`) — eyni nişan, `STATE_VERSION = 2`.
+  v1 blob atılmır, çevrilir (`upgradeSaved()`), istifadəçinin cavabları itmir.
+- **Snapshot-lar toxunulmur.** Onlar dondurulmuş sənəddir: saxlanmış `lines` və
+  `totals`-dan render olunur, heç vaxt yenidən hesablanmır (§22). Müştərinin
+  əlindəki PDF-dəki rəqəm vahid dəyişikliyindən tərpənmir.
+
+Admin paneldəki beş həndəsə defoltu da millimetrdədir:
+`DEFAULT_ROOM_HEIGHT_MM` (2800), `DEFAULT_DOOR_WIDTH_MM` (900),
+`DEFAULT_DOOR_HEIGHT_MM` (2100), `DEFAULT_WINDOW_WIDTH_MM` (1500),
+`DEFAULT_WINDOW_HEIGHT_MM` (1400). Miqrasiya adminin yazdığı dəyəri saxlayır,
+yalnız vahidi çevirir — heç bir qiymət dəyişmir.
+
 ## Hesablama motoru
 
 `app/Services/Calculator/` — bütün hesablama burada, bir düsturla:
@@ -37,10 +91,17 @@ kimi görünür — heç vaxt 0 AZN kimi yox (Master Spec §19).
 LineTotal = MAX(Quantity × UnitPrice × Π(Coefficients), MinimumCharge)
 ```
 
+`MinimumCharge` **sifariş üzrə**dir, otaq üzrə yox. Bir iş bir neçə otaqda
+görünürsə, minimum həmin işin bütün sətirləri arasında onların dəyərinə mütənasib
+bölünür: mətbəxdə 9 m², hamamda 4 m² döşəmə kafeli bir sifarişdir — 13 m² × 15 ₼ =
+195 ₼, iki dəfə 150 ₼ = 300 ₼ yox. Sətirdə `meta.minimumChargeOrder` sifarişin
+tam minimumunu saxlayır.
+
 | Sinif | Məsuliyyət |
 |---|---|
+| `Units` | **Yeganə mm → m çevirmə nöqtəsi** və payload versiyası |
 | `CalculatorConfig` | 7 konfiqurasiya cədvəlinə yeganə giriş nöqtəsi; versiyalı keş |
-| `GeometryEngine` | Otaq həndəsəsi (§6) və aqreqasiya qatı (§6.3) |
+| `GeometryEngine` | Otaq həndəsəsi (§6) və aqreqasiya qatı (§6.3); **vahid sərhədi** |
 | `DependencyEngine` | «Hazırkı vəziyyət → hədəf üzlük» texnoloji zənciri (§9) |
 | `ModuleResolver` | Elektrik, santexnika, HVAC, qapı, işıqlandırma, demontaj, xidmətlər (§11) |
 | `MaterialResolver` | Material tələbatı, waste, paket sayı, kataloq/fallback/istisna (§12–13) |
@@ -83,6 +144,10 @@ PDF, WhatsApp və sifariş eyni məbləği göstərir (§22).
 | Yaş zona divarları | Hidroizolyasiya defoltu yalnız hamam/sanitar qovşaq üçün; mətbəxdə yalnız döşəmə. İstifadəçi zonanı əl ilə yaş işarələyə bilər. |
 | Köhnə döşəmə örtüyünün sökülməsi | Döşəmə zonasının vəziyyəti `OLD_FINISH` → `DEM_FLOOR_LAMINATE` (yumşaq örtük tarifi), `OLD_TILE` → `DEM_FLOOR_TILE`. `existingCover` opsiyası dəqiq örtüyü deyirsə, o üstün gəlir. |
 | Köhnə qapıların sökülməsi | `OLD_RENOVATION` obyektdə `installNewDoor` işarəli hər qapı yeri üçün `DEM_DOOR` avtomatik təklif olunur (istifadəçi çıxara bilər); SHELL-də heç vaxt. |
+| Silikon (`TILE_SILICONE`) | **Otaq üzrə bir dəfə**, otağın perimetri qədər. Əvvəl hər kafelli zona üçün ayrıca yaranırdı: divarı da, döşəməsi də kafelli hamamda perimetr iki dəfə hesablanırdı. Birləşmə yeri səthin yox, otağın xassəsidir. |
+| İriformatlı kafel | Divarda format **tarif sətrini** seçir (`TILE_INSTALL_LARGE`, 18 ₼/m²), əmsal yox — fərq onsuz da formatın əlavəsidir. Döşəmədə isə bir tarif sətri var, ona görə format orada **əmsaldan** gəlir (`K_TILE_LARGE`). Düzülüş əmsalı (`K_TILE_DIAGONAL`) hər formata tətbiq olunur. |
+| Səthdəki köhnə üzlüyün sökülməsi | Yalnız **texnoloji zəncir** (zonanın `currentState`-i) qərar verir. Demontaj bloku `wallTileArea` / `ceilingGypsumArea` / `ceilingStretchArea` qəbul etmir — zona sətri otaq səviyyəsində, modul sətri obyekt səviyyəsində olduğu üçün ikisi birləşmirdi və eyni kafel iki dəfə sökülürdü. |
+| Obyektin sahəsi | Bir mənbə: yazılmış `object.area`, yoxdursa otaqların cəmi. Həm yekun təmizlik, həm tullantı həcmi eyni rəqəmdən oxuyur. |
 | Nöqtə sayları | Otaq addımında redaktə olunur (rozetka, açar, işıq, su, kanalizasiya…). Defolt `RoomType::defaultPoints()`-dən, otaq növü dəyişəndə sıfırlanır. |
 | Sahə dəyişəndə otaqlar | İstifadəçi otaqlara toxunmayıbsa, obyekt sahəsi dəyişəndə otaqlar yenidən seed olunur — əks halda 120 m²-lik defolt otaqlar 80 yazan müştərinin smetasını sakitcə 50% şişirdirdi. |
 | Qaba materialların (qrunt, şpaklyovka, yapışqan…) qiyməti | Müştərinin matrisində yox idi; motor miqdarı hesabladığına görə DRAFT fallback qiymətlərlə seed edilib və admin paneldə təsdiqlənməlidir. |
@@ -176,7 +241,8 @@ Tag manager qoşulmayıbsa heç nə pozulmur: hadisələr sadəcə heç yerə ge
 ## Testlər
 
 - `tests/Feature/QuickCalculatorTest.php` — TZ §50 qəbul meyarları (AC-01…AC-16) və §51 nəzarət cədvəli
-- `tests/Feature/EstimateEngineTest.php` — Master Spec §23 ssenariləri A–J + waste/contingency ayrılığı, snapshot sabitliyi
+- `tests/Feature/CalculatorMillimetreTest.php` — mm → m sərhədi, payload versiyası və köhnə (metr) sessiyanın miqrasiyası
+- `tests/Feature/EstimateEngineTest.php` — Master Spec §23 ssenariləri A–J + waste/contingency ayrılığı, snapshot sabitliyi, silikon/minimum sifariş/kafel əmsalı düzəlişləri
 - `tests/Feature/AdminCalculatorResourcesTest.php` — admin ekranları və qiymət dəyişikliyinin storefront-a çatması
 - `tests/Feature/CalculatorPagesTest.php` — səhifələrdə qiymətin hardcode olunmaması
 

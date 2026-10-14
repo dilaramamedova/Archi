@@ -36,9 +36,46 @@ class DependencyEngine
                     $requests[] = $request;
                 }
             }
+
+            if ($sealant = $this->sealantStep($room)) {
+                $requests[] = $sealant;
+            }
         }
 
         return $requests;
+    }
+
+    /**
+     * Silicone along the wet-room joints — once per room.
+     *
+     * It used to be a step of each tiled zone, so a bathroom with tiled walls AND a
+     * tiled floor was billed the room's perimeter twice: a 2×2 m bathroom (8 m of
+     * perimeter) came out at 16 p.m. The sealed joint is a property of the room, not
+     * of a surface, which is exactly why it cannot be derived per zone (master spec
+     * §6.3 — one quantity, one source).
+     */
+    private function sealantStep(RoomGeometry $room): ?WorkRequest
+    {
+        $tiled = array_filter(
+            $room->zones,
+            fn (SurfaceZone $zone) => $zone->wetZone && in_array(
+                $zone->finish,
+                [FinishCategory::WallTile, FinishCategory::FloorTile],
+                true,
+            ),
+        );
+
+        if ($tiled === [] || $room->perimeter <= 0) {
+            return null;
+        }
+
+        return new WorkRequest(
+            workId: 'TILE_SILICONE',
+            quantity: $room->perimeter,
+            roomId: $room->id,
+            roomName: $room->name,
+            meta: ['source' => 'ROOM_PERIMETER'],
+        );
     }
 
     /** @return array<int, WorkRequest> */
@@ -249,20 +286,20 @@ class DependencyEngine
                 'quantity' => $area,
                 'coefficients' => $this->tileFormatCoefficients($zone),
             ]],
-            FinishCategory::WallTile => array_merge(
-                [$this->tileInstallStep($zone)],
-                [['workId' => 'TILE_GROUT', 'quantity' => $area]],
-                $zone->wetZone ? [['workId' => 'TILE_SILICONE', 'quantity' => $room->perimeter]] : [],
-            ),
-            FinishCategory::FloorTile => array_merge(
-                [[
+            // The sealant is NOT here: it belongs to the room, and sealantStep()
+            // emits it once. Grout is per square metre of tile, so it is.
+            FinishCategory::WallTile => [
+                $this->tileInstallStep($zone),
+                ['workId' => 'TILE_GROUT', 'quantity' => $area],
+            ],
+            FinishCategory::FloorTile => [
+                [
                     'workId' => 'FLOOR_TILE_INSTALL',
                     'quantity' => $area,
                     'coefficients' => $this->tileFormatCoefficients($zone),
-                ]],
-                [['workId' => 'TILE_GROUT', 'quantity' => $area]],
-                $zone->wetZone ? [['workId' => 'TILE_SILICONE', 'quantity' => $room->perimeter]] : [],
-            ),
+                ],
+                ['workId' => 'TILE_GROUT', 'quantity' => $area],
+            ],
             FinishCategory::Laminate => [
                 ['workId' => 'FLOOR_LAMINATE_INSTALL', 'quantity' => $area],
                 ['workId' => 'SKIRTING_INSTALL', 'quantity' => $room->skirtingLength],
@@ -295,18 +332,41 @@ class DependencyEngine
         };
     }
 
-    /** Tile format decides both the work id and the coefficient (Coefficients sheet). */
+    /** Wall-tile format => its own tariff row. */
+    private const WALL_TILE_WORKS = [
+        'LARGE' => 'TILE_INSTALL_LARGE',
+        'MOSAIC' => 'TILE_INSTALL_MOSAIC',
+        'STANDARD' => 'TILE_INSTALL_STANDARD',
+    ];
+
+    /**
+     * Wall tiling: the format picks the tariff row, the layout picks the coefficient.
+     *
+     * The format must NOT also add K_TILE_LARGE. Large-format wall tile has its own
+     * rate (18 ₼/m² against the standard 15) — that difference IS the surcharge, and
+     * multiplying it by K_TILE_LARGE (1.25) again charged 22.50 ₼/m² for work the
+     * admin priced at 18. Mosaic, on the same code path, never got a coefficient, so
+     * the rule was not even applied consistently.
+     *
+     * The layout coefficient now reaches every format. A diagonal large-format wall
+     * used to lose K_TILE_DIAGONAL (1.15) completely, because the LARGE branch
+     * returned before the layout was ever looked at.
+     */
     private function tileInstallStep(SurfaceZone $zone): array
     {
         $format = strtoupper((string) $zone->option('format', 'STANDARD'));
 
-        return match ($format) {
-            'LARGE' => ['workId' => 'TILE_INSTALL_LARGE', 'quantity' => $zone->area, 'coefficients' => ['K_TILE_LARGE']],
-            'MOSAIC' => ['workId' => 'TILE_INSTALL_MOSAIC', 'quantity' => $zone->area],
-            default => ['workId' => 'TILE_INSTALL_STANDARD', 'quantity' => $zone->area, 'coefficients' => $this->layoutCoefficients($zone)],
-        };
+        return [
+            'workId' => self::WALL_TILE_WORKS[$format] ?? self::WALL_TILE_WORKS['STANDARD'],
+            'quantity' => $zone->area,
+            'coefficients' => $this->layoutCoefficients($zone),
+        ];
     }
 
+    /**
+     * Floors and stone have a single tariff row for every format, so there the
+     * format has to come from the coefficient — the opposite of walls above.
+     */
     private function tileFormatCoefficients(SurfaceZone $zone): array
     {
         $coefficients = strtoupper((string) $zone->option('format', 'STANDARD')) === 'LARGE'

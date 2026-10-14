@@ -7,9 +7,12 @@ use App\Enums\Calculator\RoomType;
 use App\Enums\Calculator\WarmFloorType;
 
 /**
- * A room after the geometry engine has run (master spec §6). Everything except the
- * three entered dimensions is derived here, once, so no work formula ever recomputes
- * an area for itself.
+ * A room after the geometry engine has run (master spec §6). Every quantity is
+ * derived here, once, so no work formula ever recomputes an area for itself.
+ *
+ * Every figure on this object — and in toArray() — is METRES or m². Millimetres are
+ * the unit of the request payload only; GeometryEngine converted them on the way in
+ * (see Units). Nothing downstream of here ever sees a millimetre.
  */
 class RoomGeometry
 {
@@ -23,8 +26,12 @@ class RoomGeometry
         public readonly string $name,
         public readonly RoomType $roomType,
         public readonly GeometryMode $geometryMode,
-        public readonly float $length,
-        public readonly float $width,
+        /**
+         * Metres. The only entered dimension anything still reads, because the
+         * ceiling-height coefficient bands are expressed in metres. Length and width
+         * used to sit beside it and were read by nothing at all — they had already
+         * done their job inside floorArea and perimeter.
+         */
         public readonly float $height,
         public readonly float $floorArea,
         public readonly float $ceilingArea,
@@ -82,9 +89,11 @@ class RoomGeometry
             'name' => $this->name,
             'roomType' => $this->roomType->value,
             'geometryMode' => $this->geometryMode->value,
-            'length' => $this->length,
-            'width' => $this->width,
-            'height' => $this->height,
+            // The entered length, width and height are NOT echoed here: they are the
+            // request's own data, in the request's own unit, and repeating them in
+            // metres next to the millimetres the visitor typed is how a reader ends
+            // up believing the wrong one. What follows is derived — metres and m²,
+            // the units these quantities are actually tariffed in.
             'floorArea' => round($this->floorArea, 4),
             'ceilingArea' => round($this->ceilingArea, 4),
             'perimeter' => round($this->perimeter, 4),
@@ -93,7 +102,15 @@ class RoomGeometry
             'windowArea' => round($this->windowArea, 4),
             'netWallArea' => round($this->netWallArea, 4),
             'skirtingLength' => round($this->skirtingLength, 4),
-            'openings' => $this->openings,
+            // Millimetres, as they were entered — the one rule, everywhere.
+            'openings' => array_map(fn (array $o) => [
+                'type' => $o['type'],
+                'widthMm' => round(Units::mToMm($o['width']), 1),
+                'heightMm' => round(Units::mToMm($o['height']), 1),
+                'qty' => $o['qty'],
+                'subtype' => $o['subtype'],
+                'installNewDoor' => $o['installNewDoor'],
+            ], $this->openings),
             'zones' => array_map(fn (SurfaceZone $z) => $z->toArray(), $this->zones),
             'warmFloorType' => $this->warmFloorType->value,
             'warmFloorArea' => round($this->warmFloorArea, 4),

@@ -35,7 +35,8 @@ class CalculatorPdfTest extends TestCase
                 'id' => 'room-1',
                 'name' => 'Qonaq otağı',
                 'roomType' => 'LIVING_ROOM',
-                'length' => 5, 'width' => 4, 'height' => 2.8,
+                // Millimetres — see App\Services\Calculator\Units.
+                'lengthMm' => 5000, 'widthMm' => 4000, 'heightMm' => 2800,
                 'floorFinish' => 'LAMINATE',
                 'wallFinish' => 'PAINT',
                 'ceilingFinish' => 'CEILING_PAINT',

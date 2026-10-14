@@ -381,7 +381,7 @@ class EstimateEngineTest extends TestCase
     public function test_the_height_coefficient_reaches_wall_labour_only(): void
     {
         $inputs = $this->inputs();
-        $inputs['rooms'][0]['height'] = 3.4;
+        $inputs['rooms'][0]['heightMm'] = 3400;
 
         $lines = $this->linesById($this->builder->build($inputs));
 
@@ -599,6 +599,222 @@ class EstimateEngineTest extends TestCase
         $this->assertSame($after['baseSubtotal'], $after['grandTotal']);
     }
 
+    /**
+     * The sealed joint runs around the room, so it is billed once per room.
+     *
+     * It used to be a step of every tiled zone: a 2×2 m bathroom (8 m of perimeter)
+     * with tiled walls AND a tiled floor produced two requests of 8 p.m each, which
+     * consolidation then added up to 16 p.m — 32 ₼ of silicone nobody will apply.
+     */
+    public function test_tile_sealant_is_billed_once_per_room_not_once_per_tiled_surface(): void
+    {
+        $inputs = $this->inputs();
+        $inputs['object']['area'] = 4;
+        $inputs['rooms'][0]['roomType'] = 'BATHROOM';
+        $inputs['rooms'][0]['lengthMm'] = 2000;
+        $inputs['rooms'][0]['widthMm'] = 2000;
+        $inputs['rooms'][0]['zones'] = [
+            ['surface' => 'FLOOR', 'area' => 4, 'finish' => 'FLOOR_TILE', 'currentState' => 'ROUGH_FLOOR', 'wetZone' => true],
+            ['surface' => 'WALL', 'area' => 18, 'finish' => 'WALL_TILE', 'currentState' => 'PLASTER_READY', 'wetZone' => true],
+        ];
+
+        $estimate = $this->builder->build($inputs);
+        $sealant = array_values(array_filter($estimate['lines'], fn (array $l) => $l['itemId'] === 'TILE_SILICONE'));
+
+        $this->assertCount(1, $sealant);
+        // The room's perimeter, 2 × (2 + 2) = 8 m — not 16.
+        $this->assertSame(8.0, $sealant[0]['quantity']);
+        $this->assertSame(32.0, $sealant[0]['lineTotal']);
+        // Grout IS per square metre of tile, so both surfaces count: 4 + 18.
+        $this->assertSame(22.0, $this->linesById($estimate)['TILE_GROUT']['quantity']);
+    }
+
+    /** A dry tiled room has no sealant line at all. */
+    public function test_a_dry_tiled_room_gets_no_sealant(): void
+    {
+        $inputs = $this->inputs();
+        $inputs['rooms'][0]['zones'] = [
+            ['surface' => 'FLOOR', 'area' => 20, 'finish' => 'FLOOR_TILE', 'currentState' => 'ROUGH_FLOOR', 'wetZone' => false],
+        ];
+
+        $this->assertArrayNotHasKey('TILE_SILICONE', $this->linesById($this->builder->build($inputs)));
+    }
+
+    /**
+     * "Minimum sifariş" is a minimum ORDER, so it applies once to the job.
+     *
+     * 9 m² of kitchen floor tile plus 4 m² of bathroom floor tile is one order of
+     * 13 m²: at 15 ₼/m² that is 195 ₼, well above the 150 ₼ minimum. The engine used
+     * to price the two rooms as separate lines of MAX(135, 150) and MAX(60, 150) and
+     * charge 300 ₼ — 105 ₼ created purely by the estimate being broken down by room.
+     */
+    public function test_the_minimum_charge_applies_per_order_not_per_room(): void
+    {
+        $estimate = $this->builder->build($this->twoTiledRooms(9, 4));
+        $lines = array_values(array_filter($estimate['lines'], fn (array $l) => $l['itemId'] === 'FLOOR_TILE_INSTALL'));
+
+        $this->assertCount(2, $lines);
+        $this->assertSame(195.0, round(array_sum(array_column($lines, 'lineTotal')), 2));
+        // The admin's order-wide minimum stays visible on the line.
+        $this->assertSame(150.0, $lines[0]['meta']['minimumChargeOrder']);
+    }
+
+    /** One small room on its own is still lifted to the whole minimum. */
+    public function test_a_single_small_room_is_still_lifted_to_the_minimum(): void
+    {
+        $inputs = $this->twoTiledRooms(4, 0);
+        unset($inputs['rooms'][1]);
+        $inputs['rooms'] = array_values($inputs['rooms']);
+
+        $line = $this->linesById($this->builder->build($inputs))['FLOOR_TILE_INSTALL'];
+
+        // 4 m² × 15 = 60 ₼ raw, lifted to the 150 ₼ minimum order.
+        $this->assertSame(4.0, $line['quantity']);
+        $this->assertSame(150.0, $line['lineTotal']);
+    }
+
+    /** Several rooms that together stay under it sum to exactly the minimum, once. */
+    public function test_rooms_under_the_minimum_together_sum_to_exactly_one_minimum(): void
+    {
+        $lines = array_filter(
+            $this->builder->build($this->twoTiledRooms(4, 4))['lines'],
+            fn (array $l) => $l['itemId'] === 'FLOOR_TILE_INSTALL',
+        );
+
+        // 8 m² × 15 = 120 ₼ raw → one 150 ₼ minimum, split 75/75 by room.
+        $this->assertSame(150.0, round(array_sum(array_column($lines, 'lineTotal')), 2));
+    }
+
+    /**
+     * Large-format wall tile has its own tariff row (18 ₼/m² against the standard
+     * 15) — that difference IS the format surcharge. Multiplying it by K_TILE_LARGE
+     * as well charged 22.50 ₼/m² for work the admin priced at 18, and the same code
+     * path never applied the coefficient to mosaic, so the rule was not even
+     * consistent with itself.
+     */
+    public function test_the_large_format_surcharge_is_charged_once_on_a_wall(): void
+    {
+        $line = $this->linesById($this->builder->build($this->tiledWall('LARGE')))['TILE_INSTALL_LARGE'];
+
+        $this->assertSame([], $line['coefficients']);
+        $this->assertSame(180.0, $line['lineTotal']); // 10 × 18, not 10 × 18 × 1.25
+    }
+
+    /**
+     * The layout coefficient now reaches every format. A diagonal large-format wall
+     * used to lose K_TILE_DIAGONAL entirely, because the LARGE branch returned
+     * before the layout was ever looked at.
+     */
+    public function test_the_diagonal_layout_coefficient_reaches_every_tile_format(): void
+    {
+        foreach ([
+            'STANDARD' => ['TILE_INSTALL_STANDARD', 172.5],   // 10 × 15 × 1.15
+            'LARGE' => ['TILE_INSTALL_LARGE', 207.0],         // 10 × 18 × 1.15
+            'MOSAIC' => ['TILE_INSTALL_MOSAIC', 322.0],       // 10 × 28 × 1.15
+        ] as $format => [$workId, $expected]) {
+            $line = $this->linesById($this->builder->build($this->tiledWall($format, 'DIAGONAL')))[$workId];
+
+            $this->assertSame(
+                [['id' => 'K_TILE_DIAGONAL', 'value' => 1.15]],
+                $line['coefficients'],
+                "Diagonal layout lost for format {$format}",
+            );
+            $this->assertSame($expected, $line['lineTotal']);
+        }
+    }
+
+    /**
+     * A floor has one tariff row for every format, so there the format DOES come
+     * from the coefficient — the opposite of the wall above, and deliberately so.
+     */
+    public function test_a_floor_keeps_its_format_coefficient_because_it_has_one_rate(): void
+    {
+        $inputs = $this->inputs();
+        $inputs['rooms'][0]['zones'] = [
+            ['surface' => 'FLOOR', 'area' => 10, 'finish' => 'FLOOR_TILE', 'currentState' => 'PLASTER_READY',
+                'options' => ['format' => 'LARGE']],
+        ];
+
+        $line = $this->linesById($this->builder->build($inputs))['FLOOR_TILE_INSTALL'];
+
+        $this->assertSame([['id' => 'K_TILE_LARGE', 'value' => 1.25]], $line['coefficients']);
+        $this->assertSame(187.5, $line['lineTotal']); // 10 × 15 × 1.25
+    }
+
+    /**
+     * Old tile on a wall is the dependency engine's business — it derives the removal
+     * from the zone's own state. The demolition block used to accept a wall-tile area
+     * of its own, and because a module request is object-scoped while a zone request
+     * is room-scoped, the two never consolidated: the same 20 m² of tile was removed
+     * twice.
+     */
+    public function test_old_tile_removal_is_not_billed_twice_from_the_demolition_block(): void
+    {
+        $inputs = $this->inputs();
+        $inputs['object']['demolitionRequired'] = true;
+        $inputs['rooms'][0]['zones'] = [
+            ['surface' => 'WALL', 'area' => 20, 'finish' => 'WALL_TILE', 'currentState' => 'OLD_TILE'],
+        ];
+        // A frontend or CRM that still sends the old key must not double the line.
+        $inputs['modules']['demolition'] = ['estimateDebris' => false, 'wallTileArea' => 20];
+
+        $lines = array_filter(
+            $this->builder->build($inputs)['lines'],
+            fn (array $l) => $l['itemId'] === 'DEM_WALL_TILE',
+        );
+
+        $this->assertCount(1, $lines);
+        $this->assertSame(20.0, reset($lines)['quantity']);
+    }
+
+    /**
+     * The debris estimate and the final cleaning are both "per m² of the object", so
+     * they must read the same area. They used to disagree: a flat stated as 61.5 m²
+     * whose rooms added up to 20 had its cleaning billed on 61.5 and its debris
+     * estimated on 20.
+     */
+    public function test_debris_and_cleaning_are_measured_against_the_same_object_area(): void
+    {
+        $inputs = $this->inputs();
+        $inputs['object']['area'] = 100;           // rooms add up to 20 m²
+        $inputs['object']['demolitionRequired'] = true;
+        $inputs['modules'] = ['demolition' => ['estimateDebris' => true], 'services' => ['finalCleaning' => true]];
+
+        $lines = $this->linesById($this->builder->build($inputs));
+
+        $this->assertSame(100.0, $lines['LOG_FINAL_CLEANING']['quantity']);
+        // 100 m² × 0.05 m³/m²
+        $this->assertSame(5.0, $lines['DEM_DEBRIS_LOADING']['quantity']);
+    }
+
+    /** Two rooms with tiled floors of the given areas, in square metres. */
+    private function twoTiledRooms(float $first, float $second): array
+    {
+        $inputs = $this->inputs();
+        $inputs['object']['area'] = $first + $second;
+        $inputs['rooms'][0]['zones'] = [
+            ['surface' => 'FLOOR', 'area' => $first, 'finish' => 'FLOOR_TILE', 'currentState' => 'PLASTER_READY'],
+        ];
+        $inputs['rooms'][1] = $inputs['rooms'][0];
+        $inputs['rooms'][1]['id'] = 'r2';
+        $inputs['rooms'][1]['name'] = 'Hamam';
+        $inputs['rooms'][1]['zones'][0]['area'] = $second;
+
+        return $inputs;
+    }
+
+    /** One 10 m² tiled wall zone with the given format and layout. */
+    private function tiledWall(string $format, ?string $layout = null): array
+    {
+        $inputs = $this->inputs();
+        $inputs['rooms'][0]['zones'] = [
+            ['surface' => 'WALL', 'area' => 10, 'finish' => 'WALL_TILE', 'currentState' => 'PLASTER_READY',
+                'options' => array_filter(['format' => $format, 'layout' => $layout])],
+        ];
+
+        return $inputs;
+    }
+
     /** Every line traces back to quantity, price and source (master spec §24). */
     public function test_every_line_carries_its_calculation_trace(): void
     {
@@ -683,13 +899,14 @@ class EstimateEngineTest extends TestCase
                 'id' => 'r1',
                 'name' => 'Qonaq',
                 'roomType' => 'LIVING',
-                'length' => 5,
-                'width' => 4,
-                'height' => 3,
+                // Millimetres — see App\Services\Calculator\Units. 5 × 4 m, 3 m high.
+                'lengthMm' => 5000,
+                'widthMm' => 4000,
+                'heightMm' => 3000,
                 'points' => [],
                 'openings' => [
-                    ['type' => 'DOOR', 'width' => 0.9, 'height' => 2.1, 'qty' => 1, 'subtype' => 'INTERIOR', 'installNewDoor' => true],
-                    ['type' => 'WINDOW', 'width' => 1.5, 'height' => 1.4, 'qty' => 1],
+                    ['type' => 'DOOR', 'widthMm' => 900, 'heightMm' => 2100, 'qty' => 1, 'subtype' => 'INTERIOR', 'installNewDoor' => true],
+                    ['type' => 'WINDOW', 'widthMm' => 1500, 'heightMm' => 1400, 'qty' => 1],
                 ],
                 'zones' => [
                     ['surface' => 'WALL', 'area' => 50.01, 'finish' => 'PAINT', 'currentState' => 'SHELL'],

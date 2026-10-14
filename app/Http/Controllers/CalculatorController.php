@@ -22,6 +22,7 @@ use App\Services\Calculator\CityRate;
 use App\Services\Calculator\EstimateBuilder;
 use App\Services\Calculator\MaterialFallback;
 use App\Services\Calculator\QuickCalculator;
+use App\Services\Calculator\Units;
 use App\Services\Calculator\WorkRate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -172,14 +173,18 @@ class CalculatorController extends Controller
                 'vatMode' => $this->config->setting('VAT_MODE', 'INCLUDED'),
                 'vatPercent' => $this->config->float('VAT_PERCENT', 0),
                 'areaTolerancePercent' => $this->config->float('AREA_TOLERANCE_PERCENT', 5),
-                'defaultRoomHeight' => $this->config->float('DEFAULT_ROOM_HEIGHT', 2.8),
+                // Millimetres, like every dimension the visitor types. The `Mm`
+                // suffix travels with the value so the frontend cannot mistake the
+                // unit (see App\Services\Calculator\Units).
+                'payloadVersion' => Units::PAYLOAD_VERSION,
+                'defaultRoomHeightMm' => $this->config->float('DEFAULT_ROOM_HEIGHT_MM', 2800),
                 'defaultDoor' => [
-                    'width' => $this->config->float('DEFAULT_DOOR_WIDTH', 0.9),
-                    'height' => $this->config->float('DEFAULT_DOOR_HEIGHT', 2.1),
+                    'widthMm' => $this->config->float('DEFAULT_DOOR_WIDTH_MM', 900),
+                    'heightMm' => $this->config->float('DEFAULT_DOOR_HEIGHT_MM', 2100),
                 ],
                 'defaultWindow' => [
-                    'width' => $this->config->float('DEFAULT_WINDOW_WIDTH', 1.5),
-                    'height' => $this->config->float('DEFAULT_WINDOW_HEIGHT', 1.4),
+                    'widthMm' => $this->config->float('DEFAULT_WINDOW_WIDTH_MM', 1500),
+                    'heightMm' => $this->config->float('DEFAULT_WINDOW_HEIGHT_MM', 1400),
                 ],
                 'estimateValidDays' => $this->config->int('ESTIMATE_VALID_DAYS', 30),
             ],
@@ -382,18 +387,31 @@ class CalculatorController extends Controller
             'basket.items' => ['array', 'max:60'],
         ]);
 
-        return [
+        // The version the CLIENT declares, not the version we wish it sent: a browser
+        // running a cached pre-millimetre bundle still posts metres, and the only
+        // honest thing to do with it is convert it. An absent marker means version 1.
+        return Units::upgradePayload([
+            'v' => (int) $request->input('v', 1),
             'object' => (array) $request->input('object', []),
             'rooms' => array_values((array) $request->input('rooms', [])),
             'works' => (array) $request->input('works', []),
             'materials' => (array) $request->input('materials', []),
             'modules' => (array) $request->input('modules', []),
             'basket' => (array) $request->input('basket', []),
-        ];
+        ]);
     }
 
+    /**
+     * Every recalculation funnels through here, which is why the payload upgrade sits
+     * here too: a fresh request from the browser and a session saved months ago take
+     * the same single path, so a 4.5 m room stored before the switch to millimetres
+     * can never be re-read as 4.5 mm. The call is idempotent — inputs() has already
+     * upgraded a live request, and upgrading an already-current payload is a no-op.
+     */
     private function build(array $inputs, Request $request): array
     {
+        $inputs = Units::upgradePayload($inputs);
+
         return $this->builder->build(
             $inputs,
             $this->selectedProducts($inputs),

@@ -202,6 +202,19 @@ export default function init() {
     );
   }
 
+  /**
+   * Every dimension on a room is MILLIMETRES — `lengthMm`, `widthMm`, `heightMm` and
+   * an opening's `widthMm` / `heightMm` — because that is how this market specifies a
+   * room, and because the key says the unit so a metre-era saved state is detectable
+   * rather than silently a thousand times too small. Areas stay m²: `object.area`,
+   * `warmFloor.area`, `hvac.conditionedArea`. The server divides by 1000 exactly once
+   * (app/Services/Calculator/Units.php).
+   */
+  const MM_STEP = 10;
+
+  /** Nearest 10 mm — the step of the fields, so a seeded value lands on it too. */
+  const mm = (metres) => Math.round((metres * 1000) / MM_STEP) * MM_STEP;
+
   function newRoom(roomType, roomArea, index) {
     // A plausible rectangle for the share of the area this room takes: the visitor
     // corrects the two dimensions, and every wall quantity follows from them.
@@ -212,16 +225,16 @@ export default function init() {
       id: `room-${index + 1}-${Math.random().toString(36).slice(2, 7)}`,
       name: labelOf(enums.roomTypes, roomType),
       roomType,
-      length: Math.round(side * 1.2 * 10) / 10,
-      width: Math.round((side / 1.2) * 10) / 10,
-      height: CONFIG.settings.defaultRoomHeight,
+      lengthMm: mm(side * 1.2),
+      widthMm: mm(side / 1.2),
+      heightMm: CONFIG.settings.defaultRoomHeightMm,
       currentState: null, // null → the object condition seeds it on the server
       floorFinish: wet ? 'FLOOR_TILE' : 'LAMINATE',
       wallFinish: wet ? 'WALL_TILE' : 'PAINT',
       ceilingFinish: 'CEILING_PAINT',
       openings: [
-        { type: 'DOOR', width: CONFIG.settings.defaultDoor.width, height: CONFIG.settings.defaultDoor.height, qty: 1, subtype: 'INTERIOR', installNewDoor: true },
-        { type: 'WINDOW', width: CONFIG.settings.defaultWindow.width, height: CONFIG.settings.defaultWindow.height, qty: roomType === 'BATHROOM' || roomType === 'WC' || roomType === 'CORRIDOR' ? 0 : 1 },
+        { type: 'DOOR', widthMm: CONFIG.settings.defaultDoor.widthMm, heightMm: CONFIG.settings.defaultDoor.heightMm, qty: 1, subtype: 'INTERIOR', installNewDoor: true },
+        { type: 'WINDOW', widthMm: CONFIG.settings.defaultWindow.widthMm, heightMm: CONFIG.settings.defaultWindow.heightMm, qty: roomType === 'BATHROOM' || roomType === 'WC' || roomType === 'CORRIDOR' ? 0 : 1 },
       ],
       warmFloor: { type: wet ? 'ELECTRIC' : 'NONE', area: null },
       points: {},
@@ -232,6 +245,8 @@ export default function init() {
 
   function payload() {
     return {
+      // Shape version: from 2 on, room and opening dimensions are millimetres.
+      v: CONFIG.settings.payloadVersion,
       object: state.object,
       rooms: state.rooms.map((room) => ({
         ...room,
@@ -255,10 +270,23 @@ export default function init() {
   /** Everything the visitor answered, so leaving the page loses nothing. */
   const STATE_KEY = 'archi-detailed-calc';
 
+  /**
+   * Shape version of the saved answers.
+   *
+   *   1 — room and opening dimensions in METRES
+   *   2 — in MILLIMETRES (`lengthMm`, `widthMm`, `heightMm`, openings `widthMm` /
+   *       `heightMm`)
+   *
+   * This marker exists for exactly this moment: reading a v1 blob as if it were v2
+   * would turn a visitor's 4.5 m room into 4.5 mm and quote them nothing. upgrade()
+   * below converts it instead of discarding their answers.
+   */
+  const STATE_VERSION = 2;
+
   function persist() {
     try {
       localStorage.setItem(STATE_KEY, JSON.stringify({
-        v: 1,
+        v: STATE_VERSION,
         step: state.step,
         object: state.object,
         rooms: state.rooms,
@@ -275,11 +303,42 @@ export default function init() {
     }
   }
 
+  /**
+   * Bring a saved blob up to STATE_VERSION. A v1 room is metres, so its dimensions
+   * are multiplied by 1000 and renamed; anything older or unversioned is discarded,
+   * because guessing the unit from the magnitude of a number is how a 4.5 becomes a
+   * 4 500 mm room one visitor and a 4.5 mm room the next.
+   */
+  function upgradeSaved(saved) {
+    if (saved.v === STATE_VERSION) return saved;
+    if (saved.v !== 1) return null;
+
+    const toMm = (node, from, to) => {
+      if (Number.isFinite(+node[from]) && node[to] === undefined) node[to] = Math.round(+node[from] * 1000);
+      delete node[from];
+    };
+
+    (saved.rooms || []).forEach((room) => {
+      toMm(room, 'length', 'lengthMm');
+      toMm(room, 'width', 'widthMm');
+      toMm(room, 'height', 'heightMm');
+      (room.openings || []).forEach((opening) => {
+        toMm(opening, 'width', 'widthMm');
+        toMm(opening, 'height', 'heightMm');
+      });
+    });
+
+    saved.v = STATE_VERSION;
+
+    return saved;
+  }
+
   /** @returns {boolean} true when a previous session was restored */
   function restore() {
-    const saved = readJson(localStorage.getItem(STATE_KEY), null);
+    const stored = readJson(localStorage.getItem(STATE_KEY), null);
+    const saved = stored && Array.isArray(stored.rooms) && stored.rooms.length ? upgradeSaved(stored) : null;
 
-    if (! saved || saved.v !== 1 || ! Array.isArray(saved.rooms) || ! saved.rooms.length) {
+    if (! saved) {
       return false;
     }
 
@@ -448,6 +507,14 @@ export default function init() {
     return `<input type="number" inputmode="decimal" min="0" ${attrs} value="${esc(value)}">${unit ? `<span class="u">${esc(unit)}</span>` : ''}`;
   }
 
+  /**
+   * A dimension field. Millimetres, so whole numbers on a 10 mm step and a numeric
+   * keypad with no decimal point — nobody types 4 500.5 mm.
+   */
+  function mmInput(attrs, value) {
+    return `<input type="number" inputmode="numeric" min="0" step="${MM_STEP}" ${attrs} value="${esc(value)}"><span class="u">${esc(T.units.mm)}</span>`;
+  }
+
   // ---------- steps ---------------------------------------------------------------
 
   function stepObject() {
@@ -512,12 +579,15 @@ export default function init() {
         if (index !== state.editRoom) {
           // Name the figures. "Hamam otağı · 22.80 m²" leaves the reader guessing
           // whether that is the floor, the walls or the room's share of the flat.
-          const floorArea = measured ? measured.floorArea : (room.length || 0) * (room.width || 0);
+          // The dimensions are millimetres, the area is m² — 1 000 000 mm² to the m².
+          const floorArea = measured
+            ? measured.floorArea
+            : ((room.lengthMm || 0) * (room.widthMm || 0)) / 1e6;
           // The separators are literal text, not margins: the row is read aloud by
           // screen readers and copied into WhatsApp, where CSS spacing does not exist.
           const summary = [
             '',
-            `${qty(room.length)} × ${qty(room.width)} ${T.units.m}`,
+            `${qty(room.lengthMm)} × ${qty(room.widthMm)} ${T.units.mm}`,
             `${t.floor_short} ${qty(floorArea)} ${T.units.m2}`,
           ].join(' · ');
 
@@ -543,15 +613,15 @@ export default function init() {
       <div class="dc-room-h"><b>${esc(room.name)}</b><button class="rm" ${removable}>${esc(t.remove)}</button></div>
       <div class="dc-group"><label>${esc(t.type)}</label>${chips('roomType', enums.roomTypes.map((r) => ({ value: r.value, label: r.label })), room.roomType, `data-ri="${index}"`)}</div>
       <div class="dc-fields">
-        ${field(t.length, numberInput(`data-r="${index}" data-f="length" step="0.1"`, room.length, T.units.m))}
-        ${field(t.width, numberInput(`data-r="${index}" data-f="width" step="0.1"`, room.width, T.units.m))}
-        <div class="dc-fb dc-fb-sm"><span>${esc(t.height)}</span><div class="ip">${numberInput(`data-r="${index}" data-f="height" step="0.05"`, room.height, T.units.m)}</div></div>
+        ${field(t.length, mmInput(`data-r="${index}" data-f="lengthMm"`, room.lengthMm))}
+        ${field(t.width, mmInput(`data-r="${index}" data-f="widthMm"`, room.widthMm))}
+        <div class="dc-fb dc-fb-sm"><span>${esc(t.height)}</span><div class="ip">${mmInput(`data-r="${index}" data-f="heightMm"`, room.heightMm)}</div></div>
         <div class="dc-fb dc-fb-sm"><span>${esc(t.doors)}</span><div class="ip">${numberInput(`data-op="${index}" data-ot="DOOR" data-of="qty" step="1"`, door.qty ?? 0)}</div></div>
         <div class="dc-fb dc-fb-sm"><span>${esc(t.windows)}</span><div class="ip">${numberInput(`data-op="${index}" data-ot="WINDOW" data-of="qty" step="1"`, win.qty ?? 0)}</div></div>
-        ${field(t.door_width, numberInput(`data-op="${index}" data-ot="DOOR" data-of="width" step="0.05"`, door.width ?? 0, T.units.m))}
-        ${field(t.door_height, numberInput(`data-op="${index}" data-ot="DOOR" data-of="height" step="0.05"`, door.height ?? 0, T.units.m))}
-        ${field(t.window_width, numberInput(`data-op="${index}" data-ot="WINDOW" data-of="width" step="0.05"`, win.width ?? 0, T.units.m))}
-        ${field(t.window_height, numberInput(`data-op="${index}" data-ot="WINDOW" data-of="height" step="0.05"`, win.height ?? 0, T.units.m))}
+        ${field(t.door_width, mmInput(`data-op="${index}" data-ot="DOOR" data-of="widthMm"`, door.widthMm ?? 0))}
+        ${field(t.door_height, mmInput(`data-op="${index}" data-ot="DOOR" data-of="heightMm"`, door.heightMm ?? 0))}
+        ${field(t.window_width, mmInput(`data-op="${index}" data-ot="WINDOW" data-of="widthMm"`, win.widthMm ?? 0))}
+        ${field(t.window_height, mmInput(`data-op="${index}" data-ot="WINDOW" data-of="heightMm"`, win.heightMm ?? 0))}
       </div>
       ${derivedLine}
       ${pointsEditor(room, index)}

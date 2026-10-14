@@ -243,7 +243,7 @@ class EstimateBuilder
      */
     private function priceWorks(array $requests, float $cityCoefficient): array
     {
-        $lines = [];
+        $priced = [];
 
         foreach ($requests as $request) {
             $rate = $this->config->workRate($request->workId);
@@ -266,6 +266,16 @@ class EstimateBuilder
                 $coefficients[] = ['id' => 'CITY', 'value' => $cityCoefficient];
             }
 
+            $priced[] = ['request' => $request, 'rate' => $rate, 'coefficients' => $coefficients];
+        }
+
+        $minimums = $this->minimumShares($priced);
+        $lines = [];
+
+        foreach ($priced as $index => $row) {
+            $request = $row['request'];
+            $rate = $row['rate'];
+
             $lines[] = EstimateLine::make(
                 itemId: $rate->workId,
                 lineType: $rate->category->lineType(),
@@ -275,18 +285,88 @@ class EstimateBuilder
                 quantitySource: $rate->quantitySource,
                 quantity: $request->quantity,
                 unitPrice: $rate->rate,
-                coefficients: $coefficients,
-                minimumCharge: $rate->minimumCharge,
+                coefficients: $row['coefficients'],
+                minimumCharge: $minimums[$index],
                 precisionClass: $request->precisionClass ?? $rate->precisionClass,
                 source: LineSource::AdminRate,
                 roomId: $request->roomId,
                 roomName: $request->roomName,
                 contingencyEligible: $rate->contingencyEligible,
-                meta: $request->meta + ['suggested' => $request->suggested],
+                meta: $request->meta + ['suggested' => $request->suggested]
+                    + ($rate->minimumCharge > 0 ? ['minimumChargeOrder' => $rate->minimumCharge] : []),
             );
         }
 
         return $lines;
+    }
+
+    /**
+     * The minimum charge is a MINIMUM ORDER ("minimum sifariş"), so it applies once
+     * to the whole job — not once per room.
+     *
+     * A flat with 9 m² of kitchen floor tile and 4 m² of bathroom floor tile is one
+     * order of 13 m²: at 15 ₼/m² that is 195 ₼, comfortably over the 150 ₼ minimum.
+     * The engine used to bill it as two lines of MAX(135, 150) and MAX(60, 150) =
+     * 300 ₼ — 105 ₼ invented out of the fact that the estimate happens to be broken
+     * down by room.
+     *
+     * So the minimum is shared across the lines of one work, in proportion to what
+     * each line is actually worth. Two consequences, both wanted:
+     *
+     *   - when the work's raw total already clears the minimum, no line is lifted;
+     *   - when it does not, the lifted lines sum to exactly the minimum, and the
+     *     by-room view still shows which room owes which part of it.
+     *
+     * A work that appears once — the common case — is unaffected: its share is the
+     * whole minimum, and the behaviour is what it has always been. The order-wide
+     * figure travels on the line as meta.minimumChargeOrder for the admin panel.
+     *
+     * @param  array<int, array{request: WorkRequest, rate: WorkRate, coefficients: array}>  $priced
+     * @return array<int, float> same keys as $priced
+     */
+    private function minimumShares(array $priced): array
+    {
+        $rawByWork = [];
+
+        foreach ($priced as $row) {
+            if ($row['rate']->minimumCharge <= 0) {
+                continue;
+            }
+
+            $workId = $row['rate']->workId;
+            $rawByWork[$workId] = ($rawByWork[$workId] ?? 0.0) + $this->rawTotal($row);
+        }
+
+        $shares = [];
+
+        foreach ($priced as $index => $row) {
+            $minimum = $row['rate']->minimumCharge;
+            $total = $rawByWork[$row['rate']->workId] ?? 0.0;
+
+            // Nothing to share out: no minimum, or the work has no value at all yet
+            // (every quantity zero), in which case EstimateLine keeps the line at 0.
+            $shares[$index] = $minimum <= 0 || $total <= 0
+                ? $minimum
+                : round($minimum * ($this->rawTotal($row) / $total), 2);
+        }
+
+        return $shares;
+    }
+
+    /** @param array{request: WorkRequest, rate: WorkRate, coefficients: array} $row */
+    private function rawTotal(array $row): float
+    {
+        if ($row['rate']->rate === null) {
+            return 0.0;
+        }
+
+        $factor = 1.0;
+
+        foreach ($row['coefficients'] as $coefficient) {
+            $factor *= $coefficient['value'];
+        }
+
+        return max(0.0, $row['request']->quantity) * $row['rate']->rate * $factor;
     }
 
     /** @param array<int, EstimateLine> $lines */

@@ -107,9 +107,23 @@ class ModuleResolver
             $this->itemModule($modules['lighting'] ?? [], self::LIGHTING_ITEMS),
             $this->itemModule($modules['ventilation'] ?? [], self::VENTILATION_ITEMS),
             $this->partitions($modules['partitions'] ?? []),
-            $this->demolition($modules['demolition'] ?? [], $rooms, $object),
+            $this->demolition($modules['demolition'] ?? [], $rooms, $object, $derived),
             $this->services($modules['services'] ?? [], $object, $derived),
         );
+    }
+
+    /**
+     * The object's area, from one place.
+     *
+     * The stated area wins over the sum of the rooms, because that is the figure the
+     * visitor answered and the figure the AREA_MISMATCH warning is measured against.
+     * Both the services block and the debris estimate used to resolve this for
+     * themselves, from different sources — a flat stated as 80 m² whose rooms add up
+     * to 61.5 had its final cleaning billed on 80 and its debris estimated on 61.5.
+     */
+    private function objectArea(array $object, array $derived): float
+    {
+        return (float) ($object['area'] ?? 0) ?: (float) ($derived['TOTAL_FLOOR_AREA'] ?? 0);
     }
 
     /** @return array<int, WorkRequest> */
@@ -355,7 +369,7 @@ class ModuleResolver
      *
      * @return array<int, WorkRequest>
      */
-    private function demolition(array $input, array $rooms, array $object): array
+    private function demolition(array $input, array $rooms, array $object, array $derived): array
     {
         // "Demontaj lazımdır" on the object step is not an estimate line of its own —
         // it is the switch that opens this block (master spec §10.1). With it off, no
@@ -382,13 +396,22 @@ class ModuleResolver
             ))
             : 0;
 
+        // What is ON a surface — old tile, an old gypsum or stretch ceiling — is the
+        // dependency engine's business, and it derives it from the zone's own state
+        // (their tariff rows say so: quantity_source SelectedWallTileArea /
+        // SelectedCeilingArea). This block used to accept wallTileArea,
+        // ceilingGypsumArea and ceilingStretchArea as well, and because a module
+        // request is object-scoped while a zone request is room-scoped the two never
+        // consolidated: a 20 m² OLD_TILE wall plus wallTileArea = 20 billed
+        // DEM_WALL_TILE twice, 40 m² of tile removal for 20 m² of tile. Removed —
+        // the surface chain is the single source.
+        //
+        // What remains here has no counterpart in the chain: structure (plaster,
+        // partitions) and items (doors, fixtures, points).
         foreach ([
-            'wallTileArea' => 'DEM_WALL_TILE',
             'wallPlasterArea' => 'DEM_WALL_PLASTER',
             'masonryPartitionArea' => 'DEM_PARTITION_MASONRY',
             'gypsumPartitionArea' => 'DEM_PARTITION_GYPSUM',
-            'ceilingGypsumArea' => 'DEM_CEILING_GYPSUM',
-            'ceilingStretchArea' => 'DEM_CEILING_STRETCH',
             'doors' => 'DEM_DOOR',
             'plumbingFixtures' => 'DEM_PLUMB_FIXTURE',
             'electricPoints' => 'DEM_ELECTRIC_POINT',
@@ -403,8 +426,9 @@ class ModuleResolver
         $volume = (float) ($input['debrisVolume'] ?? 0);
 
         if ($volume <= 0 && ($input['estimateDebris'] ?? true)) {
-            $floorArea = array_sum(array_map(fn (RoomGeometry $r) => $r->floorArea, $rooms));
-            $volume = $floorArea * $this->config->float('DEBRIS_VOLUME_PER_M2', 0.05);
+            // DEBRIS_VOLUME_PER_M2 is m³ per m² of the object, so it multiplies the
+            // object's area — the same one the services block uses.
+            $volume = $this->objectArea($object, $derived) * $this->config->float('DEBRIS_VOLUME_PER_M2', 0.05);
         }
 
         if ($volume > 0) {
@@ -431,7 +455,7 @@ class ModuleResolver
     private function services(array $input, array $object, array $derived): array
     {
         $requests = [];
-        $objectArea = (float) ($object['area'] ?? 0) ?: (float) ($derived['TOTAL_FLOOR_AREA'] ?? 0);
+        $objectArea = $this->objectArea($object, $derived);
 
         if (($object['designProject'] ?? false) && $objectArea > 0) {
             $requests[] = new WorkRequest('SERVICE_DESIGN', $objectArea);

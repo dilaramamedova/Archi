@@ -146,16 +146,17 @@ class CalculatorSeeder extends Seeder
             ['key' => 'SELF_LEVEL_DEFAULT_THICKNESS_MM', 'group' => 'MATERIAL', 'type' => 'decimal', 'value' => 5, 'unit' => 'mm',
                 'description' => ['az' => 'Özüyayılan döşəmənin ilkin qalınlığı', 'ru' => 'Толщина наливного пола по умолчанию', 'en' => 'Default self-levelling thickness']],
 
-            // Geometry defaults (master spec §6)
-            ['key' => 'DEFAULT_ROOM_HEIGHT', 'group' => 'GEOMETRY', 'type' => 'decimal', 'value' => 2.8, 'unit' => 'm',
+            // Geometry defaults (master spec §6). Millimetres, like every dimension
+            // the visitor types — see App\Services\Calculator\Units.
+            ['key' => 'DEFAULT_ROOM_HEIGHT_MM', 'group' => 'GEOMETRY', 'type' => 'decimal', 'value' => 2800, 'unit' => 'mm',
                 'description' => ['az' => 'Otağın ilkin hündürlüyü', 'ru' => 'Высота комнаты по умолчанию', 'en' => 'Default room height']],
-            ['key' => 'DEFAULT_DOOR_WIDTH', 'group' => 'GEOMETRY', 'type' => 'decimal', 'value' => 0.9, 'unit' => 'm',
+            ['key' => 'DEFAULT_DOOR_WIDTH_MM', 'group' => 'GEOMETRY', 'type' => 'decimal', 'value' => 900, 'unit' => 'mm',
                 'description' => ['az' => 'Qapının ilkin eni', 'ru' => 'Ширина двери по умолчанию', 'en' => 'Default door width']],
-            ['key' => 'DEFAULT_DOOR_HEIGHT', 'group' => 'GEOMETRY', 'type' => 'decimal', 'value' => 2.1, 'unit' => 'm',
+            ['key' => 'DEFAULT_DOOR_HEIGHT_MM', 'group' => 'GEOMETRY', 'type' => 'decimal', 'value' => 2100, 'unit' => 'mm',
                 'description' => ['az' => 'Qapının ilkin hündürlüyü', 'ru' => 'Высота двери по умолчанию', 'en' => 'Default door height']],
-            ['key' => 'DEFAULT_WINDOW_WIDTH', 'group' => 'GEOMETRY', 'type' => 'decimal', 'value' => 1.5, 'unit' => 'm',
+            ['key' => 'DEFAULT_WINDOW_WIDTH_MM', 'group' => 'GEOMETRY', 'type' => 'decimal', 'value' => 1500, 'unit' => 'mm',
                 'description' => ['az' => 'Pəncərənin ilkin eni', 'ru' => 'Ширина окна по умолчанию', 'en' => 'Default window width']],
-            ['key' => 'DEFAULT_WINDOW_HEIGHT', 'group' => 'GEOMETRY', 'type' => 'decimal', 'value' => 1.4, 'unit' => 'm',
+            ['key' => 'DEFAULT_WINDOW_HEIGHT_MM', 'group' => 'GEOMETRY', 'type' => 'decimal', 'value' => 1400, 'unit' => 'mm',
                 'description' => ['az' => 'Pəncərənin ilkin hündürlüyü', 'ru' => 'Высота окна по умолчанию', 'en' => 'Default window height']],
 
             // Snapshot

@@ -18,6 +18,11 @@ use App\Enums\Calculator\WarmFloorType;
  * its width and height — not merely counted — because NetWallArea is mathematically
  * impossible without them, and NetWallArea is what plaster, putty, sanding, primer,
  * paint and wallpaper are all billed by.
+ *
+ * THIS CLASS IS THE UNIT BOUNDARY. Linear dimensions arrive in millimetres (keys
+ * ending in `Mm`) and leave as metres; areas arrive and leave in m². Downstream —
+ * the dependency engine, the modules, the materials, the tariffs — knows nothing but
+ * metres. Every conversion goes through Units::mmToM(); see Units for the full rule.
  */
 class GeometryEngine
 {
@@ -47,9 +52,10 @@ class GeometryEngine
         $name = trim((string) ($input['name'] ?? '')) ?: __($roomType->labelKey());
         $mode = GeometryMode::tryFrom((string) ($input['geometryMode'] ?? '')) ?? GeometryMode::Standard;
 
-        $length = max(0.0, (float) ($input['length'] ?? 0));
-        $width = max(0.0, (float) ($input['width'] ?? 0));
-        $height = max(0.0, (float) ($input['height'] ?? $this->config->float('DEFAULT_ROOM_HEIGHT', 2.8)));
+        // mm → m, once. Everything below this line is metres and m².
+        $length = Units::dimension($input, 'lengthMm');
+        $width = Units::dimension($input, 'widthMm');
+        $height = Units::dimension($input, 'heightMm', $this->config->float('DEFAULT_ROOM_HEIGHT_MM', 2800));
 
         $openings = $this->normaliseOpenings($input['openings'] ?? []);
         $doorArea = $this->openingArea($openings, 'DOOR');
@@ -59,8 +65,10 @@ class GeometryEngine
         if ($mode === GeometryMode::Manual) {
             // Complex shape: the visitor (or a sales manager) states the three
             // quantities directly rather than letting L×W lie about the room.
+            // The two areas are m² — an area was never in millimetres; only the
+            // perimeter is a linear dimension and therefore mm.
             $floorArea = max(0.0, (float) ($input['floorArea'] ?? 0));
-            $perimeter = max(0.0, (float) ($input['perimeter'] ?? 0));
+            $perimeter = Units::dimension($input, 'perimeterMm');
             $grossWallArea = $perimeter * $height;
             $netWallArea = (float) ($input['netWallArea'] ?? max($grossWallArea - $doorArea - $windowArea, 0));
         } else {
@@ -100,8 +108,6 @@ class GeometryEngine
             name: $name,
             roomType: $roomType,
             geometryMode: $mode,
-            length: $length,
-            width: $width,
             height: $height,
             floorArea: $floorArea,
             ceilingArea: $ceilingArea,
@@ -124,17 +130,20 @@ class GeometryEngine
     /**
      * Openings carry real dimensions with editable defaults, so the anketa stays
      * short without giving up the arithmetic (master spec §6).
+     *
+     * Input is `widthMm` / `heightMm`; the normalised opening is metres, like every
+     * other figure the engine passes around.
      */
     private function normaliseOpenings(mixed $raw): array
     {
         $defaults = [
             'DOOR' => [
-                'width' => $this->config->float('DEFAULT_DOOR_WIDTH', 0.9),
-                'height' => $this->config->float('DEFAULT_DOOR_HEIGHT', 2.1),
+                'widthMm' => $this->config->float('DEFAULT_DOOR_WIDTH_MM', 900),
+                'heightMm' => $this->config->float('DEFAULT_DOOR_HEIGHT_MM', 2100),
             ],
             'WINDOW' => [
-                'width' => $this->config->float('DEFAULT_WINDOW_WIDTH', 1.5),
-                'height' => $this->config->float('DEFAULT_WINDOW_HEIGHT', 1.4),
+                'widthMm' => $this->config->float('DEFAULT_WINDOW_WIDTH_MM', 1500),
+                'heightMm' => $this->config->float('DEFAULT_WINDOW_HEIGHT_MM', 1400),
             ],
         ];
 
@@ -155,8 +164,8 @@ class GeometryEngine
 
             $openings[] = [
                 'type' => $type,
-                'width' => max(0.0, (float) ($opening['width'] ?? $defaults[$type]['width'])),
-                'height' => max(0.0, (float) ($opening['height'] ?? $defaults[$type]['height'])),
+                'width' => Units::dimension($opening, 'widthMm', $defaults[$type]['widthMm']),
+                'height' => Units::dimension($opening, 'heightMm', $defaults[$type]['heightMm']),
                 'qty' => $qty,
                 'subtype' => isset($opening['subtype']) ? strtoupper((string) $opening['subtype']) : null,
                 'installNewDoor' => $type === 'DOOR' && (bool) ($opening['installNewDoor'] ?? false),
