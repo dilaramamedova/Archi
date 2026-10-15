@@ -49,8 +49,15 @@ final class ProfessionalCabinetQaTest extends TestCase
     {
         $user = User::factory()->create(['role' => UserRole::Master]);
 
-        $specialty = SpecialistSpecialty::query()->where('is_active', true)->first()
-            ?? SpecialistSpecialty::create(['name' => ['az' => 'Memar'], 'is_active' => true, 'sort_order' => 1]);
+        // Owns its specialty instead of borrowing whichever one happens to be in the
+        // database. Reusing `->first()` made the test depend on rows a migration seeds,
+        // and when the fallback branch did run it inserted without a slug — a NOT NULL
+        // column with no default — so the file passed alone and died with a
+        // QueryException in the full suite.
+        $specialty = SpecialistSpecialty::query()->firstOrCreate(
+            ['slug' => 'qa-cabinet-memar'],
+            ['name' => ['az' => 'Memar'], 'is_active' => true, 'sort_order' => 1],
+        );
 
         SpecialistProfile::create([
             'user_id' => $user->id,

@@ -11,6 +11,7 @@ use App\Models\SpecialistProfile;
 use App\Models\SpecialistSpecialty;
 use App\Models\User;
 use App\Services\SearchService;
+use Database\Seeders\DemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Livewire;
@@ -227,7 +228,12 @@ final class SpecialistSpecialtyTranslationTest extends TestCase
         SpecialistSpecialty::query()->create(['name' => ['az' => 'Santexnik'], 'slug' => 'santexnik']);
         SpecialistSpecialty::query()->create(['name' => ['az' => 'Santexnik'], 'slug' => 'santexnik-vip']);
 
-        $this->assertSame(2, SpecialistSpecialty::query()->count());
+        // Counts the two rows this test made, not every row in the table: the category
+        // migration seeds `memar` and `tikinti-sirketi`, so a table-wide count asserts
+        // against a baseline this test does not own and never meant to describe. What
+        // is being proven is that the json name column carries no unique index — the
+        // slug is the identity key.
+        $this->assertSame(2, SpecialistSpecialty::query()->whereIn('slug', ['santexnik', 'santexnik-vip'])->count());
     }
 
     public function test_specialty_names_never_leak_raw_json_into_the_html(): void
@@ -250,7 +256,7 @@ final class SpecialistSpecialtyTranslationTest extends TestCase
 
     public function test_seeding_the_canonical_trades_twice_keeps_admin_edits_and_adds_no_duplicates(): void
     {
-        $this->seed(\Database\Seeders\DemoSeeder::class);
+        $this->seed(DemoSeeder::class);
 
         $before = SpecialistSpecialty::query()->count();
 
@@ -259,7 +265,7 @@ final class SpecialistSpecialtyTranslationTest extends TestCase
         $kafelci->setTranslation('name', 'ru', 'Плиточник (admin)');
         $kafelci->save();
 
-        $this->seed(\Database\Seeders\DemoSeeder::class);
+        $this->seed(DemoSeeder::class);
 
         $kafelci->refresh();
         $this->assertSame('Kafel ustası (admin)', $kafelci->getTranslation('name', 'az'));
