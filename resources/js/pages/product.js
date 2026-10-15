@@ -153,9 +153,13 @@ function initAddToCart() {
       ],
     });
 
-    // Persist to the server for logged-in users
+    // Persist to the server for logged-in users.
+    // A guest has no account cart, so the request can only ever come back 401. It used
+    // to be sent anyway and the rejection swallowed — which worked, but spent a round
+    // trip on every guest add and left a red 401 in the console of a page that is
+    // behaving perfectly. Guests keep their cart in localStorage alone.
     const productId = d.productId;
-    if (productId) {
+    if (productId && ! isGuest()) {
       try {
         const res = await fetch('/api/cart', {
           method: 'POST',
@@ -173,17 +177,16 @@ function initAddToCart() {
         if (res.ok) {
           const data = await res.json();
           syncCartBadge(data.count);
-        } else if (!isGuest()) {
-          // Logged-in add rejected by the server — the account cart was NOT
-          // updated, so say so (replaces the success popup; one popup at a time).
-          // Guests always get 401 here and their localStorage cart did succeed.
+        } else {
+          // The account cart was NOT updated, so say so — this replaces the success
+          // popup, one popup at a time.
           const data = await res.json().catch(() => ({}));
           popup.error(data.message || document.body.dataset.errGeneric);
         }
       } catch {
-        // network error — the localStorage fallback already ran; only warn
-        // logged-in users whose server cart is now out of sync
-        if (!isGuest()) popup.error(document.body.dataset.errGeneric);
+        // Network error. The localStorage cart already has the row, but this user's
+        // account cart is now behind it, so they are told.
+        popup.error(document.body.dataset.errGeneric);
       }
     }
 
