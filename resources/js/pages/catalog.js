@@ -67,6 +67,19 @@ function buildFilterUrl() {
     if (max && max.value.trim() !== '') params.set(`attr_max[${el.dataset.attr}]`, max.value.trim());
   });
 
+  // Laminate card filters (class=laminat only): ticked rows carry data-lam (the
+  // lam_* parameter) + data-val; values of one parameter are OR-ed server-side.
+  const lam = {};
+  document.querySelectorAll('.fs-check[data-lam][data-on="true"]').forEach((el) => {
+    (lam[el.dataset.lam] = lam[el.dataset.lam] || []).push(el.dataset.val);
+  });
+  Object.entries(lam).forEach(([param, values]) => params.set(param, values.join(',')));
+  document.querySelectorAll('.fs-lam-range input').forEach((el) => {
+    const param = el.dataset.lamMin || el.dataset.lamMax;
+    const v = el.value.trim().replace(',', '.');
+    if (param && v !== '') params.set(param, v);
+  });
+
   // Preserve context params the sidebar has no controls for: the search query,
   // the classifier drill-down position (section / group / class, plus the
   // legacy category param) and the homepage "Ətraflı bax" entry filters.
@@ -214,6 +227,17 @@ function initFilters(sheet) {
       const title = el.closest('.fs-attr')?.querySelector('.fs-title .t')?.textContent.trim() || el.dataset.attr;
       out.push({ range: el, label: `${title}: ${vMinT || '…'} – ${vMaxT || '…'}` });
     });
+    // Laminate filters: the chip names the group too ("Panelin qalınlığı: 8 mm"),
+    // a bare "8 mm" or "32" would not say what it filters.
+    document.querySelectorAll('.fs-check[data-lam][data-on="true"]').forEach((el) =>
+      out.push({ el, label: el.dataset.chip || el.querySelector('.lbl').textContent.trim() })
+    );
+    document.querySelectorAll('.fs-lam-range').forEach((el) => {
+      const vMinT = el.querySelector('[data-lam-min]')?.value.trim() || '';
+      const vMaxT = el.querySelector('[data-lam-max]')?.value.trim() || '';
+      if (vMinT === '' && vMaxT === '') return;
+      out.push({ range: el, label: `${el.dataset.chip}: ${vMinT || '…'} – ${vMaxT || '…'} ${el.dataset.unit || ''}`.trim() });
+    });
     // "In stock only" is a filter like any other, but it used to produce no
     // chip and was missing from the mobile "Filtrlər (n)" badge, so on a phone
     // it could be on with nothing on screen saying so.
@@ -321,6 +345,7 @@ function initFilters(sheet) {
       renderChips();
     } else {
       chip._filter.el.dataset.on = 'false';
+      chip._filter.el.setAttribute('aria-checked', 'false');
       renderChips();
     }
   }
@@ -378,7 +403,7 @@ function initFilters(sheet) {
   });
 
   // Attribute range inputs feed the chips band too
-  document.querySelectorAll('.fs-attr-range input').forEach((i) =>
+  document.querySelectorAll('.fs-attr-range input, .fs-lam-range input').forEach((i) =>
     i.addEventListener('change', renderChips)
   );
 

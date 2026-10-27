@@ -52,7 +52,8 @@ class ProductClassAttributesTest extends TestCase
 
         $this->section = Category::create(['name' => ['az' => 'Döşəmə'], 'slug' => 'dosheme', 'is_active' => true]);
         $this->group = Category::create(['name' => ['az' => 'Polimer örtüklər'], 'slug' => 'polimer', 'parent_id' => $this->section->id, 'is_active' => true]);
-        $this->class = SubCategory::create(['category_id' => $this->group->id, 'name' => ['az' => 'Laminat'], 'slug' => 'laminat', 'is_active' => true]);
+        // Not laminate: that class has its own typed card instead of class attributes.
+        $this->class = SubCategory::create(['category_id' => $this->group->id, 'name' => ['az' => 'Parket'], 'slug' => 'parket', 'is_active' => true]);
 
         $this->dropdown = $this->attribute('Sinif', 'dropdown', 'basic', ['AC3', 'AC4', 'AC5']);
         $this->multi = $this->attribute('Otaq', 'multiselect', 'basic', ['Mətbəx', 'Hamam', 'Qonaq otağı']);
@@ -338,7 +339,7 @@ class ProductClassAttributesTest extends TestCase
         $product = Product::firstOrFail();
         $this->assertSame(1, $product->attributeValues()->count());
 
-        $otherClass = SubCategory::create(['category_id' => $this->group->id, 'name' => ['az' => 'Parket'], 'slug' => 'parket', 'is_active' => true]);
+        $otherClass = SubCategory::create(['category_id' => $this->group->id, 'name' => ['az' => 'Linoleum'], 'slug' => 'linoleum', 'is_active' => true]);
 
         $this->actingAs($this->seller)->putJson('/business/products/'.$product->id, $this->payload([
             'sub_category_id' => $otherClass->id,

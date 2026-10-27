@@ -7,6 +7,8 @@ use App\Enums\UserStatus;
 use App\Models\Product;
 use App\Models\SpecialistProfile;
 use App\Models\Wishlist;
+use App\Services\Laminate\LaminateCatalog;
+use App\Services\Laminate\LaminatePresenter;
 use App\Support\ProductViewCounter;
 use Illuminate\Support\Collection;
 
@@ -36,6 +38,13 @@ class ProductController extends Controller
         // Structured classifier specs (EAV attribute values), rendered above the
         // legacy flat specifications rows on the specs tab.
         $attributeSpecs = $this->buildAttributeSpecs($product);
+
+        // Laminate renders its typed card (TZ «Ламинат» §9) instead.
+        $laminateCard = null;
+        if (LaminateCatalog::isLaminateClass($product->sub_category_id)) {
+            $product->loadMissing(['brand', 'laminateSpec']);
+            $laminateCard = (new LaminatePresenter)->present($product);
+        }
 
         ProductViewCounter::record($product->id);
 
@@ -81,7 +90,7 @@ class ProductController extends Controller
             ->take(4)
             ->get();
 
-        return view('pages.product', compact('product', 'related', 'specialists', 'fbtProducts', 'attributeSpecs', 'ratingCounts', 'isWished'));
+        return view('pages.product', compact('product', 'related', 'specialists', 'fbtProducts', 'attributeSpecs', 'ratingCounts', 'isWished', 'laminateCard'));
     }
 
     /**

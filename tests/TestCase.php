@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use App\Services\Laminate\LaminateCatalog;
 use Database\Seeders\TranslationsSeeder;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 use Illuminate\Support\Facades\Cache;
@@ -33,6 +34,10 @@ abstract class TestCase extends BaseTestCase
         // QueryException or a missing name, in a file that passed on its own. Every
         // test starts cold instead.
         Cache::flush();
+
+        // Same story for the laminate class id and dictionary ids, which are
+        // memoised in static properties for the life of the process.
+        LaminateCatalog::flush();
 
         $compiledViewPath = storage_path('framework/testing-views');
         File::ensureDirectoryExists($compiledViewPath);

@@ -23,6 +23,12 @@ class TranslationsSeeder extends Seeder
             $groups[$group] = array_merge($groups[$group] ?? [], $items);
         }
 
+        // The laminate card (TZ «Ламинат») keeps its copy beside its own migration,
+        // which upserts the same file into existing databases.
+        foreach (require database_path('seeders/data/laminate_translations.php') as $group => $items) {
+            $groups[$group] = array_merge($groups[$group] ?? [], $items);
+        }
+
         foreach ($groups as $group => $items) {
             foreach ($items as $key => $value) {
                 Translation::updateOrCreate(
@@ -540,6 +546,8 @@ class TranslationsSeeder extends Seeder
                 'limit.remaining' => ['az' => 'Daha :remaining məhsul əlavə edə bilərsiniz (:used/:limit).', 'ru' => 'Вы можете добавить ещё :remaining товаров (:used/:limit).', 'en' => 'You can add :remaining more products (:used/:limit).'],
                 'basic.barcode_placeholder' => ['az' => '4780012345678', 'ru' => '4780012345678', 'en' => '4780012345678'],
                 'basic.brand' => ['az' => 'Brend', 'ru' => 'Бренд', 'en' => 'Brand'],
+                'basic.brand_placeholder' => ['az' => 'Seçin və ya yazın…', 'ru' => 'Выберите или введите…', 'en' => 'Select or type…'],
+                'basic.brand_hint' => ['az' => 'Siyahıda yoxdursa, brendin adını yazın — yeni brend kimi əlavə olunacaq.', 'ru' => 'Если бренда нет в списке, введите его название — он будет добавлен как новый.', 'en' => 'Not in the list? Type the brand name — it will be added as a new brand.'],
                 'basic.category' => ['az' => 'Kateqoriya', 'ru' => 'Категория', 'en' => 'Category'],
                 'basic.name' => ['az' => 'Məhsulun adı', 'ru' => 'Название товара', 'en' => 'Product name'],
                 'basic.name_placeholder' => ['az' => 'Məs.: Keramik kafel 60×60, mat', 'ru' => 'Напр.: Керамическая плитка 60×60, матовая', 'en' => 'E.g.: Ceramic tile 60×60, matte'],

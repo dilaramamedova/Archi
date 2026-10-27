@@ -7,22 +7,39 @@ use App\Enums\AttributeFieldType;
 use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Category;
+use App\Models\DictionaryRequest;
+use App\Models\LaminateSpec;
+use App\Models\LaminateSpecDocument;
 use App\Models\Product;
 use App\Models\ProductAttributeValue;
 use App\Models\ProductImage;
 use App\Models\SubCategory;
 use App\Models\User;
+use App\Services\Laminate\LaminateCatalog;
+use App\Services\Laminate\LaminateDocuments;
+use App\Services\Laminate\LaminateFormSchema;
+use App\Services\Laminate\LaminateRequestException;
+use App\Services\Laminate\LaminateSpecService;
 use App\Services\SearchService;
+use App\Support\ClassifierFields;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class BusinessProductController extends Controller
 {
+    public function __construct(
+        private readonly LaminateSpecService $laminate,
+        private readonly LaminateDocuments $laminateDocuments,
+    ) {}
+
     /** Stock quantity at or below which a product counts as "running low". */
     public const LOW_STOCK_THRESHOLD = 10;
 
@@ -97,14 +114,20 @@ class BusinessProductController extends Controller
         $this->authorizeProduct($request, $product);
         app()->setLocale(session('locale', config('app.locale')));
 
+        $product->load(['images', 'category.parent', 'attributeValues', 'applications']);
+
         return view('pages.business-product-edit', [
-            'product' => $product->load(['images', 'category.parent', 'attributeValues', 'applications']),
+            'product' => $product,
             'categories' => Category::roots()->active()->ordered()->get(),
             'groups' => Category::active()->ordered()->whereNotNull('parent_id')->get(),
             'brands' => Brand::orderBy('name->az')->get(),
             'subCategories' => SubCategory::active()->ordered()->get(),
             // Editing an existing product never consumes quota.
             'quota' => ['limit' => null, 'used' => 0, 'remaining' => null, 'reached' => false],
+            // The laminate card in the payload's own shape, for the form to pre-fill.
+            'laminateInitial' => LaminateCatalog::isLaminateClass($product->sub_category_id)
+                ? $this->laminate->formValues($product->laminateSpec()->first(), $product)
+                : null,
         ]);
     }
 
@@ -151,6 +174,27 @@ class BusinessProductController extends Controller
         app()->setLocale(session('locale', config('app.locale')));
         $locale = app()->getLocale();
 
+        // Class-specific fields are switched off: every class gets the plain form.
+        if (! ClassifierFields::enabled()) {
+            return response()->json([
+                'id' => $subCategory->id,
+                'name' => (string) $subCategory->name,
+                'fields' => [],
+                'applications' => [],
+            ]);
+        }
+
+        // Laminate has its own typed card (TZ «Ламинат»), not generic class fields.
+        if (LaminateCatalog::isLaminateClass($subCategory->id)) {
+            return response()->json([
+                'id' => $subCategory->id,
+                'name' => (string) $subCategory->name,
+                'fields' => [],
+                'applications' => [],
+                'laminate' => (new LaminateFormSchema)->build(),
+            ]);
+        }
+
         $subCategory->load([
             'attributes' => fn ($q) => $q->where('attributes.is_active', true),
             'attributes.options',
@@ -187,6 +231,11 @@ class BusinessProductController extends Controller
         $this->guardProductQuota($request->user());
 
         $validated = $this->validateProduct($request);
+
+        if (LaminateCatalog::isLaminateClass(isset($validated['sub_category_id']) ? (int) $validated['sub_category_id'] : null)) {
+            return $this->storeLaminate($request, $validated);
+        }
+
         $attrPlan = $this->validateClassAttributes($request, isset($validated['sub_category_id']) ? (int) $validated['sub_category_id'] : null);
 
         // Publishing requires at least one image; drafts may be saved without.
@@ -234,6 +283,11 @@ class BusinessProductController extends Controller
     {
         $this->authorizeProduct($request, $product);
         $validated = $this->validateProduct($request);
+
+        if (LaminateCatalog::isLaminateClass(isset($validated['sub_category_id']) ? (int) $validated['sub_category_id'] : null)) {
+            return $this->updateLaminate($request, $product, $validated);
+        }
+
         $attrPlan = $this->validateClassAttributes($request, isset($validated['sub_category_id']) ? (int) $validated['sub_category_id'] : null);
 
         // A published product must keep at least one image: survivors + new uploads.
@@ -266,6 +320,11 @@ class BusinessProductController extends Controller
 
             if ($classChanged) {
                 $product->attributeValues()->delete();
+
+                // Moved out of laminate: its typed card no longer describes it, and its
+                // pending dictionary proposals are moot.
+                LaminateSpec::query()->where('product_id', $product->id)->delete();
+                DictionaryRequest::query()->where('product_id', $product->id)->pending()->delete();
             }
 
             $this->syncClassAttributes($product, $attrPlan);
@@ -281,6 +340,316 @@ class BusinessProductController extends Controller
                 : t('business-cabinet.saved'),
             'redirect' => route('business.profile.products'),
         ]);
+    }
+
+    // ---------------------------------------------------------------- laminate
+
+    /**
+     * Create a laminate product (TZ «Ламинат»). The generic class-attribute path is
+     * not used: the card is typed, validated by LaminateSpecService, and the colour,
+     * free-form rows and "where to use" blocks the TZ excludes are never stored.
+     *
+     * A draft may be incomplete; publishing requires the TZ's fields, and the response
+     * always reports what is still missing so the form can say so.
+     */
+    private function storeLaminate(Request $request, array $validated): JsonResponse
+    {
+        $claim = $this->claimIdempotency($request);
+        if ($claim instanceof JsonResponse) {
+            return $claim;
+        }
+
+        try {
+            $user = $request->user();
+            $plan = $this->laminate->validate($this->laminateInput($request), null);
+            $documents = $this->laminateDocuments->validate($request, $plan['values'], $plan['warranties'], null);
+            $this->guardLaminateUnit($validated);
+            [$brandId, $brandProposal] = $this->laminateBrand($validated);
+
+            $publish = (bool) ($validated['publish'] ?? false);
+            $missing = $this->laminate->missingForPublish($plan['values'], $brandId, count($request->file('images') ?? []));
+
+            if ($publish && $missing !== []) {
+                throw $this->laminate->publishException($missing);
+            }
+
+            $product = DB::transaction(function () use ($validated, $plan, $brandId, $brandProposal, $publish, $user): Product {
+                User::whereKey($user->id)->lockForUpdate()->first();
+                $this->guardProductQuota($user->fresh());
+
+                $product = Product::create([
+                    ...$this->productAttributes($validated, true, $brandId, $plan['values']['pack_area_m2']),
+                    'user_id' => $user->id,
+                    'slug' => $this->uniqueSlug($validated['name']),
+                    'is_visible' => $publish,
+                    'is_approved' => false,
+                    'rejected_at' => null,
+                    'rejection_reason' => null,
+                ]);
+
+                $this->laminate->save($product, $plan, $user->id);
+                $this->laminate->syncBrandRequest($product, $brandProposal, $user->id);
+
+                return $product;
+            });
+
+            $this->syncImages($request, $product);
+            $spec = $product->laminateSpec()->first();
+            $this->laminateDocuments->sync($spec, $documents, $user->id);
+
+            $response = [
+                'success' => true,
+                'message' => $publish ? t('business-cabinet.product_submitted') : t('business-cabinet.draft_saved'),
+                'redirect' => route('business.profile.products'),
+                'missing_fields' => $missing,
+                'laminate_version' => $spec->version,
+            ];
+
+            $this->completeIdempotency($claim, $response);
+
+            return response()->json($response);
+        } catch (Throwable $e) {
+            $this->releaseIdempotency($claim);
+
+            throw $e;
+        }
+    }
+
+    private function updateLaminate(Request $request, Product $product, array $validated): JsonResponse
+    {
+        $user = $request->user();
+        $current = $product->laminateSpec()->first();
+
+        $plan = $this->laminate->validate($this->laminateInput($request), $current);
+        $documents = $this->laminateDocuments->validate($request, $plan['values'], $plan['warranties'], $current);
+        $this->guardLaminateUnit($validated);
+        [$brandId, $brandProposal] = $this->laminateBrand($validated);
+
+        $keptImages = $product->images()
+            ->whereIn('id', array_map('intval', (array) $request->input('kept_image_ids', [])))
+            ->count();
+        $imageCount = ($request->has('kept_image_ids') || $request->hasFile('images'))
+            ? $keptImages + count($request->file('images') ?? [])
+            : $product->images()->count();
+
+        // Saving a visible product re-submits it for moderation, so the publication
+        // rule applies to it exactly as to a first publish.
+        $publish = (bool) ($validated['publish'] ?? false);
+        $willBeVisible = $publish || $product->is_visible;
+        $missing = $this->laminate->missingForPublish($plan['values'], $brandId, $imageCount);
+
+        if ($willBeVisible && $missing !== []) {
+            throw $this->laminate->publishException($missing);
+        }
+
+        $wasApproved = $product->is_approved;
+
+        DB::transaction(function () use ($product, $validated, $plan, $brandId, $brandProposal, $publish, $user): void {
+            $classChanged = (int) ($product->sub_category_id ?? 0) !== (int) ($validated['sub_category_id'] ?? 0);
+
+            $product->update([
+                ...$this->productAttributes($validated, true, $brandId, $plan['values']['pack_area_m2']),
+                'is_visible' => $publish ? true : $product->is_visible,
+                'is_approved' => false,
+                'rejected_at' => null,
+                'rejection_reason' => null,
+            ]);
+
+            if ($classChanged) {
+                $product->attributeValues()->delete();
+            }
+
+            // Laminate carries no "where to use" tags (TZ §1).
+            $product->applications()->detach();
+
+            $this->laminate->save($product, $plan, $user->id);
+            $this->laminate->syncBrandRequest($product, $brandProposal, $user->id);
+        });
+
+        $this->syncImages($request, $product);
+        $spec = $product->laminateSpec()->first();
+        $this->laminateDocuments->sync($spec, $documents, $user->id);
+
+        return response()->json([
+            'success' => true,
+            'message' => $wasApproved ? t('business-cabinet.product_resubmitted') : t('business-cabinet.saved'),
+            'redirect' => route('business.profile.products'),
+            'missing_fields' => $missing,
+            'laminate_version' => $spec->version,
+        ]);
+    }
+
+    /**
+     * Seller-side search by brand + manufacturer article (TZ §1 scenario, §6
+     * «Дубли»): an approved card of another seller with the same article, so its
+     * characteristics can be copied instead of retyped. Documents are not copied —
+     * they belong to the other seller's card.
+     */
+    public function laminateLookup(Request $request): JsonResponse
+    {
+        $brandId = (int) $request->query('brand_id');
+        $sku = trim((string) $request->query('sku'));
+
+        if ($brandId <= 0 || $sku === '' || mb_strlen($sku) > 100) {
+            return response()->json(['matches' => []]);
+        }
+
+        $specs = LaminateSpec::query()
+            ->where('sku_normalized', LaminateSpecService::normalizeSku($sku))
+            ->whereHas('product', fn ($q) => $q->visible()->approved()
+                ->where('brand_id', $brandId)
+                ->where('user_id', '!=', $request->user()->id))
+            ->with(['product', 'heatingTypes', 'warranties'])
+            ->limit(3)
+            ->get();
+
+        return response()->json([
+            'matches' => $specs->map(function (LaminateSpec $spec): array {
+                $values = $this->laminate->formValues($spec);
+                unset($values['documents'], $values['version'], $values['brand_proposed']);
+                foreach (array_keys(LaminateCatalog::OPTION_FIELDS) as $field) {
+                    unset($values[$field.'_proposed']);
+                }
+
+                return [
+                    'product_id' => $spec->product_id,
+                    'name' => (string) $spec->product->name,
+                    'values' => $values,
+                ];
+            })->values(),
+        ]);
+    }
+
+    /** @return array<string, mixed> */
+    private function laminateInput(Request $request): array
+    {
+        $input = $request->input('laminate', []);
+
+        return is_array($input) ? $input : [];
+    }
+
+    /** TZ §5: a laminate price is per m² or per pack — nothing else. */
+    private function guardLaminateUnit(array $validated): void
+    {
+        $unit = $validated['unit'] ?? null;
+
+        if ($unit !== null && ! in_array($unit, LaminateCatalog::PRICE_UNITS, true)) {
+            throw new LaminateRequestException(
+                ['unit' => (string) t('laminate.errors.PRICE_UNIT')],
+                ['unit' => 'PRICE_UNIT'],
+            );
+        }
+    }
+
+    /**
+     * Brand of a laminate product. A listed brand is used as is; a typed name that
+     * matches a listed brand is that brand; any other typed name becomes a pending
+     * dictionary request and the product has no brand until a moderator approves it
+     * (TZ §3 №1, acceptance 3). Unlike other classes, nothing is created in `brands`.
+     *
+     * @return array{0: ?int, 1: ?string} [brand id, proposed name]
+     */
+    private function laminateBrand(array $validated): array
+    {
+        if (! empty($validated['brand_id'])) {
+            return [(int) $validated['brand_id'], null];
+        }
+
+        $name = trim((string) ($validated['new_brand'] ?? ''));
+        if ($name === '') {
+            return [null, null];
+        }
+
+        $slug = Str::slug($name) ?: 'brand-'.substr(md5(mb_strtolower($name)), 0, 8);
+        $existing = Brand::query()->where('slug', $slug)->value('id');
+
+        return $existing ? [(int) $existing, null] : [null, $name];
+    }
+
+    /**
+     * Idempotent creation (TZ §6 «Повторная отправка»): the same Idempotency-Key with
+     * the same body returns the first result instead of a second product; the same
+     * key with a different body is a 409.
+     *
+     * @return array{cache_key: string, hash: string}|JsonResponse|null
+     */
+    private function claimIdempotency(Request $request): array|JsonResponse|null
+    {
+        $key = trim((string) $request->header('Idempotency-Key', ''));
+
+        if ($key === '' || strlen($key) > 128) {
+            return null;
+        }
+
+        $cacheKey = 'idem:product-store:'.$request->user()->id.':'.hash('sha256', $key);
+        $hash = $this->requestFingerprint($request);
+
+        if (Cache::add($cacheKey, ['hash' => $hash, 'state' => 'pending'], now()->addMinutes(10))) {
+            return ['cache_key' => $cacheKey, 'hash' => $hash];
+        }
+
+        $entry = Cache::get($cacheKey);
+
+        if (($entry['hash'] ?? null) !== $hash) {
+            return $this->idempotencyError('IDEMPOTENCY_KEY_REUSED');
+        }
+
+        if (($entry['state'] ?? null) === 'done') {
+            return response()->json($entry['response'])->header('Idempotent-Replayed', 'true');
+        }
+
+        return $this->idempotencyError('REQUEST_IN_PROGRESS');
+    }
+
+    private function completeIdempotency(?array $claim, array $response): void
+    {
+        if ($claim) {
+            Cache::put($claim['cache_key'], ['hash' => $claim['hash'], 'state' => 'done', 'response' => $response], now()->addDay());
+        }
+    }
+
+    private function releaseIdempotency(array|JsonResponse|null $claim): void
+    {
+        if (is_array($claim)) {
+            Cache::forget($claim['cache_key']);
+        }
+    }
+
+    private function idempotencyError(string $code): JsonResponse
+    {
+        return response()->json([
+            'message' => (string) t('laminate.errors.'.$code),
+            'errors' => ['idempotency' => [(string) t('laminate.errors.'.$code)]],
+            'codes' => ['idempotency' => $code],
+        ], 409);
+    }
+
+    /** Body fingerprint: every field plus each upload's name, size and content hash. */
+    private function requestFingerprint(Request $request): string
+    {
+        // input() carries no uploads; those are fingerprinted separately below.
+        $data = $request->input();
+        unset($data['_token']);
+        $files = [];
+        $uploads = $request->allFiles();
+
+        array_walk_recursive($uploads, function ($file) use (&$files): void {
+            if ($file instanceof UploadedFile) {
+                $files[] = [$file->getClientOriginalName(), $file->getSize(), @sha1_file($file->getRealPath()) ?: ''];
+            }
+        });
+
+        $sort = function (array &$a) use (&$sort): void {
+            ksort($a);
+            foreach ($a as &$v) {
+                if (is_array($v)) {
+                    $sort($v);
+                }
+            }
+        };
+        $sort($data);
+
+        return hash('sha256', json_encode([$data, $files]));
     }
 
     public function toggleVisibility(Request $request, Product $product): JsonResponse
@@ -324,7 +693,20 @@ class BusinessProductController extends Controller
             }
         }
 
+        // Laminate passports and conditions, detached ones included. Once the product
+        // is gone no card points at them, and the rows cascade away with it — the
+        // files would otherwise sit on the private disk for good.
+        $documentKeys = LaminateSpecDocument::query()
+            ->whereHas('spec', fn ($q) => $q->where('product_id', $product->id))
+            ->whereNotNull('storage_key')
+            ->pluck('storage_key')
+            ->all();
+
         $product->delete();
+
+        if ($documentKeys !== []) {
+            Storage::disk(LaminateSpecDocument::DISK)->delete($documentKeys);
+        }
 
         return response()->json(['success' => true]);
     }
@@ -495,7 +877,9 @@ class BusinessProductController extends Controller
      */
     private function validateClassAttributes(Request $request, ?int $subCategoryId): array
     {
-        if (! $subCategoryId) {
+        // Switched off: nothing is asked, nothing is required, and an empty plan
+        // leaves the values already stored on a product untouched.
+        if (! $subCategoryId || ! ClassifierFields::enabled()) {
             return ['submitted' => [], 'rows' => []];
         }
 
@@ -671,6 +1055,10 @@ class BusinessProductController extends Controller
      */
     private function syncApplications(Request $request, Product $product): void
     {
+        if (! ClassifierFields::enabled()) {
+            return;
+        }
+
         if (! $request->exists('applications') && ! $request->exists('applications_present')) {
             return;
         }
@@ -683,7 +1071,14 @@ class BusinessProductController extends Controller
         $product->applications()->sync($ids);
     }
 
-    private function productAttributes(array $validated): array
+    /**
+     * @param  bool  $laminate  the laminate card replaces the generic size / material /
+     *                          colour / country / pack fields and the free-form rows, so
+     *                          none of those is stored for it (TZ «Ламинат» §1)
+     * @param  ?int  $laminateBrandId  already resolved — laminate never auto-creates a brand
+     * @param  ?string  $packArea  canonical m² per pack; it is also the calculator's pack size
+     */
+    private function productAttributes(array $validated, bool $laminate = false, ?int $laminateBrandId = null, ?string $packArea = null): array
     {
         $locale = app()->getLocale();
 
@@ -691,31 +1086,38 @@ class BusinessProductController extends Controller
         // Filament KeyValue field edits, so admin and the product page render both
         // sources identically. Fixed-field keys win a collision (`+` keeps the left).
         $custom = [];
-        foreach ($validated['attributes'] ?? [] as $row) {
-            $custom[trim((string) $row['key'])] = trim((string) $row['value']);
+        if (! $laminate) {
+            foreach ($validated['attributes'] ?? [] as $row) {
+                $custom[trim((string) $row['key'])] = trim((string) $row['value']);
+            }
         }
 
-        $fixed = array_filter([
-            'barcode' => $validated['barcode'] ?? null,
-            'shelf' => $validated['shelf'] ?? null,
-            'dimensions' => $validated['dimensions'] ?? null,
-            'material' => $validated['material'] ?? null,
-            'color' => $validated['color'] ?? null,
-            'country' => $validated['country'] ?? null,
-        ]);
+        $fixed = array_filter($laminate
+            ? [
+                'barcode' => $validated['barcode'] ?? null,
+                'shelf' => $validated['shelf'] ?? null,
+            ]
+            : [
+                'barcode' => $validated['barcode'] ?? null,
+                'shelf' => $validated['shelf'] ?? null,
+                'dimensions' => $validated['dimensions'] ?? null,
+                'material' => $validated['material'] ?? null,
+                'color' => $validated['color'] ?? null,
+                'country' => $validated['country'] ?? null,
+            ]);
 
         return [
             'category_id' => $validated['category_id'],
             'sub_category_id' => $validated['sub_category_id'] ?? null,
-            'brand_id' => $this->resolveBrandId($validated),
+            'brand_id' => $laminate ? $laminateBrandId : $this->resolveBrandId($validated),
             'sku' => $validated['sku'] ?? null,
             'name' => [$locale => $validated['name']],
             'description' => [$locale => $validated['description'] ?? ''],
             'price' => $validated['price'],
             'old_price' => $validated['old_price'] ?? null,
-            'unit' => $validated['unit'] ?? 'piece',
-            'package_size' => $validated['package_size'] ?? null,
-            'package_unit' => $validated['package_unit'] ?? null,
+            'unit' => $laminate ? ($validated['unit'] ?? 'm2') : ($validated['unit'] ?? 'piece'),
+            'package_size' => $laminate ? $packArea : ($validated['package_size'] ?? null),
+            'package_unit' => $laminate ? ($packArea !== null ? 'm2' : null) : ($validated['package_unit'] ?? null),
             'weight_kg' => $validated['weight_kg'] ?? null,
             'volume_m3' => $validated['volume_m3'] ?? null,
             'stock' => $validated['stock'],

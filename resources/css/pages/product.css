@@ -134,6 +134,24 @@
   .pd-spec-tip:hover .pop,
   .pd-spec-tip:focus-visible .pop { @apply visible opacity-100; }
 
+  /* laminate card (TZ «Ламинат» §9): heading, the thickness/underlay caption, the
+     installation link of the floor-heating row and the documents block */
+  .pd-specs-title    { @apply mb-3.5 text-lg font-semibold text-ink; }
+  .pd-specs-lam .row .v { @apply break-words; }
+  .pd-spec-note      { @apply ml-1.5 text-[13px] font-normal text-black/50; }
+  .pd-spec-link      { @apply ml-1.5 text-[13px] font-medium whitespace-nowrap text-ink underline decoration-yellow-line decoration-2 underline-offset-2 hover:text-black/70; }
+  .pd-docs           { @apply mt-7 max-w-[760px]; }
+  .pd-docs-title     { @apply mb-3 text-base font-semibold text-ink; }
+  .pd-docs-list      { @apply flex flex-wrap gap-2.5; }
+  .pd-doc            { @apply inline-flex h-11 max-w-full items-center gap-2 rounded-ds border border-black/14 bg-white px-4 text-sm font-medium text-ink transition-colors duration-150 hover:border-black/35; }
+  .pd-doc .ic        { @apply size-5 shrink-0 text-black/55; }
+  .pd-doc span:not(.ext) { @apply truncate; }
+  .pd-doc .ext       { @apply text-black/45; }
+
+  /* laminate: the derived second price under the seller's own price */
+  .pd-price-alt      { @apply mt-1.5 text-sm text-black/55; }
+  .pd-price-alt b    { @apply font-semibold text-ink; }
+
   .pd-section       { @apply pt-12 pb-2; }
 
   /* "Bunları da unutma" — the accessories row. It is a plain card row (see

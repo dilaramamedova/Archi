@@ -57,7 +57,9 @@ class CatalogClassifierUxTest extends TestCase
             'parent_id' => $this->section->id, 'is_active' => true, 'sort_order' => 1,
         ]);
         $this->class = SubCategory::create([
-            'name' => ['az' => 'Laminat'], 'slug' => 'laminat',
+            // Not laminate: that class has a typed card with its own filters, and this
+            // fixture exercises the generic classifier filters.
+            'name' => ['az' => 'Parket'], 'slug' => 'parket',
             'category_id' => $this->group->id, 'is_active' => true, 'sort_order' => 1,
         ]);
 
@@ -103,7 +105,7 @@ class CatalogClassifierUxTest extends TestCase
 
     public function test_class_page_lists_all_class_products_when_no_attribute_filter_is_active(): void
     {
-        $this->get('/catalog?class=laminat')
+        $this->get('/catalog?class=parket')
             ->assertOk()
             ->assertSeeText('Laminat Palıd qırmızı')
             ->assertSeeText('Laminat Qoz ağ')
@@ -136,7 +138,7 @@ class CatalogClassifierUxTest extends TestCase
 
     public function test_catalog_filters_by_attribute_option(): void
     {
-        $this->get('/catalog?class=laminat&attr[reng]=qirmizi')
+        $this->get('/catalog?class=parket&attr[reng]=qirmizi')
             ->assertOk()
             ->assertSeeText('Laminat Palıd qırmızı')
             ->assertDontSeeText('Laminat Qoz ağ')
@@ -145,7 +147,7 @@ class CatalogClassifierUxTest extends TestCase
 
     public function test_option_filter_is_or_within_one_attribute(): void
     {
-        $this->get('/catalog?class=laminat&attr[reng]=qirmizi,ag')
+        $this->get('/catalog?class=parket&attr[reng]=qirmizi,ag')
             ->assertOk()
             ->assertSeeText('Laminat Palıd qırmızı')
             ->assertSeeText('Laminat Qoz ağ')
@@ -154,12 +156,12 @@ class CatalogClassifierUxTest extends TestCase
 
     public function test_catalog_filters_by_numeric_range(): void
     {
-        $this->get('/catalog?class=laminat&attr_min[qalinliq]=10')
+        $this->get('/catalog?class=parket&attr_min[qalinliq]=10')
             ->assertOk()
             ->assertSeeText('Laminat Qoz ağ')
             ->assertDontSeeText('Laminat Palıd qırmızı');
 
-        $this->get('/catalog?class=laminat&attr_min[qalinliq]=6&attr_max[qalinliq]=9')
+        $this->get('/catalog?class=parket&attr_min[qalinliq]=6&attr_max[qalinliq]=9')
             ->assertOk()
             ->assertSeeText('Laminat Palıd qırmızı')
             ->assertDontSeeText('Laminat Qoz ağ');
@@ -167,7 +169,7 @@ class CatalogClassifierUxTest extends TestCase
 
     public function test_filters_combine_with_and_between_attributes(): void
     {
-        $this->get('/catalog?class=laminat&attr[reng]=qirmizi&attr_min[qalinliq]=10')
+        $this->get('/catalog?class=parket&attr[reng]=qirmizi&attr_min[qalinliq]=10')
             ->assertOk()
             ->assertDontSeeText('Laminat Palıd qırmızı')
             ->assertDontSeeText('Laminat Qoz ağ')
@@ -176,7 +178,7 @@ class CatalogClassifierUxTest extends TestCase
 
     public function test_class_page_renders_top_filter_markup_with_unit_and_tooltip(): void
     {
-        $response = $this->get('/catalog?class=laminat')->assertOk();
+        $response = $this->get('/catalog?class=parket')->assertOk();
 
         $response->assertSee('data-attr-block="reng"', false);
         $response->assertSee('data-opt="qirmizi"', false);

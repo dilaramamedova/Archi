@@ -3,6 +3,8 @@
 // attribute form (EAV fields fetched per class), key-value attribute rows and the
 // multipart AJAX submit.
 
+import { createLaminateForm, uuid } from './business-product-laminate.js';
+
 const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
 
 // Searchable dropdown over a plain text input + hidden id input.
@@ -121,9 +123,12 @@ function combobox(root, { options = [], allowCreate = false, onPick = null } = {
       items.forEach((li, i) => li.classList.toggle('bg-gray-soft2', i === active));
       items[active]?.scrollIntoView({ block: 'nearest' });
     } else if (e.key === 'Enter') {
-      if (!list.classList.contains('hidden') && items[active]) {
+      // Enter inside an open list picks — the highlighted item, or the first match
+      // when nothing is highlighted — and never submits the whole form.
+      if (!list.classList.contains('hidden')) {
         e.preventDefault();
-        items[active].dispatchEvent(new MouseEvent('mousedown'));
+        const pick = items[active] ?? (input.value.trim() ? items[0] : null);
+        pick?.dispatchEvent(new MouseEvent('mousedown'));
       }
     } else if (e.key === 'Escape') {
       close();
@@ -140,6 +145,14 @@ function combobox(root, { options = [], allowCreate = false, onPick = null } = {
 export default function () {
   const form = document.getElementById('productForm');
   if (!form) return;
+
+  // Laminate class: its own typed card instead of the generic class fields.
+  const laminate = createLaminateForm({
+    form,
+    imageCount: () => document.querySelectorAll('#imageSlots .image-slot').length,
+  });
+  // One key per page load: a double submit of the same create cannot make two products.
+  const idempotencyKey = uuid();
 
   // ─── Dynamic class form ("Məhsul xüsusiyyətləri") ───
   // Field naming contract: attrs[<attribute_id>] · multiselect attrs[<id>][] ·
@@ -372,7 +385,9 @@ export default function () {
       if (block) block.style.display = visible ? '' : 'none';
     }
 
-    function render(def, values, selectedApps) {
+    function render(def, values, selectedApps, useInitial = false) {
+      // Leaving laminate restores the generic blocks before this class decides them.
+      if (!def.laminate) laminate.deactivate();
       basicWrap.innerHTML = '';
       proWrap.innerHTML = '';
       const upfront = (def.fields || []).filter(isUpfront);
@@ -402,6 +417,8 @@ export default function () {
       // The card also hosts the generic and free-form layers, so it stays visible
       // even for a class that defines no fields of its own.
       if (classDesc) classDesc.style.display = def.fields?.length ? '' : 'none';
+
+      if (def.laminate) laminate.activate(def.laminate, useInitial);
     }
 
     function syncToggleLabel() {
@@ -420,6 +437,7 @@ export default function () {
     // fields and the free-form rows stay usable.
     function clear() {
       requestSeq++;
+      laminate.deactivate();
       basicWrap.innerHTML = '';
       proWrap.innerHTML = '';
       appChips.innerHTML = '';
@@ -446,7 +464,7 @@ export default function () {
         }
       }
       if (seq !== requestSeq) return; // the seller already picked another class
-      render(def, useInitial ? (initial.values || {}) : {}, useInitial ? (initial.applications || []) : []);
+      render(def, useInitial ? (initial.values || {}) : {}, useInitial ? (initial.applications || []) : [], useInitial);
     }
 
     return { load, clear };
@@ -459,7 +477,7 @@ export default function () {
   const allClasses = comboData.classes || [];
 
   const brandRoot = form.querySelector('[data-combo="brand"]');
-  if (brandRoot) combobox(brandRoot, { options: comboData.brands || [], allowCreate: true });
+  if (brandRoot) combobox(brandRoot, { options: comboData.brands || [], allowCreate: true, onPick: () => laminate.onBrandChange() });
 
   const groupsFor = (sectionId) => allGroups.filter((g) => String(g.parent_id) === String(sectionId));
   const classesFor = (groupId) => allClasses.filter((c) => String(c.group_id) === String(groupId));
@@ -624,7 +642,8 @@ export default function () {
 
     // Publishing needs at least one image (kept + newly picked) — inline error
     // instead of a bare 422 from the server. Drafts may be saved without one.
-    if (publish === '1' && slotCount() === 0) {
+    // Laminate leaves it to the server, which lists every missing field at once.
+    if (publish === '1' && slotCount() === 0 && !laminate.active) {
       archiPopup.error(form.dataset.lImageRequired);
       addSlot?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
@@ -664,24 +683,39 @@ export default function () {
       if (file) fd.append('images[]', file);
     }
 
+    const isLaminate = laminate.active;
+    if (isLaminate) laminate.serialize(fd);
+
+    const headers = { 'X-CSRF-TOKEN': csrf(), 'Accept': 'application/json' };
+    if (isLaminate && form.dataset.method !== 'PUT') headers['Idempotency-Key'] = idempotencyKey;
+
     const buttons = form.querySelectorAll('button[type="submit"]');
     buttons.forEach((b) => (b.disabled = true));
 
     try {
       const res = await fetch(form.dataset.action, {
         method: 'POST',
-        headers: { 'X-CSRF-TOKEN': csrf(), 'Accept': 'application/json' },
+        headers,
         body: fd,
       });
       const data = await res.json().catch(() => ({}));
 
       if (res.ok && data.success) {
+        // A laminate draft may still lack what publishing needs — say what, and
+        // let the seller read it before the page moves on.
+        const missing = isLaminate ? laminate.handleSuccess(data) : [];
+        const message = missing.length
+          ? `${data.message}\n\n${laminate.missingTitle()}\n${missing.map((m) => `• ${m}`).join('\n')}`
+          : data.message;
         // The Promise resolves when the popup closes (autoClose or user action).
-        const shown = archiPopup.success(data.message, data.redirect ? { autoClose: 1800 } : {});
+        const shown = archiPopup.success(message, data.redirect && !missing.length ? { autoClose: 1800 } : {});
         if (data.redirect) shown.then(() => (location.href = data.redirect));
       } else {
         const firstError = data.errors ? Object.values(data.errors)[0][0] : (data.message || document.body.dataset.errGeneric);
-        archiPopup.error(firstError);
+        // Laminate also puts each message under its own field (422 field errors,
+        // 409 version / idempotency conflicts) — nothing the seller typed is reset.
+        const slot = isLaminate ? laminate.handleFailure(data) : null;
+        archiPopup.error(firstError).then(() => slot?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
         buttons.forEach((b) => (b.disabled = false));
       }
     } catch {

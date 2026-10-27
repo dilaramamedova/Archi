@@ -95,6 +95,10 @@
   .fs-expander[data-open="true"] .fs-exp-body { @apply block; }
   .fs-exp-body .fs-attr + .fs-div { @apply my-4; }
 
+  /* laminate card filters (class=laminat) */
+  .fs-lam .fs-title .fs-lam-unit { @apply font-normal text-black/45; }
+  .fs-exp-body .fs-lam-div       { @apply my-4; }
+
   /* price */
   .fs-price-inputs       { @apply flex items-center gap-2; }
   .fs-price-inputs .in   { @apply h-[38px] min-w-0 flex-1 rounded-ds border border-black/14 px-3 text-sm text-ink outline-none focus:border-ink; }

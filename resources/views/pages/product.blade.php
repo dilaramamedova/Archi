@@ -131,6 +131,17 @@
           @endif
         </div>
         @if ($unitLabel)<div class="pd-unit">{{ $unitLabel }}</div>@endif
+        {{-- Laminate (TZ §5): the seller's price stays the main figure; the other
+             unit is derived for display only. --}}
+        @if ($laminateCard && $laminateCard['prices'])
+          @php
+              $lamPrices = $laminateCard['prices'];
+              $lamAlt = $lamPrices['source'] === 'pack'
+                  ? ['label' => t('laminate.card.price_per_m2'), 'value' => $lamPrices['per_m2']]
+                  : ['label' => t('laminate.card.price_per_pack'), 'value' => $lamPrices['per_pack']];
+          @endphp
+          <div class="pd-price-alt">{{ $lamAlt['label'] }}: <b>{{ number_format((float) $lamAlt['value'], 2) }} ₼</b></div>
+        @endif
 
         <div class="pd-line"></div>
 
@@ -264,7 +275,13 @@
            specifications gets no specs tab at all: the tab bar collapses to the
            single description tab (initTabs handles one button fine) and the specs
            pane is not rendered. --}}
-      @php $hasSpecsTab = $attributeSpecs->isNotEmpty() || $specs->isNotEmpty(); @endphp
+      @php
+          // Laminate renders its typed card instead of the generic classifier rows
+          // and the legacy flat specifications.
+          $hasSpecsTab = $laminateCard
+              ? ($laminateCard['rows'] !== [] || $laminateCard['documents'] !== [])
+              : ($attributeSpecs->isNotEmpty() || $specs->isNotEmpty());
+      @endphp
       <div class="pd-tabs" id="pdTabs">
         <button data-on="true" data-pane="desc">{{ t('product.about.tab_desc') }}</button>
         @if ($hasSpecsTab)
@@ -284,6 +301,43 @@
 
       @if ($hasSpecsTab)
       <div class="pd-pane" data-on="false" data-pane="specs">
+        @if ($laminateCard)
+          @if ($laminateCard['rows'] !== [])
+            <p class="pd-specs-title">{{ t('laminate.card.title') }}</p>
+            <div class="pd-specs pd-specs-lam">
+              @foreach ($laminateCard['rows'] as $row)
+                <div class="row" data-key="{{ $row['key'] }}">
+                  <div class="k">{{ $row['label'] }}</div>
+                  <div class="v">
+                    {{ $row['value'] }}
+                    @if ($row['note'])<span class="pd-spec-note">{{ $row['note'] }}</span>@endif
+                    {{-- TZ §9: floor heating links the installation guide when there is one. --}}
+                    @if ($row['key'] === 'floor_heating' && $laminateCard['installation_url'])
+                      <a class="pd-spec-link" href="{{ $laminateCard['installation_url'] }}" target="_blank" rel="noopener noreferrer">{{ t('laminate.card.installation_guide') }} ↗</a>
+                    @endif
+                  </div>
+                </div>
+              @endforeach
+            </div>
+          @endif
+
+          {{-- TZ §5: no documents → no documents block at all. --}}
+          @if ($laminateCard['documents'] !== [])
+            <div class="pd-docs">
+              <p class="pd-docs-title">{{ t('laminate.card.documents') }}</p>
+              <div class="pd-docs-list">
+                @foreach ($laminateCard['documents'] as $doc)
+                  <a class="pd-doc" href="{{ $doc['url'] }}" data-kind="{{ $doc['kind'] }}"
+                     @if ($doc['is_link']) target="_blank" rel="noopener noreferrer" @endif>
+                    <svg class="ic" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 2.75h6.5L15.25 6.5v10.75H5z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M11.25 2.75V6.75h4" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+                    <span>{{ $doc['label'] }}</span>
+                    @if ($doc['is_link'])<span class="ext" aria-hidden="true">↗</span>@endif
+                  </a>
+                @endforeach
+              </div>
+            </div>
+          @endif
+        @else
         <div class="pd-specs">
           {{-- Structured classifier attributes first (translated option values,
                units from the class pivot, tooltip on professional attributes)… --}}
@@ -303,6 +357,7 @@
             <div class="row"><div class="k">{{ $specLabel((string) $key) }}</div><div class="v">{{ is_array($val) ? implode(', ', $val) : $val }}</div></div>
           @endforeach
         </div>
+        @endif
       </div>
       @endif
     </div>

@@ -11,6 +11,8 @@ use App\Models\Product;
 use App\Models\Review;
 use App\Models\SpecialistProfile;
 use App\Models\SubCategory;
+use App\Services\Laminate\LaminateCatalog;
+use App\Services\Laminate\LaminateFilters;
 use App\Services\SearchService;
 use App\Support\CatalogNavigation;
 use App\Support\VersionedCache;
@@ -102,6 +104,17 @@ class CatalogController extends Controller
             }
 
             $this->applyAttributeFilters($query, $request, $classAttributes, $activeAttrOptions, $activeAttrRanges);
+        }
+
+        // Laminate has a typed card (TZ «Ламинат»), so its filters read that card
+        // instead of the generic attribute values.
+        $laminateFacets = null;
+        $laminateActive = [];
+
+        if ($selectedClass && LaminateCatalog::isLaminateClass($selectedClass->id)) {
+            $laminateFilters = new LaminateFilters;
+            $laminateActive = $laminateFilters->apply($query, $request);
+            $laminateFacets = $laminateFilters->facets($selectedClass->id);
         }
 
         if ($request->filled('q')) {
@@ -266,6 +279,8 @@ class CatalogController extends Controller
             'featuredSpecialists',
             'latestReviews',
             'filterBrands',
+            'laminateFacets',
+            'laminateActive',
         ));
     }
 
@@ -280,6 +295,7 @@ class CatalogController extends Controller
             'q', 'sort', 'page', 'category', 'section', 'group', 'class',
             'brand', 'size', 'surface', 'min_price', 'max_price',
             'in_stock', 'free_delivery', 'on_sale', 'sale', 'featured',
+            ...LaminateFilters::PARAMS,
         ];
 
         // InputBag::get() itself throws on a non-scalar value, so the raw

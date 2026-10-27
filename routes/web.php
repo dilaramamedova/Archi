@@ -7,7 +7,11 @@ use App\Http\Controllers\Auth\NewPasswordController;
 use App\Http\Controllers\Auth\PasswordResetLinkController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\BlogController;
+use App\Http\Controllers\Cabinet\BusinessOrderController;
+use App\Http\Controllers\Cabinet\BusinessProductController;
+use App\Http\Controllers\Cabinet\BusinessProfileController;
 use App\Http\Controllers\Cabinet\SecurityController;
+use App\Http\Controllers\Cabinet\ShowroomController;
 use App\Http\Controllers\Cabinet\SpecialistCabinetController;
 use App\Http\Controllers\Cabinet\SpecialistProfileController;
 use App\Http\Controllers\CalculatorController;
@@ -16,6 +20,7 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\ConsultationRequestController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\LaminateDocumentController;
 use App\Http\Controllers\LegalPageController;
 use App\Http\Controllers\NewsletterController;
 use App\Http\Controllers\OrderController;
@@ -43,6 +48,10 @@ Route::post('/consultation-requests', [ConsultationRequestController::class, 'st
     ->name('consultation-requests.store');
 Route::get('/catalog', [CatalogController::class, 'index'])->name('catalog');
 Route::get('/product/{slug}', [ProductController::class, 'show'])->name('product.show');
+// Laminate passports / guides / conditions. Public for an approved card, owner and
+// admin otherwise — the controller decides; uploads never sit on the public disk.
+Route::get('/laminate-documents/{document}', LaminateDocumentController::class)
+    ->name('laminate.documents.show');
 // Public store page of a seller (the "Mağazaya keç" target on product pages).
 // StoreController 404s any user that is not an active seller.
 Route::get('/store/{seller}', [StoreController::class, 'show'])->name('store.show');
@@ -196,17 +205,19 @@ Route::get('/business/onboarding/step-4', fn () => archiView('pages.business-onb
 
 Route::middleware(['auth', 'role:seller,admin'])->group(function () {
     // Cabinet pages
-    Route::get('/business/profile', [\App\Http\Controllers\Cabinet\BusinessProfileController::class, 'storefront'])->name('business.profile');
+    Route::get('/business/profile', [BusinessProfileController::class, 'storefront'])->name('business.profile');
 
     Route::get('/business/profile/company', function () {
         app()->setLocale(session('locale', config('app.locale')));
         $profile = auth()->user()->sellerProfile;
+
         return view('pages.business-profile-company', compact('profile'));
     })->name('business.profile.company');
 
     Route::get('/business/profile/contact', function () {
         app()->setLocale(session('locale', config('app.locale')));
         $profile = auth()->user()->sellerProfile;
+
         return view('pages.business-profile-contact', compact('profile'));
     })->name('business.profile.contact');
 
@@ -214,47 +225,53 @@ Route::middleware(['auth', 'role:seller,admin'])->group(function () {
         app()->setLocale(session('locale', config('app.locale')));
         $profile = auth()->user()->sellerProfile;
         $showrooms = $profile ? $profile->showrooms : collect();
+
         return view('pages.business-profile-showrooms', compact('profile', 'showrooms'));
     })->name('business.profile.showrooms');
 
     Route::get('/business/profile/notifications', function () {
         app()->setLocale(session('locale', config('app.locale')));
         $profile = auth()->user()->sellerProfile;
+
         return view('pages.business-profile-notifications', compact('profile'));
     })->name('business.profile.notifications');
 
     Route::get('/business/profile/security', fn () => archiView('pages.business-profile-security'))->name('business.profile.security');
 
     // Products & inventory
-    Route::get('/business/profile/products', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'index'])->name('business.profile.products');
-    Route::get('/business/products/create', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'create'])->name('business.products.create');
-    Route::get('/business/products/{product}/edit', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'edit'])->name('business.products.edit');
-    Route::get('/business/inventory', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'inventory'])->name('business.inventory');
-    Route::get('/business/api/sub-categories/{subCategory}/form', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'subCategoryForm'])->name('business.api.subcategory.form');
-    Route::post('/business/products', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'store'])->name('business.products.store');
-    Route::put('/business/products/{product}', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'update'])->name('business.products.update');
-    Route::post('/business/products/{product}/toggle', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'toggleVisibility'])->name('business.products.toggle');
-    Route::post('/business/products/{product}/stock', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'updateStock'])->name('business.products.stock');
-    Route::delete('/business/products/{product}', [\App\Http\Controllers\Cabinet\BusinessProductController::class, 'destroy'])->name('business.products.destroy');
+    Route::get('/business/profile/products', [BusinessProductController::class, 'index'])->name('business.profile.products');
+    Route::get('/business/products/create', [BusinessProductController::class, 'create'])->name('business.products.create');
+    Route::get('/business/products/{product}/edit', [BusinessProductController::class, 'edit'])->name('business.products.edit');
+    Route::get('/business/inventory', [BusinessProductController::class, 'inventory'])->name('business.inventory');
+    Route::get('/business/api/sub-categories/{subCategory}/form', [BusinessProductController::class, 'subCategoryForm'])->name('business.api.subcategory.form');
+    // Laminate card: find an approved card by brand + manufacturer article to copy from.
+    Route::get('/business/api/laminate/lookup', [BusinessProductController::class, 'laminateLookup'])
+        ->middleware('throttle:30,1')
+        ->name('business.api.laminate.lookup');
+    Route::post('/business/products', [BusinessProductController::class, 'store'])->name('business.products.store');
+    Route::put('/business/products/{product}', [BusinessProductController::class, 'update'])->name('business.products.update');
+    Route::post('/business/products/{product}/toggle', [BusinessProductController::class, 'toggleVisibility'])->name('business.products.toggle');
+    Route::post('/business/products/{product}/stock', [BusinessProductController::class, 'updateStock'])->name('business.products.stock');
+    Route::delete('/business/products/{product}', [BusinessProductController::class, 'destroy'])->name('business.products.destroy');
 
     // Orders
-    Route::get('/business/orders', [\App\Http\Controllers\Cabinet\BusinessOrderController::class, 'index'])->name('business.orders');
-    Route::get('/business/orders/{order}', [\App\Http\Controllers\Cabinet\BusinessOrderController::class, 'show'])->name('business.orders.show');
-    Route::post('/business/orders/{order}/status', [\App\Http\Controllers\Cabinet\BusinessOrderController::class, 'updateStatus'])->name('business.orders.status');
+    Route::get('/business/orders', [BusinessOrderController::class, 'index'])->name('business.orders');
+    Route::get('/business/orders/{order}', [BusinessOrderController::class, 'show'])->name('business.orders.show');
+    Route::post('/business/orders/{order}/status', [BusinessOrderController::class, 'updateStatus'])->name('business.orders.status');
 
     // Profile API
-    Route::put('/business/profile/company', [\App\Http\Controllers\Cabinet\BusinessProfileController::class, 'updateCompany'])->name('business.profile.company.update');
-    Route::put('/business/profile/contact', [\App\Http\Controllers\Cabinet\BusinessProfileController::class, 'updateContact'])->name('business.profile.contact.update');
-    Route::put('/business/profile/notifications', [\App\Http\Controllers\Cabinet\BusinessProfileController::class, 'updateNotifications'])->name('business.profile.notifications.update');
-    Route::post('/business/profile/logo', [\App\Http\Controllers\Cabinet\BusinessProfileController::class, 'updateLogo'])->name('business.profile.logo');
-    Route::delete('/business/profile/logo', [\App\Http\Controllers\Cabinet\BusinessProfileController::class, 'deleteLogo'])->name('business.profile.logo.delete');
-    Route::post('/business/profile/cover', [\App\Http\Controllers\Cabinet\BusinessProfileController::class, 'updateCover'])->name('business.profile.cover');
-    Route::delete('/business/profile/cover', [\App\Http\Controllers\Cabinet\BusinessProfileController::class, 'deleteCover'])->name('business.profile.cover.delete');
+    Route::put('/business/profile/company', [BusinessProfileController::class, 'updateCompany'])->name('business.profile.company.update');
+    Route::put('/business/profile/contact', [BusinessProfileController::class, 'updateContact'])->name('business.profile.contact.update');
+    Route::put('/business/profile/notifications', [BusinessProfileController::class, 'updateNotifications'])->name('business.profile.notifications.update');
+    Route::post('/business/profile/logo', [BusinessProfileController::class, 'updateLogo'])->name('business.profile.logo');
+    Route::delete('/business/profile/logo', [BusinessProfileController::class, 'deleteLogo'])->name('business.profile.logo.delete');
+    Route::post('/business/profile/cover', [BusinessProfileController::class, 'updateCover'])->name('business.profile.cover');
+    Route::delete('/business/profile/cover', [BusinessProfileController::class, 'deleteCover'])->name('business.profile.cover.delete');
 
     // Showrooms API
-    Route::post('/business/showrooms', [\App\Http\Controllers\Cabinet\ShowroomController::class, 'store'])->name('business.showrooms.store');
-    Route::put('/business/showrooms/{showroom}', [\App\Http\Controllers\Cabinet\ShowroomController::class, 'update'])->name('business.showrooms.update');
-    Route::delete('/business/showrooms/{showroom}', [\App\Http\Controllers\Cabinet\ShowroomController::class, 'destroy'])->name('business.showrooms.destroy');
+    Route::post('/business/showrooms', [ShowroomController::class, 'store'])->name('business.showrooms.store');
+    Route::put('/business/showrooms/{showroom}', [ShowroomController::class, 'update'])->name('business.showrooms.update');
+    Route::delete('/business/showrooms/{showroom}', [ShowroomController::class, 'destroy'])->name('business.showrooms.destroy');
 });
 
 // Auth routes

@@ -359,7 +359,8 @@ class AdminCatalogResourcesTest extends TestCase
             ->call('create')
             ->assertHasNoFormErrors();
 
-        $attribute = Attribute::where('field_type', AttributeFieldType::Dropdown->value)->firstOrFail();
+        // The newest one: migrations seed dropdown dictionaries of their own (laminate).
+        $attribute = Attribute::where('field_type', AttributeFieldType::Dropdown->value)->latest('id')->firstOrFail();
         $options = $attribute->options()->ordered()->get();
 
         $this->assertCount(2, $options);

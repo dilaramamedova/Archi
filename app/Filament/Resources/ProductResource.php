@@ -8,13 +8,18 @@ use App\Filament\Resources\ProductResource\Pages;
 use App\Models\Attribute;
 use App\Models\Product;
 use App\Models\SubCategory;
+use App\Services\Laminate\LaminateCatalog;
+use App\Services\Laminate\LaminateModeration;
 use App\Services\SearchService;
+use App\Support\ClassifierFields;
 use Closure;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\View;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -46,8 +51,9 @@ class ProductResource extends Resource
                 Tabs\Tab::make('Əsas')->schema([
                     Forms\Components\TextInput::make('name')
                         ->label('Ad')
-                        ->required()
-                        ->translatable()
+                        // Required in Azerbaijani only; ru/en are optional and the site
+                        // falls back to az — sellers enter a single name as well.
+                        ->translatable(modifyLocalizedFieldUsing: fn (Forms\Components\TextInput $field, string $locale) => $field->required($locale === 'az'))
                         ->live(onBlur: true)
                         ->afterStateUpdated(function ($state, callable $set, $record) {
                             if (! $record) {
@@ -264,18 +270,35 @@ class ProductResource extends Resource
                 ]),
 
                 Tabs\Tab::make('Xüsusiyyətlər')->schema([
+                    // Class-specific fields are switched off for now (config/catalog.php):
+                    // the tags, the classifier attributes and the laminate card go with them.
                     Forms\Components\Select::make('applications')
                         ->label('Tətbiq sahələri')
                         ->relationship('applications', 'name')
                         ->multiple()
                         ->searchable()
-                        ->preload(),
+                        ->preload()
+                        ->visible(fn (): bool => ClassifierFields::enabled()),
 
                     Section::make('Klassifikator xüsusiyyətləri')
                         ->description('Seçilmiş məhsul sinfinin (alt kateqoriyanın) atributları. Sinif seçmək üçün "Əsas" tabında alt kateqoriyanı təyin edin.')
                         ->schema(fn (callable $get): array => static::classifierAttributeFields($get('sub_category_id')))
                         ->columns(2)
-                        ->visible(fn (callable $get): bool => (bool) $get('sub_category_id')),
+                        ->visible(fn (callable $get): bool => ClassifierFields::enabled()
+                            && (bool) $get('sub_category_id')
+                            && ! LaminateCatalog::isLaminateClass((int) $get('sub_category_id'))),
+
+                    // Laminate has a typed card the seller fills in (TZ «Ламинат»); the
+                    // moderator sees it here and decides with Approve / Reject.
+                    Section::make('Laminat kartı')
+                        ->description('Satıcının doldurduğu laminat kartı — moderasiya üçün. Təsdiq və rədd siyahıdakı düymələrlədir.')
+                        ->schema([
+                            View::make('filament.laminate-summary')
+                                ->viewData(fn (?Product $record): array => [
+                                    'summary' => $record ? app(LaminateModeration::class)->summary($record) : null,
+                                ]),
+                        ])
+                        ->visible(fn (callable $get): bool => LaminateCatalog::isLaminateClass((int) $get('sub_category_id'))),
 
                     // Sits next to the classifier fields on purpose: this is where the
                     // seller's own "Xüsusiyyət əlavə et" rows land, and admins looked for
@@ -287,7 +310,10 @@ class ProductResource extends Resource
                                 ->label('Ad – dəyər sətirləri')
                                 ->keyLabel('Parametr')
                                 ->valueLabel('Dəyər'),
-                        ]),
+                        ])
+                        // A laminate card has no free rows (TZ §3) — the seller form
+                        // does not offer them, so neither does the admin.
+                        ->visible(fn (callable $get): bool => ! LaminateCatalog::isLaminateClass((int) $get('sub_category_id'))),
                 ]),
 
                 Tabs\Tab::make('Əlavə')->schema([
@@ -403,11 +429,25 @@ class ProductResource extends Resource
                     ->modalHeading('Məhsulu təsdiqlə')
                     ->modalDescription('Təsdiqdən sonra məhsul dərhal kataloqda və axtarışda görünəcək.')
                     ->visible(fn (Product $record) => ! $record->is_approved)
-                    ->action(fn (Product $record) => $record->update([
-                        'is_approved' => true,
-                        'rejected_at' => null,
-                        'rejection_reason' => null,
-                    ])),
+                    ->action(function (Product $record, Actions\Action $action): void {
+                        // A laminate card that misses what the TZ requires for
+                        // publication cannot be approved — the buyer would see a card
+                        // without thickness, size or pack area.
+                        if ($missing = static::laminateMissing($record)) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Laminat kartı tam deyil')
+                                ->body('Çatışmır: '.implode(', ', $missing).'. Satıcıdan doldurmasını istəyin və ya səbəb göstərərək rədd edin.')
+                                ->send();
+                            $action->halt();
+                        }
+
+                        $record->update([
+                            'is_approved' => true,
+                            'rejected_at' => null,
+                            'rejection_reason' => null,
+                        ]);
+                    }),
                 Actions\Action::make('reject')
                     ->label('Rədd et')
                     ->icon('heroicon-o-x-circle')
@@ -436,12 +476,49 @@ class ProductResource extends Resource
                     ->label('Seçilmişləri təsdiqlə')
                     ->icon('heroicon-o-check-circle')
                     ->requiresConfirmation()
-                    ->action(fn ($records) => $records->each->update([
-                        'is_approved' => true,
-                        'rejected_at' => null,
-                        'rejection_reason' => null,
-                    ])),
+                    ->action(function ($records): void {
+                        // Same rule as the single approve: incomplete laminate cards
+                        // are skipped and named, the rest are approved.
+                        $skipped = [];
+
+                        foreach ($records as $record) {
+                            if (static::laminateMissing($record)) {
+                                $skipped[] = '#'.$record->id;
+
+                                continue;
+                            }
+
+                            $record->update([
+                                'is_approved' => true,
+                                'rejected_at' => null,
+                                'rejection_reason' => null,
+                            ]);
+                        }
+
+                        if ($skipped) {
+                            Notification::make()
+                                ->warning()
+                                ->title('Bəzi laminat kartları tam deyil')
+                                ->body('Təsdiqlənmədi: '.implode(', ', $skipped))
+                                ->send();
+                        }
+                    }),
             ]);
+    }
+
+    /**
+     * What a laminate product still misses for publication (TZ «Ламинат» §3); empty
+     * for complete cards and for every other class.
+     *
+     * @return list<string>
+     */
+    public static function laminateMissing(Product $record): array
+    {
+        if (! LaminateCatalog::isLaminateClass($record->sub_category_id)) {
+            return [];
+        }
+
+        return app(LaminateModeration::class)->summary($record)['missing'] ?? ['laminat kartı'];
     }
 
     /**

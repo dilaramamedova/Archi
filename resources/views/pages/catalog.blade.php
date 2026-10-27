@@ -205,7 +205,139 @@
 
       <div class="fs-div"></div>
 
-      @if ($selectedClass && ($filterGroups['top']->isNotEmpty() || $filterGroups['secondary']->isNotEmpty() || $filterGroups['advanced']->isNotEmpty()))
+      @if ($laminateFacets)
+        @php
+            // Laminate card filters (TZ «Ламинат» §9). Each group is a list of
+            // [value, label, count]; a value shows when products carry it or when it
+            // is active (so it can still be unticked), a group shows when it has any.
+            // catalog.js turns the ticked rows into lam_* query parameters.
+            $lamMm = t('laminate.unit.mm');
+            $lamOn = fn (string $param, string $value) => in_array($value, array_map('strval', (array) ($laminateActive[$param] ?? [])), true);
+            $lamDec = fn ($v) => \App\Services\Laminate\LaminateDecimal::trim((string) $v);
+            $lamThicknessOn = array_map($lamDec, (array) ($laminateActive['lam_thickness'] ?? []));
+            $lamSizeOn = array_map(function ($s) use ($lamDec) {
+                [$l, $w] = array_pad(explode('x', (string) $s), 2, '');
+                return $lamDec($l).'x'.$lamDec($w);
+            }, (array) ($laminateActive['lam_size'] ?? []));
+
+            $lamOpt = fn (array $items, string $codeKey, string $labelKey) => array_map(
+                fn ($i) => ['value' => (string) $i[$codeKey], 'label' => (string) $i[$labelKey], 'count' => (int) $i['count']],
+                $items
+            );
+            $lamMap = fn (array $counts, array $labels) => array_map(
+                fn ($code) => ['value' => $code, 'label' => $labels[$code], 'count' => (int) ($counts[$code] ?? 0)],
+                array_keys($labels)
+            );
+
+            $lamGroups = [
+                ['param' => 'lam_country', 'title' => t('laminate.field.country_code'),
+                 'items' => $lamOpt($laminateFacets['countries'], 'code', 'name')],
+                ['param' => 'lam_usage', 'title' => t('laminate.field.usage_class_option_id'),
+                 'items' => $lamOpt($laminateFacets['usage'], 'code', 'label')],
+                ['param' => 'lam_ac', 'title' => t('laminate.field.abrasion_option_id'),
+                 'items' => $lamOpt($laminateFacets['ac'], 'code', 'label')],
+                ['param' => 'lam_thickness', 'title' => t('laminate.field.thickness_mm'), 'active' => $lamThicknessOn,
+                 'items' => array_map(fn ($i) => ['value' => (string) $i['value'], 'label' => $i['value'].' '.$lamMm, 'count' => (int) $i['count']], $laminateFacets['thickness'])],
+                ['param' => 'lam_size', 'title' => t('laminate.field.size'), 'active' => $lamSizeOn,
+                 'items' => array_map(fn ($i) => ['value' => (string) $i['value'], 'label' => $i['label'].' '.$lamMm, 'count' => (int) $i['count']], $laminateFacets['sizes'])],
+                ['param' => 'lam_water', 'title' => t('laminate.field.water_protection'),
+                 'items' => $lamMap($laminateFacets['water'], [
+                     'any' => t('laminate.filter.water_any'),
+                     'water_resistant' => t('laminate.water_claim.water_resistant'),
+                     'moisture_resistant' => t('laminate.water_claim.moisture_resistant'),
+                 ])],
+                ['param' => 'lam_heating', 'title' => t('laminate.field.floor_heating'),
+                 'items' => $lamMap($laminateFacets['heating'], [
+                     'any' => t('laminate.filter.heating_any'),
+                     'water' => t('laminate.heating_type.water'),
+                     'electric_cable' => t('laminate.heating_type.electric_cable'),
+                     'electric_film' => t('laminate.heating_type.electric_film'),
+                 ])],
+                ['param' => 'lam_underlay', 'title' => t('laminate.field.integrated_underlay'),
+                 'items' => $lamMap($laminateFacets['underlay'], [
+                     'yes' => t('laminate.filter.underlay_yes'),
+                     'no' => t('laminate.filter.underlay_no'),
+                 ])],
+                ['param' => 'lam_connection', 'title' => t('laminate.field.connection_option_id'),
+                 'items' => $lamOpt($laminateFacets['connection'], 'code', 'label')],
+            ];
+            $lamMoreGroups = [
+                ['param' => 'lam_warranty', 'title' => t('laminate.field.warranty_scope'),
+                 'items' => $lamMap($laminateFacets['warranty'], [
+                     'residential' => t('laminate.warranty_scope.residential'),
+                     'commercial' => t('laminate.warranty_scope.commercial'),
+                 ])],
+            ];
+
+            $lamVisible = function (array $group) use ($lamOn) {
+                $active = $group['active'] ?? null;
+                return array_values(array_filter(array_map(function ($i) use ($group, $lamOn, $active) {
+                    $i['on'] = $active !== null ? in_array($i['value'], $active, true) : $lamOn($group['param'], $i['value']);
+                    return $i;
+                }, $group['items']), fn ($i) => $i['count'] > 0 || $i['on']));
+            };
+            $lamGroups = array_values(array_filter(array_map(fn ($g) => $g + ['rows' => $lamVisible($g)], $lamGroups), fn ($g) => $g['rows'] !== []));
+            $lamMoreGroups = array_values(array_filter(array_map(fn ($g) => $g + ['rows' => $lamVisible($g)], $lamMoreGroups), fn ($g) => $g['rows'] !== []));
+
+            $lamPack = $laminateFacets['pack'] ?? ['min' => null, 'max' => null];
+            $lamPackMin = isset($laminateActive['lam_pack_min']) ? $lamDec($laminateActive['lam_pack_min']) : '';
+            $lamPackMax = isset($laminateActive['lam_pack_max']) ? $lamDec($laminateActive['lam_pack_max']) : '';
+            $lamHasPack = $lamPack['min'] !== null || $lamPackMin !== '' || $lamPackMax !== '';
+            $lamMoreOpen = collect($lamMoreGroups)->contains(fn ($g) => collect($g['rows'])->contains('on', true))
+                || $lamPackMin !== '' || $lamPackMax !== '';
+        @endphp
+        <div id="lamFilters">
+          @foreach ($lamGroups as $group)
+            <div class="fs-block fs-lam" data-lam-group="{{ $group['param'] }}">
+              <p class="fs-title">{{ $group['title'] }}</p>
+              @foreach ($group['rows'] as $row)
+                <div class="fs-check" role="checkbox" tabindex="0" aria-checked="{{ $row['on'] ? 'true' : 'false' }}"
+                     data-lam="{{ $group['param'] }}" data-val="{{ $row['value'] }}" data-chip="{{ $row['value'] === 'any' ? $row['label'] : $group['title'].': '.$row['label'] }}"
+                     data-on="{{ $row['on'] ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ $row['label'] }}</span><span class="n">{{ $row['count'] }}</span></div>
+              @endforeach
+            </div>
+            <div class="fs-div"></div>
+          @endforeach
+
+          @if ($lamMoreGroups !== [] || $lamHasPack)
+            <div class="fs-expander" data-open="{{ $lamMoreOpen ? 'true' : 'false' }}">
+              <button type="button" class="fs-exp-head">{{ t('laminate.filter.more') }} <span class="car">⌄</span></button>
+              <div class="fs-exp-body">
+                @foreach ($lamMoreGroups as $group)
+                  <div class="fs-block fs-lam" data-lam-group="{{ $group['param'] }}">
+                    <p class="fs-title">{{ $group['title'] }}</p>
+                    @foreach ($group['rows'] as $row)
+                      <div class="fs-check" role="checkbox" tabindex="0" aria-checked="{{ $row['on'] ? 'true' : 'false' }}"
+                           data-lam="{{ $group['param'] }}" data-val="{{ $row['value'] }}" data-chip="{{ $row['value'] === 'any' ? $row['label'] : $group['title'].': '.$row['label'] }}"
+                           data-on="{{ $row['on'] ? 'true' : 'false' }}"><span class="fside-box fs-box"></span><span class="lbl">{{ $row['label'] }}</span><span class="n">{{ $row['count'] }}</span></div>
+                    @endforeach
+                  </div>
+                  @if (! $loop->last || $lamHasPack)<div class="fs-div fs-lam-div"></div>@endif
+                @endforeach
+
+                @if ($lamHasPack)
+                  @php $lamPackTitle = t('laminate.field.pack_area_m2'); @endphp
+                  <div class="fs-block fs-lam" data-lam-group="lam_pack">
+                    <p class="fs-title">{{ $lamPackTitle }} <span class="fs-lam-unit">({{ t('laminate.unit.m2') }})</span></p>
+                    <div class="fs-price-inputs fs-lam-range" data-chip="{{ $lamPackTitle }}" data-unit="{{ t('laminate.unit.m2') }}">
+                      <input class="in" data-lam-min="lam_pack_min" type="text" inputmode="decimal"
+                             placeholder="{{ $lamPack['min'] ?? t('catalog-classifier.filters.min') }}" value="{{ $lamPackMin }}"
+                             aria-label="{{ $lamPackTitle }} — {{ t('catalog-classifier.filters.min') }}">
+                      <span class="dash">—</span>
+                      <input class="in" data-lam-max="lam_pack_max" type="text" inputmode="decimal"
+                             placeholder="{{ $lamPack['max'] ?? t('catalog-classifier.filters.max') }}" value="{{ $lamPackMax }}"
+                             aria-label="{{ $lamPackTitle }} — {{ t('catalog-classifier.filters.max') }}">
+                    </div>
+                  </div>
+                @endif
+              </div>
+            </div>
+            <div class="fs-div"></div>
+          @endif
+        </div>
+      @endif
+
+      @if ($selectedClass && ! $laminateFacets && ($filterGroups['top']->isNotEmpty() || $filterGroups['secondary']->isNotEmpty() || $filterGroups['advanced']->isNotEmpty()))
         {{-- Dynamic filters from the class's filterable attributes. Top priority
              renders immediately; "secondary" sits in a collapsed group; "advanced"
              hides behind the "Bütün filtrlər" expander. --}}
