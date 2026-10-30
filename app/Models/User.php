@@ -9,6 +9,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -71,6 +72,12 @@ class User extends Authenticatable implements FilamentUser
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    /** Tenders bookmarked with «Yadda saxla» (the «Yadda saxlanılanlar» tab). */
+    public function savedTenders(): BelongsToMany
+    {
+        return $this->belongsToMany(Tender::class, 'tender_saves')->withPivot('created_at');
     }
 
     public function wishlists(): HasMany

@@ -48,6 +48,7 @@
 @import "./pages/business-onboarding-step4.css";
 @import "./pages/help.css";
 @import "./pages/legal.css";
+@import "./pages/tenders.css";
 
 @source "../views";
 @source "../js";

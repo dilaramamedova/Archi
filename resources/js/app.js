@@ -58,6 +58,7 @@ import legal from './pages/legal.js';
 import help from './pages/help.js';
 import forgotPassword from './pages/forgot-password.js';
 import resetPassword from './pages/reset-password.js';
+import tenders from './pages/tenders.js';
 
 const pages = {
     'home': home,
@@ -108,6 +109,10 @@ const pages = {
     'help': help,
     'forgot-password': forgotPassword,
     'reset-password': resetPassword,
+    // one module for the board, the detail and the lock card (it guards per element)
+    'tenders': tenders,
+    'tender': tenders,
+    'tenders-locked': tenders,
 };
 
 pages[document.body.dataset.page]?.();

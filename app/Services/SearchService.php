@@ -442,6 +442,16 @@ class SearchService
         });
     }
 
+    /** Tender board search: translatable title/summary plus the organizer name. */
+    public static function buildTenderQuery(Builder $baseQuery, string $query): Builder
+    {
+        return self::applyMatcher($baseQuery, $query, function (Builder $q, string $term): void {
+            self::orLike($q, 'tenders.title', $term);
+            self::orLike($q, 'tenders.summary', $term);
+            self::orLike($q, 'tenders.organizer_name', $term);
+        });
+    }
+
     /**
      * Seller-cabinet product filter (name is a translatable json column, sku
      * is a plain varchar). Kept here so the cabinet gets the same

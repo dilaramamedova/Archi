@@ -117,6 +117,13 @@ return [
     |
     */
 
+    /*
+    | Admin inbox for site notifications (tender join requests). The admin can
+    | override it in the panel; see App\Support\TenderNotificationRecipients.
+    */
+
+    'admin_address' => env('MAIL_ADMIN_ADDRESS'),
+
     'from' => [
         'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
         'name' => env('MAIL_FROM_NAME', env('APP_NAME', 'Laravel')),

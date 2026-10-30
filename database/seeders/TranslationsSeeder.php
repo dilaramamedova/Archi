@@ -29,6 +29,12 @@ class TranslationsSeeder extends Seeder
             $groups[$group] = array_merge($groups[$group] ?? [], $items);
         }
 
+        // The tender section (Figma «11 · TENDERLƏR») keeps its copy beside its own
+        // migration too — the `tenders` group plus three `notifications` keys.
+        foreach (require database_path('seeders/data/tenders_translations.php') as $group => $items) {
+            $groups[$group] = array_merge($groups[$group] ?? [], $items);
+        }
+
         foreach ($groups as $group => $items) {
             foreach ($items as $key => $value) {
                 Translation::updateOrCreate(

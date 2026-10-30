@@ -15,8 +15,9 @@ class MenuItemSeeder extends Seeder
             ['label' => ['az' => 'Mütəxəssislər', 'ru' => 'Специалисты', 'en' => 'Specialists'], 'route_name' => 'specialists', 'has_dropdown' => true, 'sort_order' => 2],
             ['label' => ['az' => 'Bloq', 'ru' => 'Блог', 'en' => 'Blog'], 'route_name' => 'blog', 'has_dropdown' => true, 'sort_order' => 3],
             ['label' => ['az' => 'Haqqımızda', 'ru' => 'О нас', 'en' => 'About'], 'route_name' => 'about', 'sort_order' => 4],
-            ['label' => ['az' => 'B2B', 'ru' => 'B2B', 'en' => 'B2B'], 'route_name' => 'business.register', 'sort_order' => 5],
-            ['label' => ['az' => 'Təmir kalkulyatoru', 'ru' => 'Калькулятор ремонта', 'en' => 'Renovation calculator'], 'route_name' => 'calculator', 'icon' => 'icon-calculator.svg', 'css_class' => 'nav-calc', 'sort_order' => 6],
+            ['label' => ['az' => 'Tenderlər', 'ru' => 'Тендеры', 'en' => 'Tenders'], 'route_name' => 'tenders.index', 'sort_order' => 5],
+            ['label' => ['az' => 'B2B', 'ru' => 'B2B', 'en' => 'B2B'], 'route_name' => 'business.register', 'sort_order' => 6],
+            ['label' => ['az' => 'Təmir kalkulyatoru', 'ru' => 'Калькулятор ремонта', 'en' => 'Renovation calculator'], 'route_name' => 'calculator', 'icon' => 'icon-calculator.svg', 'css_class' => 'nav-calc', 'sort_order' => 7],
         ];
 
         foreach ($headerItems as $item) {

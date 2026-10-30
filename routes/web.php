@@ -30,6 +30,7 @@ use App\Http\Controllers\SearchController;
 use App\Http\Controllers\SellController;
 use App\Http\Controllers\SpecialistController;
 use App\Http\Controllers\StoreController;
+use App\Http\Controllers\TenderController;
 use App\Http\Controllers\WishlistController;
 use App\Models\BlogPost;
 use App\Models\Product;
@@ -66,6 +67,20 @@ Route::get('/blog/article', function () {
 })->name('blog.article');
 Route::get('/blog/{slug}', [BlogController::class, 'show'])->name('blog.show');
 Route::get('/about', [AboutController::class, 'index'])->name('about');
+// Tender board — behind a paid package (App\Support\TenderAccess). "Ödənişli
+// paketləri seç" mails a join request to the admin inbox; the admin activates
+// access in the panel. Replies to a tender go straight to the organizer.
+Route::get('/tenders', [TenderController::class, 'index'])->name('tenders.index');
+Route::post('/tenders/access-request', [TenderController::class, 'requestAccess'])
+    ->middleware(['auth', 'throttle:5,1'])
+    ->name('tenders.access-request');
+Route::get('/tenders/{slug}', [TenderController::class, 'show'])->name('tenders.show');
+Route::get('/tenders/{slug}/files/{index}', [TenderController::class, 'file'])
+    ->whereNumber('index')
+    ->name('tenders.files.show');
+Route::post('/tenders/{slug}/save', [TenderController::class, 'toggleSave'])
+    ->middleware(['auth', 'throttle:60,1'])
+    ->name('tenders.save');
 
 // Legacy routes — keep named routes that frontend references
 Route::get('/product', function () {
