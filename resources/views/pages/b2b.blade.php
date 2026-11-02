@@ -175,11 +175,16 @@
   ];
   $hasCriteria = $filters['q'] !== '' || $activeFilterCount > 0;
   $resetUrl = route('b2b.index', ['market' => $market]);
+
+  // Pricing (hero, plan cards, plan lead modal) is switched off for now — the
+  // markup stays below; set this to true to bring it back.
+  $showPricing = false;
 @endphp
 <x-layout page="b2b" :title="$tOr('b2b.meta.title', 'B2B — ARCHİ')">
 
 <main class="b2-page">
 
+  @if ($showPricing)
   {{-- ============================ PRICING HERO ============================ --}}
   <section class="b2-hero" data-market="{{ $market }}">
     <div class="wrap"><div class="inner b2-hero-inner">
@@ -224,12 +229,21 @@
       @endforeach
     </div>
   </div></div>
+  @endif
 
   {{-- ============================ DIRECTORY ============================ --}}
-  <div class="wrap"><div class="inner b2-dir">
+  <div class="wrap"><div class="inner b2-dir" @unless ($showPricing) data-solo @endunless>
+
+    @unless ($showPricing)
+      <x-ui.breadcrumbs class="b2-crumbs" :items="[
+          ['label' => t('common.home'), 'href' => route('home')],
+          ['label' => $tOr('b2b.crumb', 'B2B')],
+      ]" />
+    @endunless
 
     <div class="b2-dir-head">
-      <h2>{{ $tOr('b2b.dir.heading', 'Şirkət kataloqu') }}</h2>
+      {{-- Without the pricing hero, the directory heading is the page's h1. --}}
+      <h{{ $showPricing ? 2 : 1 }} class="b2-dir-title">{{ $tOr('b2b.dir.heading', 'Şirkət kataloqu') }}</h{{ $showPricing ? 2 : 1 }}>
       <p>{{ $tOr('b2b.dir.subtitle', 'Azərbaycan bazarında fəaliyyət göstərən istehsalçı, distribütor və tədarükçüləri tapın.') }}</p>
     </div>
 
@@ -368,6 +382,7 @@
   <p class="sr-only" id="b2Live" aria-live="polite"></p>
 </main>
 
+@if ($showPricing)
 {{-- ============================ CONSULTATION / LEAD MODAL ============================ --}}
 <x-ui.modal id="b2LeadModal" class="b2-modal" :close-label="t('common.close')" aria-labelledby="b2LeadTitle"
             dialog="b2-modal-dialog">
@@ -414,5 +429,6 @@
     <button type="button" class="b2-btn b2-btn-outline" data-modal-close>{{ $tOr('b2b.done.close', 'Bağla') }}</button>
   </div>
 </x-ui.modal>
+@endif
 
 </x-layout>

@@ -66,12 +66,6 @@ final class ConsultationRequestTest extends TestCase
 
     public function test_b2b_plan_lead_is_stored_separately(): void
     {
-        $this->get(route('b2b.index'))
-            ->assertOk()
-            ->assertSee('name="source" value="b2b"', false)
-            ->assertSee('data-plan-key="local.pro"', false)
-            ->assertSee('data-plan-key="international.premium"', false);
-
         $this->postJson(route('consultation-requests.store'), [
             'full_name' => 'Anar Məmmədov',
             'phone' => '+994 50 123 45 67',

@@ -30,6 +30,7 @@
       </div>
     </div>
 
+    @if ($company->is_verified || $company->is_featured || $plan?->badge())
     <div class="b2-card-badges">
       @if ($company->is_verified)
         <span class="b2-badge b2-badge-ok" title="{{ $tOr('b2b.badge.verified', 'Təsdiqlənib') }}">
@@ -47,6 +48,7 @@
         <span class="b2-badge b2-badge-plan">{{ $tOr('b2b.plan_tag.'.$plan->value, $plan->label()) }}</span>
       @endif
     </div>
+    @endif
   </div>
 
   @if ($desc !== '')

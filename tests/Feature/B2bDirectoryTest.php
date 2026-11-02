@@ -35,6 +35,15 @@ final class B2bDirectoryTest extends TestCase
             ->assertSee($company->country);
     }
 
+    public function test_pricing_is_switched_off_for_now(): void
+    {
+        $this->get(route('b2b.index'))
+            ->assertOk()
+            ->assertDontSee('data-plan-cta', false)
+            ->assertDontSee('b2LeadModal', false)
+            ->assertSee('<h1 class="b2-dir-title">', false);
+    }
+
     public function test_unpublished_and_future_companies_are_hidden(): void
     {
         $draft = $this->makeCompany(['brand_name' => 'Gizli MMC', 'is_published' => false]);

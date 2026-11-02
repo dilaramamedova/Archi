@@ -136,7 +136,8 @@
      ========================================================================== */
   .b2-dir { display: flex; flex-direction: column; gap: 20px; padding-top: 56px; }
   .b2-dir-head { display: flex; flex-direction: column; gap: 8px; }
-  .b2-dir-head h2 { margin: 0; font-size: 34px; font-weight: 700; line-height: 1.15; letter-spacing: -.5px; color: #000; }
+  .b2-dir[data-solo] { padding-top: 24px; }
+  .b2-dir-head .b2-dir-title { margin: 0; font-size: 34px; font-weight: 700; line-height: 1.15; letter-spacing: -.5px; color: #000; }
   .b2-dir-head p  { font-size: 16px; line-height: 22px; color: var(--b2-t2); }
 
   .b2-form { display: flex; flex-direction: column; gap: 20px; }
@@ -227,13 +228,14 @@
     transition: border-color .15s, box-shadow .15s;
   }
   .b2-card:hover { border-color: #cfcfcf; box-shadow: 0 8px 24px rgba(0, 0, 0, .08); }
-  .b2-card-top { display: grid; grid-template-columns: 64px minmax(0, 1fr); grid-template-areas: "logo head" "logo head"; column-gap: 16px; }
+  .b2-card-top { display: grid; grid-template-columns: 64px minmax(0, 1fr); grid-template-areas: "logo head" "badges badges"; column-gap: 16px; }
   .b2-card .b2-logo { grid-area: logo; }
   .b2-card-head { grid-area: head; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
   .b2-card-name { margin: 0; font-size: 19px; font-weight: 600; line-height: 24px; color: #000; overflow-wrap: anywhere; }
   .b2-card-name a:hover { text-decoration: underline; text-underline-offset: 3px; }
   .b2-card-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .b2-card-badges { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+  /* own row under logo + name, so the pills never squeeze into the logo column */
+  .b2-card-badges { grid-area: badges; display: flex; flex-wrap: wrap; gap: 8px 10px; margin-top: 14px; }
 
   .b2-card-desc { font-size: 14px; line-height: 20px; color: var(--b2-t2); }
   .b2-card-foot {
@@ -284,7 +286,7 @@
   .b2c-head { display: grid; grid-template-columns: 96px minmax(0, 1fr); column-gap: 24px; align-items: start; }
   .b2c-logo { grid-column: 1; width: 96px; height: 96px; border-radius: 16px; font-size: 36px; }
   .b2c-head-main { grid-column: 2; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-  .b2c-badges { display: flex; flex-wrap: wrap; gap: 8px; }
+  .b2c-badges { display: flex; flex-wrap: wrap; gap: 8px 10px; }
   .b2c-head-main h1 { margin: 0; font-size: 38px; font-weight: 700; line-height: 1.12; letter-spacing: -.5px; color: #000; overflow-wrap: anywhere; }
   .b2c-head-chips { display: flex; flex-wrap: wrap; gap: 10px; }
   .b2c-legal { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; line-height: 18px; color: var(--b2-t3); }
@@ -415,7 +417,9 @@
     .b2-filters-foot { gap: 12px; }
     .b2-check { min-height: 32px; }
 
-    .b2-toolbar { grid-template-columns: auto minmax(0, 1fr) auto; grid-template-areas: "fbtn count sort"; gap: 10px; }
+    /* the count gets its own line — squeezed between the two buttons it wrapped mid-word */
+    .b2-toolbar { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: "fbtn sort" "count count"; gap: 10px; }
+    .b2-toolbar .b2-sort { justify-self: end; }
     .b2-fbtn {
       grid-area: fbtn; display: flex; align-items: center; justify-content: center; gap: 8px;
       height: 44px; padding: 0 14px; border: 1px solid var(--b2-line); border-radius: 8px; background: #fff;
@@ -426,7 +430,7 @@
       display: flex; align-items: center; justify-content: center; min-width: 18px; height: 18px; padding: 0 4px;
       border-radius: 9px; background: var(--color-yellow); font-size: 11px; line-height: 1;
     }
-    .b2-count { text-align: center; }
+    .b2-count { font-size: 14px; }
 
     .b2c-cols { flex-direction: column; align-items: stretch; }
     .b2c-side { width: auto; }
@@ -461,7 +465,8 @@
     .b2-plan-price .num { font-size: 34px; }
 
     .b2-dir { padding-top: 40px; gap: 16px; }
-    .b2-dir-head h2 { font-size: 26px; }
+    .b2-dir[data-solo] { padding-top: 16px; }
+    .b2-dir-head .b2-dir-title { font-size: 26px; }
     .b2-dir-head p  { font-size: 14px; line-height: 20px; }
     .b2-form { gap: 16px; }
 
