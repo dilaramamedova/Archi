@@ -214,13 +214,13 @@
     {{-- international: 2 cards --}}
     <div class="b2-plans b2-plans-2" data-market-plans="international" @if ($market !== 'international') hidden @endif>
       @foreach ($intlPlans as $plan)
-        @include('pages.partials.b2b-plan', ['plan' => $plan, 'tOr' => $tOr])
+        @include('pages.partials.b2b-plan', ['plan' => $plan, 'tOr' => $tOr, 'planKey' => 'international.'.$plan['id']])
       @endforeach
     </div>
     {{-- local: 4 cards --}}
     <div class="b2-plans b2-plans-4" data-market-plans="local" @if ($market !== 'local') hidden @endif>
       @foreach ($localPlans as $plan)
-        @include('pages.partials.b2b-plan', ['plan' => $plan, 'tOr' => $tOr])
+        @include('pages.partials.b2b-plan', ['plan' => $plan, 'tOr' => $tOr, 'planKey' => 'local.'.$plan['id']])
       @endforeach
     </div>
   </div></div>
@@ -379,6 +379,8 @@
           data-prefill="{{ $tOr('b2b.lead.prefill', 'B2B — :plan planı ilə maraqlanıram.', ['plan' => '__PLAN__']) }}"
           data-error="{{ t('common.error_generic') }}">
       @csrf
+      <input type="hidden" name="source" value="b2b">
+      <input type="hidden" name="b2b_plan" value="" data-lead-plankey>
       <div class="b2-lead-plan" data-lead-planbox hidden>
         <span class="k">{{ $tOr('b2b.modal.plan_label', 'Seçilmiş plan') }}</span>
         <span class="v" data-lead-planname></span>

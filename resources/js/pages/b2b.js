@@ -97,13 +97,15 @@ function initLeadModal() {
   const submit = $('.b2-lead-submit', form);
   const planBox = $('[data-lead-planbox]', form);
   const planName = $('[data-lead-planname]', form);
+  const planKey = $('[data-lead-plankey]', form);
   const message = $('#b2LeadMessage', form);
   const prefillTpl = form.dataset.prefill || '';
   let opener = null;
   let locked = false;
 
-  const open = (trigger, plan) => {
+  const open = (trigger, plan, key = '') => {
     opener = trigger ?? null;
+    if (planKey) planKey.value = key;
     // reset to the form step each time it opens
     if (formStep) formStep.hidden = false;
     if (doneStep) doneStep.hidden = true;
@@ -129,7 +131,7 @@ function initLeadModal() {
   };
 
   $$('[data-plan-cta]').forEach((btn) => {
-    btn.addEventListener('click', () => open(btn, btn.dataset.planName || ''));
+    btn.addEventListener('click', () => open(btn, btn.dataset.planName || '', btn.dataset.planKey || ''));
   });
   $$('[data-modal-close]', modal).forEach((btn) => btn.addEventListener('click', close));
   modal.addEventListener('click', (e) => { if (e.target === modal) close(); });

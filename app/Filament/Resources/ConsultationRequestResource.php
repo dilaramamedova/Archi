@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Filament\Resources;
 
+use App\Enums\ConsultationRequestSource;
 use App\Enums\ConsultationRequestStatus;
 use App\Filament\Concerns\CachesNavigationBadge;
 use App\Filament\Resources\ConsultationRequestResource\Pages;
@@ -12,6 +13,7 @@ use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -41,6 +43,17 @@ final class ConsultationRequestResource extends Resource
                 Forms\Components\TextInput::make('full_name')->label('Ad və soyad')->required()->maxLength(120),
                 Forms\Components\TextInput::make('phone')->label('Telefon')->tel()->required()->maxLength(25),
                 Forms\Components\Textarea::make('message')->label('Mesaj')->rows(5)->maxLength(2000)->columnSpanFull(),
+                Forms\Components\Select::make('source')
+                    ->label('Mənbə')
+                    ->options(ConsultationRequestSource::options())
+                    ->default(ConsultationRequestSource::Home->value)
+                    ->required()
+                    ->live(),
+                Forms\Components\Select::make('b2b_plan')
+                    ->label('B2B plan')
+                    ->options(ConsultationRequest::B2B_PLANS)
+                    ->visible(fn (Get $get): bool => self::sourceValue($get('source')) === ConsultationRequestSource::B2b->value)
+                    ->dehydrateStateUsing(fn (?string $state, Get $get): ?string => self::sourceValue($get('source')) === ConsultationRequestSource::B2b->value ? $state : null),
             ])->columns(2),
             Section::make('İdarəetmə')->schema([
                 Forms\Components\Select::make('status')
@@ -61,6 +74,15 @@ final class ConsultationRequestResource extends Resource
                 Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
                 Tables\Columns\TextColumn::make('full_name')->label('Ad və soyad')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('phone')->label('Telefon')->searchable()->copyable(),
+                Tables\Columns\TextColumn::make('source')
+                    ->label('Mənbə')->badge()
+                    ->formatStateUsing(fn (ConsultationRequestSource $state): string => $state->label())
+                    ->color(fn (ConsultationRequestSource $state): string => $state === ConsultationRequestSource::B2b ? 'primary' : 'gray'),
+                Tables\Columns\TextColumn::make('b2b_plan')
+                    ->label('B2B plan')
+                    ->formatStateUsing(fn (ConsultationRequest $record): ?string => $record->b2bPlanLabel())
+                    ->placeholder('—')
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('message')->label('Mesaj')->limit(60)->wrap()->toggleable(),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Status')->badge()
@@ -76,6 +98,7 @@ final class ConsultationRequestResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\SelectFilter::make('status')->label('Status')->options(self::statusOptions()),
+                Tables\Filters\SelectFilter::make('b2b_plan')->label('B2B plan')->options(ConsultationRequest::B2B_PLANS),
             ])
             ->actions([
                 Actions\EditAction::make(),
@@ -99,6 +122,12 @@ final class ConsultationRequestResource extends Resource
             'consultation-requests:pending',
             fn () => ConsultationRequest::query()->where('status', ConsultationRequestStatus::Pending)->count(),
         );
+    }
+
+    /** The Select holds a string, but a loaded record hands over the enum. */
+    private static function sourceValue(mixed $source): ?string
+    {
+        return $source instanceof ConsultationRequestSource ? $source->value : $source;
     }
 
     public static function statusOptions(): array

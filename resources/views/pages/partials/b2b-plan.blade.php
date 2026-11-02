@@ -30,5 +30,5 @@
   </ul>
 
   <button type="button" class="b2-btn {{ $primaryCta ? 'b2-btn-primary' : 'b2-btn-outline' }} b2-plan-cta"
-          data-plan-cta data-plan-name="{{ $plan['cta_plan'] }}">{{ $plan['cta'] }}</button>
+          data-plan-cta data-plan-key="{{ $planKey }}" data-plan-name="{{ $plan['cta_plan'] }}">{{ $plan['cta'] }}</button>
 </article>
