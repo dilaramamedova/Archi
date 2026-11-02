@@ -41,7 +41,14 @@
   $documents = $tender->lines('submission_documents');
   $files = $tender->fileList();
 
+  // The admin form only requires the card summary; a tender saved without the
+  // long description still gets its "Tender haqqında" text on the detail.
+  $about = filled($tender->description) ? $tender->description : $tender->summary;
+
   $facts = array_filter([
+      // No deadline: the card says "Son tarix: Müddətsiz", so the detail says it too
+      // (a set deadline gets the big yellow block above the rows instead).
+      ['icon' => 'calendar', 'label' => $tOr('tenders.detail.deadline', 'Son müraciət tarixi'), 'value' => $deadline ? null : $tOr('tenders.deadline.none', 'Müddətsiz')],
       ['icon' => 'pin', 'label' => $tOr('tenders.detail.city', 'Şəhər'), 'value' => $tender->city],
       ['icon' => 'area', 'label' => $tOr('tenders.detail.area', 'Sahə'), 'value' => $tender->areaLabel()],
       ['icon' => 'wallet', 'label' => $tOr('tenders.detail.budget', 'Büdcə'), 'value' => $tender->budgetLabel() ?? $tOr('tenders.budget.on_request', 'Sorğu əsasında')],
@@ -112,10 +119,10 @@
 
     <div class="tdd-cols">
       <div class="tdd-main">
-        @if (filled($tender->description))
+        @if (filled($about))
           <section class="tdd-card">
             <h2>{{ $tOr('tenders.detail.about', 'Tender haqqında') }}</h2>
-            <p class="tdd-text">{!! nl2br(e($tender->description)) !!}</p>
+            <p class="tdd-text">{!! nl2br(e($about)) !!}</p>
           </section>
         @endif
 

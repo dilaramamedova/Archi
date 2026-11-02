@@ -56,12 +56,15 @@ final class B2bController extends Controller
 
         match ($filters['sort']) {
             'newest' => $query->latest('published_at')->latest('id'),
-            'name' => $query->orderByRaw('COALESCE(NULLIF(brand_name, ""), legal_name)'),
-            // featured: paid tiers and the featured flag first, then newest.
+            'name' => $query->orderByRaw('COALESCE(NULLIF(brand_name, ""), legal_name)')->orderBy('id'),
+            // featured: paid tiers and the featured flag first, then the admin's
+            // "Sıra" (lower first), then newest.
             default => $query
                 ->orderByDesc('is_featured')
                 ->orderByRaw("FIELD(plan, 'premium', 'pro', 'basic', 'free') ")
-                ->latest('published_at'),
+                ->orderBy('sort_order')
+                ->latest('published_at')
+                ->latest('id'),
         };
 
         $companies = $query->paginate(12)->withQueryString();

@@ -449,7 +449,7 @@ class SearchService
             self::orLike($q, 'b2b_companies.legal_name', $term);
             self::orLike($q, 'b2b_companies.brand_name', $term);
             self::orLike($q, 'b2b_companies.brands', $term);
-            self::orLike($q, 'b2b_companies.description', $term);
+            self::orLikeTranslations($q, 'b2b_companies.description', $term);
         });
     }
 
@@ -457,8 +457,8 @@ class SearchService
     public static function buildTenderQuery(Builder $baseQuery, string $query): Builder
     {
         return self::applyMatcher($baseQuery, $query, function (Builder $q, string $term): void {
-            self::orLike($q, 'tenders.title', $term);
-            self::orLike($q, 'tenders.summary', $term);
+            self::orLikeTranslations($q, 'tenders.title', $term);
+            self::orLikeTranslations($q, 'tenders.summary', $term);
             self::orLike($q, 'tenders.organizer_name', $term);
         });
     }
@@ -651,13 +651,25 @@ class SearchService
         $q->orWhereRaw(self::columnExpression($column, $term).' like ?', ['%'.$term.'%']);
     }
 
+    /** orLike() over the values of a translatable JSON column (not its locale keys). */
+    private static function orLikeTranslations(Builder $q, string $column, string $term): void
+    {
+        $q->orWhereRaw(self::columnExpression($column, $term, jsonValues: true).' like ?', ['%'.$term.'%']);
+    }
+
     /**
      * SQL expression for a searchable column, case-insensitive and — when the
      * term itself carries no Azerbaijani diacritics — accent-folded.
      */
-    private static function columnExpression(string $column, string $term): string
+    private static function columnExpression(string $column, string $term, bool $jsonValues = false): string
     {
-        $expression = 'lower(cast('.self::wrapColumn($column).' as char) collate '.self::CI_COLLATION.')';
+        // $jsonValues: a Spatie-translatable JSON column — match the translations
+        // only (json_extract '$.*'), never the locale keys "az" / "ru" / "en".
+        $sql = $jsonValues
+            ? 'json_extract('.self::wrapColumn($column).", '$.*')"
+            : self::wrapColumn($column);
+
+        $expression = 'lower(cast('.$sql.' as char) collate '.self::CI_COLLATION.')';
 
         if ($term !== self::normalizeAzeri($term)) {
             return $expression;

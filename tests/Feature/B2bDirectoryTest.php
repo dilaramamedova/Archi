@@ -71,6 +71,21 @@ final class B2bDirectoryTest extends TestCase
         $this->assertEqualsCanonicalizing([$b->id], $ids(['q' => 'milano']));
     }
 
+    public function test_search_matches_description_text_not_its_locale_keys(): void
+    {
+        $tiles = $this->makeCompany(['brand_name' => 'Qwerty', 'legal_name' => 'Qwerty MMC', 'description' => ['az' => 'Kafel istehsalı', 'en' => 'Tile maker']]);
+
+        $ids = fn (string $q) => $this->get(route('b2b.index', ['q' => $q]))->assertOk()->viewData('companies')->getCollection()->pluck('id')->all();
+
+        // The description is stored as {"az": …, "en": …}; a LIKE on the raw JSON matched every company for "az"/"en".
+        $this->assertSame([], $ids('az'));
+        $this->assertSame([], $ids('en'));
+        $this->assertSame([$tiles->id], $ids('kafel'));
+        $this->assertSame([$tiles->id], $ids('tile maker'));
+        $this->assertSame([$tiles->id], $ids('istehsalı'));
+        $this->assertSame([$tiles->id], $ids('istehsali'), 'Accent folding still applies to the JSON values.');
+    }
+
     public function test_featured_sort_puts_featured_and_higher_plans_first(): void
     {
         $free = $this->makeCompany(['brand_name' => 'Free Co', 'plan' => B2bPlan::Free, 'published_at' => now()->subDays(1)]);

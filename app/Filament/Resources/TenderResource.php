@@ -105,7 +105,17 @@ final class TenderResource extends Resource
                 Forms\Components\TextInput::make('area_sqm')->label('Sahə (m²)')->numeric()->minValue(0),
                 Forms\Components\TextInput::make('duration')->label('İcra müddəti')->placeholder('8 həftə')->maxLength(60)->translatable(),
                 Forms\Components\TextInput::make('budget_min')->label('Büdcə (min)')->helperText('Hər ikisi boş — «Sorğu əsasında».')->numeric()->minValue(0),
-                Forms\Components\TextInput::make('budget_max')->label('Büdcə (maks)')->numeric()->minValue(0)->gte('budget_min'),
+                Forms\Components\TextInput::make('budget_max')
+                    ->label('Büdcə (maks)')
+                    ->numeric()
+                    ->minValue(0)
+                    // Only compared when a minimum is set: Laravel's gte fails against an
+                    // empty field, which blocked a max-only budget ("50 000 ₼") that the
+                    // front renders fine (Tender::budgetLabel()).
+                    ->rule(
+                        static fn (Forms\Components\TextInput $component): string => 'gte:'.$component->resolveRelativeStatePath('budget_min'),
+                        static fn ($get): bool => filled($get('budget_min')),
+                    ),
                 Forms\Components\Select::make('currency')
                     ->label('Valyuta')
                     ->options(['AZN' => 'AZN', 'USD' => 'USD', 'EUR' => 'EUR'])
@@ -190,7 +200,8 @@ final class TenderResource extends Resource
                     ->icon('heroicon-o-arrow-top-right-on-square')
                     ->url(fn (Tender $record): string => route('tenders.show', $record->slug))
                     ->openUrlInNewTab()
-                    ->visible(fn (Tender $record): bool => $record->is_published),
+                    // Same rule as Tender::scopePublished(): a scheduled tender would 404 on the site.
+                    ->visible(fn (Tender $record): bool => $record->is_published && $record->published_at !== null && ! $record->published_at->isFuture()),
                 Actions\EditAction::make(),
                 Actions\DeleteAction::make(),
             ])

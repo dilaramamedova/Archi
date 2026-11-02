@@ -26,6 +26,25 @@ final class B2bCompany extends Model
     /** Catalog photos are public (shown in the profile gallery). */
     public const IMAGES_DISK = 'public';
 
+    /** Admin-facing labels of the "Ünsiyyət dilləri" checkboxes (the profile translates them). */
+    public const LANGUAGES = [
+        'az' => 'Azərbaycan', 'ru' => 'Rus', 'en' => 'İngilis', 'tr' => 'Türk', 'other' => 'Digər',
+    ];
+
+    /**
+     * What the Telegram / Instagram / LinkedIn / Facebook inputs accept: a handle
+     * (`@anatolia`), a bare host+path (`instagram.com/anatolia`) or an http(s) link.
+     * Anything with another scheme (javascript:, data:) is rejected.
+     */
+    public const HANDLE_OR_URL_REGEX = '/^(?:https?:\/\/[^\s<>"\']+|\+?[0-9][0-9\s()-]{5,}|@?[\pL\pN._-]+(?:\/[^\s<>"\']*)?)$/iu';
+
+    private const SOCIAL_BASES = [
+        'telegram' => 'https://t.me/',
+        'instagram' => 'https://www.instagram.com/',
+        'facebook' => 'https://www.facebook.com/',
+        'linkedin' => 'https://www.linkedin.com/company/',
+    ];
+
     protected $fillable = [
         'slug', 'b2b_category_id',
         'legal_name', 'brand_name', 'registration_no', 'country', 'legal_address',
@@ -54,7 +73,7 @@ final class B2bCompany extends Model
     {
         static::saving(function (self $company): void {
             if (blank($company->slug)) {
-                $company->slug = self::uniqueSlug((string) ($company->brand_name ?: $company->legal_name));
+                $company->slug = self::uniqueSlug((string) ($company->brand_name ?: $company->legal_name), $company->getKey());
             }
 
             if ($company->is_published && ! $company->published_at) {
@@ -62,15 +81,21 @@ final class B2bCompany extends Model
             }
         });
 
-        // Remove catalog photos dropped in the panel (or with the company) from disk.
+        // Remove the logo / catalog photos replaced or dropped in the panel from disk.
+        // getRawOriginal(): getOriginal() returns the *cast* array, which json_decode()
+        // cannot read ("Array to string conversion").
         static::updated(function (self $company): void {
             if ($company->wasChanged('catalog_images')) {
-                $before = (array) json_decode((string) $company->getOriginal('catalog_images'), true);
+                $before = (array) json_decode((string) $company->getRawOriginal('catalog_images'), true);
                 self::deleteImages(array_diff($before, (array) $company->catalog_images));
+            }
+
+            if ($company->wasChanged('logo')) {
+                self::deleteImages([$company->getRawOriginal('logo')]);
             }
         });
 
-        static::deleted(fn (self $company) => self::deleteImages((array) $company->catalog_images));
+        static::deleted(fn (self $company) => self::deleteImages([...(array) $company->catalog_images, $company->logo]));
     }
 
     public function category(): BelongsTo
@@ -124,24 +149,23 @@ final class B2bCompany extends Model
      */
     public function languageLabels(): array
     {
-        $map = [
-            'az' => 'Azərbaycan', 'ru' => 'Rus', 'en' => 'İngilis',
-            'tr' => 'Türk', 'other' => 'Digər',
-        ];
-
         return collect($this->languages ?? [])
-            ->map(fn ($code): string => $map[$code] ?? (string) $code)
+            ->map(function ($code): string {
+                $code = (string) $code;
+                $key = 'b2b.lang.'.$code;
+                $value = t($key);
+
+                return is_string($value) && $value !== $key ? $value : (self::LANGUAGES[$code] ?? $code);
+            })
             ->values()
             ->all();
     }
 
     public function whatsappUrl(): ?string
     {
-        if (blank($this->whatsapp)) {
-            return null;
-        }
+        $digits = preg_replace('/[^0-9]/', '', (string) $this->whatsapp);
 
-        return 'https://wa.me/'.preg_replace('/[^0-9]/', '', $this->whatsapp);
+        return $digits !== '' ? 'https://wa.me/'.$digits : null;
     }
 
     public function mailtoUrl(): ?string
@@ -149,13 +173,92 @@ final class B2bCompany extends Model
         return filled($this->email) ? 'mailto:'.$this->email : null;
     }
 
-    public static function uniqueSlug(string $name): string
+    /** `tel:` link for any phone string, or null when it has no digits. */
+    public static function telUrl(?string $phone): ?string
+    {
+        $number = preg_replace('/[^0-9+]/', '', (string) $phone);
+
+        return preg_match('/[0-9]/', $number) ? 'tel:'.$number : null;
+    }
+
+    /** The contact person's direct line — only when it is not just the office phone again. */
+    public function directPhone(): ?string
+    {
+        if (blank($this->contact_phone)) {
+            return null;
+        }
+
+        $digits = fn (?string $v): string => preg_replace('/[^0-9]/', '', (string) $v);
+
+        return $digits($this->contact_phone) === $digits($this->phone) ? null : $this->contact_phone;
+    }
+
+    /** The website as a safe absolute http(s) link ("anatolia.com" → "https://anatolia.com"). */
+    public function websiteUrl(): ?string
+    {
+        return self::safeUrl($this->website);
+    }
+
+    /**
+     * Profile link for telegram / instagram / facebook / linkedin. The admin may type
+     * a full link or just the handle; anything that is neither (e.g. `javascript:`)
+     * yields null and the link is not rendered.
+     */
+    public function socialUrl(string $network): ?string
+    {
+        $value = trim((string) $this->getAttribute($network));
+
+        if ($value === '' || ! isset(self::SOCIAL_BASES[$network])) {
+            return null;
+        }
+
+        // Telegram also takes a phone number: t.me/+994501112233.
+        if ($network === 'telegram' && preg_match('/^\+[0-9\s()-]{6,}$/', $value)) {
+            return self::SOCIAL_BASES['telegram'].'+'.preg_replace('/[^0-9]/', '', $value);
+        }
+
+        // "@anatolia.tiles" / "anatolia" is a handle; "instagram.com" / "t.me" is a host.
+        if (preg_match('/^@?([\pL\pN._-]+)$/u', $value, $m)
+            && ! preg_match('/^(?:www\.)?(?:t\.me|telegram\.me|instagram\.com|facebook\.com|fb\.com|linkedin\.com)$/i', $m[1])) {
+            return self::SOCIAL_BASES[$network].rawurlencode($m[1]);
+        }
+
+        return self::safeUrl($value);
+    }
+
+    /** Absolute http(s) URL or null; a bare "host/path" gets https:// prepended. */
+    public static function safeUrl(?string $value): ?string
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return null;
+        }
+
+        if (! preg_match('#^[a-z][a-z0-9+.-]*://#i', $value)) {
+            // A scheme without "//" (javascript:, data:, mailto:) is never a web link.
+            if (preg_match('/^[a-z][a-z0-9+.-]*:(?!\d)/i', $value)) {
+                return null;
+            }
+
+            $value = 'https://'.ltrim($value, '/');
+        }
+
+        $scheme = strtolower((string) parse_url($value, PHP_URL_SCHEME));
+        $host = parse_url($value, PHP_URL_HOST);
+
+        return in_array($scheme, ['http', 'https'], true) && is_string($host) && str_contains($host, '.')
+            ? $value
+            : null;
+    }
+
+    public static function uniqueSlug(string $name, int|string|null $ignoreId = null): string
     {
         $base = Str::slug($name) ?: 'company';
         $slug = $base;
         $i = 2;
 
-        while (self::query()->where('slug', $slug)->exists()) {
+        while (self::query()->where('slug', $slug)->when($ignoreId, fn (Builder $q) => $q->whereKeyNot($ignoreId))->exists()) {
             $slug = $base.'-'.$i++;
         }
 

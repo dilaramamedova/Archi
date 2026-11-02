@@ -189,6 +189,15 @@ return [
         'contact.cta' => ['az' => 'Əlaqə saxla', 'ru' => 'Связаться', 'en' => 'Get in touch'],
         'contact.copy_email' => ['az' => 'E-poçtu kopyala', 'ru' => 'Скопировать e-mail', 'en' => 'Copy email'],
         'contact.copied' => ['az' => 'Kopyalandı', 'ru' => 'Скопировано', 'en' => 'Copied'],
+        'contact.address' => ['az' => 'Hüquqi ünvan', 'ru' => 'Юридический адрес', 'en' => 'Legal address'],
+        'contact.direct_phone' => ['az' => 'Birbaşa telefon', 'ru' => 'Прямой телефон', 'en' => 'Direct phone'],
+
+        // ── communication languages (read by B2bCompany::languageLabels) ──────
+        'lang.az' => ['az' => 'Azərbaycan', 'ru' => 'Азербайджанский', 'en' => 'Azerbaijani'],
+        'lang.ru' => ['az' => 'Rus', 'ru' => 'Русский', 'en' => 'Russian'],
+        'lang.en' => ['az' => 'İngilis', 'ru' => 'Английский', 'en' => 'English'],
+        'lang.tr' => ['az' => 'Türk', 'ru' => 'Турецкий', 'en' => 'Turkish'],
+        'lang.other' => ['az' => 'Digər', 'ru' => 'Другие', 'en' => 'Other'],
         'related.title' => ['az' => 'Oxşar şirkətlər', 'ru' => 'Похожие компании', 'en' => 'Similar companies'],
 
         // ── cooperation types (read by B2bCooperationType::translated) ───────

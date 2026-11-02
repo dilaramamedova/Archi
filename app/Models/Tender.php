@@ -55,7 +55,7 @@ final class Tender extends Model
 
     protected static function booted(): void
     {
-        static::saving(function (self $tender): void {
+        self::saving(function (self $tender): void {
             if (blank($tender->slug)) {
                 $tender->slug = self::uniqueSlug((string) $tender->getTranslation('title', 'az', false));
             }
@@ -70,14 +70,22 @@ final class Tender extends Model
         });
 
         // Attachments removed in the panel (or with the tender) must not linger on disk.
-        static::updated(function (self $tender): void {
+        self::updated(function (self $tender): void {
             if ($tender->wasChanged('files')) {
                 $before = (array) $tender->getOriginal('files');
                 self::deleteFiles(array_diff($before, (array) $tender->files));
             }
+
+            // A replaced or removed organizer logo goes the same way.
+            if ($tender->wasChanged('organizer_logo')) {
+                self::deleteLogo($tender->getOriginal('organizer_logo'), $tender->id);
+            }
         });
 
-        static::deleted(fn (self $tender) => self::deleteFiles((array) $tender->files));
+        self::deleted(function (self $tender): void {
+            self::deleteFiles((array) $tender->files);
+            self::deleteLogo($tender->organizer_logo, $tender->id);
+        });
     }
 
     public function category(): BelongsTo
@@ -234,5 +242,23 @@ final class Tender extends Model
         if ($paths !== []) {
             Storage::disk(self::FILES_DISK)->delete($paths);
         }
+    }
+
+    /**
+     * Logos are uploaded to the public disk under tenders/logos. Only those are
+     * removed, and only when no other tender still points at the same file
+     * (seeded tenders may share one).
+     */
+    private static function deleteLogo(mixed $path, int $exceptId): void
+    {
+        if (! is_string($path) || ! str_starts_with($path, 'tenders/logos/')) {
+            return;
+        }
+
+        if (self::query()->whereKeyNot($exceptId)->where('organizer_logo', $path)->exists()) {
+            return;
+        }
+
+        Storage::disk('public')->delete($path);
     }
 }

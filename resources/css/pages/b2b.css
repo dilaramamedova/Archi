@@ -41,8 +41,11 @@
     display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px 5px 9px;
     border: 1px solid var(--b2-line); border-radius: 100px; background: #fff;
     font-size: 13px; font-weight: 500; line-height: 16px; color: var(--b2-t2); white-space: nowrap;
+    max-width: 100%; min-width: 0;
   }
   .b2-chip .b2-ic { width: 15px; height: 15px; color: var(--b2-icon); }
+  /* a long free-text country must not push the card / header wider than the screen */
+  .b2-chip > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 
   /* ---- badges (verified / featured / plan) ---- */
   .b2-badge {
@@ -237,7 +240,7 @@
   /* own row under logo + name, so the pills never squeeze into the logo column */
   .b2-card-badges { grid-area: badges; display: flex; flex-wrap: wrap; gap: 8px 10px; margin-top: 14px; }
 
-  .b2-card-desc { font-size: 14px; line-height: 20px; color: var(--b2-t2); }
+  .b2-card-desc { font-size: 14px; line-height: 20px; color: var(--b2-t2); overflow-wrap: anywhere; }
   .b2-card-foot {
     display: flex; align-items: center; justify-content: space-between; gap: 12px;
     margin-top: auto; padding-top: 16px; border-top: 1px solid var(--b2-line);
@@ -290,6 +293,7 @@
   .b2c-head-main h1 { margin: 0; font-size: 38px; font-weight: 700; line-height: 1.12; letter-spacing: -.5px; color: #000; overflow-wrap: anywhere; }
   .b2c-head-chips { display: flex; flex-wrap: wrap; gap: 10px; }
   .b2c-legal { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; line-height: 18px; color: var(--b2-t3); }
+  .b2c-legal span { min-width: 0; overflow-wrap: anywhere; }
 
   .b2c-cols { display: flex; align-items: flex-start; gap: 16px; }
   .b2c-colmain { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 16px; }
@@ -322,15 +326,18 @@
 
   /* contact */
   .b2c-person { display: flex; align-items: center; gap: 14px; }
-  .b2c-person .b2-ic { width: 30px; height: 30px; color: #000; }
-  .b2c-person .n { font-size: 16px; font-weight: 600; line-height: 20px; color: #000; }
-  .b2c-person .o { margin-top: 2px; font-size: 14px; line-height: 17px; color: var(--b2-t3); }
+  .b2c-person > div { min-width: 0; }
+  .b2c-person .b2-ic { width: 30px; height: 30px; flex-shrink: 0; color: #000; }
+  .b2c-person .n { font-size: 16px; font-weight: 600; line-height: 20px; color: #000; overflow-wrap: anywhere; }
+  .b2c-person .o { margin-top: 2px; font-size: 14px; line-height: 17px; color: var(--b2-t3); overflow-wrap: anywhere; }
+  .b2c-person .p { margin-top: 4px; font-size: 14px; font-weight: 500; line-height: 17px; color: #000; overflow-wrap: anywhere; }
+  .b2c-person .p a:hover { text-decoration: underline; text-underline-offset: 3px; }
   .b2c-lines { display: flex; flex-direction: column; gap: 12px; margin: 0; padding: 0; list-style: none; }
   .b2c-lines li { display: flex; align-items: center; gap: 12px; font-size: 15px; line-height: 20px; color: #000; min-width: 0; }
   .b2c-lines .b2-ic { width: 22px; height: 22px; flex-shrink: 0; color: var(--b2-icon); }
   .b2c-lines a, .b2c-lines span { min-width: 0; overflow-wrap: anywhere; }
   .b2c-lines a:hover { text-decoration: underline; text-underline-offset: 3px; }
-  .b2c-social { display: flex; gap: 10px; }
+  .b2c-social { display: flex; flex-wrap: wrap; gap: 10px; }
   .b2c-social a {
     display: flex; align-items: center; justify-content: center; width: 40px; height: 40px;
     border: 1px solid var(--b2-line); border-radius: 10px; color: #000; transition: border-color .15s, background-color .15s;

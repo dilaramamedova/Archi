@@ -33,9 +33,18 @@ final class B2bCompanyResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
-    private const LANGUAGES = [
-        'az' => 'Azərbaycan', 'ru' => 'Rus', 'en' => 'İngilis', 'tr' => 'Türk', 'other' => 'Digər',
-    ];
+    /**
+     * Telegram / Instagram / LinkedIn / Facebook: a handle or an http(s) link, never
+     * another scheme — the profile turns the value into an absolute link.
+     */
+    private static function handleOrUrlRule(): \Closure
+    {
+        return fn (): \Closure => function (string $attribute, mixed $value, \Closure $fail): void {
+            if (filled($value) && ! preg_match(B2bCompany::HANDLE_OR_URL_REGEX, trim((string) $value))) {
+                $fail('Tam link (https://…) və ya istifadəçi adı (@ad) yazın.');
+            }
+        };
+    }
 
     public static function form(Schema $form): Schema
     {
@@ -47,9 +56,9 @@ final class B2bCompanyResource extends Resource
                 Forms\Components\TextInput::make('country')->label('Ölkə')->maxLength(80)
                     ->datalist(fn (): array => B2bCompany::query()->whereNotNull('country')->distinct()->orderBy('country')->pluck('country')->all()),
                 Forms\Components\TextInput::make('legal_address')->label('Hüquqi ünvan')->maxLength(255),
-                Forms\Components\TextInput::make('phone')->label('Telefon')->tel()->maxLength(40),
-                Forms\Components\TextInput::make('website')->label('Veb-sayt')->url()->maxLength(255),
-                Forms\Components\FileUpload::make('logo')->label('Logo')->image()->disk('public')->directory('b2b/logos'),
+                Forms\Components\TextInput::make('phone')->label('Şirkət telefonu (ofis)')->helperText('Profildə «Əlaqə» siyahısında göstərilir.')->tel()->maxLength(40),
+                Forms\Components\TextInput::make('website')->label('Veb-sayt')->placeholder('https://')->url()->rule('url:http,https')->maxLength(255),
+                Forms\Components\FileUpload::make('logo')->label('Logo')->image()->disk('public')->directory('b2b/logos')->maxSize(4096),
                 Forms\Components\Textarea::make('description')->label('Qısa təsvir')->rows(4)->translatable()->columnSpanFull(),
             ])->columns(2),
 
@@ -80,15 +89,18 @@ final class B2bCompanyResource extends Resource
             Section::make('Əlaqə')->schema([
                 Forms\Components\TextInput::make('contact_person')->label('Əlaqələndirici şəxs')->maxLength(120),
                 Forms\Components\TextInput::make('contact_position')->label('Vəzifə')->maxLength(120),
-                Forms\Components\TextInput::make('contact_phone')->label('Telefon')->tel()->maxLength(40),
-                Forms\Components\TextInput::make('whatsapp')->label('WhatsApp')->maxLength(40),
-                Forms\Components\TextInput::make('telegram')->label('Telegram')->maxLength(80),
+                Forms\Components\TextInput::make('contact_phone')
+                    ->label('Əlaqələndiricinin telefonu')
+                    ->helperText('Birbaşa xətt. Profildə şəxsin adının altında göstərilir (ofis telefonundan fərqlidirsə).')
+                    ->tel()->maxLength(40),
+                Forms\Components\TextInput::make('whatsapp')->label('WhatsApp')->placeholder('+994 50 000 00 00')->maxLength(40),
+                Forms\Components\TextInput::make('telegram')->label('Telegram')->placeholder('@istifadəçi və ya https://t.me/…')->rules([self::handleOrUrlRule()])->maxLength(80),
                 Forms\Components\TextInput::make('email')->label('E-poçt')->email()->maxLength(255),
                 Forms\Components\TextInput::make('working_hours')->label('İş saatları')->placeholder('B.e–Cümə 09:00–18:00')->maxLength(120),
-                Forms\Components\TextInput::make('instagram')->label('Instagram')->maxLength(255),
-                Forms\Components\TextInput::make('linkedin')->label('LinkedIn')->maxLength(255),
-                Forms\Components\TextInput::make('facebook')->label('Facebook')->maxLength(255),
-                Forms\Components\CheckboxList::make('languages')->label('Ünsiyyət dilləri')->options(self::LANGUAGES)->columns(3)->columnSpanFull(),
+                Forms\Components\TextInput::make('instagram')->label('Instagram')->placeholder('@ad və ya https://instagram.com/…')->rules([self::handleOrUrlRule()])->maxLength(255),
+                Forms\Components\TextInput::make('linkedin')->label('LinkedIn')->placeholder('https://linkedin.com/company/…')->rules([self::handleOrUrlRule()])->maxLength(255),
+                Forms\Components\TextInput::make('facebook')->label('Facebook')->placeholder('https://facebook.com/…')->rules([self::handleOrUrlRule()])->maxLength(255),
+                Forms\Components\CheckboxList::make('languages')->label('Ünsiyyət dilləri')->options(B2bCompany::LANGUAGES)->columns(3)->columnSpanFull(),
             ])->columns(2),
 
             Section::make('Yerləşdirmə')->schema([
@@ -156,7 +168,10 @@ final class B2bCompanyResource extends Resource
                     ->icon('heroicon-o-arrow-top-right-on-square')
                     ->url(fn (B2bCompany $record): string => route('b2b.show', $record->slug))
                     ->openUrlInNewTab()
-                    ->visible(fn (B2bCompany $record): bool => $record->is_published),
+                    // Only when the profile is live — a draft or a future date would 404.
+                    ->visible(fn (B2bCompany $record): bool => $record->is_published
+                        && $record->published_at !== null
+                        && $record->published_at->lte(now())),
                 Actions\EditAction::make(),
                 Actions\DeleteAction::make(),
             ])

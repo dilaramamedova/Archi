@@ -446,6 +446,30 @@
   .td-req-done-ic              { width: 72px; height: 72px; }
   .td-req-done-ic .td-ic       { width: 34px; height: 34px; }
 
+  /* Admin-entered text (titles, company and city names, one-per-line items) can hold
+     long unbroken words, codes or URLs: wrap them instead of pushing the card wider
+     than the phone screen. `anywhere` also lowers the min-content width, so the flex
+     and grid cells around these can actually shrink. */
+  .td-card-head .org,
+  .td-card-head .cat,
+  .td-card-title,
+  .td-card-sum,
+  .td-meta .v,
+  .tdd-org .org,
+  .tdd-info .cat,
+  .tdd-steps li > span:last-child,
+  .tdd-bullets li,
+  .tdd-docs li > span,
+  .tdd-rows dd,
+  .tdd-person .n,
+  .tdd-person .o     { overflow-wrap: anywhere; }
+  .tdd-steps li > span:last-child,
+  .tdd-docs li > span,
+  .tdd-person > div,
+  .tdd-rows dd       { min-width: 0; }
+  /* the current crumb on the detail is the tender title — ellipsis, not a hard clip */
+  .td-crumbs .cur    { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
   /* blocks that set `display` must still honour the hidden attribute */
   .td-page [hidden],
   .td-modal [hidden] { display: none !important; }

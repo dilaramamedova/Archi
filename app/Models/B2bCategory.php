@@ -25,9 +25,23 @@ final class B2bCategory extends Model
     {
         static::saving(function (self $category): void {
             if (blank($category->slug)) {
-                $category->slug = Str::slug((string) $category->getTranslation('name', 'az', false)) ?: Str::random(8);
+                $category->slug = self::uniqueSlug((string) $category->getTranslation('name', 'az', false), $category->getKey());
             }
         });
+    }
+
+    /** "keramika", then "keramika-2"… — slugs are unique, a clash used to be a 500 in the panel. */
+    public static function uniqueSlug(string $name, int|string|null $ignoreId = null): string
+    {
+        $base = Str::slug($name) ?: Str::lower(Str::random(8));
+        $slug = $base;
+        $i = 2;
+
+        while (self::query()->where('slug', $slug)->when($ignoreId, fn (Builder $q) => $q->whereKeyNot($ignoreId))->exists()) {
+            $slug = $base.'-'.$i++;
+        }
+
+        return $slug;
     }
 
     public function companies(): HasMany

@@ -2,6 +2,9 @@
   B2B company profile (Figma «10 · B2B BEYNƏLXALQ / ArchiAds» — no dedicated frame;
   built in the tender-detail language). Two columns on desktop, stacked on mobile.
   Rendered by B2bController@show. Every block renders only when its field has content.
+  Admin field → block: phone/whatsapp/telegram/email/website/working_hours/legal_address
+  → contact list; contact_person/position/contact_phone (if ≠ phone) → person block;
+  instagram/linkedin/facebook → social row; market/sort_order are placement-only.
   Styles: resources/css/pages/b2b.css (.b2c-*)   JS: resources/js/pages/b2b.js
 --}}
 @php
@@ -28,22 +31,32 @@
       ['icon' => 'briefcase', 'label' => $tOr('b2b.facts.cooperation', 'Əməkdaşlıq növü'), 'value' => $coop],
   ], fn (array $row): bool => filled($row['value']));
 
-  // contact rows — only those with a value
-  $primaryCta = $company->whatsappUrl() ?? $company->mailtoUrl() ?? ($company->website ?: null);
+  // contact rows — only those with a value. `external` rows open in a new tab;
+  // every href comes from a model helper that only emits tel:/mailto:/http(s).
+  $websiteUrl = $company->websiteUrl();
+  $directPhone = $company->directPhone();
+  $primaryCta = $company->whatsappUrl() ?? $company->mailtoUrl() ?? $websiteUrl;
   $contactRows = array_filter([
-      ['icon' => 'whatsapp', 'label' => $tOr('b2b.contact.whatsapp', 'WhatsApp'), 'value' => $company->whatsapp, 'href' => $company->whatsappUrl()],
-      ['icon' => 'phone', 'label' => $tOr('b2b.contact.phone', 'Telefon'), 'value' => $company->phone, 'href' => $company->phone ? 'tel:'.preg_replace('/[^0-9+]/', '', $company->phone) : null],
-      ['icon' => 'telegram', 'label' => $tOr('b2b.contact.telegram', 'Telegram'), 'value' => $company->telegram, 'href' => null],
-      ['icon' => 'mail', 'label' => $tOr('b2b.contact.email', 'E-poçt'), 'value' => $company->email, 'href' => $company->mailtoUrl()],
-      ['icon' => 'link', 'label' => $tOr('b2b.contact.website', 'Veb-sayt'), 'value' => $company->website, 'href' => $company->website],
-      ['icon' => 'clock', 'label' => $tOr('b2b.contact.hours', 'İş saatları'), 'value' => $company->working_hours, 'href' => null],
+      ['icon' => 'whatsapp', 'label' => $tOr('b2b.contact.whatsapp', 'WhatsApp'), 'value' => $company->whatsapp, 'href' => $company->whatsappUrl(), 'external' => true],
+      ['icon' => 'phone', 'label' => $tOr('b2b.contact.phone', 'Telefon'), 'value' => $company->phone, 'href' => \App\Models\B2bCompany::telUrl($company->phone), 'external' => false],
+      ['icon' => 'telegram', 'label' => $tOr('b2b.contact.telegram', 'Telegram'), 'value' => $company->telegram, 'href' => $company->socialUrl('telegram'), 'external' => true],
+      ['icon' => 'mail', 'label' => $tOr('b2b.contact.email', 'E-poçt'), 'value' => $company->email, 'href' => $company->mailtoUrl(), 'external' => false],
+      ['icon' => 'link', 'label' => $tOr('b2b.contact.website', 'Veb-sayt'), 'value' => $company->website, 'href' => $websiteUrl, 'external' => true],
+      ['icon' => 'clock', 'label' => $tOr('b2b.contact.hours', 'İş saatları'), 'value' => $company->working_hours, 'href' => null, 'external' => false],
+      ['icon' => 'pin', 'label' => $tOr('b2b.contact.address', 'Hüquqi ünvan'), 'value' => $company->legal_address, 'href' => null, 'external' => false],
   ], fn (array $row): bool => filled($row['value']));
 
   $socials = array_filter([
-      ['icon' => 'instagram', 'href' => $company->instagram],
-      ['icon' => 'linkedin', 'href' => $company->linkedin],
-      ['icon' => 'facebook', 'href' => $company->facebook],
+      ['icon' => 'instagram', 'label' => 'Instagram', 'href' => $company->socialUrl('instagram')],
+      ['icon' => 'linkedin', 'label' => 'LinkedIn', 'href' => $company->socialUrl('linkedin')],
+      ['icon' => 'facebook', 'label' => 'Facebook', 'href' => $company->socialUrl('facebook')],
   ], fn (array $row): bool => filled($row['href']));
+
+  $hasMain = $description !== '' || $images !== [] || $facts !== [] || $catalogDesc !== '' || $languages !== [];
+  $hasPerson = filled($company->contact_person) || $directPhone;
+  $hasContact = $hasPerson || $contactRows !== [] || $socials !== [] || $primaryCta || filled($company->email);
+  // The legal name is the h1 already when there is no brand name — don't repeat it.
+  $showLegalName = filled($company->brand_name) && $company->brand_name !== $company->legal_name;
 @endphp
 <x-layout page="b2b-company" :title="$tOr('b2b.meta.company_title', ':name — ARCHİ B2B', ['name' => $company->displayName()])">
 
@@ -70,6 +83,7 @@
       @endif
 
       <div class="b2c-head-main">
+        @if ($company->is_verified || $company->is_featured || $plan?->badge())
         <div class="b2c-badges">
           @if ($company->is_verified)
             <span class="b2-badge b2-badge-ok">@include('pages.partials.b2b-icon', ['name' => 'badge-check', 'stroke' => '1.6'])<span>{{ $tOr('b2b.badge.verified', 'Təsdiqlənib') }}</span></span>
@@ -81,9 +95,11 @@
             <span class="b2-badge b2-badge-plan">{{ $tOr('b2b.plan_tag.'.$plan->value, $plan->label()) }}</span>
           @endif
         </div>
+        @endif
 
         <h1>{{ $company->displayName() }}</h1>
 
+        @if ($company->country || $coop)
         <div class="b2c-head-chips">
           @if ($company->country)
             <span class="b2-chip">@include('pages.partials.b2b-icon', ['name' => 'pin'])<span>{{ $company->country }}</span></span>
@@ -92,17 +108,20 @@
             <span class="b2-chip">@include('pages.partials.b2b-icon', ['name' => 'briefcase'])<span>{{ $coop }}</span></span>
           @endif
         </div>
+        @endif
 
-        @if (filled($company->legal_name) || filled($company->registration_no))
+        @if ($showLegalName || filled($company->registration_no))
           <p class="b2c-legal">
-            @if (filled($company->legal_name))<span>{{ $company->legal_name }}</span>@endif
+            @if ($showLegalName)<span>{{ $company->legal_name }}</span>@endif
             @if (filled($company->registration_no))<span>{{ $tOr('b2b.facts.reg_no', 'Qeydiyyat №: :no', ['no' => $company->registration_no]) }}</span>@endif
           </p>
         @endif
       </div>
     </header>
 
+    @if ($hasMain || $hasContact)
     <div class="b2c-cols">
+      @if ($hasMain)
       <div class="b2c-colmain">
         @if ($description !== '')
           <section class="b2c-card">
@@ -154,18 +173,32 @@
           </section>
         @endif
       </div>
+      @endif
 
+      @if ($hasContact)
       <aside class="b2c-side">
         <section class="b2c-card b2c-contact">
           <h2>{{ $tOr('b2b.contact.title', 'Əlaqə') }}</h2>
 
-          @if (filled($company->contact_person))
+          @if ($hasPerson)
             <div class="b2c-person">
               @include('pages.partials.b2b-icon', ['name' => 'user'])
               <div>
-                <p class="n">{{ $company->contact_person }}</p>
+                @if (filled($company->contact_person))
+                  <p class="n">{{ $company->contact_person }}</p>
+                @endif
                 @if (filled($company->contact_position))
                   <p class="o">{{ $company->contact_position }}</p>
+                @endif
+                @if ($directPhone)
+                  <p class="p">
+                    <span class="sr-only">{{ $tOr('b2b.contact.direct_phone', 'Birbaşa telefon') }}:</span>
+                    @if ($tel = \App\Models\B2bCompany::telUrl($directPhone))
+                      <a href="{{ $tel }}">{{ $directPhone }}</a>
+                    @else
+                      <span>{{ $directPhone }}</span>
+                    @endif
+                  </p>
                 @endif
               </div>
             </div>
@@ -176,8 +209,9 @@
               @foreach ($contactRows as $row)
                 <li>
                   @include('pages.partials.b2b-icon', ['name' => $row['icon'], 'stroke' => '1.7'])
+                  <span class="sr-only">{{ $row['label'] }}:</span>
                   @if ($row['href'])
-                    <a href="{{ $row['href'] }}" @if (in_array($row['icon'], ['link', 'telegram'], true)) target="_blank" rel="noopener" @endif>{{ $row['value'] }}</a>
+                    <a href="{{ $row['href'] }}" @if ($row['external']) target="_blank" rel="noopener noreferrer" @endif>{{ $row['value'] }}</a>
                   @else
                     <span>{{ $row['value'] }}</span>
                   @endif
@@ -189,7 +223,7 @@
           @if ($socials !== [])
             <div class="b2c-social">
               @foreach ($socials as $s)
-                <a href="{{ $s['href'] }}" target="_blank" rel="noopener" aria-label="{{ ucfirst($s['icon']) }}">@include('pages.partials.b2b-icon', ['name' => $s['icon'], 'stroke' => '1.6'])</a>
+                <a href="{{ $s['href'] }}" target="_blank" rel="noopener noreferrer" aria-label="{{ $s['label'] }}">@include('pages.partials.b2b-icon', ['name' => $s['icon'], 'stroke' => '1.6'])</a>
               @endforeach
             </div>
           @endif
@@ -197,7 +231,7 @@
           @if ($primaryCta || $company->email)
             <div class="b2c-actions">
               @if ($primaryCta)
-                <a class="b2-btn b2-btn-primary" href="{{ $primaryCta }}" @if (! $company->whatsappUrl() && ! $company->mailtoUrl()) target="_blank" rel="noopener" @endif>{{ $tOr('b2b.contact.cta', 'Əlaqə saxla') }}</a>
+                <a class="b2-btn b2-btn-primary" href="{{ $primaryCta }}" @if (! str_starts_with($primaryCta, 'mailto:')) target="_blank" rel="noopener noreferrer" @endif>{{ $tOr('b2b.contact.cta', 'Əlaqə saxla') }}</a>
               @endif
               @if ($company->email)
                 <button type="button" class="b2-btn b2-btn-outline b2c-copy" data-copy="{{ $company->email }}"
@@ -210,14 +244,16 @@
           @endif
         </section>
       </aside>
+      @endif
     </div>
+    @endif
 
     @if ($related->isNotEmpty())
       <section class="b2c-related">
         <h2>{{ $tOr('b2b.related.title', 'Oxşar şirkətlər') }}</h2>
         <div class="b2-grid">
-          @foreach ($related as $company)
-            @include('pages.partials.b2b-company-card', ['company' => $company, 'tOr' => $tOr])
+          @foreach ($related as $relatedCompany)
+            @include('pages.partials.b2b-company-card', ['company' => $relatedCompany, 'tOr' => $tOr])
           @endforeach
         </div>
       </section>

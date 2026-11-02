@@ -155,6 +155,8 @@ final class TenderBoardTest extends TestCase
         $this->assertEqualsCanonicalizing([$office->id, $furniture->id], $titles(['status' => 'open']));
         // Case- and accent-insensitive like the rest of the site's search.
         $this->assertEqualsCanonicalizing([$furniture->id], $titles(['q' => 'mebel istehsali']));
+        // Title/summary are {"az": …} JSON; the locale key itself must not match every tender.
+        $this->assertSame([], $titles(['q' => 'az']));
         // Open tenders are listed before closed ones.
         $this->assertSame($closed->id, last($titles([])));
     }
