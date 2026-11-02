@@ -49,6 +49,7 @@
 @import "./pages/help.css";
 @import "./pages/legal.css";
 @import "./pages/tenders.css";
+@import "./pages/b2b.css";
 
 @source "../views";
 @source "../js";

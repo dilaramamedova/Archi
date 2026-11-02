@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AboutController;
+use App\Http\Controllers\B2bController;
 use App\Http\Controllers\AccountController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\NewPasswordController;
@@ -81,6 +82,11 @@ Route::get('/tenders/{slug}/files/{index}', [TenderController::class, 'file'])
 Route::post('/tenders/{slug}/save', [TenderController::class, 'toggleSave'])
     ->middleware(['auth', 'throttle:60,1'])
     ->name('tenders.save');
+
+// B2B directory — admin-managed company catalog with a pricing hero (no
+// self-registration; the pricing CTAs open the consultation form).
+Route::get('/b2b', [B2bController::class, 'index'])->name('b2b.index');
+Route::get('/b2b/{slug}', [B2bController::class, 'show'])->name('b2b.show');
 
 // Legacy routes — keep named routes that frontend references
 Route::get('/product', function () {

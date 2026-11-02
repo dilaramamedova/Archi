@@ -35,6 +35,12 @@ class TranslationsSeeder extends Seeder
             $groups[$group] = array_merge($groups[$group] ?? [], $items);
         }
 
+        // The B2B section (Figma «10 · B2B BEYNƏLXALQ / ArchiAds») keeps its copy beside
+        // its own migration too — the `b2b` group plus the cooperation-type keys.
+        foreach (require database_path('seeders/data/b2b_translations.php') as $group => $items) {
+            $groups[$group] = array_merge($groups[$group] ?? [], $items);
+        }
+
         foreach ($groups as $group => $items) {
             foreach ($items as $key => $value) {
                 Translation::updateOrCreate(

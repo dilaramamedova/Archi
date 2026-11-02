@@ -59,6 +59,7 @@ import help from './pages/help.js';
 import forgotPassword from './pages/forgot-password.js';
 import resetPassword from './pages/reset-password.js';
 import tenders from './pages/tenders.js';
+import b2b from './pages/b2b.js';
 
 const pages = {
     'home': home,
@@ -113,6 +114,9 @@ const pages = {
     'tenders': tenders,
     'tender': tenders,
     'tenders-locked': tenders,
+    // one module for the directory and the company profile (it guards per element)
+    'b2b': b2b,
+    'b2b-company': b2b,
 };
 
 pages[document.body.dataset.page]?.();

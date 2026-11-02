@@ -442,6 +442,17 @@ class SearchService
         });
     }
 
+    /** B2B directory search: company names, brands and the translatable description. */
+    public static function buildB2bQuery(Builder $baseQuery, string $query): Builder
+    {
+        return self::applyMatcher($baseQuery, $query, function (Builder $q, string $term): void {
+            self::orLike($q, 'b2b_companies.legal_name', $term);
+            self::orLike($q, 'b2b_companies.brand_name', $term);
+            self::orLike($q, 'b2b_companies.brands', $term);
+            self::orLike($q, 'b2b_companies.description', $term);
+        });
+    }
+
     /** Tender board search: translatable title/summary plus the organizer name. */
     public static function buildTenderQuery(Builder $baseQuery, string $query): Builder
     {
