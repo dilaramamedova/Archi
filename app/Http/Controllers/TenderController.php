@@ -57,7 +57,9 @@ final class TenderController extends Controller
             'tab' => ($request->user() && $request->input('tab') === 'saved') ? 'saved' : 'all',
         ];
 
-        $query = Tender::query()->published()->with('category');
+        // A deactivated category is hidden from the board: it is not loaded, so the
+        // card shows none rather than a category the filter no longer offers.
+        $query = Tender::query()->published()->with(['category' => fn ($q) => $q->active()]);
 
         if ($filters['tab'] === 'saved') {
             $query->whereHas('savedBy', fn (Builder $q) => $q->whereKey($request->user()->id));
@@ -86,8 +88,7 @@ final class TenderController extends Controller
 
         match ($filters['sort']) {
             'deadline' => $query->orderByRaw('deadline_at IS NULL')->orderBy('deadline_at'),
-            'budget' => $query->orderByRaw('COALESCE(budget_max, budget_min) IS NULL')
-                ->orderByRaw('COALESCE(budget_max, budget_min) DESC'),
+            'budget' => $this->orderByBudget($query),
             default => null,
         };
 
@@ -113,7 +114,7 @@ final class TenderController extends Controller
 
     public function show(Request $request, string $slug): View
     {
-        $tender = Tender::query()->published()->where('slug', $slug)->with('category')->firstOrFail();
+        $tender = Tender::query()->published()->where('slug', $slug)->with(['category' => fn ($q) => $q->active()])->firstOrFail();
         $access = TenderAccess::for($request->user());
 
         if (! $access->granted()) {
@@ -193,6 +194,26 @@ final class TenderController extends Controller
         }
 
         return response()->json(['message' => t('tenders.access.sent')], 201);
+    }
+
+    /**
+     * Highest budget first, compared in AZN (config tenders.budget_rates) so that
+     * 50 000 USD ranks above 60 000 AZN. "Sorğu əsasında" (no budget) goes last.
+     */
+    private function orderByBudget(Builder $query): void
+    {
+        $cases = '';
+        $bindings = [];
+
+        foreach ((array) config('tenders.budget_rates', []) as $currency => $rate) {
+            $cases .= ' WHEN ? THEN ?';
+            array_push($bindings, (string) $currency, (float) $rate);
+        }
+
+        $rate = $cases === '' ? '1' : "CASE currency{$cases} ELSE 1 END";
+
+        $query->orderByRaw('COALESCE(budget_max, budget_min) IS NULL')
+            ->orderByRaw("COALESCE(budget_max, budget_min) * {$rate} DESC", $bindings);
     }
 
     /** T3 / T4 / T5 / M3 — the lock card, with the request form for signed-in users. */

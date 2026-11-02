@@ -109,6 +109,19 @@ final class B2bDirectoryTest extends TestCase
         $this->assertSame(1, $company->fresh()->views_count);
     }
 
+    public function test_inactive_category_is_not_shown_on_cards_profiles_or_related(): void
+    {
+        $company = $this->makeCompany(['brand_name' => 'Anatolia']);
+        $this->makeCompany(['brand_name' => 'Qonşu']); // same category → "related" card on the profile
+        $this->category->update(['name' => ['az' => 'Köhnə kateqoriya'], 'is_active' => false]);
+
+        $this->get(route('b2b.index'))->assertOk()->assertSee('Anatolia')->assertDontSee('Köhnə kateqoriya');
+        $this->get(route('b2b.show', $company->slug))->assertOk()->assertSee('Qonşu')->assertDontSee('Köhnə kateqoriya');
+
+        $this->category->update(['is_active' => true]);
+        $this->get(route('b2b.show', $company->slug))->assertOk()->assertSee('Köhnə kateqoriya');
+    }
+
     public function test_model_helpers(): void
     {
         $company = $this->makeCompany([

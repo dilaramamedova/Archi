@@ -120,6 +120,39 @@ final class Tender extends Model
         return $this->deadline_at === null || $this->deadline_at->isFuture();
     }
 
+    /** Admin list state labels, keyed by the "Vəziyyət" filter value. */
+    public const ADMIN_STATES = [
+        'draft' => 'Qaralama',
+        'scheduled' => 'Planlaşdırılıb',
+        'open' => 'Aktiv',
+        'closed' => 'Bağlanıb',
+    ];
+
+    /**
+     * Where the tender stands for the admin: a draft or a scheduled tender is not
+     * on the site yet, whatever its deadline; a live one is open or closed.
+     */
+    public function adminState(): string
+    {
+        return match (true) {
+            ! $this->is_published => 'draft',
+            $this->published_at?->isFuture() ?? false => 'scheduled',
+            $this->isOpen() => 'open',
+            default => 'closed',
+        };
+    }
+
+    public function scopeAdminState(Builder $query, string $state): Builder
+    {
+        return match ($state) {
+            'draft' => $query->where('is_published', false),
+            'scheduled' => $query->where('is_published', true)->where('published_at', '>', now()),
+            'open' => $query->published()->open(),
+            'closed' => $query->published()->closed(),
+            default => $query,
+        };
+    }
+
     /** "FD" for "Forma Development", "TE" for "Terra" — the logo placeholder. */
     public function initials(): string
     {

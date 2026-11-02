@@ -36,7 +36,7 @@ final class B2bController extends Controller
             'market' => in_array($request->input('market'), ['local', 'international'], true) ? $request->input('market') : 'international',
         ];
 
-        $query = B2bCompany::query()->published()->with('category');
+        $query = B2bCompany::query()->published()->with(self::activeCategory());
 
         if ($filters['q'] !== '') {
             $query = SearchService::buildB2bQuery($query, $filters['q']);
@@ -89,11 +89,12 @@ final class B2bController extends Controller
 
     public function show(Request $request, string $slug): View
     {
-        $company = B2bCompany::query()->published()->where('slug', $slug)->with('category')->firstOrFail();
+        $company = B2bCompany::query()->published()->where('slug', $slug)->with(self::activeCategory())->firstOrFail();
 
         $company->increment('views_count');
 
         $related = B2bCompany::query()->published()
+            ->with(self::activeCategory())
             ->whereKeyNot($company->id)
             ->when($company->b2b_category_id, fn (Builder $q) => $q->where('b2b_category_id', $company->b2b_category_id))
             ->orderByDesc('is_featured')
@@ -102,5 +103,16 @@ final class B2bController extends Controller
             ->get();
 
         return view('pages.b2b-company', compact('company', 'related'));
+    }
+
+    /**
+     * Eager-load only an active category: a category the admin switched off is
+     * gone from the filter, so cards and profiles must not show it either.
+     *
+     * @return array<string, \Closure>
+     */
+    private static function activeCategory(): array
+    {
+        return ['category' => fn ($q) => $q->active()];
     }
 }

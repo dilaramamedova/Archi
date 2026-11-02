@@ -171,8 +171,13 @@ final class TenderResource extends Resource
                 Tables\Columns\TextColumn::make('state')
                     ->label('Vəziyyət')
                     ->badge()
-                    ->state(fn (Tender $record): string => $record->isOpen() ? 'Aktiv' : 'Bağlanıb')
-                    ->color(fn (string $state): string => $state === 'Aktiv' ? 'success' : 'gray'),
+                    ->state(fn (Tender $record): string => Tender::ADMIN_STATES[$record->adminState()])
+                    ->color(fn (string $state): string => match ($state) {
+                        Tender::ADMIN_STATES['open'] => 'success',
+                        Tender::ADMIN_STATES['scheduled'] => 'info',
+                        Tender::ADMIN_STATES['draft'] => 'warning',
+                        default => 'gray',
+                    }),
                 Tables\Columns\IconColumn::make('is_published')->label('Dərc')->boolean(),
                 Tables\Columns\TextColumn::make('views_count')->label('Baxış')->sortable()->toggleable(),
                 Tables\Columns\TextColumn::make('saved_by_count')->label('Saxlanılıb')->sortable()->toggleable(isToggledHiddenByDefault: true),
@@ -187,12 +192,10 @@ final class TenderResource extends Resource
                     ->getOptionLabelFromRecordUsing(fn ($record): string => (string) $record->getTranslation('name', 'az')),
                 Tables\Filters\SelectFilter::make('state')
                     ->label('Vəziyyət')
-                    ->options(['open' => 'Aktiv', 'closed' => 'Bağlanıb'])
-                    ->query(fn (Builder $query, array $data): Builder => match ($data['value'] ?? null) {
-                        'open' => $query->open(),
-                        'closed' => $query->closed(),
-                        default => $query,
-                    }),
+                    ->options(Tender::ADMIN_STATES)
+                    ->query(fn (Builder $query, array $data): Builder => filled($data['value'] ?? null)
+                        ? $query->adminState((string) $data['value'])
+                        : $query),
             ])
             ->actions([
                 Actions\Action::make('view')

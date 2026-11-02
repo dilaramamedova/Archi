@@ -174,11 +174,10 @@
       'name' => $tOr('b2b.sort.name', 'Ad (A–Z)'),
   ];
   $hasCriteria = $filters['q'] !== '' || $activeFilterCount > 0;
-  $resetUrl = route('b2b.index', ['market' => $market]);
-
   // Pricing (hero, plan cards, plan lead modal) is switched off for now — the
-  // markup stays below; set this to true to bring it back.
-  $showPricing = false;
+  // markup stays below; B2B_PRICING=true (config/b2b.php) brings it back.
+  $showPricing = (bool) config('b2b.pricing');
+  $resetUrl = route('b2b.index', $showPricing ? ['market' => $market] : []);
 @endphp
 <x-layout page="b2b" :title="$tOr('b2b.meta.title', 'B2B — ARCHİ')">
 
@@ -248,7 +247,9 @@
     </div>
 
     <form class="b2-form" id="b2Form" method="get" action="{{ route('b2b.index') }}" role="search">
-      <input type="hidden" name="market" id="b2MarketInput" value="{{ $market }}">
+      @if ($showPricing)
+        <input type="hidden" name="market" id="b2MarketInput" value="{{ $market }}">
+      @endif
 
       {{-- search row --}}
       <div class="b2-search">

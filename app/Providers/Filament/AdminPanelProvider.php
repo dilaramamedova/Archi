@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use Filament\Forms\Components\TextInput;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -22,6 +23,18 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
 {
+    /**
+     * Any phone the way people write it: "+994 (50) 123-45-67", "012 404 00 00".
+     * Filament's default ->tel() regex allows brackets only right after the "+",
+     * so the common Azerbaijani "+994 (50) …" was rejected.
+     */
+    public const PHONE_REGEX = '/^\+?(?=(?:\D*\d){5})[0-9\s().\/-]+$/';
+
+    public function boot(): void
+    {
+        TextInput::configureUsing(fn (TextInput $input) => $input->telRegex(self::PHONE_REGEX));
+    }
+
     public function panel(Panel $panel): Panel
     {
         return $panel

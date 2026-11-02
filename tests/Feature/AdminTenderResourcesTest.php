@@ -118,6 +118,27 @@ final class AdminTenderResourcesTest extends TestCase
             ->assertHasNoFormErrors(['title.ru', 'title.en']);
     }
 
+    public function test_phone_accepts_the_usual_azerbaijani_formats(): void
+    {
+        $tender = $this->makeTender();
+
+        foreach (['+994 (50) 123-45-67', '(012) 404 00 00', '+994501234567', '050 123 45 67'] as $phone) {
+            Livewire::test(EditTender::class, ['record' => $tender->getRouteKey()])
+                ->fillForm(['contact_phone' => $phone])
+                ->call('save')
+                ->assertHasNoFormErrors();
+
+            $this->assertSame($phone, $tender->fresh()->contact_phone);
+        }
+
+        foreach (['zəng edin', '+994', '12-34'] as $phone) {
+            Livewire::test(EditTender::class, ['record' => $tender->getRouteKey()])
+                ->fillForm(['contact_phone' => $phone])
+                ->call('save')
+                ->assertHasFormErrors(['contact_phone']);
+        }
+    }
+
     public function test_admin_edits_and_deletes_a_tender(): void
     {
         $tender = $this->makeTender();
@@ -229,20 +250,23 @@ final class AdminTenderResourcesTest extends TestCase
         $open = $this->makeTender(['title' => ['az' => 'Açıq'], 'tender_category_id' => $category->id]);
         $closed = $this->makeTender(['title' => ['az' => 'Bağlı'], 'deadline_at' => now()->subDay()]);
         $draft = $this->makeTender(['title' => ['az' => 'Qaralama'], 'is_published' => false, 'deadline_at' => null]);
+        $scheduled = $this->makeTender(['title' => ['az' => 'Sabah'], 'published_at' => now()->addDay()]);
+        $all = [$open, $closed, $draft, $scheduled];
 
+        // A draft or scheduled tender is not "Aktiv" just because it has no deadline.
         Livewire::test(ListTenders::class)
-            ->assertCanSeeTableRecords([$open, $closed, $draft])
+            ->assertCanSeeTableRecords($all)
             ->assertTableColumnStateSet('state', 'Aktiv', $open)
             ->assertTableColumnStateSet('state', 'Bağlanıb', $closed)
-            ->assertTableColumnStateSet('state', 'Aktiv', $draft)   // no deadline = open
-            ->filterTable('state', 'closed')
-            ->assertCanSeeTableRecords([$closed])
-            ->assertCanNotSeeTableRecords([$open, $draft]);
+            ->assertTableColumnStateSet('state', 'Qaralama', $draft)
+            ->assertTableColumnStateSet('state', 'Planlaşdırılıb', $scheduled);
 
-        Livewire::test(ListTenders::class)
-            ->filterTable('state', 'open')
-            ->assertCanSeeTableRecords([$open, $draft])
-            ->assertCanNotSeeTableRecords([$closed]);
+        foreach (['closed' => $closed, 'open' => $open, 'draft' => $draft, 'scheduled' => $scheduled] as $state => $expected) {
+            Livewire::test(ListTenders::class)
+                ->filterTable('state', $state)
+                ->assertCanSeeTableRecords([$expected])
+                ->assertCanNotSeeTableRecords(array_values(array_filter($all, fn (Tender $t): bool => $t->isNot($expected))));
+        }
 
         Livewire::test(ListTenders::class)
             ->filterTable('is_published', false)
@@ -571,6 +595,30 @@ final class AdminTenderResourcesTest extends TestCase
         Livewire::test(ListTenderAccessRequests::class)
             ->callTableAction('grantAccess', $this->makeRequest(), ['months' => 0])
             ->assertHasTableActionErrors(['months' => 'min']);
+    }
+
+    public function test_approved_status_cannot_be_picked_by_hand_without_a_subscription(): void
+    {
+        $request = $this->makeRequest();
+
+        // Picking "Giriş aktivləşdirilib" in the form would close the request with no access behind it.
+        Livewire::test(EditTenderAccessRequest::class, ['record' => $request->getRouteKey()])
+            ->fillForm(['status' => TenderAccessRequestStatus::Approved->value])
+            ->call('save')
+            ->assertHasFormErrors(['status']);
+
+        $this->assertSame(TenderAccessRequestStatus::Pending, $request->fresh()->status);
+        $this->assertDatabaseCount('tender_subscriptions', 0);
+
+        // Once granted through the action, the request keeps saving normally.
+        $request->update(['status' => TenderAccessRequestStatus::Approved]);
+
+        Livewire::test(EditTenderAccessRequest::class, ['record' => $request->getRouteKey()])
+            ->fillForm(['admin_note' => 'Ödəniş alındı'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame('Ödəniş alındı', $request->fresh()->admin_note);
     }
 
     public function test_closing_a_request_by_hand_stamps_the_processed_date(): void

@@ -65,6 +65,13 @@ final class TenderAccessRequestResource extends Resource
                 Forms\Components\Select::make('status')
                     ->label('Status')
                     ->options(TenderAccessRequestStatus::options())
+                    // "Giriş aktivləşdirilib" only means something with a subscription
+                    // behind it, so it is set by «Girişi aktivləşdir», never picked here.
+                    ->disableOptionWhen(fn (string $value, ?TenderAccessRequest $record): bool => $value === TenderAccessRequestStatus::Approved->value
+                        && $record?->status !== TenderAccessRequestStatus::Approved)
+                    ->helperText(fn (?TenderAccessRequest $record): ?string => $record?->status === TenderAccessRequestStatus::Approved
+                        ? null
+                        : 'Girişi açmaq üçün yuxarıdakı «Girişi aktivləşdir» düyməsindən istifadə edin — o, paketi və müddəti yazır.')
                     ->required(),
                 Forms\Components\DateTimePicker::make('processed_at')->label('Baxılma tarixi')->timezone('Asia/Baku')->seconds(false),
                 Forms\Components\Textarea::make('admin_note')->label('Admin qeydi')->rows(3)->columnSpanFull(),

@@ -21,4 +21,21 @@ return [
 
     'paid_access' => (bool) env('TENDERS_PAID_ACCESS', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Budget sort rates
+    |--------------------------------------------------------------------------
+    |
+    | AZN value of one unit of each tender currency. Only used to order the
+    | board by "Büdcə (yüksək)" across currencies — budgets are always shown in
+    | their own currency, so approximate rates are enough.
+    |
+    */
+
+    'budget_rates' => [
+        'AZN' => 1.0,
+        'USD' => (float) env('TENDERS_RATE_USD', 1.70),
+        'EUR' => (float) env('TENDERS_RATE_EUR', 1.95),
+    ],
+
 ];

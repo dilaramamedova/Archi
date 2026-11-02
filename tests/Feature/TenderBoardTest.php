@@ -161,6 +161,34 @@ final class TenderBoardTest extends TestCase
         $this->assertSame($closed->id, last($titles([])));
     }
 
+    public function test_budget_sort_compares_currencies_in_azn(): void
+    {
+        config(['tenders.budget_rates' => ['AZN' => 1.0, 'USD' => 1.7, 'EUR' => 1.95]]);
+
+        $azn = $this->makeTender(['budget_max' => 60000, 'currency' => 'AZN']);   //  60 000 ₼
+        $usd = $this->makeTender(['budget_max' => 50000, 'currency' => 'USD']);   //  85 000 ₼
+        $eur = $this->makeTender(['budget_min' => 40000, 'currency' => 'EUR']);   //  78 000 ₼
+        $none = $this->makeTender();                                              // "Sorğu əsasında"
+
+        $ids = $this->actingAs($this->subscriber())->get(route('tenders.index', ['sort' => 'budget']))
+            ->assertOk()->viewData('tenders')->getCollection()->pluck('id')->all();
+
+        $this->assertSame([$usd->id, $eur->id, $azn->id, $none->id], $ids);
+    }
+
+    public function test_inactive_category_is_not_shown_on_cards_or_the_detail(): void
+    {
+        $tender = $this->makeTender();
+        $this->category->update(['name' => ['az' => 'Köhnə kateqoriya'], 'is_active' => false]);
+        $user = $this->subscriber();
+
+        $this->actingAs($user)->get(route('tenders.index'))->assertOk()->assertSee($tender->title)->assertDontSee('Köhnə kateqoriya');
+        $this->actingAs($user)->get(route('tenders.show', $tender->slug))->assertOk()->assertDontSee('Köhnə kateqoriya');
+
+        $this->category->update(['is_active' => true]);
+        $this->actingAs($user)->get(route('tenders.show', $tender->slug))->assertOk()->assertSee('Köhnə kateqoriya');
+    }
+
     public function test_save_toggle_and_saved_tab(): void
     {
         $saved = $this->makeTender();

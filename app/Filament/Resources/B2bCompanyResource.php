@@ -33,6 +33,13 @@ final class B2bCompanyResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
+    private const MARKETS = ['international' => 'Beynəlxalq (USD)', 'local' => 'Daxili (AZN)'];
+
+    private static function pricingOn(): bool
+    {
+        return (bool) config('b2b.pricing');
+    }
+
     /**
      * Telegram / Instagram / LinkedIn / Facebook: a handle or an http(s) link, never
      * another scheme — the profile turns the value into an absolute link.
@@ -98,15 +105,20 @@ final class B2bCompanyResource extends Resource
                 Forms\Components\TextInput::make('email')->label('E-poçt')->email()->maxLength(255),
                 Forms\Components\TextInput::make('working_hours')->label('İş saatları')->placeholder('B.e–Cümə 09:00–18:00')->maxLength(120),
                 Forms\Components\TextInput::make('instagram')->label('Instagram')->placeholder('@ad və ya https://instagram.com/…')->rules([self::handleOrUrlRule()])->maxLength(255),
-                Forms\Components\TextInput::make('linkedin')->label('LinkedIn')->placeholder('https://linkedin.com/company/…')->rules([self::handleOrUrlRule()])->maxLength(255),
+                Forms\Components\TextInput::make('linkedin')->label('LinkedIn')->placeholder('https://linkedin.com/company/…')
+                    ->helperText('Tam link, «company/ad» (şirkət səhifəsi) və ya «in/ad» (şəxsi profil). Təkcə ad yazılsa, şirkət səhifəsi sayılır.')
+                    ->rules([self::handleOrUrlRule()])->maxLength(255),
                 Forms\Components\TextInput::make('facebook')->label('Facebook')->placeholder('https://facebook.com/…')->rules([self::handleOrUrlRule()])->maxLength(255),
                 Forms\Components\CheckboxList::make('languages')->label('Ünsiyyət dilləri')->options(B2bCompany::LANGUAGES)->columns(3)->columnSpanFull(),
             ])->columns(2),
 
             Section::make('Yerləşdirmə')->schema([
+                // The market only picks which pricing table a company belongs to —
+                // hidden while pricing is off (config/b2b.php), the column keeps its value.
                 Forms\Components\Select::make('market')->label('Bazar')
-                    ->options(['international' => 'Beynəlxalq (USD)', 'local' => 'Daxili (AZN)'])
+                    ->options(self::MARKETS)
                     ->default('international')
+                    ->visible(fn (): bool => self::pricingOn())
                     ->required(),
                 Forms\Components\Select::make('plan')->label('Plan')->options(B2bPlan::options())->default(B2bPlan::Free->value)->required(),
                 Forms\Components\TextInput::make('slug')->label('Slug')->helperText('Boş qalsa, addan yaradılır.')->alphaDash()->unique(ignoreRecord: true)->maxLength(255),
@@ -140,6 +152,7 @@ final class B2bCompanyResource extends Resource
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('market')
                     ->label('Bazar')
+                    ->visible(fn (): bool => self::pricingOn())
                     ->badge()
                     ->formatStateUsing(fn (string $state): string => $state === 'local' ? 'AZN' : 'USD')
                     ->color(fn (string $state): string => $state === 'local' ? 'gray' : 'info'),
@@ -155,7 +168,7 @@ final class B2bCompanyResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\TernaryFilter::make('is_published')->label('Dərc'),
-                Tables\Filters\SelectFilter::make('market')->label('Bazar')->options(['international' => 'Beynəlxalq (USD)', 'local' => 'Daxili (AZN)']),
+                Tables\Filters\SelectFilter::make('market')->label('Bazar')->options(self::MARKETS)->visible(fn (): bool => self::pricingOn()),
                 Tables\Filters\SelectFilter::make('cooperation_type')->label('Əməkdaşlıq növü')->options(B2bCooperationType::options()),
                 Tables\Filters\SelectFilter::make('b2b_category_id')
                     ->label('Kateqoriya')

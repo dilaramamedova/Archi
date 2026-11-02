@@ -102,6 +102,7 @@ final class AdminB2bResourcesTest extends TestCase
 
     public function test_admin_creates_a_company_with_every_field_and_images(): void
     {
+        config(['b2b.pricing' => true]); // the market field only shows with pricing on
         Storage::fake('public');
         $category = B2bCategory::query()->create(['name' => ['az' => 'Keramika'], 'slug' => 'keramika-full']);
 
@@ -165,8 +166,25 @@ final class AdminB2bResourcesTest extends TestCase
             ->assertHasFormErrors(['legal_name' => 'required']);
     }
 
+    public function test_market_field_is_hidden_while_pricing_is_off(): void
+    {
+        $this->get(B2bCompanyResource::getUrl('create'))->assertOk()->assertDontSee('Beynəlxalq (USD)');
+
+        Livewire::test(CreateB2bCompany::class)
+            ->fillForm(['legal_name' => 'Bazarsız MMC', 'plan' => B2bPlan::Free->value])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas('b2b_companies', ['legal_name' => 'Bazarsız MMC']);
+
+        config(['b2b.pricing' => true]);
+        $this->get(B2bCompanyResource::getUrl('create'))->assertOk()->assertSee('Beynəlxalq (USD)');
+    }
+
     public function test_company_requires_market_and_plan(): void
     {
+        config(['b2b.pricing' => true]);
+
         Livewire::test(CreateB2bCompany::class)
             ->fillForm(['legal_name' => 'Test MMC', 'market' => null, 'plan' => null])
             ->call('create')
@@ -341,6 +359,7 @@ final class AdminB2bResourcesTest extends TestCase
 
     public function test_company_table_filters_and_search(): void
     {
+        config(['b2b.pricing' => true]); // the market filter only shows with pricing on
         $tiles = B2bCategory::query()->create(['name' => ['az' => 'Kafel'], 'slug' => 'kafel-filter']);
         $furniture = B2bCategory::query()->create(['name' => ['az' => 'Mebel'], 'slug' => 'mebel-filter']);
 

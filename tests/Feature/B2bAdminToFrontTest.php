@@ -198,6 +198,14 @@ final class B2bAdminToFrontTest extends TestCase
         $this->assertSame('https://linkedin.com/company/anatolia', $c->socialUrl('linkedin'));
         $this->assertNull($c->socialUrl('email'));
 
+        // LinkedIn: a person ("in/…") is not turned into a company page; a bare handle is.
+        $linkedin = fn (string $value): ?string => (new B2bCompany(['linkedin' => $value]))->socialUrl('linkedin');
+        $this->assertSame('https://www.linkedin.com/in/aylin-kaya', $linkedin('in/aylin-kaya'));
+        $this->assertSame('https://www.linkedin.com/company/anatolia', $linkedin('company/anatolia/'));
+        $this->assertSame('https://www.linkedin.com/school/ada', $linkedin('/school/ada'));
+        $this->assertSame('https://www.linkedin.com/company/anatolia', $linkedin('@anatolia'));
+        $this->assertSame('https://www.linkedin.com/in/aylin-kaya', $linkedin('https://www.linkedin.com/in/aylin-kaya'));
+
         foreach (['javascript:alert(1)', 'mailto:a@b.c', 'ftp://x.example', 'http://localhost', ''] as $bad) {
             $this->assertNull(B2bCompany::safeUrl($bad), $bad);
         }

@@ -217,6 +217,12 @@ final class B2bCompany extends Model
             return self::SOCIAL_BASES['telegram'].'+'.preg_replace('/[^0-9]/', '', $value);
         }
 
+        // LinkedIn has people and pages under different paths: "in/aylin-kaya",
+        // "company/anatolia", "school/…", "showcase/…". A bare handle stays a company.
+        if ($network === 'linkedin' && preg_match('#^/?(in|company|school|showcase)/([\pL\pN._%-]+)/?$#u', $value, $m)) {
+            return 'https://www.linkedin.com/'.$m[1].'/'.rawurlencode(rawurldecode($m[2]));
+        }
+
         // "@anatolia.tiles" / "anatolia" is a handle; "instagram.com" / "t.me" is a host.
         if (preg_match('/^@?([\pL\pN._-]+)$/u', $value, $m)
             && ! preg_match('/^(?:www\.)?(?:t\.me|telegram\.me|instagram\.com|facebook\.com|fb\.com|linkedin\.com)$/i', $m[1])) {
