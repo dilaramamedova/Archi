@@ -44,6 +44,9 @@ final class AdminTenderResourcesTest extends TestCase
 
         Filament::setCurrentPanel(Filament::getPanel('admin'));
         $this->actingAs(User::factory()->admin()->create(), 'admin');
+
+        // Some assertions check the paid access states; the section ships free.
+        config(['tenders.paid_access' => true]);
     }
 
     public function test_every_tender_resource_page_renders(): void

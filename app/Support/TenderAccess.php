@@ -42,11 +42,23 @@ final class TenderAccess
 
     public static function for(?User $user): self
     {
+        // While the section is free (config/tenders.php) everyone — guests
+        // included — is treated as fully subscribed, so the board and every
+        // detail show without a package. Flip TENDERS_PAID_ACCESS on to enforce.
+        if (! self::paidMode()) {
+            return new self(self::ACTIVE);
+        }
+
         if ($user === null) {
             return new self(self::GUEST);
         }
 
         return self::resolve($user);
+    }
+
+    public static function paidMode(): bool
+    {
+        return (bool) config('tenders.paid_access');
     }
 
     public function granted(): bool

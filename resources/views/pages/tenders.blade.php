@@ -56,20 +56,22 @@
         ['label' => $tOr('tenders.crumb', 'Tenderlər')],
     ]" />
 
-    {{-- paid package banner --}}
-    <div class="td-banner td-banner-ok">
-      <span class="td-banner-check">@include('pages.partials.tender-icon', ['name' => 'check', 'stroke' => '2.4'])</span>
-      <div>
-        <p class="t1">{{ $tOr('tenders.package.active', 'Ödənişli paket aktivdir') }}</p>
-        <p class="t2">
-          @if ($endsAt)
-            {{ $tOr('tenders.package.active_until', 'Bütün tenderlərə :date tarixinədək çıxışınız var.', ['date' => $endsAt->format('d.m.Y')]) }}
-          @else
-            {{ $tOr('tenders.package.active_sub', 'Bütün tenderlərə çıxışınız var.') }}
-          @endif
-        </p>
+    {{-- paid package banner — only while the section is paid --}}
+    @if ($paidMode)
+      <div class="td-banner td-banner-ok">
+        <span class="td-banner-check">@include('pages.partials.tender-icon', ['name' => 'check', 'stroke' => '2.4'])</span>
+        <div>
+          <p class="t1">{{ $tOr('tenders.package.active', 'Ödənişli paket aktivdir') }}</p>
+          <p class="t2">
+            @if ($endsAt)
+              {{ $tOr('tenders.package.active_until', 'Bütün tenderlərə :date tarixinədək çıxışınız var.', ['date' => $endsAt->format('d.m.Y')]) }}
+            @else
+              {{ $tOr('tenders.package.active_sub', 'Bütün tenderlərə çıxışınız var.') }}
+            @endif
+          </p>
+        </div>
       </div>
-    </div>
+    @endif
 
     <div class="td-heading">
       <h1>{{ $tOr('tenders.heading.title', 'Tenderlər') }}</h1>
@@ -168,7 +170,10 @@
 
             <nav class="td-tabs" aria-label="{{ $tOr('tenders.tabs.label', 'Tender siyahısı') }}">
               <a href="{{ $tabUrls['all'] }}" @if (! $isSavedTab) aria-current="page" @endif>{{ $tOr('tenders.tabs.all', 'Bütün tenderlər') }}</a>
-              <a href="{{ $tabUrls['saved'] }}" @if ($isSavedTab) aria-current="page" @endif>{{ $tOr('tenders.tabs.saved', 'Yadda saxlanılanlar') }}</a>
+              {{-- Saving needs an account; a free-mode guest has no saved list. --}}
+              @auth
+                <a href="{{ $tabUrls['saved'] }}" @if ($isSavedTab) aria-current="page" @endif>{{ $tOr('tenders.tabs.saved', 'Yadda saxlanılanlar') }}</a>
+              @endauth
             </nav>
 
             <div class="td-select td-sort">
@@ -183,12 +188,21 @@
           </div>
 
           @if ($tenders->isEmpty())
+            @php
+              // No criteria + empty + not the saved tab means there simply are no
+              // published tenders yet — a distinct message from a filtered miss.
+              $emptyKind = ($isSavedTab && ! $hasCriteria) ? 'saved' : (! $hasCriteria ? 'none' : 'filtered');
+              $emptyIcon = ['saved' => 'bookmark', 'none' => 'calendar', 'filtered' => 'search'][$emptyKind];
+            @endphp
             <div class="td-empty">
-              <span class="td-empty-ic">@include('pages.partials.tender-icon', ['name' => $isSavedTab && ! $hasCriteria ? 'bookmark' : 'search', 'stroke' => '1.6'])</span>
-              @if ($isSavedTab && ! $hasCriteria)
+              <span class="td-empty-ic">@include('pages.partials.tender-icon', ['name' => $emptyIcon, 'stroke' => '1.6'])</span>
+              @if ($emptyKind === 'saved')
                 <h2>{{ $tOr('tenders.empty.saved_title', 'Hələ yadda saxladığınız tender yoxdur') }}</h2>
                 <p>{{ $tOr('tenders.empty.saved_text', 'Tender kartındakı əlfəcin işarəsinə basın — tender bu siyahıya əlavə olunacaq.') }}</p>
                 <a class="td-btn td-btn-outline" href="{{ $tabUrls['all'] }}">{{ $tOr('tenders.empty.saved_cta', 'Bütün tenderlərə bax') }}</a>
+              @elseif ($emptyKind === 'none')
+                <h2>{{ $tOr('tenders.empty.none_title', 'Hazırda aktiv tender yoxdur') }}</h2>
+                <p>{{ $tOr('tenders.empty.none_text', 'Yeni tenderlər əlavə olunan kimi burada görünəcək. Bir az sonra yenidən yoxlayın.') }}</p>
               @else
                 <h2>{{ $tOr('tenders.empty.title', 'Uyğun tender tapılmadı') }}</h2>
                 <p>{{ $tOr('tenders.empty.text', 'Axtarışınıza və seçdiyiniz filtrlərə uyğun tender yoxdur. Filtrləri sıfırlayın və ya axtarış sözünü dəyişin.') }}</p>
@@ -227,12 +241,14 @@
 
                     <div class="td-card-side">
                       <span class="td-chip" data-tone="{{ $open ? 'open' : 'closed' }}">{{ $open ? $tOr('tenders.status.open', 'Aktiv') : $tOr('tenders.status.closed', 'Bağlanıb') }}</span>
-                      <button type="button" class="td-bm" data-save-url="{{ route('tenders.save', $tender->slug) }}"
-                              aria-pressed="{{ $saved ? 'true' : 'false' }}"
-                              aria-label="{{ $saved ? $tOr('tenders.card.saved', 'Yadda saxlanılıb') : $tOr('tenders.card.save', 'Yadda saxla') }}"
-                              title="{{ $saved ? $tOr('tenders.card.saved', 'Yadda saxlanılıb') : $tOr('tenders.card.save', 'Yadda saxla') }}">
-                        @include('pages.partials.tender-icon', ['name' => 'bookmark'])
-                      </button>
+                      @auth
+                        <button type="button" class="td-bm" data-save-url="{{ route('tenders.save', $tender->slug) }}"
+                                aria-pressed="{{ $saved ? 'true' : 'false' }}"
+                                aria-label="{{ $saved ? $tOr('tenders.card.saved', 'Yadda saxlanılıb') : $tOr('tenders.card.save', 'Yadda saxla') }}"
+                                title="{{ $saved ? $tOr('tenders.card.saved', 'Yadda saxlanılıb') : $tOr('tenders.card.save', 'Yadda saxla') }}">
+                          @include('pages.partials.tender-icon', ['name' => 'bookmark'])
+                        </button>
+                      @endauth
                     </div>
                   </div>
 

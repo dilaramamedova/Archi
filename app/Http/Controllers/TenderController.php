@@ -26,10 +26,12 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 /**
  * Tender board (Figma «11 · TENDERLƏR», T1–T7 / M1–M4).
  *
- * Everything past the lock card — list, detail, contacts, files — needs an
- * active package (App\Support\TenderAccess). Without one the same lock page is
- * rendered for /tenders and every /tenders/{slug}, so a shared direct link
- * reveals nothing either.
+ * In paid mode everything past the lock card — list, detail, contacts, files —
+ * needs an active package (App\Support\TenderAccess); without one the same lock
+ * page is rendered for /tenders and every /tenders/{slug}, so a shared direct
+ * link reveals nothing either. While the section is free (config/tenders.php),
+ * TenderAccess grants everyone, so the board shows to all visitors and the lock
+ * page is never reached — the gating code simply stays dormant.
  */
 final class TenderController extends Controller
 {
@@ -51,7 +53,8 @@ final class TenderController extends Controller
             'city' => trim((string) $request->input('city', '')),
             'status' => in_array($request->input('status'), self::STATUSES, true) ? $request->input('status') : 'all',
             'sort' => in_array($request->input('sort'), self::SORTS, true) ? $request->input('sort') : 'newest',
-            'tab' => $request->input('tab') === 'saved' ? 'saved' : 'all',
+            // The saved tab needs an account — a free-mode guest never gets it.
+            'tab' => ($request->user() && $request->input('tab') === 'saved') ? 'saved' : 'all',
         ];
 
         $query = Tender::query()->published()->with('category');
@@ -97,13 +100,15 @@ final class TenderController extends Controller
         $cities = Tender::query()->published()->whereNotNull('city')->where('city', '!=', '')
             ->distinct()->orderBy('city')->pluck('city');
 
-        $savedIds = $request->user()->savedTenders()->pluck('tenders.id')->all();
+        $savedIds = $request->user()?->savedTenders()->pluck('tenders.id')->all() ?? [];
 
         $activeFilterCount = count($filters['categories'])
             + ($filters['city'] !== '' ? 1 : 0)
             + ($filters['status'] !== 'all' ? 1 : 0);
 
-        return view('pages.tenders', compact('access', 'tenders', 'filters', 'categories', 'cities', 'savedIds', 'activeFilterCount'));
+        $paidMode = TenderAccess::paidMode();
+
+        return view('pages.tenders', compact('access', 'tenders', 'filters', 'categories', 'cities', 'savedIds', 'activeFilterCount', 'paidMode'));
     }
 
     public function show(Request $request, string $slug): View
@@ -117,9 +122,10 @@ final class TenderController extends Controller
 
         $tender->increment('views_count');
 
-        $isSaved = $request->user()->savedTenders()->whereKey($tender->id)->exists();
+        $isSaved = $request->user()?->savedTenders()->whereKey($tender->id)->exists() ?? false;
+        $paidMode = TenderAccess::paidMode();
 
-        return view('pages.tender', compact('access', 'tender', 'isSaved'));
+        return view('pages.tender', compact('access', 'tender', 'isSaved', 'paidMode'));
     }
 
     public function file(Request $request, string $slug, int $index): StreamedResponse|RedirectResponse

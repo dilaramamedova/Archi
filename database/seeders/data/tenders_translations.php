@@ -62,6 +62,8 @@ return [
         'empty.title' => ['az' => 'Uyğun tender tapılmadı', 'ru' => 'Подходящих тендеров не найдено', 'en' => 'No matching tenders found'],
         'empty.text' => ['az' => 'Axtarışınıza və seçdiyiniz filtrlərə uyğun tender yoxdur. Filtrləri sıfırlayın və ya axtarış sözünü dəyişin.', 'ru' => 'По вашему запросу и выбранным фильтрам тендеров нет. Сбросьте фильтры или измените поисковый запрос.', 'en' => 'No tenders match your search and the selected filters. Reset the filters or change your search term.'],
         'empty.reset' => ['az' => 'Filtrləri sıfırla', 'ru' => 'Сбросить фильтры', 'en' => 'Reset filters'],
+        'empty.none_title' => ['az' => 'Hazırda aktiv tender yoxdur', 'ru' => 'Активных тендеров пока нет', 'en' => 'No active tenders yet'],
+        'empty.none_text' => ['az' => 'Yeni tenderlər əlavə olunan kimi burada görünəcək. Bir az sonra yenidən yoxlayın.', 'ru' => 'Новые тендеры появятся здесь сразу после добавления. Загляните чуть позже.', 'en' => 'New tenders will appear here as soon as they are added. Check back a little later.'],
         'empty.saved_title' => ['az' => 'Hələ yadda saxladığınız tender yoxdur', 'ru' => 'У вас пока нет сохранённых тендеров', 'en' => 'You have no saved tenders yet'],
         'empty.saved_text' => ['az' => 'Tender kartındakı əlfəcin işarəsinə basın — tender bu siyahıya əlavə olunacaq.', 'ru' => 'Нажмите на значок закладки в карточке тендера — он появится в этом списке.', 'en' => 'Tap the bookmark icon on a tender card and it will appear in this list.'],
         'empty.saved_cta' => ['az' => 'Bütün tenderlərə bax', 'ru' => 'Смотреть все тендеры', 'en' => 'Browse all tenders'],

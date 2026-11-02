@@ -101,11 +101,13 @@
         </p>
       </div>
 
-      <button type="button" class="tdd-save" data-save-url="{{ route('tenders.save', $tender->slug) }}"
-              aria-pressed="{{ $isSaved ? 'true' : 'false' }}">
-        @include('pages.partials.tender-icon', ['name' => 'bookmark'])
-        <span class="lbl">{{ $isSaved ? $savedLabel : $saveLabel }}</span>
-      </button>
+      @auth
+        <button type="button" class="tdd-save" data-save-url="{{ route('tenders.save', $tender->slug) }}"
+                aria-pressed="{{ $isSaved ? 'true' : 'false' }}">
+          @include('pages.partials.tender-icon', ['name' => 'bookmark'])
+          <span class="lbl">{{ $isSaved ? $savedLabel : $saveLabel }}</span>
+        </button>
+      @endauth
     </header>
 
     <div class="tdd-cols">
@@ -252,19 +254,21 @@
           <p class="tdd-foot">{{ $tOr('tenders.detail.direct_note', 'Müraciət birbaşa sifarişçiyə göndərilir.') }}</p>
         </section>
 
-        <div class="tdd-card tdd-package">
-          <span class="td-banner-check">@include('pages.partials.tender-icon', ['name' => 'check', 'stroke' => '2.4'])</span>
-          <div>
-            <p class="t1">{{ $tOr('tenders.package.active', 'Ödənişli paket aktivdir') }}</p>
-            <p class="t2">
-              @if ($endsAt)
-                {{ $tOr('tenders.package.active_until', 'Bütün tenderlərə :date tarixinədək çıxışınız var.', ['date' => $endsAt->format('d.m.Y')]) }}
-              @else
-                {{ $tOr('tenders.package.active_sub', 'Bütün tenderlərə çıxışınız var.') }}
-              @endif
-            </p>
+        @if ($paidMode)
+          <div class="tdd-card tdd-package">
+            <span class="td-banner-check">@include('pages.partials.tender-icon', ['name' => 'check', 'stroke' => '2.4'])</span>
+            <div>
+              <p class="t1">{{ $tOr('tenders.package.active', 'Ödənişli paket aktivdir') }}</p>
+              <p class="t2">
+                @if ($endsAt)
+                  {{ $tOr('tenders.package.active_until', 'Bütün tenderlərə :date tarixinədək çıxışınız var.', ['date' => $endsAt->format('d.m.Y')]) }}
+                @else
+                  {{ $tOr('tenders.package.active_sub', 'Bütün tenderlərə çıxışınız var.') }}
+                @endif
+              </p>
+            </div>
           </div>
-        </div>
+        @endif
       </aside>
     </div>
 

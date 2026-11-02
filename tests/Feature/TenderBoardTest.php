@@ -35,6 +35,10 @@ final class TenderBoardTest extends TestCase
     {
         parent::setUp();
 
+        // These tests exercise the paid gate; the section ships free by default,
+        // so turn the gate on for the class.
+        config(['tenders.paid_access' => true]);
+
         $this->category = TenderCategory::query()->create([
             'name' => ['az' => 'Test kateqoriya'],
             'slug' => 'test-kateqoriya',
