@@ -87,8 +87,20 @@ class CalculatorPagesTest extends TestCase
 
         $works = collect($response->json('works'));
 
-        $this->assertGreaterThan(100, $works->count());
-        $this->assertFalse($works->first()->has ?? false);
+        $this->assertGreaterThan(40, $works->count());
         $this->assertArrayNotHasKey('rate', $works->first());
+
+        // The finishes travel as rows, without their prices.
+        $finishes = collect($response->json('finishes'));
+        $this->assertTrue($finishes->contains('id', 'LAMINATE'));
+        $this->assertSame('FLOATING', $finishes->firstWhere('id', 'LAMINATE')['family']);
+        $this->assertArrayNotHasKey('labourRate', $finishes->first());
+        $this->assertArrayNotHasKey('materialPrices', $finishes->first());
+        $this->assertStringNotContainsString('"rate"', $response->getContent());
+
+        // Three conditions, three states, no HVAC catalogue.
+        $this->assertCount(3, $response->json('enums.conditions'));
+        $this->assertCount(3, $response->json('enums.surfaceStates'));
+        $this->assertArrayNotHasKey('hvacSystems', $response->json('enums'));
     }
 }

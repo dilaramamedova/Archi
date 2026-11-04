@@ -18,12 +18,42 @@ deploy tələb etmədən dəyişdirilir (TZ §30/§34, Master Spec §21/§24).
 | Ekran | Cədvəl | Nə idarə edir |
 |---|---|---|
 | Sürətli kalkulyator qiymətləri | `calculator_quick_rates` | Təsdiqlənmiş 6 qiymət (2 təmir növü × 3 kateqoriya) |
-| İş tarifləri | `calculator_work_rates` | 125 iş: tarif, minimum məbləğ, dəqiqlik sinfi, ehtiyata daxil olub-olmaması |
-| Material fallback qiymətləri | `calculator_material_fallbacks` | Məhsul seçilməyəndə istifadə olunan kateqoriya qiymətləri (Ekonom/Standart/Premium) |
-| Əmsallar | `calculator_coefficients` | Tavan hündürlüyü, kafel formatı, düzülüş, HVAC mürəkkəbliyi… |
-| Material normaları | `calculator_material_norms` | Sərfiyyat normaları və texnoloji ehtiyat (waste) faizləri |
-| Kalkulyator parametrləri | `calculator_settings` | Contingency %, ƏDV rejimi, sahə limitləri, lift qaydası, defolt qat sayları… |
+| **Üzlüklər** | `calculator_finishes` | Döşəmə/divar/tavan üzlükləri: hər sətir = usta haqqı + material (Ekonom/Standart/Premium) + ehtiyat % + texnologiya |
+| İş tarifləri | `calculator_work_rates` | ~55 iş: hazırlıq, mühəndis, demontaj, logistika, xidmət |
+| Material qiymətləri | `calculator_material_fallbacks` | Üzlük olmayan materiallar: qrunt, suvaq, yapışqan, qapı, santexnika, işıq, kabel… |
+| Əmsallar | `calculator_coefficients` | Yalnız tavan hündürlüyü (format/düzülüş əmsalları ləğv olunub) |
+| Material normaları | `calculator_material_norms` | Sərfiyyat normaları (qrunt, şpaklyovka, suvaq, stəjka, yapışqan, dərz, hidroizolyasiya, boya) |
+| Kalkulyator parametrləri | `calculator_settings` | Contingency %, ƏDV, sahə limitləri, kabel/boru normaları, çatdırılma normaları… |
 | Şəhər əmsalları | `calculator_cities` | Şəhər üzrə əmək əmsalı; Bakı = 1.00 baza |
+
+## Sadələşdirilmiş model (2026-11)
+
+Kataloqda sinif sahələri söndürüldükdən sonra (`CATALOG_CLASSIFIER_FIELDS`) kalkulyator
+da öz kod səviyyəli klassifikasiyalarından azad edildi. Məntiq:
+
+- **Üzlük = admin sətri.** `FinishCategory` enum-u yoxdur. Hər üzlük (`LAMINATE`, `PAINT`,
+  `WALL_TILE_LARGE`…) `calculator_finishes`-də bir sətirdir və öz usta haqqını, material
+  qiymətini, ehtiyat faizini daşıyır. Yeni üzlük («Mikrosement») = admin paneldə yeni sətir,
+  deploy lazım deyil. Üzlüyün iş sətrinin ID-si üzlüyün ID-sidir; material sətri `{ID}_MATERIAL`.
+- **Texnologiya ailəsi** (`FinishFamily`: COAT, TILE, PANEL, FLOATING, SUSPENDED) hazırlıq
+  zəncirini müəyyən edir — kodda qalan yeganə klassifikasiya. Boya tipli → suvaq/şpaklyovka/finiş
+  qrunt; kafel tipli → kafel altı hazırlıq, yaş zonada hidroizolyasiya, dərz, yapışqan; üzən döşəmə
+  → plintus; asma tavan → hamarlama yoxdur.
+- **3 vəziyyət** (`SurfaceState`: BARE / PREPARED / OLD) və **3 obyekt vəziyyəti**
+  (`ObjectCondition`: SHELL / PREPARED / OLD_RENOVATION). Qaba səth suvaqlanır/stəjka olunur,
+  köhnə səth əvvəlcə sökülür (yaş otaqda kafel tarifi, quru otaqda yumşaq örtük tarifi).
+- **Modullar otaqlardan çıxarılır**, ayrıca forma yoxdur: kondisioner = otaqdakı kondisioner
+  nöqtəsi sayı; işıqlandırıcı = işıq nöqtələri; boru = su/kanalizasiya nöqtəsi × `PIPE_M_PER_POINT`;
+  «Elektrik tam yenilənsin» açıqdırsa şit + nöqtə × `CABLE_M_PER_POINT` kabel; santexnika
+  avadanlığı otaq növündən defolt (`RoomType::defaultFixtures()`), redaktə olunur.
+- **Demontaj** yalnız köhnə təmirli obyektdə köhnə qapı/santexnika/nöqtə sayır (yeni saylar = köhnə
+  saylar); tullantı obyekt sahəsindən.
+- **Logistika** sahə normasıdır (`DELIVERY_AREA_PER_TRIP`, `MATERIAL_KG_PER_M2`) — kataloqda çəki
+  olmadığı üçün əvvəlki «hesablana bilmir, 0 ₼» yerinə real təxmin.
+- Payload versiyası **3**; v1/v2 sessiyalar `Units::upgradePayload()` və JS `upgradeSaved()`
+  ilə çevrilir (köhnə vəziyyətlər, material/iş açarları). Miqrasiya
+  `2026_11_04_100000_simplify_calculator_into_finish_rows` köhnə iş/fallback qiymətlərini
+  üzlük sətirlərinə köçürür, istifadəsiz sətirləri deaktiv edir.
 
 Qeyd: **boş qiymət silinmiş qiymət demək deyil.** Tarif və ya fallback qiymət boş
 qalarsa, smetada həmin sətir `PRICE_MISSING` statusu ilə «qiymət dəqiqləşdirilir»

@@ -60,4 +60,19 @@ enum RoomType: string
             self::Other => ['sockets' => 4, 'switches' => 1, 'lights' => 1],
         };
     }
+
+    /**
+     * The sanitary fixtures a room of this type normally gets — editable on the room,
+     * like the points. A fixture is installed and, in an old flat, the old one is
+     * removed; both counts come from here, so neither can be forgotten.
+     */
+    public function defaultFixtures(): array
+    {
+        return match ($this) {
+            self::Bathroom => ['toilet' => 1, 'basin' => 1, 'shower' => 1, 'bathtub' => 0, 'mixer' => 2],
+            self::Wc => ['toilet' => 1, 'basin' => 1, 'mixer' => 1],
+            self::Kitchen => ['kitchen_sink' => 1, 'mixer' => 1],
+            default => [],
+        };
+    }
 }

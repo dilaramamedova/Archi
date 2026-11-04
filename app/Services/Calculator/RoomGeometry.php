@@ -17,21 +17,17 @@ use App\Enums\Calculator\WarmFloorType;
 class RoomGeometry
 {
     /**
-     * @param  array<int, array{type: string, width: float, height: float, qty: int, subtype: ?string, installNewDoor: bool}>  $openings
+     * @param  array<int, array{type: string, width: float, height: float, qty: int, installNewDoor: bool}>  $openings
      * @param  array<int, SurfaceZone>  $zones
      * @param  array<string, int>  $points  electrical / plumbing point counts
+     * @param  array<string, int>  $fixtures  sanitary fixture counts
      */
     public function __construct(
         public readonly string $id,
         public readonly string $name,
         public readonly RoomType $roomType,
         public readonly GeometryMode $geometryMode,
-        /**
-         * Metres. The only entered dimension anything still reads, because the
-         * ceiling-height coefficient bands are expressed in metres. Length and width
-         * used to sit beside it and were read by nothing at all — they had already
-         * done their job inside floorArea and perimeter.
-         */
+        /** Metres — the ceiling-height coefficient bands are expressed in metres. */
         public readonly float $height,
         public readonly float $floorArea,
         public readonly float $ceilingArea,
@@ -46,6 +42,7 @@ class RoomGeometry
         public readonly WarmFloorType $warmFloorType,
         public readonly float $warmFloorArea,
         public readonly array $points,
+        public readonly array $fixtures,
         public readonly bool $wetZone,
         /** @var array<int, string> non-blocking validation messages for this room */
         public readonly array $warnings = [],
@@ -66,20 +63,12 @@ class RoomGeometry
     }
 
     /** Doors the visitor asked to have installed — master spec audit §2.6. */
-    public function newDoorCounts(): array
+    public function newDoorCount(): int
     {
-        $counts = [];
-
-        foreach ($this->openings as $opening) {
-            if ($opening['type'] !== 'DOOR' || ! $opening['installNewDoor']) {
-                continue;
-            }
-
-            $subtype = $opening['subtype'] ?: 'INTERIOR';
-            $counts[$subtype] = ($counts[$subtype] ?? 0) + $opening['qty'];
-        }
-
-        return $counts;
+        return (int) array_sum(array_map(
+            fn (array $o) => $o['type'] === 'DOOR' && $o['installNewDoor'] ? $o['qty'] : 0,
+            $this->openings,
+        ));
     }
 
     public function toArray(): array
@@ -92,8 +81,7 @@ class RoomGeometry
             // The entered length, width and height are NOT echoed here: they are the
             // request's own data, in the request's own unit, and repeating them in
             // metres next to the millimetres the visitor typed is how a reader ends
-            // up believing the wrong one. What follows is derived — metres and m²,
-            // the units these quantities are actually tariffed in.
+            // up believing the wrong one. What follows is derived — metres and m².
             'floorArea' => round($this->floorArea, 4),
             'ceilingArea' => round($this->ceilingArea, 4),
             'perimeter' => round($this->perimeter, 4),
@@ -108,13 +96,13 @@ class RoomGeometry
                 'widthMm' => round(Units::mToMm($o['width']), 1),
                 'heightMm' => round(Units::mToMm($o['height']), 1),
                 'qty' => $o['qty'],
-                'subtype' => $o['subtype'],
                 'installNewDoor' => $o['installNewDoor'],
             ], $this->openings),
             'zones' => array_map(fn (SurfaceZone $z) => $z->toArray(), $this->zones),
             'warmFloorType' => $this->warmFloorType->value,
             'warmFloorArea' => round($this->warmFloorArea, 4),
             'points' => $this->points,
+            'fixtures' => $this->fixtures,
             'wetZone' => $this->wetZone,
             'warnings' => $this->warnings,
         ];

@@ -7,7 +7,6 @@ use App\Enums\Calculator\LineType;
 use App\Enums\Calculator\ObjectCondition;
 use App\Enums\Calculator\PrecisionClass;
 use App\Enums\Calculator\PriceSegment;
-use App\Enums\Calculator\PropertyMarketType;
 use App\Enums\Calculator\WorkCategory;
 use App\Models\Product;
 
@@ -40,12 +39,9 @@ class EstimateBuilder
     {
         $object = is_array($inputs['object'] ?? null) ? $inputs['object'] : [];
 
-        // The object condition seeds the state of every surface zone. When it was not
-        // answered, the new-build / second-hand choice is the next best evidence
-        // (master spec §7) — a new build arrives bare, a resale carries an old finish.
-        $condition = ObjectCondition::tryFrom(strtoupper((string) ($object['condition'] ?? '')))
-            ?? PropertyMarketType::tryFrom(strtoupper((string) ($object['marketType'] ?? '')))?->defaultCondition()
-            ?? ObjectCondition::Shell;
+        // The object condition seeds the state of every surface zone and the
+        // demolition / rewiring defaults (master spec §7).
+        $condition = ObjectCondition::fromAny($object['condition'] ?? null) ?? ObjectCondition::Shell;
         $segment = PriceSegment::fromSlug($object['segment'] ?? null) ?? PriceSegment::Standard;
 
         $rooms = $this->geometry->buildRooms(is_array($inputs['rooms'] ?? null) ? $inputs['rooms'] : [], $condition);
@@ -53,7 +49,7 @@ class EstimateBuilder
 
         $requests = array_merge(
             $this->dependencies->suggest($rooms),
-            $this->modules->resolve($rooms, is_array($inputs['modules'] ?? null) ? $inputs['modules'] : [], $object, $derived),
+            $this->modules->resolve($rooms, is_array($inputs['modules'] ?? null) ? $inputs['modules'] : [], $object, $derived, $condition),
         );
 
         $selection = is_array($inputs['works'] ?? null) ? $inputs['works'] : [];
@@ -94,12 +90,7 @@ class EstimateBuilder
             );
         }
 
-        $logistics = $this->logistics->resolve(
-            $materialLines,
-            $products,
-            $object,
-            is_array($inputs['modules']['logistics'] ?? null) ? $inputs['modules']['logistics'] : [],
-        );
+        $logistics = $this->logistics->resolve($materialLines, $object, $derived);
 
         $logisticsLines = $this->priceWorks($this->consolidate($logistics['requests']), $cityCoefficient);
 
@@ -149,7 +140,8 @@ class EstimateBuilder
                     ? round($grandTotal)
                     : $grandTotal,
             ],
-            'warnings' => $this->warnings($rooms, $object, $derived, $lines, $logistics['meta']),
+            'condition' => $condition->value,
+            'warnings' => $this->warnings($rooms, $object, $derived, $lines),
             'logistics' => $logistics['meta'],
             // Only a line that actually carries money earns the "təxmini" disclaimer.
             // A material the visitor buys themselves is estimated in the same sense,
@@ -508,7 +500,7 @@ class EstimateBuilder
      * @param  array<int, RoomGeometry>  $rooms
      * @param  array<int, EstimateLine>  $lines
      */
-    private function warnings(array $rooms, array $object, array $derived, array $lines, array $logisticsMeta): array
+    private function warnings(array $rooms, array $object, array $derived, array $lines): array
     {
         $warnings = [];
 
@@ -541,10 +533,6 @@ class EstimateBuilder
             if ($line->isPriceMissing()) {
                 $warnings[] = ['code' => 'PRICE_MISSING', 'itemId' => $line->itemId, 'name' => $line->name];
             }
-        }
-
-        if (! ($logisticsMeta['complete'] ?? true)) {
-            $warnings[] = ['code' => 'LOGISTICS_INCOMPLETE', 'products' => $logisticsMeta['productsWithoutLogisticsData'] ?? 0];
         }
 
         return $warnings;

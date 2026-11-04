@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\CalculatorCity;
 use App\Models\CalculatorCoefficient;
+use App\Models\CalculatorFinish;
 use App\Models\CalculatorMaterialFallback;
 use App\Models\CalculatorMaterialNorm;
 use App\Models\CalculatorQuickRate;
@@ -33,9 +34,44 @@ class CalculatorSeeder extends Seeder
         $this->seedCoefficients();
         $this->seedNorms();
         $this->seedWorkRates();
+        $this->seedFinishes();
         $this->seedMaterialFallbacks();
 
         VersionedCache::bump(VersionedCache::CALCULATOR);
+    }
+
+    /**
+     * The finishes: one row each with labour and material prices. Re-running keeps
+     * an admin's prices only if the seeder is not run deliberately, like every other
+     * table here.
+     */
+    private function seedFinishes(): void
+    {
+        $draft = 'DRAFT — 2026 Bakı bazar araşdırması; Archi tərəfindən təsdiqlənməlidir.';
+        $sort = 0;
+
+        foreach (require database_path('seeders/data/calculator_finishes.php') as $row) {
+            CalculatorFinish::updateOrCreate(
+                ['finish_id' => $row['id']],
+                [
+                    'surface' => $row['surface'],
+                    'family' => $row['family'],
+                    'name' => $row['name'],
+                    'unit' => $row['unit'] ?? 'm²',
+                    'labour_rate' => $row['labour'],
+                    'minimum_charge' => $row['min'] ?? 0,
+                    'material_economy' => $row['economy'],
+                    'material_standard' => $row['standard'],
+                    'material_premium' => $row['premium'],
+                    'waste_percent' => $row['waste'] ?? 0,
+                    'is_default' => $row['default'] ?? false,
+                    'search_keywords' => $row['keywords'] ?? null,
+                    'notes' => $row['notes'] ?? $draft,
+                    'sort_order' => $sort++,
+                    'is_active' => true,
+                ],
+            );
+        }
     }
 
     /** TZ §54 — the only figures the client has already approved. */
@@ -114,19 +150,24 @@ class CalculatorSeeder extends Seeder
             // Logistics
             ['key' => 'FREE_LIFT_FLOORS', 'group' => 'LOGISTICS', 'type' => 'integer', 'value' => 1, 'unit' => 'mərtəbə',
                 'description' => ['az' => 'Lift olmadıqda pulsuz mərtəbə sayı', 'ru' => 'Этажи без начисления подъёма', 'en' => 'Floors carried free when there is no lift']],
-            ['key' => 'DELIVERY_VEHICLE_WEIGHT_CAPACITY', 'group' => 'LOGISTICS', 'type' => 'decimal', 'value' => 1500, 'unit' => 'kq',
-                'description' => ['az' => 'Nəqliyyatın yükgötürmə qabiliyyəti', 'ru' => 'Грузоподъёмность транспорта', 'en' => 'Vehicle weight capacity']],
-            ['key' => 'DELIVERY_VEHICLE_VOLUME_CAPACITY', 'group' => 'LOGISTICS', 'type' => 'decimal', 'value' => 12, 'unit' => 'm³',
-                'description' => ['az' => 'Nəqliyyatın həcmi', 'ru' => 'Объём кузова', 'en' => 'Vehicle volume capacity']],
+            ['key' => 'DELIVERY_AREA_PER_TRIP', 'group' => 'LOGISTICS', 'type' => 'decimal', 'value' => 40, 'unit' => 'm²/reys',
+                'description' => ['az' => 'Bir çatdırılma reysinə düşən obyekt sahəsi', 'ru' => 'Площадь объекта на один рейс доставки', 'en' => 'Object area per delivery trip'],
+                'notes' => '80 m² obyekt = 2 reys. Materialların çəkisi kataloqda çox vaxt olmadığı üçün çatdırılma sahəyə görə təxmin edilir.'],
+            ['key' => 'MATERIAL_KG_PER_M2', 'group' => 'LOGISTICS', 'type' => 'decimal', 'value' => 25, 'unit' => 'kq/m²',
+                'description' => ['az' => 'Obyektin 1 m²-nə düşən materialın təxmini çəkisi', 'ru' => 'Примерный вес материалов на 1 м² объекта', 'en' => 'Estimated material weight per m² of the object'],
+                'notes' => 'Lift olmayanda əl ilə qaldırma bu çəki ilə hesablanır.'],
             ['key' => 'DEBRIS_VOLUME_PER_M2', 'group' => 'LOGISTICS', 'type' => 'decimal', 'value' => 0.05, 'unit' => 'm³/m²',
                 'description' => ['az' => 'Demontajda 1 m²-ə düşən tikinti tullantısı', 'ru' => 'Объём строительного мусора на 1 м²', 'en' => 'Debris volume per m² of demolition'],
                 'notes' => 'İstifadəçi həcmi özü daxil etmədikdə istifadə olunur.'],
             ['key' => 'DEBRIS_VEHICLE_VOLUME_CAPACITY', 'group' => 'LOGISTICS', 'type' => 'decimal', 'value' => 6, 'unit' => 'm³',
                 'description' => ['az' => 'Tullantı maşınının həcmi (bir reys)', 'ru' => 'Объём мусоровоза (один рейс)', 'en' => 'Debris vehicle volume per trip']],
 
-            // HVAC
-            ['key' => 'SPLIT_INCLUDED_ROUTE_METERS', 'group' => 'HVAC', 'type' => 'decimal', 'value' => 3, 'unit' => 'm/blok',
-                'description' => ['az' => 'Standart split montajına daxil olan trassa', 'ru' => 'Трасса, включённая в стандартный монтаж split', 'en' => 'Route metres included in a standard split installation']],
+            // Engineering norms — the cable and pipe runs follow the points.
+            ['key' => 'CABLE_M_PER_POINT', 'group' => 'ENGINEERING', 'type' => 'decimal', 'value' => 7, 'unit' => 'm/nöqtə',
+                'description' => ['az' => 'Hər elektrik nöqtəsinə düşən kabel uzunluğu', 'ru' => 'Длина кабеля на одну электроточку', 'en' => 'Cable length per electrical point'],
+                'notes' => 'Yalnız «Elektrik tam yenilənsin» açıq olanda işləyir.'],
+            ['key' => 'PIPE_M_PER_POINT', 'group' => 'ENGINEERING', 'type' => 'decimal', 'value' => 3, 'unit' => 'm/nöqtə',
+                'description' => ['az' => 'Hər su / kanalizasiya nöqtəsinə düşən boru uzunluğu', 'ru' => 'Длина трубы на одну точку воды / канализации', 'en' => 'Pipe length per water / sewer point']],
 
             // Material defaults
             ['key' => 'DEFAULT_PAINT_COATS', 'group' => 'MATERIAL', 'type' => 'decimal', 'value' => 2, 'unit' => 'qat',
@@ -139,12 +180,8 @@ class CalculatorSeeder extends Seeder
                 'description' => ['az' => 'Hidroizolyasiyanın ilkin qat sayı', 'ru' => 'Слоёв гидроизоляции по умолчанию', 'en' => 'Default waterproofing layers']],
             ['key' => 'PLASTER_DEFAULT_THICKNESS_MM', 'group' => 'MATERIAL', 'type' => 'decimal', 'value' => 20, 'unit' => 'mm',
                 'description' => ['az' => 'Suvağın ilkin qalınlığı', 'ru' => 'Толщина штукатурки по умолчанию', 'en' => 'Default plaster thickness']],
-            ['key' => 'PLASTER_THICK_THRESHOLD_MM', 'group' => 'MATERIAL', 'type' => 'decimal', 'value' => 30, 'unit' => 'mm',
-                'description' => ['az' => 'Qalın suvaq əmsalının işə düşdüyü hədd', 'ru' => 'Порог применения коэффициента толстой штукатурки', 'en' => 'Thickness above which the thick-plaster coefficient applies']],
             ['key' => 'SCREED_DEFAULT_THICKNESS_MM', 'group' => 'MATERIAL', 'type' => 'decimal', 'value' => 50, 'unit' => 'mm',
                 'description' => ['az' => 'Stəjkanın ilkin qalınlığı', 'ru' => 'Толщина стяжки по умолчанию', 'en' => 'Default screed thickness']],
-            ['key' => 'SELF_LEVEL_DEFAULT_THICKNESS_MM', 'group' => 'MATERIAL', 'type' => 'decimal', 'value' => 5, 'unit' => 'mm',
-                'description' => ['az' => 'Özüyayılan döşəmənin ilkin qalınlığı', 'ru' => 'Толщина наливного пола по умолчанию', 'en' => 'Default self-levelling thickness']],
 
             // Geometry defaults (master spec §6). Millimetres, like every dimension
             // the visitor types — see App\Services\Calculator\Units.
@@ -192,14 +229,8 @@ class CalculatorSeeder extends Seeder
             ['K_HEIGHT_3_01_3_50', 'HEIGHT', ['az' => 'Tavan hündürlüyü 3.01–3.50 m', 'ru' => 'Высота потолка 3.01–3.50 м', 'en' => 'Ceiling height 3.01–3.50 m'], 1.15, 'wall/ceiling labor'],
             ['K_HEIGHT_3_51_4_00', 'HEIGHT', ['az' => 'Tavan hündürlüyü 3.51–4.00 m', 'ru' => 'Высота потолка 3.51–4.00 м', 'en' => 'Ceiling height 3.51–4.00 m'], 1.30, 'wall/ceiling labor'],
             ['K_HEIGHT_OVER_4', 'HEIGHT', ['az' => 'Tavan hündürlüyü 4.00 m-dən çox', 'ru' => 'Высота потолка более 4.00 м', 'en' => 'Ceiling height above 4.00 m'], 1.50, 'wall/ceiling labor'],
-            ['K_TILE_LARGE', 'TILE', ['az' => 'İriformatlı keramoqranit', 'ru' => 'Крупноформатная плитка', 'en' => 'Large-format tile'], 1.25, 'tile install'],
-            ['K_TILE_MOSAIC', 'TILE', ['az' => 'Mozaika', 'ru' => 'Мозаика', 'en' => 'Mosaic'], 1.60, 'tile install'],
-            ['K_TILE_DIAGONAL', 'TILE', ['az' => 'Diaqonal düzülüş', 'ru' => 'Диагональная раскладка', 'en' => 'Diagonal layout'], 1.15, 'tile install'],
-            ['K_PARQUET_HERRINGBONE', 'FLOOR', ['az' => 'Parket «yolka» düzülüşü', 'ru' => 'Паркет ёлкой', 'en' => 'Herringbone parquet'], 1.35, 'parquet install'],
-            ['K_DECOR_COMPLEX', 'WALL', ['az' => 'Mürəkkəb dekorativ üzlük', 'ru' => 'Сложная декоративная отделка', 'en' => 'Complex decorative finish'], 1.30, 'decor plaster/panel'],
-            ['K_PLASTER_THICK', 'WALL', ['az' => 'Qalın suvaq qatı', 'ru' => 'Толстый слой штукатурки', 'en' => 'Thick plaster layer'], 1.20, 'plaster'],
-            ['K_HVAC_ZONE', 'HVAC', ['az' => 'Zonaların sayı əmsalı', 'ru' => 'Коэффициент количества зон', 'en' => 'Zone count coefficient'], 1.10, 'ducted/VRF'],
-            ['K_HVAC_COMPLEX', 'HVAC', ['az' => 'HVAC mürəkkəbliyi', 'ru' => 'Сложность HVAC', 'en' => 'HVAC complexity'], 1.20, 'ducted/VRF/central'],
+            // A format, a layout or a complexity surcharge is its own finish row now
+            // ("İriformatlı keramoqranit" has its own rate), not a multiplier.
         ];
 
         foreach ($rows as [$id, $group, $description, $value, $appliesTo]) {
@@ -213,11 +244,8 @@ class CalculatorSeeder extends Seeder
     private function seedNorms(): void
     {
         $rows = [
-            ['WASTE_TILE_STANDARD', ['az' => 'Kafel — texnoloji ehtiyat', 'ru' => 'Плитка — запас', 'en' => 'Tile — waste'], 'WastePercent', 10, '%'],
-            ['WASTE_TILE_DIAGONAL', ['az' => 'Kafel diaqonal — ehtiyat', 'ru' => 'Плитка диагонально — запас', 'en' => 'Diagonal tile — waste'], 'WastePercent', 15, '%'],
-            ['WASTE_LAMINATE', ['az' => 'Laminat — ehtiyat', 'ru' => 'Ламинат — запас', 'en' => 'Laminate — waste'], 'WastePercent', 8, '%'],
-            ['WASTE_SPC', ['az' => 'SPC — ehtiyat', 'ru' => 'SPC — запас', 'en' => 'SPC — waste'], 'WastePercent', 8, '%'],
-            ['WASTE_PARQUET', ['az' => 'Parket — ehtiyat', 'ru' => 'Паркет — запас', 'en' => 'Parquet — waste'], 'WastePercent', 10, '%'],
+            // A finish's own waste lives on its row in calculator_finishes; only the
+            // skirting, which is not a finish, keeps a waste rule here.
             ['WASTE_SKIRTING', ['az' => 'Plintus — ehtiyat', 'ru' => 'Плинтус — запас', 'en' => 'Skirting — waste'], 'WastePercent', 5, '%'],
             ['PAINT_COVERAGE', ['az' => 'Boya — örtmə qabiliyyəti', 'ru' => 'Краска — укрывистость', 'en' => 'Paint — coverage'], 'CoverageM2PerLiter', 10, 'm²/L'],
             ['PRIMER_CONSUMPTION', ['az' => 'Qrunt — sərfiyyat', 'ru' => 'Грунтовка — расход', 'en' => 'Primer — consumption'], 'ConsumptionLPerM2', 0.12, 'L/m²'],
@@ -227,7 +255,6 @@ class CalculatorSeeder extends Seeder
             ['GROUT_CONSUMPTION', ['az' => 'Dərz doldurucu — sərfiyyat', 'ru' => 'Затирка — расход', 'en' => 'Grout — consumption'], 'ConsumptionKgPerM2', 0.5, 'kq/m²'],
             ['WATERPROOF_CONSUMPTION', ['az' => 'Hidroizolyasiya — sərfiyyat', 'ru' => 'Гидроизоляция — расход', 'en' => 'Waterproofing — consumption'], 'ConsumptionPerM2PerLayer', 1.3, 'kq/m²/qat'],
             ['SCREED_CONSUMPTION', ['az' => 'Stəjka — sərfiyyat', 'ru' => 'Стяжка — расход', 'en' => 'Screed — consumption'], 'ConsumptionKgPerM2PerMm', 1.9, 'kq/m²/mm'],
-            ['SELF_LEVEL_CONSUMPTION', ['az' => 'Özüyayılan döşəmə — sərfiyyat', 'ru' => 'Наливной пол — расход', 'en' => 'Self-levelling — consumption'], 'ConsumptionKgPerM2PerMm', 1.6, 'kq/m²/mm'],
         ];
 
         foreach ($rows as [$id, $name, $parameter, $value, $unit]) {

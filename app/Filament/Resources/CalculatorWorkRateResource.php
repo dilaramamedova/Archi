@@ -70,7 +70,6 @@ class CalculatorWorkRateResource extends Resource
         'ELECTRICAL' => 'Elektrik',
         'PLUMBING' => 'Santexnika',
         'HVAC' => 'Kondisioner',
-        'VENTILATION' => 'Ventilyasiya',
         'DOORS' => 'Qapılar',
         'LIGHTING' => 'İşıqlandırma',
         'LOGISTICS' => 'Logistika (daşınma, qaldırma)',
@@ -87,6 +86,7 @@ class CalculatorWorkRateResource extends Resource
      * therefore whether the rate they are about to type is the right size.
      */
     private const QUANTITY_SOURCES = [
+        'LightFixtureCount' => 'Otaqdakı işıq nöqtələrinin sayı — tavan + divar (ədəd)',
         'SelectedFloorArea' => 'Otağın döşəmə sahəsi (m²)',
         'SelectedCeilingArea' => 'Otağın tavan sahəsi (m²)',
         'SelectedWallArea' => 'Seçilmiş divar sahəsi (m²)',

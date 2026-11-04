@@ -58,7 +58,7 @@ class CalculatorSettingResource extends Resource
         'FINANCE' => 'Pul və faizlər',
         'VALIDATION' => 'Yoxlamalar',
         'LOGISTICS' => 'Çatdırılma və qaldırma',
-        'HVAC' => 'Kondisioner',
+        'ENGINEERING' => 'Elektrik və santexnika normaları',
         'MATERIAL' => 'Material üçün ilkin dəyərlər',
         'GEOMETRY' => 'Ölçülər üçün ilkin dəyərlər',
         'SNAPSHOT' => 'Smetanın saxlanması',
@@ -86,21 +86,20 @@ class CalculatorSettingResource extends Resource
         'AREA_TOLERANCE_PERCENT' => 'Müştərinin 1-ci addımda yazdığı sahə ilə otaqların cəmi arasında icazə verilən fərq. Fərq bundan çox olsa xəbərdarlıq çıxır, amma hesablama dayanmır.',
 
         'FREE_LIFT_FLOORS' => 'Lift olmayanda neçə mərtəbəyə görə pul alınmasın. 1 yazsanız, 1-ci mərtəbə pulsuz, 5-ci mərtəbə üçün 4 mərtəbə hesablanır.',
-        'DELIVERY_VEHICLE_WEIGHT_CAPACITY' => 'Bir maşının daşıya bildiyi ağırlıq. Materialın ümumi çəkisi buna bölünərək neçə reys lazım olduğu tapılır.',
-        'DELIVERY_VEHICLE_VOLUME_CAPACITY' => 'Bir maşının həcmi. Çəki və həcmdən hansı çox reys tələb edirsə, o götürülür.',
+        'DELIVERY_AREA_PER_TRIP' => 'Bir çatdırılma reysinə düşən obyekt sahəsi. 40 yazsanız 80 m² obyektə 2 reys hesablanır. Materialların çəkisi kataloqda çox vaxt olmadığı üçün çatdırılma sahəyə görə təxmin edilir.',
+        'MATERIAL_KG_PER_M2' => 'Obyektin 1 m²-nə düşən materialın təxmini çəkisi (25 = 60 m² obyektə 1.5 ton). Yük lifti olmayanda əl ilə qaldırma (kq × mərtəbə) bu çəki ilə hesablanır.',
+        'CABLE_M_PER_POINT' => 'Hər elektrik nöqtəsinə (rozetka, açar, işıq…) neçə metr kabel çəkilir. Yalnız «Elektrik tam yenilənsin» açıq olanda işləyir.',
+        'PIPE_M_PER_POINT' => 'Hər su və kanalizasiya nöqtəsinə neçə metr boru çəkilir.',
         'DEBRIS_VOLUME_PER_M2' => 'Demontajda hər 1 m² sahədən nə qədər tullantı çıxır. 0.05 yazsanız, 100 m² mənzildən 5 m³ tullantı hesablanır.',
         'DEBRIS_VEHICLE_VOLUME_CAPACITY' => 'Tullantı maşınının bir reysdə apardığı həcm.',
 
-        'SPLIT_INCLUDED_ROUTE_METERS' => 'Split kondisionerin standart montajına neçə metr trassa daxildir. Müştəri bundan çox yazsa, artıq metrlərə ayrıca pul hesablanır.',
 
         'DEFAULT_PAINT_COATS' => 'Boya neçə qat vurulur. Boyanın miqdarı buna görə hesablanır.',
         'DEFAULT_PRIMER_COATS' => 'Qrunt neçə qat vurulur.',
         'DEFAULT_WALL_PUTTY_LAYERS' => 'Şpaklyovka neçə qat vurulur.',
         'DEFAULT_WATERPROOF_LAYERS' => 'Hidroizolyasiya neçə qat vurulur.',
         'PLASTER_DEFAULT_THICKNESS_MM' => 'Suvağın orta qalınlığı. Suvaq qarışığının kiloqramı buna görə hesablanır.',
-        'PLASTER_THICK_THRESHOLD_MM' => 'Suvaq bu qalınlıqdan çox olduqda «qalın suvaq» əmsalı işə düşür.',
         'SCREED_DEFAULT_THICKNESS_MM' => 'Stəjkanın orta qalınlığı.',
-        'SELF_LEVEL_DEFAULT_THICKNESS_MM' => 'Özüyayılan döşəmənin orta qalınlığı.',
 
         // Kalkulyatorda bütün ölçülər millimetrlədir, bu defoltlar da.
         'DEFAULT_ROOM_HEIGHT_MM' => 'Yeni otaq əlavə ediləndə tavan hündürlüyü kimi hazır gələn rəqəm. Millimetrlə: 2800 = 2.8 m.',

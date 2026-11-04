@@ -120,8 +120,31 @@ export default function init() {
   const STEP_CAPTIONS = [T.object.k, T.rooms.k, T.works.k, T.materials.k, T.cart.k, T.summary.k];
 
   const enums = CONFIG.enums;
-  const finishesFor = (surface) => enums.finishes.filter((f) => f.surface === surface);
   const labelOf = (list, value) => (list.find((x) => x.value === value) || {}).label || value;
+
+  /**
+   * The finishes are admin rows (calculator_finishes), not a fixed list: whatever
+   * the panel holds for a surface is what the chips offer.
+   */
+  const finishes = CONFIG.finishes || [];
+  const finishesFor = (surface) => finishes
+    .filter((f) => f.surface === surface)
+    .map((f) => ({ value: f.id, label: f.name }));
+
+  /**
+   * The finish a new room starts with: a tile-type finish on a wet room's floor and
+   * walls, otherwise the row the admin marked as the default for that surface.
+   */
+  const defaultFinish = (surface, wet) => {
+    const rows = finishes.filter((f) => f.surface === surface);
+    const pick = (wet && surface !== 'CEILING' && rows.find((f) => f.family === 'TILE'))
+      || rows.find((f) => f.isDefault)
+      || rows[0];
+
+    return pick ? pick.id : null;
+  };
+
+  const conditionOf = (value) => enums.conditions.find((c) => c.value === value) || enums.conditions[0] || {};
 
   const state = {
     step: 0,
@@ -130,23 +153,20 @@ export default function init() {
       area: CONFIG.quick.defaults.area,
       cityKey: (CONFIG.cities.find((c) => c.isDefault) || CONFIG.cities[0] || {}).key,
       floor: 1,
-      totalFloors: 9,
-      marketType: 'SECONDARY',
       condition: 'SHELL',
       hasFreightElevator: false,
       demolitionRequired: false,
+      rewireElectrics: true,
       designProject: false,
       segment: CONFIG.quick.defaults.segment,
     },
     rooms: [],
     works: {},
     materials: {},
+    // Electrics, plumbing, air conditioning, fittings, doors, demolition and
+    // delivery are all derived from the rooms; only the cleaning switch is asked.
     modules: {
-      hvac: { systemType: 'NONE', indoorUnits: 1, outdoorUnits: 1, routeMeters: 0, conditionedArea: 0, zones: 1 },
-      lighting: { spots: 0, pendants: 0, chandeliers: 0 },
-      services: { finalCleaning: true, techSupervisionMonths: 0, authorSupervisionMonths: 0 },
-      demolition: { estimateDebris: true },
-      logistics: { externalAccess: false, platformDays: 0 },
+      services: { finalCleaning: true },
     },
     basket: { useCart: cartProducts.length > 0, excluded: [] },
     estimate: null,
@@ -156,8 +176,20 @@ export default function init() {
     summaryView: 'category',
     roomsTouched: false,
     demolitionTouched: false,
-    conditionTouched: false,
+    rewireTouched: false,
   };
+
+  /**
+   * The condition seeds the two object switches until the visitor sets them
+   * (master spec §7) — an old flat is stripped out and rewired, a prepared base
+   * is neither.
+   */
+  function applyConditionDefaults() {
+    const condition = conditionOf(state.object.condition);
+
+    if (! state.demolitionTouched) state.object.demolitionRequired = !! condition.defaultDemolition;
+    if (! state.rewireTouched) state.object.rewireElectrics = !! condition.defaultRewiring;
+  }
 
   /**
    * Continue the quick calculator: the URL query wins (the CTA carries it), then
@@ -177,7 +209,7 @@ export default function init() {
     if (type === 'WHITE_BOX') state.object.condition = 'SHELL';
     else if (type === 'FULL_RENOVATION') state.object.condition = 'OLD_RENOVATION';
 
-    state.object.demolitionRequired = state.object.condition === 'OLD_RENOVATION';
+    applyConditionDefaults();
   }
 
   /**
@@ -207,7 +239,7 @@ export default function init() {
    * an opening's `widthMm` / `heightMm` — because that is how this market specifies a
    * room, and because the key says the unit so a metre-era saved state is detectable
    * rather than silently a thousand times too small. Areas stay m²: `object.area`,
-   * `warmFloor.area`, `hvac.conditionedArea`. The server divides by 1000 exactly once
+   * `warmFloor.area`. The server divides by 1000 exactly once
    * (app/Services/Calculator/Units.php).
    */
   const MM_STEP = 10;
@@ -219,7 +251,7 @@ export default function init() {
     // A plausible rectangle for the share of the area this room takes: the visitor
     // corrects the two dimensions, and every wall quantity follows from them.
     const side = Math.max(1.5, Math.sqrt(Math.max(roomArea, 4)));
-    const wet = (enums.roomTypes.find((r) => r.value === roomType) || {}).isWet;
+    const type = enums.roomTypes.find((r) => r.value === roomType) || {};
 
     return {
       id: `room-${index + 1}-${Math.random().toString(36).slice(2, 7)}`,
@@ -229,15 +261,25 @@ export default function init() {
       widthMm: mm(side / 1.2),
       heightMm: CONFIG.settings.defaultRoomHeightMm,
       currentState: null, // null → the object condition seeds it on the server
-      floorFinish: wet ? 'FLOOR_TILE' : 'LAMINATE',
-      wallFinish: wet ? 'WALL_TILE' : 'PAINT',
-      ceilingFinish: 'CEILING_PAINT',
+      ...roomFinishes(type),
       openings: [
-        { type: 'DOOR', widthMm: CONFIG.settings.defaultDoor.widthMm, heightMm: CONFIG.settings.defaultDoor.heightMm, qty: 1, subtype: 'INTERIOR', installNewDoor: true },
+        { type: 'DOOR', widthMm: CONFIG.settings.defaultDoor.widthMm, heightMm: CONFIG.settings.defaultDoor.heightMm, qty: 1, installNewDoor: true },
         { type: 'WINDOW', widthMm: CONFIG.settings.defaultWindow.widthMm, heightMm: CONFIG.settings.defaultWindow.heightMm, qty: roomType === 'BATHROOM' || roomType === 'WC' || roomType === 'CORRIDOR' ? 0 : 1 },
       ],
-      warmFloor: { type: wet ? 'ELECTRIC' : 'NONE', area: null },
+      // Bathrooms and WCs get a warm floor by default; a kitchen is wet underfoot
+      // but rarely heated.
+      warmFloor: { type: type.hasWetWalls ? 'ELECTRIC' : 'NONE', area: null },
       points: {},
+      fixtures: {},
+    };
+  }
+
+  /** The three finishes a room of this type starts with. */
+  function roomFinishes(type) {
+    return {
+      floorFinish: defaultFinish('FLOOR', !! type.isWet),
+      wallFinish: defaultFinish('WALL', !! type.hasWetWalls),
+      ceilingFinish: defaultFinish('CEILING', false),
     };
   }
 
@@ -276,12 +318,15 @@ export default function init() {
    *   1 — room and opening dimensions in METRES
    *   2 — in MILLIMETRES (`lengthMm`, `widthMm`, `heightMm`, openings `widthMm` /
    *       `heightMm`)
+   *   3 — three surface states and three object conditions; materials and works
+   *       keyed by finish id; the engineering modules derived from the rooms
    *
-   * This marker exists for exactly this moment: reading a v1 blob as if it were v2
-   * would turn a visitor's 4.5 m room into 4.5 mm and quote them nothing. upgrade()
-   * below converts it instead of discarding their answers.
+   * This marker exists for exactly this moment: reading an old blob as if it were
+   * current would turn a visitor's 4.5 m room into 4.5 mm, or their "old tile" into
+   * no state at all. upgradeSaved() converts it instead of discarding their answers —
+   * the same steps the server takes in Units::upgradePayload().
    */
-  const STATE_VERSION = 2;
+  const STATE_VERSION = 3;
 
   function persist() {
     try {
@@ -296,6 +341,7 @@ export default function init() {
         basket: { useCart: state.basket.useCart, excluded: state.basket.excluded },
         roomsTouched: state.roomsTouched,
         demolitionTouched: state.demolitionTouched,
+        rewireTouched: state.rewireTouched,
       }));
     } catch {
       // Storage blocked (private window) — the calculator still works, the
@@ -303,31 +349,69 @@ export default function init() {
     }
   }
 
+  /** v2 → v3 value maps; the finish ids themselves did not change. */
+  const LEGACY = {
+    states: { SHELL: 'BARE', ROUGH_FLOOR: 'BARE', PLASTER_READY: 'PREPARED', PAINT_READY: 'PREPARED', OLD_FINISH: 'OLD', OLD_TILE: 'OLD' },
+    conditions: { PARTIAL: 'PREPARED', READY_BASE: 'PREPARED' },
+    materials: {
+      MAT_FLOOR_LAMINATE: 'LAMINATE', MAT_FLOOR_SPC: 'SPC', MAT_FLOOR_PARQUET: 'PARQUET', MAT_FLOOR_CARPET: 'CARPET',
+      MAT_FLOOR_TILE: 'FLOOR_TILE', MAT_FLOOR_STONE: 'FLOOR_STONE', MAT_WALL_PAINT: 'PAINT', MAT_WALL_WALLPAPER: 'WALLPAPER',
+      MAT_WALL_DECOR_PLASTER: 'DECOR_PLASTER', MAT_WALL_TILE: 'WALL_TILE', MAT_WALL_PANEL: 'WALL_PANEL', MAT_WALL_STONE: 'WALL_STONE',
+      MAT_CEIL_PAINT: 'CEILING_PAINT', MAT_CEIL_GYPSUM: 'GYPSUM_FLAT', MAT_CEIL_STRETCH: 'STRETCH_CEILING',
+    },
+    works: {
+      FLOOR_LAMINATE_INSTALL: 'LAMINATE', FLOOR_SPC_INSTALL: 'SPC', FLOOR_PARQUET_INSTALL: 'PARQUET', FLOOR_TILE_INSTALL: 'FLOOR_TILE',
+      FLOOR_STONE_INSTALL: 'FLOOR_STONE', TILE_INSTALL_STANDARD: 'WALL_TILE', TILE_INSTALL_LARGE: 'WALL_TILE_LARGE', TILE_INSTALL_MOSAIC: 'MOSAIC',
+      WALL_PAINT: 'PAINT', WALL_WALLPAPER: 'WALLPAPER', WALL_DECOR_PLASTER: 'DECOR_PLASTER', WALL_PANEL_INSTALL: 'WALL_PANEL',
+      WALL_STONE_INSTALL: 'WALL_STONE', CEIL_PAINT: 'CEILING_PAINT', CEIL_GYPSUM_FLAT: 'GYPSUM_FLAT', CEIL_GYPSUM_COMPLEX: 'GYPSUM_COMPLEX',
+      CEIL_STRETCH: 'STRETCH_CEILING',
+    },
+  };
+
+  const rekey = (map, legacy) => Object.fromEntries(Object.entries(map || {}).map(([k, v]) => [legacy[k] || k, v]));
+
   /**
-   * Bring a saved blob up to STATE_VERSION. A v1 room is metres, so its dimensions
-   * are multiplied by 1000 and renamed; anything older or unversioned is discarded,
-   * because guessing the unit from the magnitude of a number is how a 4.5 becomes a
-   * 4 500 mm room one visitor and a 4.5 mm room the next.
+   * Bring a saved blob up to STATE_VERSION, one version at a time. Anything older or
+   * unversioned is discarded, because guessing the unit from the magnitude of a
+   * number is how a 4.5 becomes a 4 500 mm room one visitor and a 4.5 mm room the next.
    */
   function upgradeSaved(saved) {
     if (saved.v === STATE_VERSION) return saved;
-    if (saved.v !== 1) return null;
+    if (saved.v !== 1 && saved.v !== 2) return null;
 
-    const toMm = (node, from, to) => {
-      if (Number.isFinite(+node[from]) && node[to] === undefined) node[to] = Math.round(+node[from] * 1000);
-      delete node[from];
-    };
+    if (saved.v === 1) {
+      const toMm = (node, from, to) => {
+        if (Number.isFinite(+node[from]) && node[to] === undefined) node[to] = Math.round(+node[from] * 1000);
+        delete node[from];
+      };
+
+      (saved.rooms || []).forEach((room) => {
+        toMm(room, 'length', 'lengthMm');
+        toMm(room, 'width', 'widthMm');
+        toMm(room, 'height', 'heightMm');
+        (room.openings || []).forEach((opening) => {
+          toMm(opening, 'width', 'widthMm');
+          toMm(opening, 'height', 'heightMm');
+        });
+      });
+    }
+
+    const object = saved.object || {};
+    object.condition = LEGACY.conditions[object.condition] || object.condition
+      || (object.marketType === 'NEW_BUILD' ? 'SHELL' : 'OLD_RENOVATION');
+    delete object.marketType;
+    delete object.totalFloors;
+    saved.object = object;
 
     (saved.rooms || []).forEach((room) => {
-      toMm(room, 'length', 'lengthMm');
-      toMm(room, 'width', 'widthMm');
-      toMm(room, 'height', 'heightMm');
-      (room.openings || []).forEach((opening) => {
-        toMm(opening, 'width', 'widthMm');
-        toMm(opening, 'height', 'heightMm');
-      });
+      if (room.currentState) room.currentState = LEGACY.states[room.currentState] || room.currentState;
+      (room.openings || []).forEach((opening) => { delete opening.subtype; });
+      room.fixtures = room.fixtures || {};
     });
 
+    saved.materials = rekey(saved.materials, LEGACY.materials);
+    saved.works = rekey(saved.works, LEGACY.works);
+    saved.modules = { services: { finalCleaning: saved.modules?.services?.finalCleaning ?? true } };
     saved.v = STATE_VERSION;
 
     return saved;
@@ -352,7 +436,21 @@ export default function init() {
     state.step = Math.min(5, Math.max(0, +saved.step || 0));
     state.roomsTouched = !! saved.roomsTouched;
     state.demolitionTouched = !! saved.demolitionTouched;
+    state.rewireTouched = !! saved.rewireTouched;
     state.editRoom = 0;
+
+    // A finish the admin has since switched off cannot stay selected: fall back to
+    // the room type's default rather than sending an id the server will ignore.
+    const known = new Set(finishes.map((f) => f.id));
+    state.rooms.forEach((room) => {
+      const type = enums.roomTypes.find((r) => r.value === room.roomType) || {};
+      const defaults = roomFinishes(type);
+
+      ['floorFinish', 'wallFinish', 'ceilingFinish'].forEach((key) => {
+        if (room[key] && ! known.has(room[key])) room[key] = defaults[key];
+      });
+      room.fixtures = room.fixtures || {};
+    });
 
     return true;
   }
@@ -528,16 +626,15 @@ export default function init() {
     <div class="dc-fb"><span>${esc(t.city)}</span><div class="ip">${select('cityKey', CONFIG.cities.map((c) => ({ value: c.key, label: c.name })), o.cityKey)}</div></div>
     ${field(t.floor, numberInput('data-o="floor" step="1"', o.floor))}
   </div>
-  <div class="dc-group"><label>${esc(t.property)}</label>${chips('marketType', [
-      { value: 'NEW_BUILD', label: t.properties.new },
-      { value: 'SECONDARY', label: t.properties.used },
-    ], o.marketType)}</div>
   <div class="dc-group"><label>${esc(t.condition)}</label>${chips('condition', enums.conditions, o.condition)}</div>
   <div class="dc-group"><label>${esc(t.segment)}</label>${chips('segment', enums.segments, o.segment)}</div>
   <div class="dc-group"><label>${esc(t.extra)}</label>
     <div class="dc-toggles">
-      <div class="dc-tg ${o.hasFreightElevator ? 'on' : ''}" data-flag="hasFreightElevator"><span>${esc(t.elevator)}</span><div class="dc-sw"></div></div>
       <div class="dc-tg ${o.demolitionRequired ? 'on' : ''}" data-flag="demolitionRequired"><span>${esc(t.demolition)}</span><div class="dc-sw"></div></div>
+      ${t.demolition_hint ? `<p class="${CLS.note}">${esc(t.demolition_hint)}</p>` : ''}
+      <div class="dc-tg ${o.rewireElectrics ? 'on' : ''}" data-flag="rewireElectrics"><span>${esc(t.rewire || '')}</span><div class="dc-sw"></div></div>
+      ${t.rewire_hint ? `<p class="${CLS.note}">${esc(t.rewire_hint)}</p>` : ''}
+      <div class="dc-tg ${o.hasFreightElevator ? 'on' : ''}" data-flag="hasFreightElevator"><span>${esc(t.elevator)}</span><div class="dc-sw"></div></div>
       <div class="dc-tg ${o.designProject ? 'on' : ''}" data-flag="designProject"><span>${esc(t.design_needed)}</span><div class="dc-sw"></div></div>
     </div>
   </div>`;
@@ -560,13 +657,39 @@ export default function init() {
     const inputs = keys
       .map((key) => {
         const value = room.points?.[key] ?? defaults[key];
+        // An air-conditioner point is where a split unit hangs — the engine prices
+        // the unit's installation from this count, so the label names the unit.
+        const label = key === 'ac_power' ? (labels.ac || labels[key]) : labels[key];
 
-        return field(labels[key] || key, numberInput(`data-pt="${index}" data-pk="${esc(key)}" step="1"`, value));
+        return field(label || key, numberInput(`data-pt="${index}" data-pk="${esc(key)}" step="1"`, value));
       })
       .join('');
 
     return `<div class="dc-group"><label>${esc(T.rooms.points_label || '')}</label><div class="dc-fields">${inputs}</div></div>`;
   }
+
+  /**
+   * Unitaz, əlüzyuyan, duş… — the sanitary fixtures of a wet room. Same rules as the
+   * points: defaults from the room type, every count editable, one edit never resets
+   * the others. Each fixture is installed, bought and — in an old flat — the old one
+   * removed, so this one list drives three lines.
+   */
+  function fixturesEditor(room, index) {
+    const defaults = (enums.roomTypes.find((r) => r.value === room.roomType) || {}).defaultFixtures || {};
+    const keys = Object.keys(defaults);
+
+    if (! keys.length) return '';
+
+    const labels = T.fixtures || {};
+    const inputs = keys
+      .map((key) => field(labels[key] || key, numberInput(`data-fx="${index}" data-fk="${esc(key)}" step="1"`, room.fixtures?.[key] ?? defaults[key])))
+      .join('');
+
+    return `<div class="dc-group"><label>${esc(T.rooms.fixtures_label || '')}</label><div class="dc-fields">${inputs}</div></div>`;
+  }
+
+  /** The room's own state, or — until the visitor picks one — the object's. */
+  const roomState = (room) => room.currentState || conditionOf(state.object.condition).defaultSurfaceState;
 
   function stepRooms() {
     const t = T.rooms;
@@ -624,12 +747,13 @@ export default function init() {
         ${field(t.window_height, mmInput(`data-op="${index}" data-ot="WINDOW" data-of="heightMm"`, win.heightMm ?? 0))}
       </div>
       ${derivedLine}
-      ${pointsEditor(room, index)}
-      <div class="dc-tg ${door.installNewDoor ? 'on' : ''}" data-newdoor="${index}"><span>${esc(t.install_door)}</span><div class="dc-sw"></div></div>
-      <div class="dc-group"><label>${esc(t.state)}</label>${chips('currentState', enums.surfaceStates, room.currentState, `data-ri="${index}"`)}</div>
       <div class="dc-group"><label>${esc(t.floor_cover)}</label>${chips('floorFinish', finishesFor('FLOOR'), room.floorFinish, `data-ri="${index}"`)}</div>
       <div class="dc-group"><label>${esc(t.wall_cover)}</label>${chips('wallFinish', finishesFor('WALL'), room.wallFinish, `data-ri="${index}"`)}</div>
       <div class="dc-group"><label>${esc(t.ceiling_cover)}</label>${chips('ceilingFinish', finishesFor('CEILING'), room.ceilingFinish, `data-ri="${index}"`)}</div>
+      <div class="dc-group"><label>${esc(t.state)}</label>${chips('currentState', enums.surfaceStates, roomState(room), `data-ri="${index}"`)}${t.state_hint ? `<p class="${CLS.note}">${esc(t.state_hint)}</p>` : ''}</div>
+      ${pointsEditor(room, index)}
+      ${fixturesEditor(room, index)}
+      <div class="dc-tg ${door.installNewDoor ? 'on' : ''}" data-newdoor="${index}"><span>${esc(t.install_door)}</span><div class="dc-sw"></div></div>
       <div class="dc-tg ${room.warmFloor.type !== 'NONE' ? 'on' : ''}" data-warm="${index}"><span>${esc(t.heating)}</span><div class="dc-sw"></div></div>
       </div>`;
       })
@@ -647,7 +771,15 @@ export default function init() {
   function stepWorks() {
     const t = T.works;
     const suggested = state.estimate?.suggestedWorks || [];
-    const byId = new Map(CONFIG.works.map((w) => [w.workId, w]));
+    // A finish's own installation is a work too, named by the finish id; it sits in
+    // the block of its surface, or with the tiling when it is tile-type.
+    const finishWorks = finishes.map((f) => ({
+      workId: f.id,
+      name: f.name,
+      unit: f.unit,
+      category: f.family === 'TILE' ? 'TILING' : ({ FLOOR: 'FLOOR', WALL: 'WALLS', CEILING: 'CEILING' })[f.surface],
+    }));
+    const byId = new Map([...CONFIG.works, ...finishWorks].map((w) => [w.workId, w]));
     const active = new Set(lines().filter((l) => l.lineType !== 'MATERIAL').map((l) => l.itemId));
 
     const groups = {};
@@ -675,45 +807,20 @@ export default function init() {
     const removedSuggestion = Object.values(state.works).some((w) => w.selected === false);
 
     return `<div class="dc-sh"><div class="k">${esc(t.k)}</div><h2>${esc(t.h)}</h2><div class="d">${esc(t.d)}</div></div>
-  <p class="${CLS.note}">${esc(t.no_prices)}</p>
+  <p class="${CLS.note}">${esc(t.auto_hint || '')} ${esc(t.no_prices)}</p>
   ${removedSuggestion ? `<div class="${CLS.warn}">${esc(t.removed_warning)}</div>` : ''}
   ${cards}
   ${modulesBlock()}`;
   }
 
-  /** Engineering modules open only once they are relevant (master spec §20). */
+  /**
+   * Air conditioning, light fittings, pipes and cable are counted from the rooms'
+   * points now, so the only thing left to ask here is the cleaning.
+   */
   function modulesBlock() {
     const m = state.modules;
-    const hvac = m.hvac;
-    const estimated = enums.hvacSystems.find((s) => s.value === hvac.systemType)?.precisionClass === 'ESTIMATED';
 
-    const hvacInputs = hvac.systemType === 'NONE'
-      ? ''
-      : estimated
-        ? `<div class="dc-fields">
-             ${field(T.modules.hvac_area, numberInput('data-m="hvac.conditionedArea"', hvac.conditionedArea || '', T.units.m2))}
-           </div>
-           <p class="${CLS.note}">${esc(T.notice.estimated)}</p>`
-        : `<div class="dc-fields">
-             ${field(T.modules.hvac_units, numberInput('data-m="hvac.indoorUnits" step="1"', hvac.indoorUnits))}
-             ${hvac.systemType === 'MULTI_SPLIT'
-               ? field(T.modules.hvac_outdoor, numberInput('data-m="hvac.outdoorUnits" step="1"', hvac.outdoorUnits || 1))
-               : ''}
-             ${field(T.modules.hvac_route, numberInput('data-m="hvac.routeMeters"', hvac.routeMeters, T.units.m))}
-           </div>`;
-
-    return `<div class="dc-group"><label>${esc(T.modules.hvac)}</label>
-    ${chips('hvacSystem', enums.hvacSystems.map((s) => ({ value: s.value, label: s.label })), hvac.systemType)}
-    ${hvacInputs}
-  </div>
-  <div class="dc-group"><label>${esc(T.modules.lighting)}</label>
-    <div class="dc-fields">
-      ${field(T.modules.lighting_spots, numberInput('data-m="lighting.spots" step="1"', m.lighting.spots))}
-      ${field(T.modules.lighting_pendants, numberInput('data-m="lighting.pendants" step="1"', m.lighting.pendants))}
-      ${field(T.modules.lighting_chandeliers, numberInput('data-m="lighting.chandeliers" step="1"', m.lighting.chandeliers))}
-    </div>
-  </div>
-  <div class="dc-group"><label>${esc(T.modules.services)}</label>
+    return `<div class="dc-group"><label>${esc(T.modules.services)}</label>
     <div class="dc-toggles">
       <div class="dc-tg ${m.services.finalCleaning ? 'on' : ''}" data-mflag="services.finalCleaning"><span>${esc(T.modules.final_cleaning)}</span><div class="dc-sw"></div></div>
     </div>
@@ -723,15 +830,17 @@ export default function init() {
   /**
    * Materials. Every requirement the engine derived is listed with its quantity and
    * the three ways it can be priced (master spec §12): a real catalog product, the
-   * category's average price for the chosen segment, or "I will buy it myself".
+   * finish's or category's average price for the chosen segment, or "I will buy it
+   * myself". `meta.materialId` is the selection key — a finish id for the finish
+   * material, a category id for everything else.
    */
   function stepMaterials() {
     const t = T.materials;
 
     const rows = lines()
-      .filter((line) => line.lineType === 'MATERIAL' && line.meta?.materialCategoryId)
+      .filter((line) => line.lineType === 'MATERIAL' && line.meta?.materialId)
       .map((line) => {
-        const categoryId = line.meta.materialCategoryId;
+        const categoryId = line.meta.materialId;
         const selection = state.materials[categoryId] || { mode: 'FALLBACK_SEGMENT' };
         const options = [
           { value: 'FALLBACK_SEGMENT', label: t.mode.fallback },
@@ -912,12 +1021,9 @@ export default function init() {
   /**
    * The running estimate. Every row that carries money is listed and the rows add up
    * to the figure above them — a panel whose parts do not sum to its own total is
-   * the fastest way to lose a client's trust. Rows worth 0 ₼ are shown only when the
-   * zero itself means something the visitor should act on (see logistics below).
+   * the fastest way to lose a client's trust. Rows worth 0 ₼ are not shown.
    */
   function sideSummary(total) {
-    const logisticsIncomplete = state.estimate?.logistics?.complete === false;
-
     const rows = [
       { label: T.side.works, value: total.works },
       { label: T.side.materials, value: total.materials },
@@ -925,10 +1031,9 @@ export default function init() {
       {
         label: T.side.logistics,
         value: total.logistics,
-        // 0 ₼ here is not "free delivery" — it is "we cannot know yet", and the
-        // reason is that no chosen product carries a weight.
-        hint: total.logistics === 0 && logisticsIncomplete ? T.side.logistics_unknown : null,
-        show: total.logistics > 0 || logisticsIncomplete,
+        // The catalog rarely knows what a product weighs, so delivery and lifting
+        // are a norm per m² of the object — and the panel says so.
+        hint: total.logistics > 0 ? T.side.delivery_note : null,
       },
       {
         label: tr(T.side.contingency, { percent: num(total.contingencyPercent) }),
@@ -1271,13 +1376,17 @@ export default function init() {
           state.roomsTouched = true;
 
           if (key === 'roomType') {
+            const type = enums.roomTypes.find((r) => r.value === value) || {};
+
             room.name = labelOf(enums.roomTypes, value);
-            // The point counts belong to the old room type; keeping them would
-            // give the new bathroom a living room's eight sockets.
+            // The counts belong to the old room type; keeping them would give the
+            // new bathroom a living room's eight sockets and no toilet. The
+            // finishes follow too, while the visitor has not picked their own.
             room.points = {};
+            room.fixtures = {};
+            Object.assign(room, roomFinishes(type));
+            room.warmFloor = { type: type.hasWetWalls ? 'ELECTRIC' : 'NONE', area: null };
           }
-        } else if (key === 'hvacSystem') {
-          state.modules.hvac.systemType = value;
         } else {
           state.object[key] = value;
 
@@ -1285,21 +1394,9 @@ export default function init() {
           // the visitor has not started editing the rooms themselves.
           if (key === 'objectType' && ! state.roomsTouched) seedRooms();
 
-          // New build / second-hand seeds the condition — a new build arrives bare,
-          // a resale carries someone's old renovation (master spec §7). Only until
-          // the visitor picks a condition themselves.
-          if (key === 'marketType' && ! state.conditionTouched) {
-            state.object.condition = value === 'NEW_BUILD' ? 'SHELL' : 'OLD_RENOVATION';
-          }
-
-          if (key === 'condition') state.conditionTouched = true;
-
-          // A flat with an old renovation in it needs stripping out; a bare new build
-          // does not. The switch follows that until the visitor decides otherwise
-          // (master spec §7).
-          if ((key === 'condition' || key === 'marketType') && ! state.demolitionTouched) {
-            state.object.demolitionRequired = state.object.condition === 'OLD_RENOVATION';
-          }
+          // An old flat is stripped out and rewired, a prepared base is neither —
+          // the switches follow the condition until the visitor sets them.
+          if (key === 'condition') applyConditionDefaults();
         }
 
         recalculate({ immediate: true });
@@ -1372,10 +1469,13 @@ export default function init() {
       }),
     );
 
-    mainEl.querySelectorAll('input[data-m]').forEach((el) =>
+    mainEl.querySelectorAll('input[data-fx]').forEach((el) =>
       el.addEventListener('input', () => {
-        const [group, key] = el.dataset.m.split('.');
-        state.modules[group][key] = +el.value || 0;
+        const room = state.rooms[+el.dataset.fx];
+        if (! room) return;
+
+        room.fixtures = { ...(room.fixtures || {}), [el.dataset.fk]: Math.max(0, Math.trunc(+el.value || 0)) };
+        state.roomsTouched = true;
         recalculate();
       }),
     );
@@ -1384,9 +1484,10 @@ export default function init() {
       el.addEventListener('click', () => {
         state.object[el.dataset.flag] = ! state.object[el.dataset.flag];
 
-        // Once the visitor has an opinion about demolition, the condition chips stop
+        // Once the visitor has an opinion about a switch, the condition chips stop
         // overwriting it.
         if (el.dataset.flag === 'demolitionRequired') state.demolitionTouched = true;
+        if (el.dataset.flag === 'rewireElectrics') state.rewireTouched = true;
 
         recalculate({ immediate: true });
         render();

@@ -4,6 +4,7 @@ namespace App\Services\Calculator;
 
 use App\Models\CalculatorCity;
 use App\Models\CalculatorCoefficient;
+use App\Models\CalculatorFinish;
 use App\Models\CalculatorMaterialFallback;
 use App\Models\CalculatorMaterialNorm;
 use App\Models\CalculatorQuickRate;
@@ -25,7 +26,7 @@ class CalculatorConfig
     public const CACHE_DOMAIN = VersionedCache::CALCULATOR;
 
     /** Bumped when the shape of a calculation changes, not when a price changes. */
-    public const CALCULATOR_VERSION = '1.0';
+    public const CALCULATOR_VERSION = '2.0';
 
     private ?array $settings = null;
 
@@ -34,6 +35,8 @@ class CalculatorConfig
     private ?array $norms = null;
 
     private ?array $workRates = null;
+
+    private ?array $finishes = null;
 
     private ?array $fallbacks = null;
 
@@ -85,9 +88,64 @@ class CalculatorConfig
         return $this->workRates = $catalog;
     }
 
+    /**
+     * A work id is either a catalog row or a finish: the finish's own installation is
+     * priced from the finish row, so the works step, the selection map and the
+     * estimate all name it by the finish id.
+     */
     public function workRate(string $workId): ?WorkRate
     {
-        return $this->workRates()[$workId] ?? null;
+        return $this->workRates()[$workId] ?? $this->finish($workId)?->labourWorkRate();
+    }
+
+    /**
+     * The finishes the visitor can choose, keyed by finish id (calculator_finishes).
+     * Plain arrays in the cache, value objects out — see workRates().
+     *
+     * @return array<string, Finish>
+     */
+    public function finishes(): array
+    {
+        if ($this->finishes !== null) {
+            return $this->finishes;
+        }
+
+        $rows = VersionedCache::remember(
+            self::CACHE_DOMAIN,
+            'finishes',
+            VersionedCache::TTL_STRUCTURAL,
+            fn () => CalculatorFinish::active()->ordered()->get()
+                ->map(fn (CalculatorFinish $finish) => [
+                    'finish_id' => $finish->finish_id,
+                    'surface' => $finish->surface->value,
+                    'family' => $finish->family->value,
+                    'names' => Translated::normalise($finish->getTranslations('name')),
+                    'unit' => $finish->unit,
+                    'labour_rate' => $finish->labour_rate === null ? null : (float) $finish->labour_rate,
+                    'minimum_charge' => (float) $finish->minimum_charge,
+                    'material_prices' => [
+                        'ECONOMY' => $finish->material_economy === null ? null : (float) $finish->material_economy,
+                        'STANDARD' => $finish->material_standard === null ? null : (float) $finish->material_standard,
+                        'PREMIUM' => $finish->material_premium === null ? null : (float) $finish->material_premium,
+                    ],
+                    'waste_percent' => (float) $finish->waste_percent,
+                    'is_default' => (bool) $finish->is_default,
+                ])
+                ->all(),
+        );
+
+        $finishes = [];
+
+        foreach ($rows as $row) {
+            $finishes[$row['finish_id']] = Finish::fromArray($row);
+        }
+
+        return $this->finishes = $finishes;
+    }
+
+    public function finish(?string $finishId): ?Finish
+    {
+        return $finishId === null ? null : ($this->finishes()[$finishId] ?? null);
     }
 
     /** @return array<string, MaterialFallback> keyed by material category id */
@@ -292,6 +350,7 @@ class CalculatorConfig
             function () {
                 $stamps = [
                     CalculatorWorkRate::max('updated_at'),
+                    CalculatorFinish::max('updated_at'),
                     CalculatorMaterialFallback::max('updated_at'),
                     CalculatorCoefficient::max('updated_at'),
                     CalculatorMaterialNorm::max('updated_at'),

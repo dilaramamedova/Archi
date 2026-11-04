@@ -2,23 +2,24 @@
 
 namespace App\Services\Calculator;
 
-use App\Enums\Calculator\HvacSystemType;
 use App\Enums\Calculator\ObjectCondition;
-use App\Enums\Calculator\PrecisionClass;
 use App\Enums\Calculator\WarmFloorType;
 
 /**
- * The engineering modules (master spec §11) plus the item-count works that are not
- * derived from a surface: electrics, plumbing, HVAC, doors, lighting, partitions,
- * demolition extras and the additional services.
+ * Everything that is not a surface: electrics, plumbing, air conditioning, light
+ * fittings, doors, warm floors, demolition extras and the additional services
+ * (master spec §11).
  *
- * The rule this class exists to enforce: object area is NOT a quantity source for
- * electrics or plumbing. "80 m² × a rate" would be a made-up number — the sum comes
- * from points, lines, panels and fixtures, each with its own rate.
+ * Nothing here has its own input block any more. The rooms already say how many
+ * sockets, lights, water points, fixtures and air conditioners they have, and the
+ * object step says whether the flat is stripped out and rewired — the engine derives
+ * the rest (cable, pipes, the panel, old fixtures, debris) from those counts with
+ * norms the admin controls. The rule from the specification still holds: object
+ * area is never a quantity source for electrics or plumbing.
  */
 class ModuleResolver
 {
-    /** Point input key => work id (rough electrical installation, per point). */
+    /** Room point key => rough electrical installation, per point. */
     private const ELECTRICAL_POINTS = [
         'sockets' => 'ELEC_SOCKET_POINT',
         'switches' => 'ELEC_SWITCH_POINT',
@@ -30,63 +31,20 @@ class ModuleResolver
         'appliance' => 'ELEC_APPLIANCE_POINT',
     ];
 
-    /** Rough plumbing, per point. Finish fixture installation is a separate group. */
+    /** Rough plumbing, per point. */
     private const PLUMBING_POINTS = [
         'water_points' => 'PLUMB_WATER_POINT',
         'sewer_points' => 'PLUMB_SEWER_POINT',
     ];
 
-    /** Object-level electrical items, entered as counts. */
-    private const ELECTRICAL_ITEMS = [
-        'dedicatedLines' => 'ELEC_DEDICATED_LINE',
-        'cableMeters' => 'ELEC_CABLE',
-        'conduitMeters' => 'ELEC_CONDUIT',
-        'smallPanels' => 'ELEC_PANEL_SMALL',
-        'largePanels' => 'ELEC_PANEL_LARGE',
-        'breakers' => 'ELEC_BREAKER',
-        'rcds' => 'ELEC_RCD',
-    ];
-
-    /** Finish plumbing: every fixture is its own rate, never a share of a lump sum. */
-    private const PLUMBING_FIXTURES = [
-        'toilets' => 'PLUMB_TOILET_INSTALL',
-        'concealedCisterns' => 'PLUMB_CONCEALED_CISTERN',
-        'basins' => 'PLUMB_BASIN_INSTALL',
-        'kitchenSinks' => 'PLUMB_KITCHEN_SINK',
-        'showers' => 'PLUMB_SHOWER_INSTALL',
-        'bathtubs' => 'PLUMB_BATHTUB_INSTALL',
-        'bidets' => 'PLUMB_BIDET_INSTALL',
-        'hygienicShowers' => 'PLUMB_HYGIENIC_SHOWER',
-        'mixers' => 'PLUMB_MIXER_INSTALL',
-        'boilers' => 'PLUMB_BOILER_INSTALL',
-        'washers' => 'PLUMB_WASHER_CONNECT',
-        'dishwashers' => 'PLUMB_DISHWASHER_CONNECT',
-        'towelRails' => 'PLUMB_TOWEL_RAIL',
-        'manifolds' => 'PLUMB_MANIFOLD',
-        'waterPipeMeters' => 'PLUMB_PIPE_WATER',
-        'sewerPipeMeters' => 'PLUMB_PIPE_SEWER',
-    ];
-
-    private const LIGHTING_ITEMS = [
-        'spots' => 'LIGHT_SPOT_INSTALL',
-        'pendants' => 'LIGHT_PENDANT_INSTALL',
-        'chandeliers' => 'LIGHT_CHANDELIER_INSTALL',
-        'ledStripMeters' => 'LIGHT_LED_STRIP_INSTALL',
-        'ledProfileMeters' => 'LIGHT_LED_PROFILE_INSTALL',
-    ];
-
-    private const VENTILATION_ITEMS = [
-        'ductMeters' => 'VENT_DUCT',
-        'diffusers' => 'VENT_DIFFUSER',
-        'grilles' => 'VENT_GRILLE',
-        'fans' => 'VENT_FAN',
-        'coreDrills' => 'VENT_CORE_DRILL',
-    ];
-
-    private const DOOR_WORKS = [
-        'INTERIOR' => 'DOOR_INSTALL_INTERIOR',
-        'HIDDEN' => 'DOOR_INSTALL_HIDDEN',
-        'SLIDING' => 'DOOR_INSTALL_SLIDING',
+    /** Room fixture key => finish plumbing: every fixture is its own rate. */
+    private const FIXTURES = [
+        'toilet' => 'PLUMB_TOILET_INSTALL',
+        'basin' => 'PLUMB_BASIN_INSTALL',
+        'shower' => 'PLUMB_SHOWER_INSTALL',
+        'bathtub' => 'PLUMB_BATHTUB_INSTALL',
+        'kitchen_sink' => 'PLUMB_KITCHEN_SINK',
+        'mixer' => 'PLUMB_MIXER_INSTALL',
     ];
 
     public function __construct(private readonly CalculatorConfig $config) {}
@@ -96,30 +54,27 @@ class ModuleResolver
      * @param  array<string, mixed>  $modules
      * @return array<int, WorkRequest>
      */
-    public function resolve(array $rooms, array $modules, array $object, array $derived): array
+    public function resolve(array $rooms, array $modules, array $object, array $derived, ObjectCondition $condition): array
     {
+        $rewire = (bool) ($object['rewireElectrics'] ?? $condition->defaultRewiring());
+        $demolish = (bool) ($object['demolitionRequired'] ?? $condition->defaultDemolition());
+
         return array_merge(
-            $this->electrical($rooms, $modules['electrical'] ?? []),
-            $this->plumbing($rooms, $modules['plumbing'] ?? []),
-            $this->hvac($modules['hvac'] ?? [], $derived),
+            $this->electrical($rooms, $rewire),
+            $this->plumbing($rooms),
+            $this->airConditioning($rooms),
+            $this->lighting($rooms),
             $this->warmFloor($rooms),
             $this->doors($rooms),
-            $this->itemModule($modules['lighting'] ?? [], self::LIGHTING_ITEMS),
-            $this->itemModule($modules['ventilation'] ?? [], self::VENTILATION_ITEMS),
-            $this->partitions($modules['partitions'] ?? []),
-            $this->demolition($modules['demolition'] ?? [], $rooms, $object, $derived),
+            $this->demolition($rooms, $object, $derived, $demolish, $rewire, $condition),
             $this->services($modules['services'] ?? [], $object, $derived),
         );
     }
 
     /**
-     * The object's area, from one place.
-     *
-     * The stated area wins over the sum of the rooms, because that is the figure the
-     * visitor answered and the figure the AREA_MISMATCH warning is measured against.
-     * Both the services block and the debris estimate used to resolve this for
-     * themselves, from different sources — a flat stated as 80 m² whose rooms add up
-     * to 61.5 had its final cleaning billed on 80 and its debris estimated on 61.5.
+     * The object's area, from one place: the stated area wins over the sum of the
+     * rooms, because that is the figure the visitor answered and the figure the
+     * AREA_MISMATCH warning is measured against.
      */
     private function objectArea(array $object, array $derived): float
     {
@@ -127,13 +82,10 @@ class ModuleResolver
     }
 
     /** @return array<int, WorkRequest> */
-    private function electrical(array $rooms, array $input): array
+    private function electrical(array $rooms, bool $rewire): array
     {
-        if (($input['enabled'] ?? true) === false) {
-            return [];
-        }
-
         $requests = [];
+        $totalPoints = 0;
 
         foreach ($rooms as $room) {
             foreach (self::ELECTRICAL_POINTS as $key => $workId) {
@@ -141,40 +93,39 @@ class ModuleResolver
 
                 if ($count > 0) {
                     $requests[] = new WorkRequest($workId, $count, $room->id, $room->name);
+                    $totalPoints += $count;
                 }
-            }
-        }
-
-        foreach (self::ELECTRICAL_ITEMS as $key => $workId) {
-            $qty = (float) ($input[$key] ?? 0);
-
-            if ($qty > 0) {
-                $requests[] = new WorkRequest($workId, $qty);
             }
         }
 
         // One thermostat per room that actually has a warm floor — the visitor never
         // has to count them, and they cannot be forgotten either.
-        $thermostats = (int) ($input['thermostats'] ?? count(array_filter(
-            $rooms,
-            fn (RoomGeometry $room) => $room->warmFloorType !== WarmFloorType::None,
-        )));
+        $thermostats = count(array_filter($rooms, fn (RoomGeometry $room) => $room->warmFloorType !== WarmFloorType::None));
 
         if ($thermostats > 0) {
             $requests[] = new WorkRequest('ELEC_FLOOR_HEAT_CONTROL', $thermostats);
+        }
+
+        // A rewired object needs a panel and the cable to every point; the cable
+        // length is a norm per point, not a guess per m².
+        if ($rewire && $totalPoints > 0) {
+            $requests[] = new WorkRequest('ELEC_PANEL_SMALL', 1);
+            $requests[] = new WorkRequest(
+                workId: 'ELEC_CABLE',
+                quantity: round($totalPoints * $this->config->float('CABLE_M_PER_POINT', 7), 2),
+                meta: ['points' => $totalPoints],
+            );
         }
 
         return $requests;
     }
 
     /** @return array<int, WorkRequest> */
-    private function plumbing(array $rooms, array $input): array
+    private function plumbing(array $rooms): array
     {
-        if (($input['enabled'] ?? true) === false) {
-            return [];
-        }
-
         $requests = [];
+        $water = 0;
+        $sewer = 0;
 
         foreach ($rooms as $room) {
             foreach (self::PLUMBING_POINTS as $key => $workId) {
@@ -184,13 +135,48 @@ class ModuleResolver
                     $requests[] = new WorkRequest($workId, $count, $room->id, $room->name);
                 }
             }
+
+            $water += (int) ($room->points['water_points'] ?? 0);
+            $sewer += (int) ($room->points['sewer_points'] ?? 0);
+
+            foreach (self::FIXTURES as $key => $workId) {
+                $count = (int) ($room->fixtures[$key] ?? 0);
+
+                if ($count > 0) {
+                    $requests[] = new WorkRequest($workId, $count, $room->id, $room->name);
+                }
+            }
         }
 
-        foreach (self::PLUMBING_FIXTURES as $key => $workId) {
-            $qty = (float) ($input[$key] ?? 0);
+        // Pipe runs follow the points, with a norm per point the admin controls.
+        $perPoint = $this->config->float('PIPE_M_PER_POINT', 3);
 
-            if ($qty > 0) {
-                $requests[] = new WorkRequest($workId, $qty);
+        if ($water > 0) {
+            $requests[] = new WorkRequest('PLUMB_PIPE_WATER', round($water * $perPoint, 2), meta: ['points' => $water]);
+        }
+
+        if ($sewer > 0) {
+            $requests[] = new WorkRequest('PLUMB_PIPE_SEWER', round($sewer * $perPoint, 2), meta: ['points' => $sewer]);
+        }
+
+        return $requests;
+    }
+
+    /**
+     * One split unit per air-conditioner point: the point in the room is where the
+     * unit hangs, so the count is already known.
+     *
+     * @return array<int, WorkRequest>
+     */
+    private function airConditioning(array $rooms): array
+    {
+        $requests = [];
+
+        foreach ($rooms as $room) {
+            $units = (int) ($room->points['ac_power'] ?? 0);
+
+            if ($units > 0) {
+                $requests[] = new WorkRequest('HVAC_SPLIT_STD', $units, $room->id, $room->name);
             }
         }
 
@@ -198,96 +184,24 @@ class ModuleResolver
     }
 
     /**
-     * Master spec §11.3. Split and multi-split are counted; ducted, VRF and central
-     * systems have no project yet, so they are area-based and explicitly ESTIMATED —
-     * an honest range beats false precision.
+     * A fitting hangs on every light point — ceiling and wall — so the fittings are
+     * counted where the points are.
      *
      * @return array<int, WorkRequest>
      */
-    private function hvac(array $input, array $derived): array
+    private function lighting(array $rooms): array
     {
-        $type = HvacSystemType::tryFrom(strtoupper((string) ($input['systemType'] ?? 'NONE'))) ?? HvacSystemType::None;
-
-        if ($type === HvacSystemType::None) {
-            return [];
-        }
-
-        $conditionedArea = (float) ($input['conditionedArea'] ?? $derived['TOTAL_FLOOR_AREA'] ?? 0);
         $requests = [];
 
-        if ($type === HvacSystemType::Split) {
-            $units = (int) ($input['indoorUnits'] ?? 0);
+        foreach ($rooms as $room) {
+            $fittings = (int) ($room->points['lights'] ?? 0) + (int) ($room->points['wall_lights'] ?? 0);
 
-            if ($units > 0) {
-                $requests[] = new WorkRequest('HVAC_SPLIT_STD', $units);
+            if ($fittings > 0) {
+                $requests[] = new WorkRequest('LIGHT_FIXTURE_INSTALL', $fittings, $room->id, $room->name);
             }
-
-            // Only the metres beyond the included standard route are billed.
-            $included = $this->config->float('SPLIT_INCLUDED_ROUTE_METERS', 3) * $units;
-            $extra = max(0.0, (float) ($input['routeMeters'] ?? 0) - $included);
-
-            if (($input['extraRouteMeters'] ?? null) !== null) {
-                $extra = max(0.0, (float) $input['extraRouteMeters']);
-            }
-
-            if ($extra > 0) {
-                $requests[] = new WorkRequest('HVAC_SPLIT_EXTRA_ROUTE', $extra);
-            }
-
-            if (($drain = (float) ($input['drainMeters'] ?? 0)) > 0) {
-                $requests[] = new WorkRequest('HVAC_SPLIT_DRAIN', $drain);
-            }
-
-            if (($pumps = (int) ($input['condensatePumps'] ?? 0)) > 0) {
-                $requests[] = new WorkRequest('HVAC_CONDENSATE_PUMP', $pumps);
-            }
-
-            return $requests;
         }
 
-        if ($type === HvacSystemType::MultiSplit) {
-            foreach ([
-                'outdoorUnits' => 'HVAC_MULTISPLIT_OUTDOOR',
-                'indoorUnits' => 'HVAC_MULTISPLIT_INDOOR',
-                'routeMeters' => 'HVAC_MULTISPLIT_ROUTE',
-            ] as $key => $workId) {
-                $qty = (float) ($input[$key] ?? 0);
-
-                if ($qty > 0) {
-                    $requests[] = new WorkRequest($workId, $qty);
-                }
-            }
-
-            return $requests;
-        }
-
-        if ($conditionedArea <= 0) {
-            return [];
-        }
-
-        $coefficients = [];
-
-        if ((int) ($input['zones'] ?? 0) > 1) {
-            $coefficients[] = 'K_HVAC_ZONE';
-        }
-
-        if ($input['complex'] ?? false) {
-            $coefficients[] = 'K_HVAC_COMPLEX';
-        }
-
-        $workId = match ($type) {
-            HvacSystemType::Ducted => 'HVAC_DUCTED_ESTIMATE',
-            HvacSystemType::Vrf => 'HVAC_VRF_ESTIMATE',
-            default => 'HVAC_CENTRAL_ESTIMATE',
-        };
-
-        return [new WorkRequest(
-            workId: $workId,
-            quantity: $conditionedArea,
-            coefficientIds: $coefficients,
-            precisionClass: PrecisionClass::Estimated,
-            meta: ['systemType' => $type->value],
-        )];
+        return $requests;
     }
 
     /** @return array<int, WorkRequest> */
@@ -307,9 +221,8 @@ class ModuleResolver
     }
 
     /**
-     * Master spec audit §2.6: a door opening flagged installNewDoor produces its
-     * installation line automatically, so the dimensions are never entered twice and
-     * an opening can never exist without the work that fills it.
+     * A door opening flagged installNewDoor produces its installation line
+     * automatically (master spec audit §2.6).
      *
      * @return array<int, WorkRequest>
      */
@@ -318,44 +231,10 @@ class ModuleResolver
         $requests = [];
 
         foreach ($rooms as $room) {
-            foreach ($room->newDoorCounts() as $subtype => $count) {
-                $workId = self::DOOR_WORKS[$subtype] ?? self::DOOR_WORKS['INTERIOR'];
-                $requests[] = new WorkRequest($workId, $count, $room->id, $room->name);
-            }
-        }
+            $count = $room->newDoorCount();
 
-        return $requests;
-    }
-
-    /** @return array<int, WorkRequest> */
-    private function itemModule(array $input, array $map): array
-    {
-        $requests = [];
-
-        foreach ($map as $key => $workId) {
-            $qty = (float) ($input[$key] ?? 0);
-
-            if ($qty > 0) {
-                $requests[] = new WorkRequest($workId, $qty);
-            }
-        }
-
-        return $requests;
-    }
-
-    /** @return array<int, WorkRequest> */
-    private function partitions(array $input): array
-    {
-        $requests = [];
-
-        foreach ([
-            'blockArea' => 'WALL_PARTITION_BLOCK',
-            'gypsumArea' => 'WALL_PARTITION_GYPSUM',
-        ] as $key => $workId) {
-            $area = (float) ($input[$key] ?? 0);
-
-            if ($area > 0) {
-                $requests[] = new WorkRequest($workId, $area);
+            if ($count > 0) {
+                $requests[] = new WorkRequest('DOOR_INSTALL_INTERIOR', $count, $room->id, $room->name);
             }
         }
 
@@ -363,82 +242,63 @@ class ModuleResolver
     }
 
     /**
-     * The demolition detail block (master spec §10.1) plus debris handling. Debris
-     * volume is estimated from the demolished area when the visitor does not enter
-     * it, and the number of trips is always CEIL — half a lorry does not exist.
+     * Stripping out an old flat (master spec §10.1). The switch on the object step
+     * governs this whole block; what a chosen finish strips from its own surface is
+     * the dependency engine's business and is not governed by it.
+     *
+     * Old doors, old fixtures and old points exist only in a flat with an old
+     * renovation, and they are the ones being replaced — so their counts are the new
+     * counts and nothing has to be entered twice. A bare shell someone switches
+     * demolition on in has none of them to remove. Debris follows the object area,
+     * and the number of trips is always CEIL.
      *
      * @return array<int, WorkRequest>
      */
-    private function demolition(array $input, array $rooms, array $object, array $derived): array
+    private function demolition(array $rooms, array $object, array $derived, bool $demolish, bool $rewire, ObjectCondition $condition): array
     {
-        // "Demontaj lazımdır" on the object step is not an estimate line of its own —
-        // it is the switch that opens this block (master spec §10.1). With it off, no
-        // partition, ceiling, fixture or debris line is billed. The surface stripping
-        // that a chosen finish requires — old wallpaper before paint, for instance —
-        // is not governed by it: that belongs to the wall's own technological chain.
-        $condition = ObjectCondition::tryFrom(strtoupper((string) ($object['condition'] ?? '')));
-        $required = (bool) ($object['demolitionRequired'] ?? $condition?->defaultDemolition() ?? false);
-
-        if (! $required) {
+        if (! $demolish) {
             return [];
         }
 
         $requests = [];
 
-        // In a flat with an old renovation, every doorway that gets a new door still
-        // holds the old one — its removal is suggested by default (and stays a
-        // suggestion the visitor can untick). An explicit count always wins, and no
-        // door is invented for a bare shell someone demolishes partitions in.
-        $defaultDoors = $condition === ObjectCondition::OldRenovation
-            ? array_sum(array_map(
-                fn (RoomGeometry $room) => array_sum($room->newDoorCounts()),
-                $rooms,
-            ))
-            : 0;
+        if ($condition === ObjectCondition::OldRenovation) {
+            $doors = array_sum(array_map(fn (RoomGeometry $room) => $room->newDoorCount(), $rooms));
 
-        // What is ON a surface — old tile, an old gypsum or stretch ceiling — is the
-        // dependency engine's business, and it derives it from the zone's own state
-        // (their tariff rows say so: quantity_source SelectedWallTileArea /
-        // SelectedCeilingArea). This block used to accept wallTileArea,
-        // ceilingGypsumArea and ceilingStretchArea as well, and because a module
-        // request is object-scoped while a zone request is room-scoped the two never
-        // consolidated: a 20 m² OLD_TILE wall plus wallTileArea = 20 billed
-        // DEM_WALL_TILE twice, 40 m² of tile removal for 20 m² of tile. Removed —
-        // the surface chain is the single source.
-        //
-        // What remains here has no counterpart in the chain: structure (plaster,
-        // partitions) and items (doors, fixtures, points).
-        foreach ([
-            'wallPlasterArea' => 'DEM_WALL_PLASTER',
-            'masonryPartitionArea' => 'DEM_PARTITION_MASONRY',
-            'gypsumPartitionArea' => 'DEM_PARTITION_GYPSUM',
-            'doors' => 'DEM_DOOR',
-            'plumbingFixtures' => 'DEM_PLUMB_FIXTURE',
-            'electricPoints' => 'DEM_ELECTRIC_POINT',
-        ] as $key => $workId) {
-            $qty = (float) ($input[$key] ?? ($key === 'doors' ? $defaultDoors : 0));
+            if ($doors > 0) {
+                $requests[] = new WorkRequest('DEM_DOOR', $doors);
+            }
 
-            if ($qty > 0) {
-                $requests[] = new WorkRequest($workId, $qty);
+            $fixtures = 0;
+            $points = 0;
+
+            foreach ($rooms as $room) {
+                $fixtures += array_sum(array_map('intval', $room->fixtures));
+
+                foreach (array_keys(self::ELECTRICAL_POINTS) as $key) {
+                    $points += (int) ($room->points[$key] ?? 0);
+                }
+            }
+
+            if ($fixtures > 0) {
+                $requests[] = new WorkRequest('DEM_PLUMB_FIXTURE', $fixtures);
+            }
+
+            if ($rewire && $points > 0) {
+                $requests[] = new WorkRequest('DEM_ELECTRIC_POINT', $points);
             }
         }
 
-        $volume = (float) ($input['debrisVolume'] ?? 0);
-
-        if ($volume <= 0 && ($input['estimateDebris'] ?? true)) {
-            // DEBRIS_VOLUME_PER_M2 is m³ per m² of the object, so it multiplies the
-            // object's area — the same one the services block uses.
-            $volume = $this->objectArea($object, $derived) * $this->config->float('DEBRIS_VOLUME_PER_M2', 0.05);
-        }
+        $volume = round($this->objectArea($object, $derived) * $this->config->float('DEBRIS_VOLUME_PER_M2', 0.05), 2);
 
         if ($volume > 0) {
-            $requests[] = new WorkRequest('DEM_DEBRIS_LOADING', round($volume, 2));
+            $requests[] = new WorkRequest('DEM_DEBRIS_LOADING', $volume);
 
             $capacity = max(0.1, $this->config->float('DEBRIS_VEHICLE_VOLUME_CAPACITY', 6));
             $requests[] = new WorkRequest(
                 workId: 'DEM_DEBRIS_DISPOSAL',
                 quantity: (float) ceil($volume / $capacity),
-                meta: ['debrisVolume' => round($volume, 2), 'vehicleCapacity' => $capacity],
+                meta: ['debrisVolume' => $volume, 'vehicleCapacity' => $capacity],
             );
         }
 
@@ -447,8 +307,8 @@ class ModuleResolver
 
     /**
      * Additional services. The design project is deliberately outside the building
-     * formulas (master spec §7) and, like the other external services, is excluded
-     * from the contingency base by its work rate flag.
+     * formulas (master spec §7) and is excluded from the contingency base by its
+     * work rate flag.
      *
      * @return array<int, WorkRequest>
      */
@@ -463,21 +323,6 @@ class ModuleResolver
 
         if (($input['finalCleaning'] ?? true) && $objectArea > 0) {
             $requests[] = new WorkRequest('LOG_FINAL_CLEANING', $objectArea);
-        }
-
-        if (($protected = (float) ($input['protectedArea'] ?? 0)) > 0) {
-            $requests[] = new WorkRequest('LOG_SITE_PROTECTION', $protected);
-        }
-
-        foreach ([
-            'techSupervisionMonths' => 'SERVICE_TECH_SUPERVISION',
-            'authorSupervisionMonths' => 'SERVICE_AUTHOR_SUPERVISION',
-        ] as $key => $workId) {
-            $months = (float) ($input[$key] ?? 0);
-
-            if ($months > 0) {
-                $requests[] = new WorkRequest($workId, $months);
-            }
         }
 
         return $requests;

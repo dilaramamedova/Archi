@@ -2,8 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\Calculator\FinishCategory;
-use App\Enums\Calculator\HvacSystemType;
+use App\Enums\Calculator\FinishFamily;
 use App\Enums\Calculator\ObjectCondition;
 use App\Enums\Calculator\ObjectType;
 use App\Enums\Calculator\PriceSegment;
@@ -20,6 +19,7 @@ use App\Models\Product;
 use App\Services\Calculator\CalculatorConfig;
 use App\Services\Calculator\CityRate;
 use App\Services\Calculator\EstimateBuilder;
+use App\Services\Calculator\Finish;
 use App\Services\Calculator\MaterialFallback;
 use App\Services\Calculator\QuickCalculator;
 use App\Services\Calculator\Units;
@@ -131,6 +131,20 @@ class CalculatorController extends Controller
                 // The rate itself is deliberately not exposed: the "İşlər" step shows
                 // no prices (master spec §10, §20) — money appears in the estimate.
             ], $this->config->workRates())),
+            // The finishes are rows, not an enum: a finish the admin adds tonight is
+            // a chip on the rooms step tomorrow morning. Prices are not exposed.
+            'finishes' => array_values(array_map(fn (Finish $finish) => [
+                'id' => $finish->finishId,
+                'surface' => $finish->surface->value,
+                'family' => $finish->family->value,
+                'name' => $finish->name(),
+                'unit' => $finish->unit,
+                'isDefault' => $finish->isDefault,
+            ], $this->config->finishes())),
+            'families' => array_map(fn (FinishFamily $family) => [
+                'value' => $family->value,
+                'label' => __($family->labelKey()),
+            ], FinishFamily::cases()),
             'materialCategories' => array_values(array_map(fn (MaterialFallback $fallback) => [
                 'id' => $fallback->categoryId,
                 'group' => $fallback->group,
@@ -150,22 +164,18 @@ class CalculatorController extends Controller
                     // empty screen and a commercial object does not open with a bedroom.
                     'defaultRoomTypes' => array_map(fn (RoomType $room) => $room->value, $type->defaultRoomTypes()),
                 ], ObjectType::cases()),
-                'conditions' => $this->enumPayload(ObjectCondition::cases()),
+                'conditions' => array_map(fn (ObjectCondition $c) => [
+                    'value' => $c->value,
+                    'label' => __($c->labelKey()),
+                    // What the condition switches on by default; the visitor may
+                    // still flip either toggle on the object step.
+                    'defaultDemolition' => $c->defaultDemolition(),
+                    'defaultRewiring' => $c->defaultRewiring(),
+                    'defaultSurfaceState' => $c->defaultSurfaceState()->value,
+                ], ObjectCondition::cases()),
                 'roomTypes' => $this->roomTypePayload(),
                 'surfaceStates' => $this->enumPayload(SurfaceState::cases()),
-                'finishes' => array_map(fn (FinishCategory $f) => [
-                    'value' => $f->value,
-                    'label' => __($f->labelKey()),
-                    'surface' => $f->surface()->value,
-                    'materialCategoryId' => $f->materialCategoryId(),
-                    'incompatibleWith' => $f->incompatibleWith(),
-                ], FinishCategory::cases()),
                 'warmFloorTypes' => array_map(fn (WarmFloorType $t) => ['value' => $t->value], WarmFloorType::cases()),
-                'hvacSystems' => array_map(fn (HvacSystemType $t) => [
-                    'value' => $t->value,
-                    'label' => __($t->labelKey()),
-                    'precisionClass' => $t->precisionClass()->value,
-                ], HvacSystemType::cases()),
                 'segments' => array_map(fn (PriceSegment $s) => ['value' => $s->value, 'label' => __($s->labelKey())], PriceSegment::cases()),
             ],
             'settings' => [
@@ -388,8 +398,8 @@ class CalculatorController extends Controller
         ]);
 
         // The version the CLIENT declares, not the version we wish it sent: a browser
-        // running a cached pre-millimetre bundle still posts metres, and the only
-        // honest thing to do with it is convert it. An absent marker means version 1.
+        // running a cached older bundle still posts the old shape, and the only honest
+        // thing to do with it is convert it. An absent marker means version 1.
         return Units::upgradePayload([
             'v' => (int) $request->input('v', 1),
             'object' => (array) $request->input('object', []),
@@ -532,7 +542,9 @@ class CalculatorController extends Controller
             'value' => $type->value,
             'label' => __($type->labelKey()),
             'isWet' => $type->isWet(),
+            'hasWetWalls' => $type->hasWetWalls(),
             'defaultPoints' => $type->defaultPoints(),
+            'defaultFixtures' => $type->defaultFixtures(),
         ], RoomType::cases());
     }
 }

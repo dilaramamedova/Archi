@@ -2,6 +2,7 @@
 
 namespace App\Services\Calculator;
 
+use App\Enums\Calculator\FinishFamily;
 use App\Enums\Calculator\LineSource;
 use App\Enums\Calculator\LineType;
 use App\Enums\Calculator\PrecisionClass;
@@ -13,11 +14,17 @@ use App\Models\Product;
  * Material requirement and pricing (master spec §12–§13).
  *
  * Requirements are derived from the works that were actually selected, not from the
- * rooms: if the visitor removes "purcaq boyası", its paint disappears with it. Each
- * requirement then resolves in one of three ways —
+ * rooms: if the visitor removes the laminate, its laminate disappears with it. There
+ * are three kinds of requirement —
+ *
+ *   the finish itself   the finish row says the unit, the waste and the segment price
+ *   consumables         primer, plaster, putty, screed, adhesive… from a norm per m²
+ *   items               a door, a fixture, a light fitting, a socket — one per work unit
+ *
+ * — and each resolves in one of three ways:
  *
  *   CATALOG_PRODUCT  a real product: package count = CEIL(need / package), EXACT
- *   FALLBACK_SEGMENT no product yet: category price for the chosen segment, CALCULATED
+ *   FALLBACK_SEGMENT no product yet: the finish's / category's segment price, CALCULATED
  *   EXCLUDED         "materialı özüm alacağam": kept as a shopping list, priced at 0
  *
  * Technological waste lives inside the required quantity here. The financial reserve
@@ -26,44 +33,7 @@ use App\Models\Product;
 class MaterialResolver
 {
     /**
-     * Finish work => the material it consumes, by area / length / piece.
-     *
-     * @var array<string, array{category: string, waste: ?string, unit: string}>
-     */
-    private const FINISH_MATERIALS = [
-        'FLOOR_LAMINATE_INSTALL' => ['category' => 'MAT_FLOOR_LAMINATE', 'waste' => 'WASTE_LAMINATE', 'unit' => 'm²'],
-        'FLOOR_SPC_INSTALL' => ['category' => 'MAT_FLOOR_SPC', 'waste' => 'WASTE_SPC', 'unit' => 'm²'],
-        'FLOOR_PARQUET_INSTALL' => ['category' => 'MAT_FLOOR_PARQUET', 'waste' => 'WASTE_PARQUET', 'unit' => 'm²'],
-        'FLOOR_TILE_INSTALL' => ['category' => 'MAT_FLOOR_TILE', 'waste' => 'WASTE_TILE_STANDARD', 'unit' => 'm²'],
-        'FLOOR_STONE_INSTALL' => ['category' => 'MAT_FLOOR_STONE', 'waste' => 'WASTE_TILE_STANDARD', 'unit' => 'm²'],
-        'TILE_INSTALL_STANDARD' => ['category' => 'MAT_WALL_TILE', 'waste' => 'WASTE_TILE_STANDARD', 'unit' => 'm²'],
-        'TILE_INSTALL_LARGE' => ['category' => 'MAT_WALL_TILE', 'waste' => 'WASTE_TILE_STANDARD', 'unit' => 'm²'],
-        'TILE_INSTALL_MOSAIC' => ['category' => 'MAT_WALL_TILE', 'waste' => 'WASTE_TILE_STANDARD', 'unit' => 'm²'],
-        'WALL_WALLPAPER' => ['category' => 'MAT_WALL_WALLPAPER', 'waste' => null, 'unit' => 'm²'],
-        'WALL_DECOR_PLASTER' => ['category' => 'MAT_WALL_DECOR_PLASTER', 'waste' => null, 'unit' => 'm²'],
-        'WALL_PANEL_INSTALL' => ['category' => 'MAT_WALL_PANEL', 'waste' => null, 'unit' => 'm²'],
-        'WALL_STONE_INSTALL' => ['category' => 'MAT_WALL_STONE', 'waste' => 'WASTE_TILE_STANDARD', 'unit' => 'm²'],
-        'CEIL_GYPSUM_FLAT' => ['category' => 'MAT_CEIL_GYPSUM', 'waste' => null, 'unit' => 'm²'],
-        'CEIL_GYPSUM_COMPLEX' => ['category' => 'MAT_CEIL_GYPSUM', 'waste' => null, 'unit' => 'm²'],
-        'CEIL_STRETCH' => ['category' => 'MAT_CEIL_STRETCH', 'waste' => null, 'unit' => 'm²'],
-        'SKIRTING_INSTALL' => ['category' => 'MAT_SKIRTING', 'waste' => 'WASTE_SKIRTING', 'unit' => 'p.m'],
-        'DOOR_INSTALL_INTERIOR' => ['category' => 'MAT_DOOR_INTERIOR', 'waste' => null, 'unit' => 'əd'],
-        'DOOR_INSTALL_HIDDEN' => ['category' => 'MAT_DOOR_HIDDEN', 'waste' => null, 'unit' => 'əd'],
-        'DOOR_INSTALL_SLIDING' => ['category' => 'MAT_DOOR_SLIDING', 'waste' => null, 'unit' => 'əd'],
-        'ELEC_SOCKET_POINT' => ['category' => 'MAT_ELECTRIC_ACCESSORIES', 'waste' => null, 'unit' => 'nöqtə'],
-        'ELEC_SWITCH_POINT' => ['category' => 'MAT_ELECTRIC_ACCESSORIES', 'waste' => null, 'unit' => 'nöqtə'],
-        'PLUMB_TOILET_INSTALL' => ['category' => 'MAT_SANITARY_BASIC', 'waste' => null, 'unit' => 'əd'],
-        'PLUMB_BASIN_INSTALL' => ['category' => 'MAT_SANITARY_BASIC', 'waste' => null, 'unit' => 'əd'],
-        'PLUMB_KITCHEN_SINK' => ['category' => 'MAT_SANITARY_BASIC', 'waste' => null, 'unit' => 'əd'],
-        'PLUMB_BATHTUB_INSTALL' => ['category' => 'MAT_SANITARY_BASIC', 'waste' => null, 'unit' => 'əd'],
-        'PLUMB_MIXER_INSTALL' => ['category' => 'MAT_SANITARY_BASIC', 'waste' => null, 'unit' => 'əd'],
-        'LIGHT_SPOT_INSTALL' => ['category' => 'MAT_LIGHTING_BASIC', 'waste' => null, 'unit' => 'əd'],
-        'LIGHT_PENDANT_INSTALL' => ['category' => 'MAT_LIGHTING_BASIC', 'waste' => null, 'unit' => 'əd'],
-        'LIGHT_CHANDELIER_INSTALL' => ['category' => 'MAT_LIGHTING_BASIC', 'waste' => null, 'unit' => 'əd'],
-    ];
-
-    /**
-     * Rough materials, whose quantity is a consumption norm rather than an area.
+     * Rough materials whose quantity is a consumption norm per m² of the work.
      * `multiplier` names the extra factor: coat/layer counts or a thickness in mm.
      *
      * @var array<string, array{category: string, norm: string, unit: string, multiplier: ?string}>
@@ -77,28 +47,37 @@ class MaterialResolver
         'WALL_PLASTER' => ['category' => 'MAT_PLASTER', 'norm' => 'PLASTER_CONSUMPTION', 'unit' => 'kq', 'multiplier' => 'plasterThickness'],
         'CEIL_PLASTER' => ['category' => 'MAT_PLASTER', 'norm' => 'PLASTER_CONSUMPTION', 'unit' => 'kq', 'multiplier' => 'plasterThickness'],
         'FLOOR_SCREED' => ['category' => 'MAT_SCREED', 'norm' => 'SCREED_CONSUMPTION', 'unit' => 'kq', 'multiplier' => 'screedThickness'],
-        'FLOOR_SELF_LEVEL' => ['category' => 'MAT_SELF_LEVEL', 'norm' => 'SELF_LEVEL_CONSUMPTION', 'unit' => 'kq', 'multiplier' => 'selfLevelThickness'],
         'FLOOR_WATERPROOF' => ['category' => 'MAT_WATERPROOF', 'norm' => 'WATERPROOF_CONSUMPTION', 'unit' => 'kq', 'multiplier' => 'waterproofLayers'],
         'TILE_WATERPROOF_WALL' => ['category' => 'MAT_WATERPROOF', 'norm' => 'WATERPROOF_CONSUMPTION', 'unit' => 'kq', 'multiplier' => 'waterproofLayers'],
         'TILE_GROUT' => ['category' => 'MAT_GROUT', 'norm' => 'GROUT_CONSUMPTION', 'unit' => 'kq', 'multiplier' => null],
-        'FLOOR_TILE_INSTALL' => ['category' => 'MAT_TILE_ADHESIVE', 'norm' => 'TILE_ADHESIVE_CONSUMPTION', 'unit' => 'kq', 'multiplier' => null],
-        'TILE_INSTALL_STANDARD' => ['category' => 'MAT_TILE_ADHESIVE', 'norm' => 'TILE_ADHESIVE_CONSUMPTION', 'unit' => 'kq', 'multiplier' => null],
-        'TILE_INSTALL_LARGE' => ['category' => 'MAT_TILE_ADHESIVE', 'norm' => 'TILE_ADHESIVE_CONSUMPTION', 'unit' => 'kq', 'multiplier' => null],
-        'TILE_INSTALL_MOSAIC' => ['category' => 'MAT_TILE_ADHESIVE', 'norm' => 'TILE_ADHESIVE_CONSUMPTION', 'unit' => 'kq', 'multiplier' => null],
-    ];
-
-    /** Paint is special: per m² on the fallback, per litre once a real tin is chosen. */
-    private const PAINT_WORKS = [
-        'WALL_PAINT' => 'MAT_WALL_PAINT',
-        'CEIL_PAINT' => 'MAT_CEIL_PAINT',
     ];
 
     /**
-     * Catalog unit keys → what an estimate should print.
+     * Items bought one per unit of work: a door per door installed, a fitting per
+     * fitting hung, a socket per socket point, a metre of cable per metre pulled.
      *
-     * The catalog stores the seller's chosen key ("m2", "lm"), which is fine in a
-     * dropdown and wrong in a priced line: "79.39 m2 × 38.50 ₼/m2" reads like a typo
-     * next to the engine's own "m²" rows.
+     * @var array<string, array{category: string, unit: string, waste: ?string}>
+     */
+    private const ITEMS = [
+        'SKIRTING_INSTALL' => ['category' => 'MAT_SKIRTING', 'unit' => 'p.m', 'waste' => 'WASTE_SKIRTING'],
+        'DOOR_INSTALL_INTERIOR' => ['category' => 'MAT_DOOR_INTERIOR', 'unit' => 'əd', 'waste' => null],
+        'ELEC_SOCKET_POINT' => ['category' => 'MAT_ELECTRIC_ACCESSORIES', 'unit' => 'nöqtə', 'waste' => null],
+        'ELEC_SWITCH_POINT' => ['category' => 'MAT_ELECTRIC_ACCESSORIES', 'unit' => 'nöqtə', 'waste' => null],
+        'ELEC_CABLE' => ['category' => 'MAT_CABLE', 'unit' => 'm', 'waste' => null],
+        'PLUMB_TOILET_INSTALL' => ['category' => 'MAT_SANITARY_BASIC', 'unit' => 'əd', 'waste' => null],
+        'PLUMB_BASIN_INSTALL' => ['category' => 'MAT_SANITARY_BASIC', 'unit' => 'əd', 'waste' => null],
+        'PLUMB_SHOWER_INSTALL' => ['category' => 'MAT_SANITARY_BASIC', 'unit' => 'əd', 'waste' => null],
+        'PLUMB_BATHTUB_INSTALL' => ['category' => 'MAT_SANITARY_BASIC', 'unit' => 'əd', 'waste' => null],
+        'PLUMB_KITCHEN_SINK' => ['category' => 'MAT_SANITARY_BASIC', 'unit' => 'əd', 'waste' => null],
+        'PLUMB_MIXER_INSTALL' => ['category' => 'MAT_SANITARY_BASIC', 'unit' => 'əd', 'waste' => null],
+        'LIGHT_FIXTURE_INSTALL' => ['category' => 'MAT_LIGHTING_BASIC', 'unit' => 'əd', 'waste' => null],
+        'FLOOR_HEAT_ELECTRIC' => ['category' => 'MAT_WARM_FLOOR', 'unit' => 'm²', 'waste' => null],
+    ];
+
+    /**
+     * Catalog unit keys → what an estimate should print. The catalog stores the
+     * seller's chosen key ("m2", "lm"), which is fine in a dropdown and wrong in a
+     * priced line next to the engine's own "m²" rows.
      */
     private const PRODUCT_UNITS = [
         'piece' => 'əd',
@@ -115,7 +94,7 @@ class MaterialResolver
 
     /**
      * @param  array<int, EstimateLine>  $workLines
-     * @param  array<string, mixed>  $materialInput  category id => {mode, productId}
+     * @param  array<string, mixed>  $materialInput  material id => {mode, productId}
      * @param  array<int, Product>  $products  catalog products keyed by id
      * @return array<int, EstimateLine>
      */
@@ -130,7 +109,7 @@ class MaterialResolver
 
             $this->collectFinish($line, $requirements);
             $this->collectConsumable($line, $requirements);
-            $this->collectPaint($line, $requirements);
+            $this->collectItem($line, $requirements);
         }
 
         $lines = [];
@@ -146,15 +125,34 @@ class MaterialResolver
         return $lines;
     }
 
+    /**
+     * The finish's own material: the finish row says the unit, the waste and the
+     * price. A tile-type finish also eats adhesive by the square metre.
+     */
     private function collectFinish(EstimateLine $line, array &$requirements): void
     {
-        $map = self::FINISH_MATERIALS[$line->itemId] ?? null;
-
-        if (! $map) {
+        if (($line->meta['source'] ?? null) !== 'FINISH') {
             return;
         }
 
-        $this->add($requirements, $map['category'], $map['unit'], $line->quantity, $this->config->wasteFactor($map['waste']), $line);
+        $finish = $this->config->finish($line->meta['finish'] ?? null);
+
+        if (! $finish) {
+            return;
+        }
+
+        $this->add($requirements, $finish->finishId, $finish->unit, $line->quantity, $finish->wasteFactor(), $line, [
+            'finish' => $finish->finishId,
+            'family' => $finish->family->value,
+        ]);
+
+        if ($finish->family === FinishFamily::Tile) {
+            $norm = $this->config->norm('TILE_ADHESIVE_CONSUMPTION');
+
+            if ($norm > 0) {
+                $this->add($requirements, 'MAT_TILE_ADHESIVE', 'kq', $line->quantity * $norm, 1.0, $line);
+            }
+        }
     }
 
     private function collectConsumable(EstimateLine $line, array &$requirements): void
@@ -176,30 +174,21 @@ class MaterialResolver
         $this->add($requirements, $map['category'], $map['unit'], $quantity, 1.0, $line);
     }
 
-    /**
-     * Paint quantity is only meaningful in litres, and litres need a tin: without a
-     * chosen product the honest unit is the painted square metre and the category's
-     * fallback price per m² (Material_Fallbacks marks those rows "m² fallback").
-     */
-    private function collectPaint(EstimateLine $line, array &$requirements): void
+    private function collectItem(EstimateLine $line, array &$requirements): void
     {
-        $category = self::PAINT_WORKS[$line->itemId] ?? null;
+        $map = self::ITEMS[$line->itemId] ?? null;
 
-        if (! $category) {
+        if (! $map) {
             return;
         }
 
-        $this->add($requirements, $category, 'm²', $line->quantity, 1.0, $line, [
-            'coats' => $this->config->float('DEFAULT_PAINT_COATS', 2),
-            'coverage' => $this->config->norm('PAINT_COVERAGE', 10),
-            'convertsToLitres' => true,
-        ]);
+        $this->add($requirements, $map['category'], $map['unit'], $line->quantity, $this->config->wasteFactor($map['waste']), $line);
     }
 
-    private function add(array &$requirements, string $category, string $unit, float $quantity, float $wasteFactor, EstimateLine $line, array $meta = []): void
+    private function add(array &$requirements, string $id, string $unit, float $quantity, float $wasteFactor, EstimateLine $line, array $meta = []): void
     {
-        $requirements[$category] ??= [
-            'category' => $category,
+        $requirements[$id] ??= [
+            'id' => $id,
             'unit' => $unit,
             'baseQty' => 0.0,
             'wasteFactor' => $wasteFactor,
@@ -207,12 +196,12 @@ class MaterialResolver
             'meta' => $meta,
         ];
 
-        $requirements[$category]['baseQty'] += $quantity;
-        $requirements[$category]['wasteFactor'] = max($requirements[$category]['wasteFactor'], $wasteFactor);
-        $requirements[$category]['meta'] = array_merge($requirements[$category]['meta'], $meta);
+        $requirements[$id]['baseQty'] += $quantity;
+        $requirements[$id]['wasteFactor'] = max($requirements[$id]['wasteFactor'], $wasteFactor);
+        $requirements[$id]['meta'] = array_merge($requirements[$id]['meta'], $meta);
 
         if ($line->roomId) {
-            $requirements[$category]['rooms'][$line->roomId] = $line->roomName;
+            $requirements[$id]['rooms'][$line->roomId] = $line->roomName;
         }
     }
 
@@ -224,7 +213,6 @@ class MaterialResolver
             'waterproofLayers' => $this->config->float('DEFAULT_WATERPROOF_LAYERS', 2),
             'plasterThickness' => $this->config->float('PLASTER_DEFAULT_THICKNESS_MM', 20),
             'screedThickness' => $this->config->float('SCREED_DEFAULT_THICKNESS_MM', 50),
-            'selfLevelThickness' => $this->config->float('SELF_LEVEL_DEFAULT_THICKNESS_MM', 5),
             default => 1.0,
         };
     }
@@ -232,12 +220,19 @@ class MaterialResolver
     /** @param array<int, Product> $products */
     private function priceRequirement(array $requirement, array $materialInput, array $products, PriceSegment $segment): ?EstimateLine
     {
-        $categoryId = $requirement['category'];
-        $selection = $materialInput[$categoryId] ?? [];
+        $id = $requirement['id'];
+        $selection = $materialInput[$id] ?? [];
         $mode = strtoupper((string) ($selection['mode'] ?? 'FALLBACK_SEGMENT'));
 
-        $fallback = $this->config->materialFallback($categoryId);
-        $name = $fallback?->name() ?? $categoryId;
+        // A finish prices its own material; everything else is a fallback category.
+        $finish = $this->config->finish($id);
+        $fallback = $finish ? null : $this->config->materialFallback($id);
+
+        $name = $finish
+            ? __('calculator-detailed.line.material', ['name' => $finish->name()])
+            : ($fallback?->name() ?? $id);
+        $price = $finish ? $finish->materialPrice($segment) : $fallback?->priceFor($segment);
+
         $requiredQty = round($requirement['baseQty'] * $requirement['wasteFactor'], 4);
 
         if ($requiredQty <= 0) {
@@ -247,8 +242,13 @@ class MaterialResolver
         $roomId = count($requirement['rooms']) === 1 ? array_key_first($requirement['rooms']) : null;
         $roomName = $roomId ? $requirement['rooms'][$roomId] : null;
 
-        $baseMeta = [
-            'materialCategoryId' => $categoryId,
+        // The finish's labour line already carries the finish id; its material line
+        // gets its own, so the two can never be confused in a trace or a snapshot.
+        // meta.materialId stays the selection key the materials step posts back.
+        $lineId = $finish ? $id.'_MATERIAL' : $id;
+
+        $baseMeta = $requirement['meta'] + [
+            'materialId' => $id,
             'baseQty' => round($requirement['baseQty'], 4),
             'wastePercent' => round(($requirement['wasteFactor'] - 1) * 100, 2),
             'rooms' => array_values($requirement['rooms']),
@@ -258,7 +258,7 @@ class MaterialResolver
         // item but adds nothing to the estimate.
         if ($mode === 'EXCLUDED') {
             return EstimateLine::make(
-                itemId: $categoryId,
+                itemId: $lineId,
                 lineType: LineType::Material,
                 category: WorkCategory::Materials,
                 name: $name,
@@ -278,13 +278,11 @@ class MaterialResolver
         $product = $this->resolveProduct($selection, $products);
 
         if ($product) {
-            return $this->catalogLine($product, $requirement, $requiredQty, $name, $roomId, $roomName, $baseMeta);
+            return $this->catalogLine($product, $requirement, $requiredQty, $roomId, $roomName, $baseMeta);
         }
 
-        $price = $fallback?->priceFor($segment);
-
         return EstimateLine::make(
-            itemId: $categoryId,
+            itemId: $lineId,
             lineType: LineType::Material,
             category: WorkCategory::Materials,
             name: $name,
@@ -326,7 +324,6 @@ class MaterialResolver
         Product $product,
         array $requirement,
         float $requiredQty,
-        string $fallbackName,
         ?string $roomId,
         ?string $roomName,
         array $baseMeta,
@@ -338,12 +335,20 @@ class MaterialResolver
             'requiredQty' => $requiredQty,
         ];
 
-        // Paint is entered per m² but bought per tin: convert once a tin is known.
-        if (($requirement['meta']['convertsToLitres'] ?? false) && ($coverage = (float) ($requirement['meta']['coverage'] ?? 0)) > 0) {
-            $litres = $requiredQty * (float) ($requirement['meta']['coats'] ?? 1) / $coverage;
-            $meta['paintedArea'] = $requiredQty;
-            $meta['litres'] = round($litres, 3);
-            $requiredQty = $litres;
+        // A square-metre requirement bought by the litre is paint: the tin covers
+        // PAINT_COVERAGE m² per litre per coat. The rule hangs on the product's unit,
+        // not on the finish's name, so it holds for any coat the admin adds.
+        if ($requirement['unit'] === 'm²' && $product->unit === 'litre') {
+            $coverage = $this->config->norm('PAINT_COVERAGE', 10);
+            $coats = $this->config->float('DEFAULT_PAINT_COATS', 2);
+
+            if ($coverage > 0) {
+                $litres = $requiredQty * $coats / $coverage;
+                $meta['paintedArea'] = $requiredQty;
+                $meta['coats'] = $coats;
+                $meta['litres'] = round($litres, 3);
+                $requiredQty = $litres;
+            }
         }
 
         $packageSize = (float) ($product->package_size ?? 0);

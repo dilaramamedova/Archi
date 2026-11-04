@@ -2,7 +2,7 @@
 
 namespace App\Services\Calculator;
 
-use App\Enums\Calculator\FinishCategory;
+use App\Enums\Calculator\FinishFamily;
 use App\Enums\Calculator\GeometryMode;
 use App\Enums\Calculator\ObjectCondition;
 use App\Enums\Calculator\RoomType;
@@ -16,8 +16,8 @@ use App\Enums\Calculator\WarmFloorType;
  *
  * The whole point is that a quantity is derived exactly once. A door is entered with
  * its width and height — not merely counted — because NetWallArea is mathematically
- * impossible without them, and NetWallArea is what plaster, putty, sanding, primer,
- * paint and wallpaper are all billed by.
+ * impossible without them, and NetWallArea is what plaster, putty, sanding, primer
+ * and every wall finish are all billed by.
  *
  * THIS CLASS IS THE UNIT BOUNDARY. Linear dimensions arrive in millimetres (keys
  * ending in `Mm`) and leave as metres; areas arrive and leave in m². Downstream —
@@ -64,9 +64,8 @@ class GeometryEngine
 
         if ($mode === GeometryMode::Manual) {
             // Complex shape: the visitor (or a sales manager) states the three
-            // quantities directly rather than letting L×W lie about the room.
-            // The two areas are m² — an area was never in millimetres; only the
-            // perimeter is a linear dimension and therefore mm.
+            // quantities directly rather than letting L×W lie about the room. The
+            // two areas are m²; only the perimeter is a linear dimension, hence mm.
             $floorArea = max(0.0, (float) ($input['floorArea'] ?? 0));
             $perimeter = Units::dimension($input, 'perimeterMm');
             $grossWallArea = $perimeter * $height;
@@ -121,7 +120,8 @@ class GeometryEngine
             zones: $zones,
             warmFloorType: $warmFloorType,
             warmFloorArea: max(0.0, $warmFloorArea),
-            points: $this->normalisePoints($input, $roomType),
+            points: $this->counts($input['points'] ?? null, $roomType->defaultPoints()),
+            fixtures: $this->counts($input['fixtures'] ?? null, $roomType->defaultFixtures()),
             wetZone: (bool) ($input['wetZone'] ?? $roomType->isWet()),
             warnings: $warnings,
         );
@@ -167,7 +167,6 @@ class GeometryEngine
                 'width' => Units::dimension($opening, 'widthMm', $defaults[$type]['widthMm']),
                 'height' => Units::dimension($opening, 'heightMm', $defaults[$type]['heightMm']),
                 'qty' => $qty,
-                'subtype' => isset($opening['subtype']) ? strtoupper((string) $opening['subtype']) : null,
                 'installNewDoor' => $type === 'DOOR' && (bool) ($opening['installNewDoor'] ?? false),
             ];
         }
@@ -203,8 +202,11 @@ class GeometryEngine
 
     /**
      * Zones are what the visitor actually answered. When a room only carries the
-     * shorthand "wall finish = paint" the whole surface becomes one zone; when the
+     * shorthand "wall finish = PAINT" the whole surface becomes one zone; when the
      * bathroom is half tile and half paint the frontend sends two.
+     *
+     * The finish is looked up in calculator_finishes; an unknown id or a finish that
+     * belongs to another surface is dropped rather than priced wrongly.
      *
      * @return array<int, SurfaceZone>
      */
@@ -240,16 +242,13 @@ class GeometryEngine
                 continue;
             }
 
-            $finish = FinishCategory::tryFrom(strtoupper((string) ($zone['finish'] ?? '')));
+            $finish = $this->config->finish(isset($zone['finish']) ? strtoupper((string) $zone['finish']) : null);
 
-            // A finish belonging to another surface is a frontend bug, not a price:
-            // drop it rather than billing a floor covering per wall square metre.
-            if ($finish && $finish->surface() !== $surface) {
+            if ($finish && ($finish->surface !== $surface || ! $finish->family->allows($surface))) {
                 $finish = null;
             }
 
-            $state = SurfaceState::tryFrom(strtoupper((string) ($zone['currentState'] ?? '')))
-                ?? $condition->defaultSurfaceState($surface);
+            $state = SurfaceState::fromAny($zone['currentState'] ?? null) ?? $condition->defaultSurfaceState();
 
             $totals[$surface->value] += $area;
 
@@ -264,7 +263,6 @@ class GeometryEngine
                     SurfaceType::Wall => $roomType->hasWetWalls(),
                     SurfaceType::Ceiling => false,
                 }),
-                options: is_array($zone['options'] ?? null) ? $zone['options'] : [],
             );
         }
 
@@ -297,7 +295,7 @@ class GeometryEngine
         foreach ($map as $entry) {
             $finish = $input[$entry['key']] ?? null;
 
-            if ($finish === null || $entry['area'] <= 0) {
+            if ($finish === null || $finish === '' || $entry['area'] <= 0) {
                 continue;
             }
 
@@ -306,7 +304,6 @@ class GeometryEngine
                 'area' => $entry['area'],
                 'finish' => $finish,
                 'currentState' => $input['currentState'] ?? null,
-                'options' => $input[$entry['key'].'Options'] ?? [],
             ];
         }
 
@@ -314,18 +311,22 @@ class GeometryEngine
     }
 
     /**
-     * Point counts default from the room type and stay editable — the defaults keep
-     * the form short, the edits keep the estimate honest (master spec §11.1, §20).
+     * Point and fixture counts default from the room type and stay editable — the
+     * defaults keep the form short, the edits keep the estimate honest (master spec
+     * §11.1, §20). One edited key never resets the others.
+     *
+     * @param  array<string, int>  $defaults
+     * @return array<string, int>
      */
-    private function normalisePoints(array $input, RoomType $roomType): array
+    private function counts(mixed $input, array $defaults): array
     {
-        $points = $roomType->defaultPoints();
+        $counts = $defaults;
 
-        foreach (is_array($input['points'] ?? null) ? $input['points'] : [] as $key => $value) {
-            $points[$key] = max(0, (int) $value);
+        foreach (is_array($input) ? $input : [] as $key => $value) {
+            $counts[$key] = max(0, (int) $value);
         }
 
-        return $points;
+        return $counts;
     }
 
     /**
@@ -351,8 +352,6 @@ class GeometryEngine
             'WARM_FLOOR_WATER_AREA' => 0.0,
             'TILE_FLOOR_AREA' => 0.0,
             'TILE_WALL_AREA' => 0.0,
-            'PAINT_WALL_AREA' => 0.0,
-            'PAINT_CEILING_AREA' => 0.0,
             'DOOR_COUNT' => 0.0,
             'WINDOW_COUNT' => 0.0,
             'ROOM_COUNT' => (float) count($rooms),
@@ -391,18 +390,14 @@ class GeometryEngine
                     continue;
                 }
 
-                // Per-finish totals; the key is the finish itself so a new finish
-                // never needs a new branch here.
-                $key = $zone->finish->value.'_AREA';
+                // Per-finish totals; the key is the finish id itself so a finish the
+                // admin adds tomorrow never needs a new branch here.
+                $key = $zone->finish->finishId.'_AREA';
                 $q[$key] = ($q[$key] ?? 0.0) + $zone->area;
 
-                match ($zone->finish) {
-                    FinishCategory::FloorTile => $q['TILE_FLOOR_AREA'] += $zone->area,
-                    FinishCategory::WallTile => $q['TILE_WALL_AREA'] += $zone->area,
-                    FinishCategory::Paint => $q['PAINT_WALL_AREA'] += $zone->area,
-                    FinishCategory::CeilingPaint => $q['PAINT_CEILING_AREA'] += $zone->area,
-                    default => null,
-                };
+                if ($zone->finish->family === FinishFamily::Tile) {
+                    $q[$zone->surface === SurfaceType::Floor ? 'TILE_FLOOR_AREA' : 'TILE_WALL_AREA'] += $zone->area;
+                }
             }
         }
 

@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Filament\Resources\CalculatorCityResource;
 use App\Filament\Resources\CalculatorCoefficientResource;
+use App\Filament\Resources\CalculatorFinishResource;
 use App\Filament\Resources\CalculatorMaterialFallbackResource;
 use App\Filament\Resources\CalculatorMaterialNormResource;
 use App\Filament\Resources\CalculatorQuickRateResource;
@@ -46,6 +47,7 @@ class AdminCalculatorResourcesTest extends TestCase
 
         foreach ([
             CalculatorQuickRateResource::class,
+            CalculatorFinishResource::class,
             CalculatorWorkRateResource::class,
             CalculatorMaterialFallbackResource::class,
             CalculatorCoefficientResource::class,
@@ -91,7 +93,7 @@ class AdminCalculatorResourcesTest extends TestCase
             ->assertSee('1 vahidə düşən iş haqqı', false)
             ->assertSee('assets/admin/calculator/work-rates.png', false)
             // The list leads with the work's name, not its technical id.
-            ->assertSee('Divarların boyanması')
+            ->assertSee('Divarların şpaklyovkası')
             // …and says in words where the quantity it is multiplied by comes from.
             ->assertSee('Qapı və pəncərə çıxılmaqla divar sahəsi (m²)');
 
@@ -153,7 +155,48 @@ class AdminCalculatorResourcesTest extends TestCase
 
         Livewire::test(ListCalculatorWorkRates::class)
             ->searchTable('kafel')
-            ->assertCanSeeTableRecords(CalculatorWorkRate::where('work_id', 'FLOOR_TILE_INSTALL')->get());
+            ->assertCanSeeTableRecords(CalculatorWorkRate::where('work_id', 'DEM_WALL_TILE')->get());
+    }
+
+    /**
+     * A finish is a row the admin owns: it can be created from the panel, with the
+     * family limited to what the chosen surface allows, and it reaches the site's
+     * configuration without a release.
+     */
+    public function test_a_finish_created_in_the_panel_reaches_the_calculator_config(): void
+    {
+        $this->signInAsAdmin();
+
+        $this->get(CalculatorFinishResource::getUrl('create'))->assertOk();
+        $this->get(CalculatorFinishResource::getUrl('edit', [
+            'record' => \App\Models\CalculatorFinish::where('finish_id', 'LAMINATE')->first(),
+        ]))->assertOk();
+
+        Livewire::test(\App\Filament\Resources\CalculatorFinishResource\Pages\CreateCalculatorFinish::class)
+            ->fillForm([
+                'finish_id' => 'microcement',
+                'name' => ['az' => 'Mikrosement', 'ru' => 'Микроцемент', 'en' => 'Microcement'],
+                'surface' => 'WALL',
+                'family' => 'COAT',
+                'unit' => 'm²',
+                'labour_rate' => 25,
+                'material_standard' => 30,
+                'waste_percent' => 5,
+                'is_active' => true,
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas('calculator_finishes', ['finish_id' => 'MICROCEMENT', 'family' => 'COAT']);
+
+        $finishes = collect($this->getJson('/api/calculator/config')->json('finishes'));
+        $this->assertTrue($finishes->contains('id', 'MICROCEMENT'));
+        $this->assertSame('WALL', $finishes->firstWhere('id', 'MICROCEMENT')['surface']);
+        // A floor family on a wall is refused by the form.
+        Livewire::test(\App\Filament\Resources\CalculatorFinishResource\Pages\CreateCalculatorFinish::class)
+            ->fillForm(['finish_id' => 'WRONG', 'name' => ['az' => 'Yanlış'], 'surface' => 'WALL', 'family' => 'FLOATING', 'unit' => 'm²'])
+            ->call('create')
+            ->assertHasFormErrors(['family']);
     }
 
     /**
@@ -174,23 +217,24 @@ class AdminCalculatorResourcesTest extends TestCase
             'Global search did not find the work rate by its site name. Got: '.$found->implode(', '),
         );
 
-        $stretch = CalculatorWorkRateResource::getGlobalSearchResults('Gərilmə tavan')
+        // A finish is found on the «Üzlüklər» screen, by its site name and its keywords.
+        $stretch = CalculatorFinishResource::getGlobalSearchResults('Gərilmə tavan')
             ->map(fn ($result) => $result->title);
         $this->assertTrue(
             $stretch->contains('Gərilmə tavan'),
-            'Global search did not find the stretch-ceiling rate by its finish label.',
+            'Global search did not find the stretch-ceiling finish by its label.',
         );
 
-        // A surface-state chip («Mayak / qara divar») is interface text, but the
-        // works it switches on must surface for it.
         $this->assertNotEmpty(
-            CalculatorWorkRateResource::getGlobalSearchResults('Mayak / qara divar')->all(),
+            CalculatorFinishResource::getGlobalSearchResults('İriformatlı')->all(),
+            'Global search found no finish for «İriformatlı».',
+        );
+
+        // A surface-state chip is interface text, but the works it switches on must
+        // surface for it.
+        $this->assertNotEmpty(
+            CalculatorWorkRateResource::getGlobalSearchResults('mayak')->all(),
             'Global search found nothing for a surface-state label.',
-        );
-
-        $this->assertNotEmpty(
-            CalculatorCoefficientResource::getGlobalSearchResults('İriformatlı')->all(),
-            'Global search found no coefficient for «İriformatlı».',
         );
     }
 

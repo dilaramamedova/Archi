@@ -62,6 +62,7 @@ class AppServiceProvider extends ServiceProvider
         // the six quick prices and ~130 work rates out of the code (TZ §34).
         CalculatorQuickRate::class => [VersionedCache::CALCULATOR],
         CalculatorWorkRate::class => [VersionedCache::CALCULATOR],
+        \App\Models\CalculatorFinish::class => [VersionedCache::CALCULATOR],
         CalculatorMaterialFallback::class => [VersionedCache::CALCULATOR],
         CalculatorCoefficient::class => [VersionedCache::CALCULATOR],
         CalculatorMaterialNorm::class => [VersionedCache::CALCULATOR],

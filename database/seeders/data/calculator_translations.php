@@ -298,5 +298,58 @@ return [
             'ru' => 'Смета ориентировочная и рассчитана по исходным данным. Итоговая цена уточняется после осмотра объекта.',
             'en' => 'This estimate is approximate and based on the details provided. The final price is confirmed after a site visit.',
         ],
+
+        // ---- Simplified calculator (2026-11): three surface states, three object
+        // conditions, finishes as admin rows, modules derived from the rooms.
+        'states.bare' => ['az' => 'Qara (mayak / qaba döşəmə)', 'ru' => 'Черновая (маяк / черновой пол)', 'en' => 'Bare (shell / rough floor)'],
+        'states.prepared' => ['az' => 'Hazırdır (suvaq / stəjka var)', 'ru' => 'Подготовлена (штукатурка / стяжка)', 'en' => 'Prepared (plastered / screeded)'],
+        'states.old' => ['az' => 'Köhnə üzlük var', 'ru' => 'Старая отделка', 'en' => 'Old finish'],
+        'conditions.prepared' => ['az' => 'Qara təmir hazırdır', 'ru' => 'Черновая готова', 'en' => 'Rough works done'],
+        'families.coat' => ['az' => 'Boya tipli', 'ru' => 'Покрасочный тип', 'en' => 'Coat'],
+        'families.tile' => ['az' => 'Kafel tipli', 'ru' => 'Плиточный тип', 'en' => 'Tile'],
+        'families.panel' => ['az' => 'Panel', 'ru' => 'Панели', 'en' => 'Panel'],
+        'families.floating' => ['az' => 'Üzən döşəmə', 'ru' => 'Плавающий пол', 'en' => 'Floating floor'],
+        'families.suspended' => ['az' => 'Asma tavan', 'ru' => 'Подвесной потолок', 'en' => 'Suspended ceiling'],
+        'line.work' => ['az' => 'iş haqqı', 'ru' => 'работа', 'en' => 'labour'],
+        'line.material' => ['az' => ':name — material', 'ru' => ':name — материал', 'en' => ':name — material'],
+        'object.rewire' => ['az' => 'Elektrik tam yenilənsin', 'ru' => 'Полная замена электрики', 'en' => 'Full rewiring'],
+        'object.rewire_hint' => [
+            'az' => 'Şit, kabel və hər nöqtə yenidən çəkilir. Söndürsəniz yalnız nöqtələrin montajı hesablanır.',
+            'ru' => 'Щит, кабель и каждая точка заново. Если выключить — считается только монтаж точек.',
+            'en' => 'Panel, cable and every point anew. Switched off, only the points are installed.',
+        ],
+        'object.demolition_hint' => [
+            'az' => 'Köhnə qapılar, santexnika, elektrik nöqtələri sökülür, tullantı daşınır.',
+            'ru' => 'Снимаются старые двери, сантехника, электроточки, вывозится мусор.',
+            'en' => 'Old doors, fixtures and points are removed and the debris is taken away.',
+        ],
+        'rooms.fixtures_label' => ['az' => 'Santexnika avadanlığı', 'ru' => 'Сантехника', 'en' => 'Sanitary fixtures'],
+        'fixtures.toilet' => ['az' => 'Unitaz', 'ru' => 'Унитаз', 'en' => 'Toilet'],
+        'fixtures.basin' => ['az' => 'Əlüzyuyan', 'ru' => 'Раковина', 'en' => 'Basin'],
+        'fixtures.shower' => ['az' => 'Duş', 'ru' => 'Душ', 'en' => 'Shower'],
+        'fixtures.bathtub' => ['az' => 'Vanna', 'ru' => 'Ванна', 'en' => 'Bathtub'],
+        'fixtures.kitchen_sink' => ['az' => 'Mətbəx qabyuyanı', 'ru' => 'Кухонная мойка', 'en' => 'Kitchen sink'],
+        'fixtures.mixer' => ['az' => 'Qarışdırıcı', 'ru' => 'Смеситель', 'en' => 'Mixer tap'],
+        'points.ac' => ['az' => 'Kondisioner', 'ru' => 'Кондиционер', 'en' => 'Air conditioner'],
+        'rooms.state_hint' => [
+            'az' => 'Obyektin vəziyyətindən gəlir; bu otaq fərqlidirsə dəyişin.',
+            'ru' => 'Берётся из состояния объекта; измените, если эта комната отличается.',
+            'en' => 'Taken from the object condition; change it if this room differs.',
+        ],
+        'rooms.derived_short' => [
+            'az' => 'döşəmə :floor m² · divar :wall m²',
+            'ru' => 'пол :floor м² · стены :wall м²',
+            'en' => 'floor :floor m² · walls :wall m²',
+        ],
+        'works.auto_hint' => [
+            'az' => 'Siyahı otaqlardan avtomatik qurulub: hazırlıq, üzlük, elektrik, santexnika, kondisioner, qapılar, demontaj və çatdırılma. Lazım olmayanı söndürün.',
+            'ru' => 'Список собран из комнат автоматически: подготовка, отделка, электрика, сантехника, кондиционеры, двери, демонтаж и доставка. Лишнее выключите.',
+            'en' => 'Built from the rooms automatically: preparation, finishes, electrics, plumbing, air conditioning, doors, demolition and delivery. Switch off what you do not need.',
+        ],
+        'side.delivery_note' => [
+            'az' => 'Çatdırılma sahəyə görə təxmin edilir.',
+            'ru' => 'Доставка оценивается по площади.',
+            'en' => 'Delivery is estimated from the area.',
+        ],
     ],
 ];

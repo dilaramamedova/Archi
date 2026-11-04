@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Enums\Calculator\RequestStatus;
 use App\Enums\Calculator\RequestType;
+use App\Models\CalculatorFinish;
 use App\Models\CalculatorRequest;
 use App\Models\CalculatorSetting;
 use App\Models\CalculatorWorkRate;
@@ -13,16 +14,19 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Models\User;
 use App\Services\Calculator\EstimateBuilder;
+use App\Services\Calculator\Units;
 use App\Support\VersionedCache;
 use Database\Seeders\CalculatorSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * The minimum acceptance scenarios of the master specification (§23) plus the rules
- * its audit section calls out as the ones that create real disputes with clients:
- * waste versus contingency, a missing rate never becoming free work, and a snapshot
- * that does not move when a price does.
+ * The simplified engine: finishes are admin rows, the technological chain is keyed
+ * by the finish family, three surface states and three object conditions, and the
+ * engineering modules are derived from the rooms. Plus the rules that create real
+ * disputes with clients: waste versus contingency, a missing rate never becoming
+ * free work, a minimum charged per order, and a snapshot that does not move when a
+ * price does.
  */
 class EstimateEngineTest extends TestCase
 {
@@ -38,7 +42,9 @@ class EstimateEngineTest extends TestCase
         $this->builder = app(EstimateBuilder::class);
     }
 
-    /** Scenario A — geometry is derived, never asked for twice. */
+    // ---- geometry ----------------------------------------------------------------
+
+    /** Geometry is derived, never asked for twice. */
     public function test_room_geometry_is_derived_from_dimensions_and_openings(): void
     {
         $estimate = $this->builder->build($this->inputs());
@@ -54,15 +60,152 @@ class EstimateEngineTest extends TestCase
         $this->assertSame(17.1, $room['skirtingLength']);
     }
 
-    /** Scenario B — block wall to paint produces the whole technological chain. */
-    public function test_the_dependency_engine_proposes_the_full_chain_for_a_bare_wall(): void
-    {
-        $estimate = $this->builder->build($this->inputs());
-        $works = $this->lineIds($estimate);
+    // ---- the chain, by family ----------------------------------------------------
 
-        foreach (['WALL_PRIMER_BASE', 'WALL_PLASTER', 'WALL_PUTTY', 'WALL_SANDING', 'WALL_PRIMER_FINISH', 'WALL_PAINT'] as $workId) {
+    /** A bare wall to be painted gets the whole smoothing chain, then the paint. */
+    public function test_a_bare_wall_under_a_coat_finish_gets_the_full_chain(): void
+    {
+        $works = $this->lineIds($this->builder->build($this->inputs()));
+
+        foreach (['WALL_PRIMER_BASE', 'WALL_PLASTER', 'WALL_PUTTY', 'WALL_SANDING', 'WALL_PRIMER_FINISH', 'PAINT'] as $workId) {
             $this->assertContains($workId, $works, "Missing chain step {$workId}");
         }
+    }
+
+    /** A prepared wall skips the plaster; an old one is stripped first. */
+    public function test_the_wall_state_decides_how_much_of_the_chain_applies(): void
+    {
+        $prepared = $this->lineIds($this->builder->build($this->withWall('PAINT', 'PREPARED')));
+        $this->assertNotContains('WALL_PLASTER', $prepared);
+        $this->assertNotContains('DEM_WALL_FINISH', $prepared);
+        $this->assertContains('WALL_PUTTY', $prepared);
+        $this->assertContains('PAINT', $prepared);
+
+        $old = $this->lineIds($this->builder->build($this->withWall('PAINT', 'OLD')));
+        $this->assertContains('DEM_WALL_FINISH', $old);
+        $this->assertNotContains('WALL_PLASTER', $old);
+        $this->assertContains('WALL_PUTTY', $old);
+    }
+
+    /** Every coat-type finish shares the chain — that is what makes a finish a row. */
+    public function test_every_coat_finish_shares_the_same_preparation(): void
+    {
+        foreach (['PAINT', 'WALLPAPER', 'DECOR_PLASTER'] as $finish) {
+            $works = $this->lineIds($this->builder->build($this->withWall($finish, 'BARE')));
+
+            $this->assertContains('WALL_PUTTY', $works, $finish);
+            $this->assertContains('WALL_PRIMER_FINISH', $works, $finish);
+            $this->assertContains($finish, $works, $finish);
+        }
+    }
+
+    /** A tiled wet wall: plaster when bare, tile prep, waterproofing, tile, grout, adhesive. */
+    public function test_a_tiled_wet_wall_gets_the_tile_chain(): void
+    {
+        $inputs = $this->inputs();
+        $inputs['rooms'][0]['roomType'] = 'BATHROOM';
+        $inputs['rooms'][0]['zones'] = [
+            ['surface' => 'WALL', 'area' => 20, 'finish' => 'WALL_TILE', 'currentState' => 'BARE'],
+        ];
+
+        $lines = $this->linesById($this->builder->build($inputs));
+
+        foreach (['WALL_PRIMER_BASE', 'WALL_PLASTER', 'TILE_SURFACE_PREP', 'TILE_WATERPROOF_WALL', 'WALL_TILE', 'TILE_GROUT', 'MAT_TILE_ADHESIVE', 'MAT_GROUT'] as $id) {
+            $this->assertArrayHasKey($id, $lines, "Missing {$id}");
+        }
+
+        // Nothing from the coat chain.
+        $this->assertArrayNotHasKey('WALL_PUTTY', $lines);
+        // 20 m² × 4.5 kg of adhesive.
+        $this->assertSame(90.0, $lines['MAT_TILE_ADHESIVE']['quantity']);
+    }
+
+    /** A bare floor is screeded whatever goes on it; a wet one is tanked; floating floors get skirting. */
+    public function test_the_floor_chain_follows_state_wetness_and_family(): void
+    {
+        $bareLaminate = $this->linesById($this->builder->build($this->withFloor('LAMINATE', 'BARE')));
+        $this->assertArrayHasKey('FLOOR_SCREED', $bareLaminate);
+        $this->assertArrayHasKey('SKIRTING_INSTALL', $bareLaminate);
+        $this->assertArrayHasKey('MAT_SKIRTING', $bareLaminate);
+        $this->assertArrayNotHasKey('FLOOR_WATERPROOF', $bareLaminate);
+        $this->assertSame(17.1, $bareLaminate['SKIRTING_INSTALL']['quantity']);
+
+        $inputs = $this->withFloor('FLOOR_TILE', 'BARE');
+        $inputs['rooms'][0]['roomType'] = 'BATHROOM';
+        $wetTile = $this->linesById($this->builder->build($inputs));
+        $this->assertArrayHasKey('FLOOR_SCREED', $wetTile);
+        $this->assertArrayHasKey('FLOOR_WATERPROOF', $wetTile);
+        $this->assertArrayHasKey('TILE_SURFACE_PREP', $wetTile);
+        $this->assertArrayHasKey('TILE_GROUT', $wetTile);
+        $this->assertArrayNotHasKey('SKIRTING_INSTALL', $wetTile);
+    }
+
+    /** A suspended ceiling hides the slab, so it skips the smoothing chain a painted one needs. */
+    public function test_a_suspended_ceiling_skips_the_smoothing_chain(): void
+    {
+        $painted = $this->lineIds($this->builder->build($this->withCeiling('CEILING_PAINT', 'BARE')));
+        foreach (['CEIL_PRIMER_BASE', 'CEIL_PLASTER', 'CEIL_PUTTY', 'CEIL_SANDING', 'CEILING_PAINT'] as $id) {
+            $this->assertContains($id, $painted);
+        }
+
+        $stretch = $this->lineIds($this->builder->build($this->withCeiling('STRETCH_CEILING', 'BARE')));
+        $this->assertContains('STRETCH_CEILING', $stretch);
+        $this->assertNotContains('CEIL_PLASTER', $stretch);
+        $this->assertNotContains('CEIL_PUTTY', $stretch);
+    }
+
+    /**
+     * The whole point of the finish table: a finish the admin adds tonight is priced
+     * tomorrow with the right chain and no code change.
+     */
+    public function test_a_finish_added_in_the_admin_panel_is_priced_without_a_code_change(): void
+    {
+        CalculatorFinish::create([
+            'finish_id' => 'MICROCEMENT',
+            'surface' => 'WALL',
+            'family' => 'COAT',
+            'name' => ['az' => 'Mikrosement'],
+            'unit' => 'm²',
+            'labour_rate' => 25,
+            'material_economy' => 20,
+            'material_standard' => 30,
+            'material_premium' => 45,
+            'waste_percent' => 5,
+            'is_active' => true,
+        ]);
+        VersionedCache::bump(VersionedCache::CALCULATOR);
+
+        $lines = $this->linesById(app(EstimateBuilder::class)->build($this->withWall('MICROCEMENT', 'PREPARED', 10)));
+
+        // The coat chain came with the family…
+        $this->assertArrayHasKey('WALL_PUTTY', $lines);
+        $this->assertArrayHasKey('WALL_PRIMER_FINISH', $lines);
+        // …and both halves of the price came from the row.
+        $this->assertSame(250.0, $lines['MICROCEMENT']['lineTotal']);              // 10 × 25
+        $this->assertSame('Mikrosement', $lines['MICROCEMENT']['name']);
+        $this->assertSame(10.5, $lines['MICROCEMENT_MATERIAL']['quantity']);       // +5% waste
+        $this->assertSame(315.0, $lines['MICROCEMENT_MATERIAL']['lineTotal']);     // 10.5 × 30
+        $this->assertSame('MICROCEMENT', $lines['MICROCEMENT_MATERIAL']['meta']['materialId']);
+    }
+
+    /** A format surcharge is its own row with its own rate — never a multiplier on top. */
+    public function test_large_format_tile_is_its_own_finish_row(): void
+    {
+        $line = $this->linesById($this->builder->build($this->withWall('WALL_TILE_LARGE', 'PREPARED', 10)))['WALL_TILE_LARGE'];
+
+        $this->assertSame([], $line['coefficients']);
+        $this->assertSame(180.0, $line['lineTotal']); // 10 × 18
+    }
+
+    /** A finish that belongs to another surface is dropped, not priced per the wrong m². */
+    public function test_a_finish_of_the_wrong_surface_is_ignored(): void
+    {
+        $inputs = $this->inputs();
+        $inputs['rooms'][0]['zones'] = [
+            ['surface' => 'WALL', 'area' => 50, 'finish' => 'LAMINATE', 'currentState' => 'BARE'],
+        ];
+
+        $this->assertArrayNotHasKey('LAMINATE', $this->linesById($this->builder->build($inputs)));
     }
 
     public function test_a_removed_work_disappears_from_the_estimate(): void
@@ -74,10 +217,12 @@ class EstimateEngineTest extends TestCase
 
         $this->assertNotContains('WALL_PLASTER', $this->lineIds($estimate));
         // The rest of the chain stays: removing a step is a warning, not a reset.
-        $this->assertContains('WALL_PAINT', $this->lineIds($estimate));
+        $this->assertContains('PAINT', $this->lineIds($estimate));
     }
 
-    /** Scenario C — electrics come from points, never from "area × rate". */
+    // ---- modules derived from the rooms -------------------------------------------
+
+    /** Electrics come from points, never from "area × rate". */
     public function test_electrical_total_is_driven_by_points_not_by_object_area(): void
     {
         $inputs = $this->inputs();
@@ -91,55 +236,103 @@ class EstimateEngineTest extends TestCase
         $this->assertSame(54.0, $lines['ELEC_LIGHT_POINT']['lineTotal']);   // 3 × 18
     }
 
-    /** Scenario D — 3 split units plus 7 m of extra route. */
-    public function test_split_air_conditioning_is_counted_per_unit_and_per_extra_metre(): void
+    /** A rewired object gets a panel and cable per point; a prepared base is not rewired. */
+    public function test_rewiring_adds_the_panel_and_cable_per_point(): void
+    {
+        // A living room's default points: 8 + 2 + 3 + 2 + 1 + 1 + 1 = 18.
+        $shell = $this->linesById($this->builder->build($this->inputs()));
+
+        $this->assertSame(1.0, $shell['ELEC_PANEL_SMALL']['quantity']);
+        $this->assertSame(126.0, $shell['ELEC_CABLE']['quantity']);          // 18 × 7 m
+        $this->assertSame(378.0, $shell['ELEC_CABLE']['lineTotal']);         // 126 × 3
+        $this->assertSame(126.0, $shell['MAT_CABLE']['quantity']);
+
+        $inputs = $this->inputs();
+        $inputs['object']['condition'] = 'PREPARED';
+        $prepared = $this->linesById($this->builder->build($inputs));
+
+        $this->assertArrayNotHasKey('ELEC_PANEL_SMALL', $prepared);
+        $this->assertArrayNotHasKey('ELEC_CABLE', $prepared);
+        $this->assertArrayHasKey('ELEC_SOCKET_POINT', $prepared);
+
+        // The visitor's own answer wins over the condition's default.
+        $inputs['object']['rewireElectrics'] = true;
+        $this->assertArrayHasKey('ELEC_CABLE', $this->linesById($this->builder->build($inputs)));
+    }
+
+    /** One split unit per air-conditioner point: the room already says how many. */
+    public function test_air_conditioning_is_counted_from_the_room_points(): void
     {
         $inputs = $this->inputs();
-        $inputs['modules']['hvac'] = ['systemType' => 'SPLIT', 'indoorUnits' => 3, 'extraRouteMeters' => 7];
+        $inputs['rooms'][0]['points'] = ['ac_power' => 2];
 
         $lines = $this->linesById($this->builder->build($inputs));
 
-        $this->assertSame(450.0, $lines['HVAC_SPLIT_STD']['lineTotal']);          // 3 × 150
-        $this->assertSame(105.0, $lines['HVAC_SPLIT_EXTRA_ROUTE']['lineTotal']);  // 7 × 15
+        $this->assertSame(2.0, $lines['HVAC_SPLIT_STD']['quantity']);
+        $this->assertSame(300.0, $lines['HVAC_SPLIT_STD']['lineTotal']); // 2 × 150
+        $this->assertSame(2.0, $lines['ELEC_AC_POINT']['quantity']);
+
+        $inputs['rooms'][0]['points'] = ['ac_power' => 0];
+        $this->assertArrayNotHasKey('HVAC_SPLIT_STD', $this->linesById($this->builder->build($inputs)));
     }
 
-    /** The included standard route is not billed twice. */
-    public function test_only_the_route_beyond_the_included_metres_is_charged(): void
+    /** A fitting hangs on every light point, ceiling and wall. */
+    public function test_light_fittings_follow_the_light_points(): void
     {
         $inputs = $this->inputs();
-        // 3 units × 3 included metres = 9 included; 16 entered → 7 chargeable.
-        $inputs['modules']['hvac'] = ['systemType' => 'SPLIT', 'indoorUnits' => 3, 'routeMeters' => 16];
+        $inputs['rooms'][0]['points'] = ['lights' => 3, 'wall_lights' => 2];
 
         $lines = $this->linesById($this->builder->build($inputs));
 
-        $this->assertSame(7.0, $lines['HVAC_SPLIT_EXTRA_ROUTE']['quantity']);
+        $this->assertSame(5.0, $lines['LIGHT_FIXTURE_INSTALL']['quantity']);
+        $this->assertSame(60.0, $lines['LIGHT_FIXTURE_INSTALL']['lineTotal']); // 5 × 12
+        $this->assertSame(5.0, $lines['MAT_LIGHTING_BASIC']['quantity']);
     }
 
-    /** Scenario G — a system without a project is honest about being an estimate. */
-    public function test_vrf_is_marked_estimated_rather_than_presented_as_exact(): void
+    /** A bathroom's fixtures default from its type, are installed, and pull their pipes. */
+    public function test_a_wet_room_gets_its_fixtures_and_pipe_runs(): void
     {
         $inputs = $this->inputs();
-        $inputs['modules']['hvac'] = ['systemType' => 'VRF', 'conditionedArea' => 80, 'zones' => 4];
+        $inputs['rooms'][0]['roomType'] = 'BATHROOM';
 
-        $estimate = $this->builder->build($inputs);
-        $line = $this->linesById($estimate)['HVAC_VRF_ESTIMATE'];
+        $lines = $this->linesById($this->builder->build($inputs));
 
-        $this->assertSame('ESTIMATED', $line['precisionClass']);
-        $this->assertTrue($estimate['hasEstimatedLines']);
-        // 80 × 160 × 1.10 (multi-zone) = 14 080
-        $this->assertSame(14080.0, $line['lineTotal']);
+        // Bathroom defaults: toilet 1, basin 1, shower 1, mixer 2; water 4, sewer 3.
+        $this->assertSame(1.0, $lines['PLUMB_TOILET_INSTALL']['quantity']);
+        $this->assertSame(1.0, $lines['PLUMB_SHOWER_INSTALL']['quantity']);
+        $this->assertSame(2.0, $lines['PLUMB_MIXER_INSTALL']['quantity']);
+        $this->assertArrayNotHasKey('PLUMB_BATHTUB_INSTALL', $lines);
+        $this->assertSame(5.0, $lines['MAT_SANITARY_BASIC']['quantity']);
+        $this->assertSame(12.0, $lines['PLUMB_PIPE_WATER']['quantity']);   // 4 points × 3 m
+        $this->assertSame(9.0, $lines['PLUMB_PIPE_SEWER']['quantity']);    // 3 points × 3 m
+
+        // Edited counts win, one key at a time.
+        $inputs['rooms'][0]['fixtures'] = ['bathtub' => 1, 'shower' => 0];
+        $edited = $this->linesById($this->builder->build($inputs));
+
+        $this->assertSame(1.0, $edited['PLUMB_BATHTUB_INSTALL']['quantity']);
+        $this->assertArrayNotHasKey('PLUMB_SHOWER_INSTALL', $edited);
+        $this->assertSame(1.0, $edited['PLUMB_TOILET_INSTALL']['quantity']);
     }
 
-    /** Scenario E — a real product is billed in whole packages. */
+    /** A new door in an opening creates its installation line and its material. */
+    public function test_an_opening_flagged_for_a_new_door_creates_the_installation_line(): void
+    {
+        $lines = $this->linesById($this->builder->build($this->inputs()));
+
+        $this->assertSame(1.0, $lines['DOOR_INSTALL_INTERIOR']['quantity']);
+        $this->assertSame(1.0, $lines['MAT_DOOR_INTERIOR']['quantity']);
+    }
+
+    // ---- materials ----------------------------------------------------------------
+
+    /** A real product is billed in whole packages. */
     public function test_a_catalog_product_is_billed_in_whole_packages(): void
     {
         $product = $this->product(['package_size' => 1.44, 'package_unit' => 'qutu', 'price' => 20]);
 
-        $inputs = $this->inputs();
-        $inputs['rooms'][0]['zones'] = [[
-            'surface' => 'FLOOR', 'area' => 30, 'finish' => 'FLOOR_TILE', 'currentState' => 'PLASTER_READY',
-        ]];
-        $inputs['materials'] = ['MAT_FLOOR_TILE' => ['mode' => 'CATALOG_PRODUCT', 'productId' => $product->id]];
+        $inputs = $this->withFloor('FLOOR_TILE', 'PREPARED', 30);
+        $inputs['materials'] = ['FLOOR_TILE' => ['mode' => 'CATALOG_PRODUCT', 'productId' => $product->id]];
 
         $lines = $this->linesById($this->estimateViaApi($inputs));
         $line = $lines['PRODUCT_'.$product->id];
@@ -149,73 +342,101 @@ class EstimateEngineTest extends TestCase
         $this->assertEquals(460.0, $line['lineTotal']);
         $this->assertEquals('EXACT', $line['precisionClass']);
         $this->assertEquals('CATALOG_PRICE', $line['source']);
+        $this->assertArrayNotHasKey('FLOOR_TILE_MATERIAL', $lines);
     }
 
-    /** Without a product the category fallback keeps the estimate complete. */
-    public function test_a_material_without_a_product_falls_back_to_the_segment_price(): void
+    /** Without a product the finish's own segment price keeps the estimate complete. */
+    public function test_a_material_without_a_product_falls_back_to_the_finish_segment_price(): void
     {
-        $inputs = $this->inputs();
-        $inputs['rooms'][0]['zones'] = [[
-            'surface' => 'FLOOR', 'area' => 20, 'finish' => 'LAMINATE', 'currentState' => 'PLASTER_READY',
-        ]];
-
-        $line = $this->linesById($this->builder->build($inputs))['MAT_FLOOR_LAMINATE'];
+        $line = $this->linesById($this->builder->build($this->withFloor('LAMINATE', 'PREPARED')))['LAMINATE_MATERIAL'];
 
         // 20 m² + 8% waste = 21.6 m² × 14 AZN (standard segment).
         $this->assertSame(21.6, $line['quantity']);
         $this->assertSame(302.4, $line['lineTotal']);
         $this->assertSame('FALLBACK_CATEGORY_PRICE', $line['source']);
         $this->assertSame('CALCULATED', $line['precisionClass']);
+        $this->assertSame('LAMINATE', $line['meta']['materialId']);
+
+        $inputs = $this->withFloor('LAMINATE', 'PREPARED');
+        $inputs['object']['segment'] = 'PREMIUM';
+        $this->assertSame(475.2, $this->linesById($this->builder->build($inputs))['LAMINATE_MATERIAL']['lineTotal']); // 21.6 × 22
     }
 
-    /** Scenario I — a new door in an opening creates its installation line. */
-    public function test_an_opening_flagged_for_a_new_door_creates_the_installation_line(): void
+    /** "I will buy it myself" keeps the row as a shopping list but takes no money. */
+    public function test_an_excluded_material_stays_listed_at_zero(): void
+    {
+        $inputs = $this->withFloor('LAMINATE', 'PREPARED');
+        $inputs['materials'] = ['LAMINATE' => ['mode' => 'EXCLUDED']];
+
+        $line = $this->linesById($this->builder->build($inputs))['LAMINATE_MATERIAL'];
+
+        $this->assertSame(21.6, $line['quantity']);
+        $this->assertSame(0.0, $line['lineTotal']);
+        $this->assertSame('MANUAL_QUOTE', $line['source']);
+    }
+
+    /** Paint is required per m² but bought per tin: a litre product converts through the coverage norm. */
+    public function test_a_product_sold_by_the_litre_converts_the_painted_area_to_litres(): void
+    {
+        $product = $this->product(['unit' => 'litre', 'price' => 30, 'package_size' => null]);
+
+        $inputs = $this->withWall('PAINT', 'PREPARED', 50);
+        $inputs['materials'] = ['PAINT' => ['mode' => 'CATALOG_PRODUCT', 'productId' => $product->id]];
+
+        $line = $this->linesById($this->estimateViaApi($inputs))['PRODUCT_'.$product->id];
+
+        // 50 m² × 2 coats / 10 m² per litre = 10 L.
+        $this->assertEquals(10.0, $line['quantity']);
+        $this->assertEquals(300.0, $line['lineTotal']);
+        $this->assertEquals(50.0, $line['meta']['paintedArea']);
+    }
+
+    // ---- logistics ----------------------------------------------------------------
+
+    /** Delivery is a norm per area; lifting is charged above the free floors by the estimated weight. */
+    public function test_delivery_and_lifting_are_estimated_from_the_object(): void
     {
         $lines = $this->linesById($this->builder->build($this->inputs()));
 
-        $this->assertArrayHasKey('DOOR_INSTALL_INTERIOR', $lines);
-        $this->assertSame(1.0, $lines['DOOR_INSTALL_INTERIOR']['quantity']);
-    }
-
-    /** Scenario F — lifting is charged only above the free floors, and only by weight. */
-    public function test_manual_lifting_needs_both_a_missing_lift_and_a_known_weight(): void
-    {
-        $product = $this->product(['package_size' => 1.44, 'price' => 20, 'weight_kg' => 25, 'volume_m3' => 0.02]);
+        // 20 m² → 1 trip of 60 ₼; 20 m² × 25 kg = 500 kg × (7 − 1 free) floors × 0.15.
+        $this->assertSame(1.0, $lines['LOG_DELIVERY_TRIP']['quantity']);
+        $this->assertSame(60.0, $lines['LOG_DELIVERY_TRIP']['lineTotal']);
+        $this->assertSame(3000.0, $lines['LOG_MANUAL_LIFT']['quantity']);
+        $this->assertSame(450.0, $lines['LOG_MANUAL_LIFT']['lineTotal']);
 
         $inputs = $this->inputs();
-        $inputs['object']['floor'] = 7;
-        $inputs['object']['hasFreightElevator'] = false;
-        $inputs['rooms'][0]['zones'] = [[
-            'surface' => 'FLOOR', 'area' => 30, 'finish' => 'FLOOR_TILE', 'currentState' => 'PLASTER_READY',
-        ]];
-        $inputs['materials'] = ['MAT_FLOOR_TILE' => ['mode' => 'CATALOG_PRODUCT', 'productId' => $product->id]];
-
-        $lines = $this->linesById($this->estimateViaApi($inputs));
-
-        // 23 packs × 25 kg = 575 kg, floors 7 − 1 free = 6 → 3 450 kg×floor × 0.15.
-        $this->assertEquals(3450.0, $lines['LOG_MANUAL_LIFT']['quantity']);
-        $this->assertEquals(517.5, $lines['LOG_MANUAL_LIFT']['lineTotal']);
-        $this->assertEquals(1.0, $lines['LOG_DELIVERY_TRIP']['quantity']);
+        $inputs['object']['area'] = 100;
+        $this->assertSame(3.0, $this->linesById($this->builder->build($inputs))['LOG_DELIVERY_TRIP']['quantity']);
     }
 
     public function test_a_freight_lift_removes_the_manual_lifting_line(): void
     {
-        $product = $this->product(['package_size' => 1.44, 'price' => 20, 'weight_kg' => 25]);
-
         $inputs = $this->inputs();
         $inputs['object']['hasFreightElevator'] = true;
-        $inputs['rooms'][0]['zones'] = [[
-            'surface' => 'FLOOR', 'area' => 30, 'finish' => 'FLOOR_TILE', 'currentState' => 'PLASTER_READY',
-        ]];
-        $inputs['materials'] = ['MAT_FLOOR_TILE' => ['mode' => 'CATALOG_PRODUCT', 'productId' => $product->id]];
 
-        $this->assertArrayNotHasKey('LOG_MANUAL_LIFT', $this->linesById($this->estimateViaApi($inputs)));
+        $lines = $this->linesById($this->builder->build($inputs));
+
+        $this->assertArrayNotHasKey('LOG_MANUAL_LIFT', $lines);
+        $this->assertArrayHasKey('LOG_DELIVERY_TRIP', $lines);
     }
 
-    /**
-     * Master spec §15 — the material waste is inside the material quantity and the
-     * financial reserve is its own line. They must not compound.
-     */
+    /** Nothing is delivered when the visitor buys every material themselves. */
+    public function test_no_delivery_when_every_material_is_excluded(): void
+    {
+        $inputs = $this->withFloor('LAMINATE', 'PREPARED');
+        $inputs['rooms'][0]['points'] = ['sockets' => 0, 'switches' => 0, 'lights' => 0, 'wall_lights' => 0, 'tv' => 0, 'data' => 0, 'ac_power' => 0];
+        $inputs['rooms'][0]['openings'] = [];
+        $inputs['materials'] = ['LAMINATE' => ['mode' => 'EXCLUDED'], 'MAT_SKIRTING' => ['mode' => 'EXCLUDED']];
+
+        $lines = $this->linesById($this->builder->build($inputs));
+
+        $this->assertArrayNotHasKey('LOG_DELIVERY_TRIP', $lines);
+        $this->assertArrayNotHasKey('LOG_MANUAL_LIFT', $lines);
+    }
+
+    // ---- money rules --------------------------------------------------------------
+
+    /** Master spec §15 — material waste is inside the quantity; the reserve is its own line. */
     public function test_contingency_is_a_separate_line_over_the_eligible_subtotal(): void
     {
         $estimate = $this->builder->build($this->inputs());
@@ -229,120 +450,99 @@ class EstimateEngineTest extends TestCase
         );
     }
 
-    /**
-     * The three switches on the object step. Each one has to move money — a toggle
-     * the engine ignores is worse than no toggle, because the visitor believes it
-     * did something.
-     */
-    public function test_the_demolition_switch_governs_the_demolition_block(): void
-    {
-        $inputs = $this->inputs();
-        $inputs['object']['demolitionRequired'] = true;
-        $inputs['modules']['demolition'] = ['estimateDebris' => true, 'plumbingFixtures' => 3];
-
-        $on = $this->linesById($this->builder->build($inputs));
-
-        $this->assertArrayHasKey('DEM_PLUMB_FIXTURE', $on);
-        $this->assertArrayHasKey('DEM_DEBRIS_LOADING', $on);
-        $this->assertArrayHasKey('DEM_DEBRIS_DISPOSAL', $on);
-
-        $inputs['object']['demolitionRequired'] = false;
-        $off = $this->linesById($this->builder->build($inputs));
-
-        $this->assertArrayNotHasKey('DEM_PLUMB_FIXTURE', $off);
-        $this->assertArrayNotHasKey('DEM_DEBRIS_LOADING', $off);
-    }
-
-    /**
-     * Stripping old wallpaper before painting belongs to the wall's technological
-     * chain, not to the demolition block — switching demolition off must not leave
-     * the painter working over the old finish (master spec §10.1).
-     */
-    public function test_surface_stripping_survives_the_demolition_switch(): void
-    {
-        $inputs = $this->inputs();
-        $inputs['object']['demolitionRequired'] = false;
-        $inputs['rooms'][0]['zones'] = [[
-            'surface' => 'WALL', 'area' => 50, 'finish' => 'PAINT', 'currentState' => 'OLD_FINISH',
-        ]];
-
-        $this->assertArrayHasKey('DEM_WALL_FINISH', $this->linesById($this->builder->build($inputs)));
-    }
-
-    /** A second-hand flat with an old renovation defaults to needing demolition. */
-    public function test_demolition_defaults_from_the_object_condition(): void
-    {
-        $inputs = $this->inputs();
-        unset($inputs['object']['demolitionRequired']);
-        $inputs['object']['condition'] = 'OLD_RENOVATION';
-        $inputs['modules']['demolition'] = ['estimateDebris' => true];
-
-        $this->assertArrayHasKey('DEM_DEBRIS_LOADING', $this->linesById($this->builder->build($inputs)));
-    }
-
-    public function test_the_design_switch_adds_the_design_project_line(): void
-    {
-        $off = $this->linesById($this->builder->build($this->inputs()));
-        $this->assertArrayNotHasKey('SERVICE_DESIGN', $off);
-
-        $inputs = $this->inputs();
-        $inputs['object']['designProject'] = true;
-        $inputs['object']['area'] = 100;
-
-        // 100 m² × 15 AZN, comfortably above the 300 AZN minimum for a design project.
-        $this->assertSame(1500.0, $this->linesById($this->builder->build($inputs))['SERVICE_DESIGN']['lineTotal']);
-    }
-
-    /** External services stay outside the reserve base. */
-    public function test_the_design_project_is_excluded_from_the_contingency_base(): void
-    {
-        $inputs = $this->inputs();
-        $inputs['object']['designProject'] = true;
-
-        $estimate = $this->builder->build($inputs);
-        $design = $this->linesById($estimate)['SERVICE_DESIGN'];
-
-        $this->assertFalse($design['contingencyEligible']);
-        $this->assertGreaterThan(0, $design['lineTotal']);
-    }
-
     /** The minimum charge lifts a small job, but never invents one out of nothing. */
     public function test_the_minimum_charge_applies_only_when_there_is_a_quantity(): void
     {
-        $inputs = $this->inputs();
-        $inputs['rooms'][0]['zones'] = [[
-            'surface' => 'WALL', 'area' => 4, 'finish' => 'PAINT', 'currentState' => 'SHELL',
-        ]];
-
-        $line = $this->linesById($this->builder->build($inputs))['WALL_PLASTER'];
+        $line = $this->linesById($this->builder->build($this->withWall('PAINT', 'BARE', 4)))['WALL_PLASTER'];
 
         // 4 m² × 9 = 36 AZN, below the 150 AZN minimum for plastering.
         $this->assertSame(150.0, $line['lineTotal']);
     }
 
-    /** Master spec §19 — a work without a rate is reported, never priced at zero. */
-    public function test_a_work_without_a_rate_is_reported_instead_of_billed_as_free(): void
+    /** Master spec §19 — a work or a finish without a rate is reported, never priced at zero. */
+    public function test_a_missing_rate_is_reported_instead_of_billed_as_free(): void
     {
-        CalculatorWorkRate::where('work_id', 'WALL_PAINT')->update(['rate' => null]);
+        CalculatorWorkRate::where('work_id', 'WALL_PUTTY')->update(['rate' => null]);
+        CalculatorFinish::where('finish_id', 'PAINT')->update(['labour_rate' => null, 'material_standard' => null]);
         VersionedCache::bump(VersionedCache::CALCULATOR);
 
         $estimate = app(EstimateBuilder::class)->build($this->inputs());
-        $line = $this->linesById($estimate)['WALL_PAINT'];
+        $lines = $this->linesById($estimate);
 
-        $this->assertSame('PRICE_MISSING', $line['source']);
-        $this->assertNull($line['unitPrice']);
-        $this->assertSame(0.0, $line['lineTotal']);
-        $this->assertContains('WALL_PAINT', $estimate['priceMissing']);
+        foreach (['WALL_PUTTY', 'PAINT', 'PAINT_MATERIAL'] as $id) {
+            $this->assertSame('PRICE_MISSING', $lines[$id]['source'], $id);
+            $this->assertNull($lines[$id]['unitPrice'], $id);
+            $this->assertSame(0.0, $lines[$id]['lineTotal'], $id);
+            $this->assertContains($id, $estimate['priceMissing']);
+        }
     }
 
-    /** Master spec §16.2 — the same lines, grouped by room. */
-    public function test_the_estimate_can_be_read_by_room_as_well_as_by_category(): void
+    /**
+     * "Minimum sifariş" is a minimum ORDER, so it applies once to the job: 9 m² of
+     * kitchen tile plus 4 m² of bathroom tile is one order of 13 m² = 195 ₼, not two
+     * lines lifted to 150 ₼ each.
+     */
+    public function test_the_minimum_charge_applies_per_order_not_per_room(): void
     {
-        $estimate = $this->builder->build($this->inputs());
+        $estimate = $this->builder->build($this->twoTiledRooms(9, 4));
+        $lines = array_values(array_filter($estimate['lines'], fn (array $l) => $l['itemId'] === 'FLOOR_TILE'));
 
-        $this->assertNotEmpty($estimate['groups']);
-        $this->assertSame('Qonaq', $estimate['byRoom'][0]['name']);
-        $this->assertGreaterThan(0, $estimate['byRoom'][0]['total']);
+        $this->assertCount(2, $lines);
+        $this->assertSame(195.0, round(array_sum(array_column($lines, 'lineTotal')), 2));
+        $this->assertSame(150.0, $lines[0]['meta']['minimumChargeOrder']);
+    }
+
+    public function test_a_single_small_room_is_still_lifted_to_the_minimum(): void
+    {
+        $inputs = $this->twoTiledRooms(4, 0);
+        unset($inputs['rooms'][1]);
+        $inputs['rooms'] = array_values($inputs['rooms']);
+
+        $line = $this->linesById($this->builder->build($inputs))['FLOOR_TILE'];
+
+        $this->assertSame(4.0, $line['quantity']);
+        $this->assertSame(150.0, $line['lineTotal']); // 60 ₼ raw, lifted
+    }
+
+    public function test_rooms_under_the_minimum_together_sum_to_exactly_one_minimum(): void
+    {
+        $lines = array_filter(
+            $this->builder->build($this->twoTiledRooms(4, 4))['lines'],
+            fn (array $l) => $l['itemId'] === 'FLOOR_TILE',
+        );
+
+        $this->assertSame(150.0, round(array_sum(array_column($lines, 'lineTotal')), 2));
+    }
+
+    /** The same work in one room is one line, not five (master spec §19). */
+    public function test_repeated_work_in_one_room_is_consolidated_into_a_single_line(): void
+    {
+        $inputs = $this->inputs();
+        $inputs['rooms'][0]['zones'] = [
+            ['surface' => 'WALL', 'area' => 25, 'finish' => 'PAINT', 'currentState' => 'BARE'],
+            ['surface' => 'WALL', 'area' => 25.01, 'finish' => 'PAINT', 'currentState' => 'BARE'],
+        ];
+
+        $painting = array_values(array_filter(
+            $this->builder->build($inputs)['lines'],
+            fn (array $line) => $line['itemId'] === 'PAINT',
+        ));
+
+        $this->assertCount(1, $painting);
+        $this->assertSame(50.01, $painting[0]['quantity']);
+    }
+
+    /** Ceiling height above 3 m costs more labour on walls and ceilings, not on floors. */
+    public function test_the_height_coefficient_reaches_wall_labour_only(): void
+    {
+        $inputs = $this->inputs();
+        $inputs['rooms'][0]['heightMm'] = 3400;
+
+        $lines = $this->linesById($this->builder->build($inputs));
+
+        $this->assertSame([['id' => 'K_HEIGHT_3_01_3_50', 'value' => 1.15]], $lines['PAINT']['coefficients']);
+        $this->assertSame([['id' => 'K_HEIGHT_3_01_3_50', 'value' => 1.15]], $lines['WALL_PLASTER']['coefficients']);
+        $this->assertSame([], $lines['LAMINATE']['coefficients']);
     }
 
     /** The city coefficient multiplies labour, and 1.00 leaves no trace on a line. */
@@ -359,37 +559,185 @@ class EstimateEngineTest extends TestCase
         $this->assertGreaterThan($baku['totals']['works'], $ganja['totals']['works']);
     }
 
-    /** Master spec §19 — the same work in one room is one line, not five. */
-    public function test_repeated_work_in_one_room_is_consolidated_into_a_single_line(): void
+    /** Every configurable number really is configurable (master spec §21). */
+    public function test_admin_settings_change_the_result_without_a_code_change(): void
     {
-        $inputs = $this->inputs();
-        $inputs['rooms'][0]['zones'] = [
-            ['surface' => 'WALL', 'area' => 25, 'finish' => 'PAINT', 'currentState' => 'SHELL'],
-            ['surface' => 'WALL', 'area' => 25.01, 'finish' => 'PAINT', 'currentState' => 'SHELL'],
-        ];
+        $before = $this->builder->build($this->inputs())['totals'];
 
-        $painting = array_values(array_filter(
-            $this->builder->build($inputs)['lines'],
-            fn (array $line) => $line['itemId'] === 'WALL_PAINT',
-        ));
+        CalculatorSetting::where('key', 'CONTINGENCY_PERCENT')->update(['value' => '0']);
+        CalculatorSetting::where('key', 'CABLE_M_PER_POINT')->update(['value' => '10']);
+        VersionedCache::bump(VersionedCache::CALCULATOR);
 
-        $this->assertCount(1, $painting);
-        $this->assertSame(50.01, $painting[0]['quantity']);
+        $estimate = app(EstimateBuilder::class)->build($this->inputs());
+        $after = $estimate['totals'];
+
+        $this->assertGreaterThan(0, $before['contingency']);
+        $this->assertSame(0.0, $after['contingency']);
+        $this->assertSame($after['baseSubtotal'], $after['grandTotal']);
+        $this->assertSame(180.0, $this->linesById($estimate)['ELEC_CABLE']['quantity']); // 18 points × 10 m
     }
 
-    /** Ceiling height above 3 m costs more labour on walls and ceilings, not on floors. */
-    public function test_the_height_coefficient_reaches_wall_labour_only(): void
+    // ---- demolition ----------------------------------------------------------------
+
+    /** The demolition switch governs the whole block; old items exist only in an old flat. */
+    public function test_the_demolition_switch_governs_the_demolition_block(): void
     {
         $inputs = $this->inputs();
-        $inputs['rooms'][0]['heightMm'] = 3400;
+        $inputs['object']['condition'] = 'OLD_RENOVATION';
+        $inputs['object']['demolitionRequired'] = true;
+        $inputs['rooms'][0]['roomType'] = 'BATHROOM';
+
+        $on = $this->linesById($this->builder->build($inputs));
+
+        $this->assertSame(1.0, $on['DEM_DOOR']['quantity']);
+        $this->assertSame(5.0, $on['DEM_PLUMB_FIXTURE']['quantity']);      // the bathroom's fixtures
+        $this->assertArrayHasKey('DEM_ELECTRIC_POINT', $on);               // rewired by default
+        $this->assertSame(1.0, $on['DEM_DEBRIS_LOADING']['quantity']);     // 20 m² × 0.05 m³
+        $this->assertSame(1.0, $on['DEM_DEBRIS_DISPOSAL']['quantity']);
+
+        $inputs['object']['demolitionRequired'] = false;
+        $off = $this->linesById($this->builder->build($inputs));
+
+        foreach (['DEM_DOOR', 'DEM_PLUMB_FIXTURE', 'DEM_ELECTRIC_POINT', 'DEM_DEBRIS_LOADING', 'DEM_DEBRIS_DISPOSAL'] as $id) {
+            $this->assertArrayNotHasKey($id, $off, $id);
+        }
+    }
+
+    /** A bare shell someone demolishes in has no old doors or fixtures to remove — only debris. */
+    public function test_a_shell_has_nothing_old_to_remove_even_with_demolition_on(): void
+    {
+        $inputs = $this->inputs();
+        $inputs['object']['demolitionRequired'] = true; // condition stays SHELL
 
         $lines = $this->linesById($this->builder->build($inputs));
 
-        $this->assertSame([['id' => 'K_HEIGHT_3_01_3_50', 'value' => 1.15]], $lines['WALL_PAINT']['coefficients']);
-        $this->assertSame([], $lines['FLOOR_LAMINATE_INSTALL']['coefficients']);
+        $this->assertArrayNotHasKey('DEM_DOOR', $lines);
+        $this->assertArrayNotHasKey('DEM_ELECTRIC_POINT', $lines);
+        $this->assertArrayHasKey('DEM_DEBRIS_LOADING', $lines);
     }
 
-    /** A stated area far from the sum of the rooms is a warning, never a block. */
+    /** Stripping old wallpaper belongs to the wall's chain, not to the demolition block. */
+    public function test_surface_stripping_survives_the_demolition_switch(): void
+    {
+        $inputs = $this->withWall('PAINT', 'OLD', 50);
+        $inputs['object']['demolitionRequired'] = false;
+
+        $this->assertArrayHasKey('DEM_WALL_FINISH', $this->linesById($this->builder->build($inputs)));
+    }
+
+    /** An old flat defaults to needing demolition. */
+    public function test_demolition_defaults_from_the_object_condition(): void
+    {
+        $inputs = $this->inputs();
+        unset($inputs['object']['demolitionRequired']);
+        $inputs['object']['condition'] = 'OLD_RENOVATION';
+
+        $this->assertArrayHasKey('DEM_DEBRIS_LOADING', $this->linesById($this->builder->build($inputs)));
+    }
+
+    /** A wet room's old surfaces are assumed tiled; a dry room's are not. */
+    public function test_old_coverings_are_removed_at_the_rate_the_room_implies(): void
+    {
+        $dry = $this->linesById($this->builder->build($this->withFloor('LAMINATE', 'OLD')));
+        $this->assertSame(20.0, $dry['DEM_FLOOR_LAMINATE']['quantity']);
+        $this->assertArrayNotHasKey('DEM_FLOOR_TILE', $dry);
+
+        $inputs = $this->inputs();
+        $inputs['rooms'][0]['roomType'] = 'BATHROOM';
+        $inputs['rooms'][0]['zones'] = [
+            ['surface' => 'FLOOR', 'area' => 20, 'finish' => 'FLOOR_TILE', 'currentState' => 'OLD'],
+            ['surface' => 'WALL', 'area' => 20, 'finish' => 'WALL_TILE', 'currentState' => 'OLD'],
+        ];
+        $wet = $this->linesById($this->builder->build($inputs));
+        $this->assertSame(20.0, $wet['DEM_FLOOR_TILE']['quantity']);
+        $this->assertSame(20.0, $wet['DEM_WALL_TILE']['quantity']);
+        $this->assertArrayNotHasKey('DEM_FLOOR_LAMINATE', $wet);
+    }
+
+    /** The debris estimate and the final cleaning read the same object area. */
+    public function test_debris_and_cleaning_are_measured_against_the_same_object_area(): void
+    {
+        $inputs = $this->inputs();
+        $inputs['object']['area'] = 100;           // rooms add up to 20 m²
+        $inputs['object']['demolitionRequired'] = true;
+        $inputs['modules'] = ['services' => ['finalCleaning' => true]];
+
+        $lines = $this->linesById($this->builder->build($inputs));
+
+        $this->assertSame(100.0, $lines['LOG_FINAL_CLEANING']['quantity']);
+        $this->assertSame(5.0, $lines['DEM_DEBRIS_LOADING']['quantity']); // 100 × 0.05
+    }
+
+    // ---- sealant -------------------------------------------------------------------
+
+    /** The sealed joint runs around the room, so it is billed once per room. */
+    public function test_tile_sealant_is_billed_once_per_room_not_once_per_tiled_surface(): void
+    {
+        $inputs = $this->inputs();
+        $inputs['object']['area'] = 4;
+        $inputs['rooms'][0]['roomType'] = 'BATHROOM';
+        $inputs['rooms'][0]['lengthMm'] = 2000;
+        $inputs['rooms'][0]['widthMm'] = 2000;
+        $inputs['rooms'][0]['zones'] = [
+            ['surface' => 'FLOOR', 'area' => 4, 'finish' => 'FLOOR_TILE', 'currentState' => 'BARE', 'wetZone' => true],
+            ['surface' => 'WALL', 'area' => 18, 'finish' => 'WALL_TILE', 'currentState' => 'PREPARED', 'wetZone' => true],
+        ];
+
+        $estimate = $this->builder->build($inputs);
+        $sealant = array_values(array_filter($estimate['lines'], fn (array $l) => $l['itemId'] === 'TILE_SILICONE'));
+
+        $this->assertCount(1, $sealant);
+        $this->assertSame(8.0, $sealant[0]['quantity']);   // 2 × (2 + 2), not 16
+        $this->assertSame(32.0, $sealant[0]['lineTotal']);
+        // Grout IS per square metre of tile, so both surfaces count: 4 + 18.
+        $this->assertSame(22.0, $this->linesById($estimate)['TILE_GROUT']['quantity']);
+    }
+
+    public function test_a_dry_tiled_room_gets_no_sealant(): void
+    {
+        $inputs = $this->inputs();
+        $inputs['rooms'][0]['zones'] = [
+            ['surface' => 'FLOOR', 'area' => 20, 'finish' => 'FLOOR_TILE', 'currentState' => 'BARE', 'wetZone' => false],
+        ];
+
+        $this->assertArrayNotHasKey('TILE_SILICONE', $this->linesById($this->builder->build($inputs)));
+    }
+
+    // ---- services, views, warnings ----------------------------------------------------
+
+    public function test_the_design_switch_adds_the_design_project_line(): void
+    {
+        $off = $this->linesById($this->builder->build($this->inputs()));
+        $this->assertArrayNotHasKey('SERVICE_DESIGN', $off);
+
+        $inputs = $this->inputs();
+        $inputs['object']['designProject'] = true;
+        $inputs['object']['area'] = 100;
+
+        $this->assertSame(1500.0, $this->linesById($this->builder->build($inputs))['SERVICE_DESIGN']['lineTotal']);
+    }
+
+    public function test_the_design_project_is_excluded_from_the_contingency_base(): void
+    {
+        $inputs = $this->inputs();
+        $inputs['object']['designProject'] = true;
+
+        $design = $this->linesById($this->builder->build($inputs))['SERVICE_DESIGN'];
+
+        $this->assertFalse($design['contingencyEligible']);
+        $this->assertGreaterThan(0, $design['lineTotal']);
+    }
+
+    /** Master spec §16.2 — the same lines, grouped by room. */
+    public function test_the_estimate_can_be_read_by_room_as_well_as_by_category(): void
+    {
+        $estimate = $this->builder->build($this->inputs());
+
+        $this->assertNotEmpty($estimate['groups']);
+        $this->assertSame('Qonaq', $estimate['byRoom'][0]['name']);
+        $this->assertGreaterThan(0, $estimate['byRoom'][0]['total']);
+    }
+
     public function test_an_area_mismatch_warns_but_still_produces_an_estimate(): void
     {
         $inputs = $this->inputs();
@@ -402,7 +750,57 @@ class EstimateEngineTest extends TestCase
         $this->assertGreaterThan(0, $estimate['totals']['grandTotal']);
     }
 
-    /** Scenario H — a stored estimate does not move when a rate does. */
+    /** Every line traces back to quantity, price and source (master spec §24). */
+    public function test_every_line_carries_its_calculation_trace(): void
+    {
+        foreach ($this->builder->build($this->inputs())['lines'] as $line) {
+            $this->assertArrayHasKey('quantity', $line);
+            $this->assertArrayHasKey('unitPrice', $line);
+            $this->assertArrayHasKey('coefficients', $line);
+            $this->assertArrayHasKey('source', $line);
+            $this->assertNotSame('', $line['trace']);
+        }
+    }
+
+    // ---- payload upgrade ---------------------------------------------------------------
+
+    /** A session saved by the previous calculator is read, not refused. */
+    public function test_a_version_two_payload_is_upgraded_to_the_finish_rows(): void
+    {
+        $old = [
+            'v' => 2,
+            'object' => ['condition' => 'PARTIAL', 'marketType' => 'SECONDARY', 'totalFloors' => 9, 'area' => 20],
+            'rooms' => [[
+                'id' => 'r1', 'roomType' => 'BATHROOM', 'lengthMm' => 2000, 'widthMm' => 2000, 'currentState' => 'OLD_TILE',
+                'floorFinish' => 'FLOOR_TILE', 'wallFinish' => 'WALL_TILE', 'ceilingFinish' => 'CEILING_PAINT',
+                'zones' => [['surface' => 'FLOOR', 'area' => 4, 'finish' => 'FLOOR_TILE', 'currentState' => 'ROUGH_FLOOR']],
+            ]],
+            'materials' => ['MAT_FLOOR_TILE' => ['mode' => 'EXCLUDED']],
+            'works' => ['FLOOR_TILE_INSTALL' => ['selected' => false]],
+            'modules' => ['hvac' => ['systemType' => 'VRF'], 'services' => ['finalCleaning' => false]],
+        ];
+
+        $upgraded = Units::upgradePayload($old);
+
+        $this->assertSame(3, $upgraded['v']);
+        $this->assertSame('PREPARED', $upgraded['object']['condition']);
+        $this->assertArrayNotHasKey('marketType', $upgraded['object']);
+        $this->assertSame('OLD', $upgraded['rooms'][0]['currentState']);
+        $this->assertSame('BARE', $upgraded['rooms'][0]['zones'][0]['currentState']);
+        $this->assertSame(['FLOOR_TILE' => ['mode' => 'EXCLUDED']], $upgraded['materials']);
+        $this->assertSame(['FLOOR_TILE' => ['selected' => false]], $upgraded['works']);
+        $this->assertSame(['services' => ['finalCleaning' => false]], $upgraded['modules']);
+
+        // When only the old market question was answered, it still seeds the condition.
+        $this->assertSame('OLD_RENOVATION', Units::upgradePayload(['v' => 2, 'object' => ['marketType' => 'SECONDARY']])['object']['condition']);
+
+        // And the upgraded payload prices normally.
+        $this->assertGreaterThan(0, $this->builder->build($upgraded)['totals']['grandTotal']);
+    }
+
+    // ---- snapshots, cart, requests -----------------------------------------------------
+
+    /** A stored estimate does not move when a rate does. */
     public function test_a_snapshot_keeps_its_prices_after_a_rate_change(): void
     {
         $user = User::factory()->create();
@@ -416,7 +814,7 @@ class EstimateEngineTest extends TestCase
 
         $frozenTotal = $snapshot->json('totals.grandTotal');
 
-        CalculatorWorkRate::where('work_id', 'WALL_PAINT')->update(['rate' => 40]);
+        CalculatorFinish::where('finish_id', 'PAINT')->update(['labour_rate' => 40]);
         VersionedCache::bump(VersionedCache::CALCULATOR);
 
         $stored = $this->actingAs($user)->getJson('/api/calculator/snapshots/'.$snapshot->json('uuid'));
@@ -426,7 +824,6 @@ class EstimateEngineTest extends TestCase
         $this->assertGreaterThan($frozenTotal, $recalculated->json('estimate.totals.grandTotal'));
     }
 
-    /** The visitor's own cart joins the estimate, and can be left out of it. */
     public function test_cart_items_are_included_in_the_estimate_and_can_be_excluded(): void
     {
         $user = User::factory()->create();
@@ -450,11 +847,6 @@ class EstimateEngineTest extends TestCase
         $this->assertNull(collect($excluded->json('lines'))->firstWhere('itemId', 'CART_'.$product->id));
     }
 
-    /**
-     * The storefront cart lives in the browser, so a guest's items reach the engine
-     * as ids in the request. Prices must still come from the catalog — a tampered
-     * localStorage price cannot change the estimate.
-     */
     public function test_a_guest_cart_sent_with_the_request_is_priced_from_the_catalog(): void
     {
         $product = $this->product(['price' => 80]);
@@ -463,7 +855,6 @@ class EstimateEngineTest extends TestCase
         $inputs['basket'] = [
             'useCart' => true,
             'excluded' => [],
-            // The claimed quantity is honoured; a claimed price would simply not exist.
             'items' => [['productId' => $product->id, 'quantity' => 3]],
         ];
 
@@ -477,31 +868,21 @@ class EstimateEngineTest extends TestCase
         $this->assertEquals(240.0, $line['lineTotal']); // 3 × catalog 80, not anything client-sent
     }
 
-    /**
-     * A product chosen as the material for a surface must not also be billed as a
-     * cart row. The calculator worked out how much of it the job needs; the number
-     * the visitor happened to have in their cart does not get added on top.
-     */
     public function test_a_product_used_as_a_material_is_not_billed_twice_from_the_cart(): void
     {
         $product = $this->product(['package_size' => 1.44, 'price' => 20]);
 
-        $inputs = $this->inputs();
-        $inputs['rooms'][0]['zones'] = [[
-            'surface' => 'FLOOR', 'area' => 30, 'finish' => 'FLOOR_TILE', 'currentState' => 'PLASTER_READY',
-        ]];
-        $inputs['materials'] = ['MAT_FLOOR_TILE' => ['mode' => 'CATALOG_PRODUCT', 'productId' => $product->id]];
+        $inputs = $this->withFloor('FLOOR_TILE', 'PREPARED', 30);
+        $inputs['materials'] = ['FLOOR_TILE' => ['mode' => 'CATALOG_PRODUCT', 'productId' => $product->id]];
         $inputs['basket'] = ['useCart' => true, 'items' => [['productId' => $product->id, 'quantity' => 2]]];
 
         $lines = $this->linesById($this->estimateViaApi($inputs));
 
-        // Priced once, as the material requirement: 23 packs, not 23 packs + 2 pieces.
         $this->assertArrayHasKey('PRODUCT_'.$product->id, $lines);
         $this->assertArrayNotHasKey('CART_'.$product->id, $lines);
         $this->assertEquals(23, $lines['PRODUCT_'.$product->id]['quantity']);
     }
 
-    /** A hidden or unapproved product cannot be smuggled in through the browser cart. */
     public function test_an_unpublished_product_in_the_browser_cart_is_ignored(): void
     {
         $product = $this->product(['price' => 80, 'is_visible' => false]);
@@ -514,10 +895,6 @@ class EstimateEngineTest extends TestCase
         $this->assertNull(collect($response->json('lines'))->firstWhere('itemId', 'CART_'.$product->id));
     }
 
-    /**
-     * A turnkey order has to reach Archi with the sum the client saw frozen behind
-     * it — a manager calling back cannot be quoting a recalculation.
-     */
     public function test_a_turnkey_request_lands_in_the_admin_panel_with_a_frozen_total(): void
     {
         $user = User::factory()->create();
@@ -540,20 +917,17 @@ class EstimateEngineTest extends TestCase
         $this->assertSame(RequestType::Turnkey, $request->type);
         $this->assertSame(RequestStatus::New, $request->status);
         $this->assertSame('Rəşad Məmmədov', $request->name);
-        $this->assertSame('+994501234567', $request->phone);
         $this->assertNotNull($request->calculator_snapshot_id);
         $this->assertEqualsWithDelta($created->json('estimate.totals.grandTotal'), (float) $request->total_amount, 0.01);
 
-        // The frozen figure does not follow a later rate change.
         $frozen = (float) $request->total_amount;
 
-        CalculatorWorkRate::where('work_id', 'WALL_PAINT')->update(['rate' => 99]);
+        CalculatorFinish::where('finish_id', 'PAINT')->update(['labour_rate' => 99]);
         VersionedCache::bump(VersionedCache::CALCULATOR);
 
         $this->assertSame($frozen, (float) $request->fresh()->total_amount);
     }
 
-    /** Saving and sharing are recorded too, so Archi sees which estimates went out. */
     public function test_saving_an_estimate_records_a_request(): void
     {
         $user = User::factory()->create();
@@ -569,7 +943,6 @@ class EstimateEngineTest extends TestCase
         $this->assertSame(RequestType::SavedEstimate, CalculatorRequest::latest('id')->first()->type);
     }
 
-    /** Somebody else's session cannot be turned into a request. */
     public function test_a_request_cannot_be_raised_on_another_visitors_session(): void
     {
         $owner = User::factory()->create();
@@ -584,313 +957,22 @@ class EstimateEngineTest extends TestCase
             ->assertForbidden();
     }
 
-    /** Every configurable number really is configurable (master spec §21). */
-    public function test_admin_settings_change_the_result_without_a_code_change(): void
-    {
-        $before = $this->builder->build($this->inputs())['totals'];
-
-        CalculatorSetting::where('key', 'CONTINGENCY_PERCENT')->update(['value' => '0']);
-        VersionedCache::bump(VersionedCache::CALCULATOR);
-
-        $after = app(EstimateBuilder::class)->build($this->inputs())['totals'];
-
-        $this->assertGreaterThan(0, $before['contingency']);
-        $this->assertSame(0.0, $after['contingency']);
-        $this->assertSame($after['baseSubtotal'], $after['grandTotal']);
-    }
+    // ---- helpers -----------------------------------------------------------------------
 
     /**
-     * The sealed joint runs around the room, so it is billed once per room.
-     *
-     * It used to be a step of every tiled zone: a 2×2 m bathroom (8 m of perimeter)
-     * with tiled walls AND a tiled floor produced two requests of 8 p.m each, which
-     * consolidation then added up to 16 p.m — 32 ₼ of silicone nobody will apply.
+     * One 5×4×3 living room with a door and a window in a bare shell: painted walls,
+     * laminate on a prepared floor, a painted ceiling. Final cleaning off so the
+     * service lines do not blur the work assertions.
      */
-    public function test_tile_sealant_is_billed_once_per_room_not_once_per_tiled_surface(): void
-    {
-        $inputs = $this->inputs();
-        $inputs['object']['area'] = 4;
-        $inputs['rooms'][0]['roomType'] = 'BATHROOM';
-        $inputs['rooms'][0]['lengthMm'] = 2000;
-        $inputs['rooms'][0]['widthMm'] = 2000;
-        $inputs['rooms'][0]['zones'] = [
-            ['surface' => 'FLOOR', 'area' => 4, 'finish' => 'FLOOR_TILE', 'currentState' => 'ROUGH_FLOOR', 'wetZone' => true],
-            ['surface' => 'WALL', 'area' => 18, 'finish' => 'WALL_TILE', 'currentState' => 'PLASTER_READY', 'wetZone' => true],
-        ];
-
-        $estimate = $this->builder->build($inputs);
-        $sealant = array_values(array_filter($estimate['lines'], fn (array $l) => $l['itemId'] === 'TILE_SILICONE'));
-
-        $this->assertCount(1, $sealant);
-        // The room's perimeter, 2 × (2 + 2) = 8 m — not 16.
-        $this->assertSame(8.0, $sealant[0]['quantity']);
-        $this->assertSame(32.0, $sealant[0]['lineTotal']);
-        // Grout IS per square metre of tile, so both surfaces count: 4 + 18.
-        $this->assertSame(22.0, $this->linesById($estimate)['TILE_GROUT']['quantity']);
-    }
-
-    /** A dry tiled room has no sealant line at all. */
-    public function test_a_dry_tiled_room_gets_no_sealant(): void
-    {
-        $inputs = $this->inputs();
-        $inputs['rooms'][0]['zones'] = [
-            ['surface' => 'FLOOR', 'area' => 20, 'finish' => 'FLOOR_TILE', 'currentState' => 'ROUGH_FLOOR', 'wetZone' => false],
-        ];
-
-        $this->assertArrayNotHasKey('TILE_SILICONE', $this->linesById($this->builder->build($inputs)));
-    }
-
-    /**
-     * "Minimum sifariş" is a minimum ORDER, so it applies once to the job.
-     *
-     * 9 m² of kitchen floor tile plus 4 m² of bathroom floor tile is one order of
-     * 13 m²: at 15 ₼/m² that is 195 ₼, well above the 150 ₼ minimum. The engine used
-     * to price the two rooms as separate lines of MAX(135, 150) and MAX(60, 150) and
-     * charge 300 ₼ — 105 ₼ created purely by the estimate being broken down by room.
-     */
-    public function test_the_minimum_charge_applies_per_order_not_per_room(): void
-    {
-        $estimate = $this->builder->build($this->twoTiledRooms(9, 4));
-        $lines = array_values(array_filter($estimate['lines'], fn (array $l) => $l['itemId'] === 'FLOOR_TILE_INSTALL'));
-
-        $this->assertCount(2, $lines);
-        $this->assertSame(195.0, round(array_sum(array_column($lines, 'lineTotal')), 2));
-        // The admin's order-wide minimum stays visible on the line.
-        $this->assertSame(150.0, $lines[0]['meta']['minimumChargeOrder']);
-    }
-
-    /** One small room on its own is still lifted to the whole minimum. */
-    public function test_a_single_small_room_is_still_lifted_to_the_minimum(): void
-    {
-        $inputs = $this->twoTiledRooms(4, 0);
-        unset($inputs['rooms'][1]);
-        $inputs['rooms'] = array_values($inputs['rooms']);
-
-        $line = $this->linesById($this->builder->build($inputs))['FLOOR_TILE_INSTALL'];
-
-        // 4 m² × 15 = 60 ₼ raw, lifted to the 150 ₼ minimum order.
-        $this->assertSame(4.0, $line['quantity']);
-        $this->assertSame(150.0, $line['lineTotal']);
-    }
-
-    /** Several rooms that together stay under it sum to exactly the minimum, once. */
-    public function test_rooms_under_the_minimum_together_sum_to_exactly_one_minimum(): void
-    {
-        $lines = array_filter(
-            $this->builder->build($this->twoTiledRooms(4, 4))['lines'],
-            fn (array $l) => $l['itemId'] === 'FLOOR_TILE_INSTALL',
-        );
-
-        // 8 m² × 15 = 120 ₼ raw → one 150 ₼ minimum, split 75/75 by room.
-        $this->assertSame(150.0, round(array_sum(array_column($lines, 'lineTotal')), 2));
-    }
-
-    /**
-     * Large-format wall tile has its own tariff row (18 ₼/m² against the standard
-     * 15) — that difference IS the format surcharge. Multiplying it by K_TILE_LARGE
-     * as well charged 22.50 ₼/m² for work the admin priced at 18, and the same code
-     * path never applied the coefficient to mosaic, so the rule was not even
-     * consistent with itself.
-     */
-    public function test_the_large_format_surcharge_is_charged_once_on_a_wall(): void
-    {
-        $line = $this->linesById($this->builder->build($this->tiledWall('LARGE')))['TILE_INSTALL_LARGE'];
-
-        $this->assertSame([], $line['coefficients']);
-        $this->assertSame(180.0, $line['lineTotal']); // 10 × 18, not 10 × 18 × 1.25
-    }
-
-    /**
-     * The layout coefficient now reaches every format. A diagonal large-format wall
-     * used to lose K_TILE_DIAGONAL entirely, because the LARGE branch returned
-     * before the layout was ever looked at.
-     */
-    public function test_the_diagonal_layout_coefficient_reaches_every_tile_format(): void
-    {
-        foreach ([
-            'STANDARD' => ['TILE_INSTALL_STANDARD', 172.5],   // 10 × 15 × 1.15
-            'LARGE' => ['TILE_INSTALL_LARGE', 207.0],         // 10 × 18 × 1.15
-            'MOSAIC' => ['TILE_INSTALL_MOSAIC', 322.0],       // 10 × 28 × 1.15
-        ] as $format => [$workId, $expected]) {
-            $line = $this->linesById($this->builder->build($this->tiledWall($format, 'DIAGONAL')))[$workId];
-
-            $this->assertSame(
-                [['id' => 'K_TILE_DIAGONAL', 'value' => 1.15]],
-                $line['coefficients'],
-                "Diagonal layout lost for format {$format}",
-            );
-            $this->assertSame($expected, $line['lineTotal']);
-        }
-    }
-
-    /**
-     * A floor has one tariff row for every format, so there the format DOES come
-     * from the coefficient — the opposite of the wall above, and deliberately so.
-     */
-    public function test_a_floor_keeps_its_format_coefficient_because_it_has_one_rate(): void
-    {
-        $inputs = $this->inputs();
-        $inputs['rooms'][0]['zones'] = [
-            ['surface' => 'FLOOR', 'area' => 10, 'finish' => 'FLOOR_TILE', 'currentState' => 'PLASTER_READY',
-                'options' => ['format' => 'LARGE']],
-        ];
-
-        $line = $this->linesById($this->builder->build($inputs))['FLOOR_TILE_INSTALL'];
-
-        $this->assertSame([['id' => 'K_TILE_LARGE', 'value' => 1.25]], $line['coefficients']);
-        $this->assertSame(187.5, $line['lineTotal']); // 10 × 15 × 1.25
-    }
-
-    /**
-     * Old tile on a wall is the dependency engine's business — it derives the removal
-     * from the zone's own state. The demolition block used to accept a wall-tile area
-     * of its own, and because a module request is object-scoped while a zone request
-     * is room-scoped, the two never consolidated: the same 20 m² of tile was removed
-     * twice.
-     */
-    public function test_old_tile_removal_is_not_billed_twice_from_the_demolition_block(): void
-    {
-        $inputs = $this->inputs();
-        $inputs['object']['demolitionRequired'] = true;
-        $inputs['rooms'][0]['zones'] = [
-            ['surface' => 'WALL', 'area' => 20, 'finish' => 'WALL_TILE', 'currentState' => 'OLD_TILE'],
-        ];
-        // A frontend or CRM that still sends the old key must not double the line.
-        $inputs['modules']['demolition'] = ['estimateDebris' => false, 'wallTileArea' => 20];
-
-        $lines = array_filter(
-            $this->builder->build($inputs)['lines'],
-            fn (array $l) => $l['itemId'] === 'DEM_WALL_TILE',
-        );
-
-        $this->assertCount(1, $lines);
-        $this->assertSame(20.0, reset($lines)['quantity']);
-    }
-
-    /**
-     * The debris estimate and the final cleaning are both "per m² of the object", so
-     * they must read the same area. They used to disagree: a flat stated as 61.5 m²
-     * whose rooms added up to 20 had its cleaning billed on 61.5 and its debris
-     * estimated on 20.
-     */
-    public function test_debris_and_cleaning_are_measured_against_the_same_object_area(): void
-    {
-        $inputs = $this->inputs();
-        $inputs['object']['area'] = 100;           // rooms add up to 20 m²
-        $inputs['object']['demolitionRequired'] = true;
-        $inputs['modules'] = ['demolition' => ['estimateDebris' => true], 'services' => ['finalCleaning' => true]];
-
-        $lines = $this->linesById($this->builder->build($inputs));
-
-        $this->assertSame(100.0, $lines['LOG_FINAL_CLEANING']['quantity']);
-        // 100 m² × 0.05 m³/m²
-        $this->assertSame(5.0, $lines['DEM_DEBRIS_LOADING']['quantity']);
-    }
-
-    /** Two rooms with tiled floors of the given areas, in square metres. */
-    private function twoTiledRooms(float $first, float $second): array
-    {
-        $inputs = $this->inputs();
-        $inputs['object']['area'] = $first + $second;
-        $inputs['rooms'][0]['zones'] = [
-            ['surface' => 'FLOOR', 'area' => $first, 'finish' => 'FLOOR_TILE', 'currentState' => 'PLASTER_READY'],
-        ];
-        $inputs['rooms'][1] = $inputs['rooms'][0];
-        $inputs['rooms'][1]['id'] = 'r2';
-        $inputs['rooms'][1]['name'] = 'Hamam';
-        $inputs['rooms'][1]['zones'][0]['area'] = $second;
-
-        return $inputs;
-    }
-
-    /** One 10 m² tiled wall zone with the given format and layout. */
-    private function tiledWall(string $format, ?string $layout = null): array
-    {
-        $inputs = $this->inputs();
-        $inputs['rooms'][0]['zones'] = [
-            ['surface' => 'WALL', 'area' => 10, 'finish' => 'WALL_TILE', 'currentState' => 'PLASTER_READY',
-                'options' => array_filter(['format' => $format, 'layout' => $layout])],
-        ];
-
-        return $inputs;
-    }
-
-    /** Every line traces back to quantity, price and source (master spec §24). */
-    public function test_every_line_carries_its_calculation_trace(): void
-    {
-        foreach ($this->builder->build($this->inputs())['lines'] as $line) {
-            $this->assertArrayHasKey('quantity', $line);
-            $this->assertArrayHasKey('unitPrice', $line);
-            $this->assertArrayHasKey('coefficients', $line);
-            $this->assertArrayHasKey('source', $line);
-            $this->assertNotSame('', $line['trace']);
-        }
-    }
-
-    /**
-     * One 5×4×3 living room with a door and a window, bare walls, laminate floor and
-     * a painted ceiling — the shape scenario A of the specification describes.
-     */
-    /**
-     * Master spec §9: the chain starts from what is on the surface NOW. A floor
-     * that carries an old covering cannot take a new one until it comes off — the
-     * wall chain always stripped old finishes, the floor chain used to skip them.
-     */
-    public function test_an_old_floor_covering_is_removed_before_the_new_one(): void
-    {
-        $inputs = $this->inputs();
-        $inputs['object']['condition'] = 'OLD_RENOVATION';
-        $inputs['rooms'][0]['zones'] = [
-            ['surface' => 'FLOOR', 'area' => 20, 'finish' => 'LAMINATE', 'currentState' => 'OLD_FINISH'],
-        ];
-
-        $lines = $this->linesById($this->estimateViaApi($inputs));
-
-        $this->assertArrayHasKey('DEM_FLOOR_LAMINATE', $lines);
-        $this->assertEquals(20, $lines['DEM_FLOOR_LAMINATE']['quantity']);
-
-        // An old tiled floor takes the tile-removal rate, not the soft-cover one.
-        $inputs['rooms'][0]['zones'] = [
-            ['surface' => 'FLOOR', 'area' => 20, 'finish' => 'FLOOR_TILE', 'currentState' => 'OLD_TILE'],
-        ];
-
-        $lines = $this->linesById($this->estimateViaApi($inputs));
-
-        $this->assertArrayHasKey('DEM_FLOOR_TILE', $lines);
-        $this->assertArrayNotHasKey('DEM_FLOOR_LAMINATE', $lines);
-    }
-
-    /**
-     * A doorway that receives a new door in an old flat still holds the old one:
-     * its removal is suggested automatically. A bare shell has no old doors, so
-     * demolition being switched on there must not invent any.
-     */
-    public function test_old_doors_are_removed_when_a_new_door_goes_into_an_old_flat(): void
-    {
-        $inputs = $this->inputs();
-        $inputs['object']['condition'] = 'OLD_RENOVATION';
-        $inputs['object']['demolitionRequired'] = true;
-
-        $lines = $this->linesById($this->estimateViaApi($inputs));
-
-        $this->assertArrayHasKey('DEM_DOOR', $lines);
-        $this->assertEquals(1, $lines['DEM_DOOR']['quantity']);
-
-        $shell = $this->inputs();
-        $shell['object']['demolitionRequired'] = true; // condition stays SHELL
-
-        $this->assertArrayNotHasKey('DEM_DOOR', $this->linesById($this->estimateViaApi($shell)));
-    }
-
     private function inputs(): array
     {
         return [
+            'v' => Units::PAYLOAD_VERSION,
             'object' => [
                 'objectType' => 'APARTMENT',
                 'area' => 20,
                 'cityKey' => 'BAKU',
                 'floor' => 7,
-                'totalFloors' => 16,
                 'condition' => 'SHELL',
                 'segment' => 'STANDARD',
                 'hasFreightElevator' => false,
@@ -905,20 +987,58 @@ class EstimateEngineTest extends TestCase
                 'heightMm' => 3000,
                 'points' => [],
                 'openings' => [
-                    ['type' => 'DOOR', 'widthMm' => 900, 'heightMm' => 2100, 'qty' => 1, 'subtype' => 'INTERIOR', 'installNewDoor' => true],
+                    ['type' => 'DOOR', 'widthMm' => 900, 'heightMm' => 2100, 'qty' => 1, 'installNewDoor' => true],
                     ['type' => 'WINDOW', 'widthMm' => 1500, 'heightMm' => 1400, 'qty' => 1],
                 ],
                 'zones' => [
-                    ['surface' => 'WALL', 'area' => 50.01, 'finish' => 'PAINT', 'currentState' => 'SHELL'],
-                    ['surface' => 'FLOOR', 'area' => 20, 'finish' => 'LAMINATE', 'currentState' => 'PLASTER_READY'],
-                    ['surface' => 'CEILING', 'area' => 20, 'finish' => 'CEILING_PAINT', 'currentState' => 'SHELL'],
+                    ['surface' => 'WALL', 'area' => 50.01, 'finish' => 'PAINT', 'currentState' => 'BARE'],
+                    ['surface' => 'FLOOR', 'area' => 20, 'finish' => 'LAMINATE', 'currentState' => 'PREPARED'],
+                    ['surface' => 'CEILING', 'area' => 20, 'finish' => 'CEILING_PAINT', 'currentState' => 'BARE'],
                 ],
             ]],
             'works' => [],
             'materials' => [],
-            'modules' => ['demolition' => ['estimateDebris' => false], 'services' => ['finalCleaning' => false]],
+            'modules' => ['services' => ['finalCleaning' => false]],
             'basket' => ['useCart' => false],
         ];
+    }
+
+    /** The base room with a single wall zone of the given finish, state and area. */
+    private function withWall(string $finish, string $state, float $area = 50.01): array
+    {
+        $inputs = $this->inputs();
+        $inputs['rooms'][0]['zones'] = [['surface' => 'WALL', 'area' => $area, 'finish' => $finish, 'currentState' => $state]];
+
+        return $inputs;
+    }
+
+    private function withFloor(string $finish, string $state, float $area = 20): array
+    {
+        $inputs = $this->inputs();
+        $inputs['rooms'][0]['zones'] = [['surface' => 'FLOOR', 'area' => $area, 'finish' => $finish, 'currentState' => $state]];
+
+        return $inputs;
+    }
+
+    private function withCeiling(string $finish, string $state, float $area = 20): array
+    {
+        $inputs = $this->inputs();
+        $inputs['rooms'][0]['zones'] = [['surface' => 'CEILING', 'area' => $area, 'finish' => $finish, 'currentState' => $state]];
+
+        return $inputs;
+    }
+
+    /** Two rooms with tiled floors of the given areas, in square metres. */
+    private function twoTiledRooms(float $first, float $second): array
+    {
+        $inputs = $this->withFloor('FLOOR_TILE', 'PREPARED', $first);
+        $inputs['object']['area'] = $first + $second;
+        $inputs['rooms'][1] = $inputs['rooms'][0];
+        $inputs['rooms'][1]['id'] = 'r2';
+        $inputs['rooms'][1]['name'] = 'Hamam';
+        $inputs['rooms'][1]['zones'][0]['area'] = $second;
+
+        return $inputs;
     }
 
     /**

@@ -52,21 +52,21 @@ class CalculatorMaterialFallbackResource extends Resource
     }
 
     private const GROUPS = [
-        'FLOOR' => 'Döşəmə materialları',
-        'WALL' => 'Divar materialları',
-        'CEILING' => 'Tavan materialları',
+        'ROUGH' => 'Qaba materiallar (qrunt, suvaq, yapışqan…)',
+        'FLOOR' => 'Döşəmə (plintus, isti döşəmə)',
         'DOORS' => 'Qapılar',
         'PLUMBING' => 'Santexnika',
         'LIGHTING' => 'İşıqlandırma',
         'ELECTRICAL' => 'Elektrik',
-        'ROUGH' => 'Qaba materiallar (qrunt, suvaq, yapışqan…)',
     ];
 
     public static function explanationParts(): array
     {
         return [
-            'text' => 'Müştəri kataloqdan konkret məhsul seçmədikdə istifadə olunan <strong>orta '
-                .'material qiymətləri</strong>. Seçdiyi səviyyəyə (Ekonom/Standart/Premium) uyğun sütun işləyir.',
+            'text' => 'Üzlük olmayan materialların <strong>orta qiymətləri</strong>: qrunt, suvaq, yapışqan kimi sərf materialları '
+                .'və qapı, santexnika, işıqlandırıcı, rozetka, kabel kimi ədədlə alınan məhsullar. Müştəri kataloqdan konkret məhsul '
+                .'seçmədikdə seçdiyi səviyyəyə (Ekonom/Standart/Premium) uyğun sütun işləyir. '
+                .'Laminat, kafel, boya kimi üzlüklərin material qiyməti isə «Üzlüklər» səhifəsindədir.',
             'shot' => 'material-fallbacks',
         ];
     }

@@ -2,19 +2,25 @@
 
 namespace App\Services\Calculator;
 
-use App\Enums\Calculator\FinishCategory;
+use App\Enums\Calculator\FinishFamily;
 use App\Enums\Calculator\SurfaceState;
 use App\Enums\Calculator\SurfaceType;
 
 /**
  * "Current state → target finish" (master spec §9).
  *
- * The client is not required to know construction technology. They say what the
- * surface looks like now and what they want it to look like; this class produces the
- * technological chain — primer, plaster, putty, sanding, finishing primer, paint —
- * with the right quantity already attached to each step. The visitor may delete a
- * suggested step afterwards: that is a warning about technological risk, never a
- * hard block.
+ * The client says what the surface looks like now (bare / prepared / old finish)
+ * and what they want on it; this class produces the technological chain — strip,
+ * primer, plaster, putty, sanding, finishing primer, the finish itself, grout or
+ * skirting — with the right quantity on each step.
+ *
+ * The chain is keyed by the finish's FAMILY, not by the finish: every coat-type
+ * finish (paint, wallpaper, decorative plaster, whatever the admin adds next) needs
+ * the same smooth base, every tile-type finish the same adhesive and grout. That is
+ * what lets a finish be a database row instead of a branch in this file.
+ *
+ * The visitor may still delete a suggested step afterwards: that is a warning about
+ * technological risk, never a hard block.
  */
 class DependencyEngine
 {
@@ -46,23 +52,15 @@ class DependencyEngine
     }
 
     /**
-     * Silicone along the wet-room joints — once per room.
-     *
-     * It used to be a step of each tiled zone, so a bathroom with tiled walls AND a
-     * tiled floor was billed the room's perimeter twice: a 2×2 m bathroom (8 m of
-     * perimeter) came out at 16 p.m. The sealed joint is a property of the room, not
-     * of a surface, which is exactly why it cannot be derived per zone (master spec
-     * §6.3 — one quantity, one source).
+     * Silicone along the wet-room joints — once per room, the room's perimeter. The
+     * sealed joint is a property of the room, not of a surface: a bathroom with a
+     * tiled floor AND tiled walls is still one perimeter (master spec §6.3).
      */
     private function sealantStep(RoomGeometry $room): ?WorkRequest
     {
         $tiled = array_filter(
             $room->zones,
-            fn (SurfaceZone $zone) => $zone->wetZone && in_array(
-                $zone->finish,
-                [FinishCategory::WallTile, FinishCategory::FloorTile],
-                true,
-            ),
+            fn (SurfaceZone $zone) => $zone->wetZone && $zone->finish?->family === FinishFamily::Tile,
         );
 
         if ($tiled === [] || $room->perimeter <= 0) {
@@ -81,19 +79,26 @@ class DependencyEngine
     /** @return array<int, WorkRequest> */
     private function forZone(SurfaceZone $zone, RoomGeometry $room, ?string $heightCoefficient): array
     {
-        if (! $zone->finish) {
+        $finish = $zone->finish;
+
+        if (! $finish) {
             return [];
         }
 
         $steps = array_merge(
             $this->preparationSteps($zone),
-            $this->finishSteps($zone, $room),
+            [[
+                'workId' => $finish->finishId,
+                'quantity' => $zone->area,
+                'meta' => ['finish' => $finish->finishId, 'family' => $finish->family->value, 'source' => 'FINISH'],
+            ]],
+            $this->followUpSteps($zone, $room),
         );
 
         $requests = [];
 
         foreach ($steps as $step) {
-            $coefficients = $step['coefficients'] ?? [];
+            $coefficients = [];
 
             // Wall and ceiling labour is what a tall room actually costs more of;
             // floor work is unaffected by ceiling height.
@@ -106,9 +111,9 @@ class DependencyEngine
                 quantity: $step['quantity'],
                 roomId: $room->id,
                 roomName: $room->name,
-                coefficientIds: array_values(array_unique($coefficients)),
+                coefficientIds: $coefficients,
                 suggested: true,
-                meta: ['zone' => $zone->surface->value, 'finish' => $zone->finish->value],
+                meta: ($step['meta'] ?? []) + ['zone' => $zone->surface->value, 'finish' => $finish->finishId],
             );
         }
 
@@ -116,9 +121,9 @@ class DependencyEngine
     }
 
     /**
-     * What has to happen to the surface before the chosen finish can go on it.
+     * What has to happen to the surface before the finish can go on it.
      *
-     * @return array<int, array{workId: string, quantity: float, coefficients?: array<int, string>}>
+     * @return array<int, array{workId: string, quantity: float}>
      */
     private function preparationSteps(SurfaceZone $zone): array
     {
@@ -132,57 +137,38 @@ class DependencyEngine
     private function wallPreparation(SurfaceZone $zone): array
     {
         $area = $zone->area;
-        $needsSmoothBase = in_array($zone->finish, [
-            FinishCategory::Paint,
-            FinishCategory::Wallpaper,
-            FinishCategory::DecorativePlaster,
-        ], true);
-
+        $family = $zone->finish->family;
         $steps = [];
 
-        // Whatever is on the wall today has to come off first.
-        $steps = array_merge($steps, match ($zone->currentState) {
-            SurfaceState::OldFinish => [['workId' => 'DEM_WALL_FINISH', 'quantity' => $area]],
-            SurfaceState::OldTile => [['workId' => 'DEM_WALL_TILE', 'quantity' => $area]],
-            default => [],
-        });
-
-        if (! $needsSmoothBase) {
-            // Tile, panels and stone need a sound, flat base — not a painted one.
-            if ($zone->currentState === SurfaceState::Shell) {
-                $steps[] = ['workId' => 'WALL_PRIMER_BASE', 'quantity' => $area];
-                $steps[] = ['workId' => 'WALL_PLASTER', 'quantity' => $area, 'coefficients' => $this->plasterCoefficients($zone)];
-            }
-
-            if ($zone->finish === FinishCategory::WallTile) {
-                $steps[] = ['workId' => 'TILE_SURFACE_PREP', 'quantity' => $area];
-
-                if ($zone->wetZone) {
-                    $steps[] = ['workId' => 'TILE_WATERPROOF_WALL', 'quantity' => $area];
-                }
-            }
-
-            return $steps;
+        // Whatever is on the wall today comes off first. A wet room's walls are
+        // assumed tiled — that is what a bathroom or WC wall carries in this market.
+        if ($zone->currentState === SurfaceState::Old) {
+            $steps[] = ['workId' => $zone->wetZone ? 'DEM_WALL_TILE' : 'DEM_WALL_FINISH', 'quantity' => $area];
         }
 
-        $steps = array_merge($steps, match ($zone->currentState) {
-            SurfaceState::Shell => [
-                ['workId' => 'WALL_PRIMER_BASE', 'quantity' => $area],
-                ['workId' => 'WALL_PLASTER', 'quantity' => $area, 'coefficients' => $this->plasterCoefficients($zone)],
-                ['workId' => 'WALL_PUTTY', 'quantity' => $area],
-                ['workId' => 'WALL_SANDING', 'quantity' => $area],
-            ],
-            SurfaceState::PlasterReady, SurfaceState::OldFinish, SurfaceState::OldTile => [
-                ['workId' => 'WALL_PUTTY', 'quantity' => $area],
-                ['workId' => 'WALL_SANDING', 'quantity' => $area],
-            ],
-            default => [],
-        });
+        // A bare wall is plastered whatever goes on it afterwards.
+        if ($zone->currentState === SurfaceState::Bare) {
+            $steps[] = ['workId' => 'WALL_PRIMER_BASE', 'quantity' => $area];
+            $steps[] = ['workId' => 'WALL_PLASTER', 'quantity' => $area];
+        }
 
-        // Decorative plaster and wallpaper are applied over the same finishing primer
-        // as paint, so the last preparation step is shared by all three.
-        $steps[] = ['workId' => 'WALL_PRIMER_FINISH', 'quantity' => $area];
+        if ($family === FinishFamily::Coat) {
+            // Paint, wallpaper and decorative plaster all want the same smooth base
+            // and the same finishing primer.
+            $steps[] = ['workId' => 'WALL_PUTTY', 'quantity' => $area];
+            $steps[] = ['workId' => 'WALL_SANDING', 'quantity' => $area];
+            $steps[] = ['workId' => 'WALL_PRIMER_FINISH', 'quantity' => $area];
+        }
 
+        if ($family === FinishFamily::Tile) {
+            $steps[] = ['workId' => 'TILE_SURFACE_PREP', 'quantity' => $area];
+
+            if ($zone->wetZone) {
+                $steps[] = ['workId' => 'TILE_WATERPROOF_WALL', 'quantity' => $area];
+            }
+        }
+
+        // Panels need nothing beyond a sound base.
         return $steps;
     }
 
@@ -191,39 +177,21 @@ class DependencyEngine
         $area = $zone->area;
         $steps = [];
 
-        // What is on the floor now decides which removal rate applies. The explicit
-        // existingCover option is the most precise answer; without it the zone's own
-        // state still says enough — an OLD_FINISH floor cannot take a new covering
-        // until the old one comes off, and skipping that step silently priced every
-        // old flat as if its floors were bare (the wall chain never had this gap).
-        $existing = strtoupper((string) $zone->option('existingCover', ''));
-
-        $steps = array_merge($steps, match ($existing) {
-            'LAMINATE', 'SPC' => [['workId' => 'DEM_FLOOR_LAMINATE', 'quantity' => $area]],
-            'PARQUET' => [['workId' => 'DEM_FLOOR_PARQUET', 'quantity' => $area]],
-            'TILE', 'STONE' => [['workId' => 'DEM_FLOOR_TILE', 'quantity' => $area]],
-            default => match ($zone->currentState) {
-                // Soft coverings share the laminate rate; the exact material can be
-                // corrected via existingCover, the step itself must not be missing.
-                SurfaceState::OldFinish => [['workId' => 'DEM_FLOOR_LAMINATE', 'quantity' => $area]],
-                SurfaceState::OldTile => [['workId' => 'DEM_FLOOR_TILE', 'quantity' => $area]],
-                default => [],
-            },
-        });
-
-        if ($zone->currentState === SurfaceState::RoughFloor || $zone->option('screed', false)) {
-            $steps[] = ['workId' => 'FLOOR_SCREED', 'quantity' => $area];
+        // The old covering comes off. A wet room's floor is assumed tiled, a dry
+        // room's a soft covering — the two removal rates differ.
+        if ($zone->currentState === SurfaceState::Old) {
+            $steps[] = ['workId' => $zone->wetZone ? 'DEM_FLOOR_TILE' : 'DEM_FLOOR_LAMINATE', 'quantity' => $area];
         }
 
-        if ($zone->option('selfLevel', false)) {
-            $steps[] = ['workId' => 'FLOOR_SELF_LEVEL', 'quantity' => $area];
+        if ($zone->currentState === SurfaceState::Bare) {
+            $steps[] = ['workId' => 'FLOOR_SCREED', 'quantity' => $area];
         }
 
         if ($zone->wetZone) {
             $steps[] = ['workId' => 'FLOOR_WATERPROOF', 'quantity' => $area];
         }
 
-        if ($zone->finish === FinishCategory::FloorTile) {
+        if ($zone->finish->family === FinishFamily::Tile) {
             $steps[] = ['workId' => 'TILE_SURFACE_PREP', 'quantity' => $area];
         }
 
@@ -235,160 +203,37 @@ class DependencyEngine
         $area = $zone->area;
 
         // A suspended or stretch ceiling hides the slab, so the smoothing chain is
-        // pointless under it — only the old ceiling has to come down.
-        if (in_array($zone->finish, [
-            FinishCategory::GypsumFlat,
-            FinishCategory::GypsumComplex,
-            FinishCategory::StretchCeiling,
-        ], true)) {
-            return match (strtoupper((string) $zone->option('existingCeiling', ''))) {
-                'GYPSUM' => [['workId' => 'DEM_CEILING_GYPSUM', 'quantity' => $area]],
-                'STRETCH' => [['workId' => 'DEM_CEILING_STRETCH', 'quantity' => $area]],
-                default => [],
-            };
+        // pointless under it.
+        if ($zone->finish->family === FinishFamily::Suspended) {
+            return [];
         }
 
-        return match ($zone->currentState) {
-            SurfaceState::Shell => [
-                ['workId' => 'CEIL_PRIMER_BASE', 'quantity' => $area],
-                ['workId' => 'CEIL_PLASTER', 'quantity' => $area],
-                ['workId' => 'CEIL_PUTTY', 'quantity' => $area],
-                ['workId' => 'CEIL_SANDING', 'quantity' => $area],
-            ],
-            SurfaceState::PlasterReady, SurfaceState::OldFinish => [
-                ['workId' => 'CEIL_PUTTY', 'quantity' => $area],
-                ['workId' => 'CEIL_SANDING', 'quantity' => $area],
-            ],
+        $steps = [];
+
+        if ($zone->currentState === SurfaceState::Bare) {
+            $steps[] = ['workId' => 'CEIL_PRIMER_BASE', 'quantity' => $area];
+            $steps[] = ['workId' => 'CEIL_PLASTER', 'quantity' => $area];
+        }
+
+        // An old painted ceiling is not stripped — it is filled and sanded over.
+        $steps[] = ['workId' => 'CEIL_PUTTY', 'quantity' => $area];
+        $steps[] = ['workId' => 'CEIL_SANDING', 'quantity' => $area];
+
+        return $steps;
+    }
+
+    /**
+     * What the finish needs after it is on: grout for tile, skirting for a floating
+     * floor. The sealant is NOT here — it belongs to the room (sealantStep()).
+     *
+     * @return array<int, array{workId: string, quantity: float}>
+     */
+    private function followUpSteps(SurfaceZone $zone, RoomGeometry $room): array
+    {
+        return match ($zone->finish->family) {
+            FinishFamily::Tile => [['workId' => 'TILE_GROUT', 'quantity' => $zone->area]],
+            FinishFamily::Floating => [['workId' => 'SKIRTING_INSTALL', 'quantity' => $room->skirtingLength]],
             default => [],
         };
-    }
-
-    /**
-     * The finishing work itself.
-     *
-     * @return array<int, array{workId: string, quantity: float, coefficients?: array<int, string>}>
-     */
-    private function finishSteps(SurfaceZone $zone, RoomGeometry $room): array
-    {
-        $area = $zone->area;
-
-        return match ($zone->finish) {
-            FinishCategory::Paint => [['workId' => 'WALL_PAINT', 'quantity' => $area]],
-            FinishCategory::Wallpaper => [['workId' => 'WALL_WALLPAPER', 'quantity' => $area]],
-            FinishCategory::DecorativePlaster => [[
-                'workId' => 'WALL_DECOR_PLASTER',
-                'quantity' => $area,
-                'coefficients' => $zone->option('complex', false) ? ['K_DECOR_COMPLEX'] : [],
-            ]],
-            FinishCategory::WallPanel => [['workId' => 'WALL_PANEL_INSTALL', 'quantity' => $area]],
-            FinishCategory::WallStone => [[
-                'workId' => 'WALL_STONE_INSTALL',
-                'quantity' => $area,
-                'coefficients' => $this->tileFormatCoefficients($zone),
-            ]],
-            // The sealant is NOT here: it belongs to the room, and sealantStep()
-            // emits it once. Grout is per square metre of tile, so it is.
-            FinishCategory::WallTile => [
-                $this->tileInstallStep($zone),
-                ['workId' => 'TILE_GROUT', 'quantity' => $area],
-            ],
-            FinishCategory::FloorTile => [
-                [
-                    'workId' => 'FLOOR_TILE_INSTALL',
-                    'quantity' => $area,
-                    'coefficients' => $this->tileFormatCoefficients($zone),
-                ],
-                ['workId' => 'TILE_GROUT', 'quantity' => $area],
-            ],
-            FinishCategory::Laminate => [
-                ['workId' => 'FLOOR_LAMINATE_INSTALL', 'quantity' => $area],
-                ['workId' => 'SKIRTING_INSTALL', 'quantity' => $room->skirtingLength],
-            ],
-            FinishCategory::Spc => [
-                ['workId' => 'FLOOR_SPC_INSTALL', 'quantity' => $area],
-                ['workId' => 'SKIRTING_INSTALL', 'quantity' => $room->skirtingLength],
-            ],
-            FinishCategory::Parquet => [
-                [
-                    'workId' => 'FLOOR_PARQUET_INSTALL',
-                    'quantity' => $area,
-                    'coefficients' => $zone->option('herringbone', false) ? ['K_PARQUET_HERRINGBONE'] : [],
-                ],
-                ['workId' => 'SKIRTING_INSTALL', 'quantity' => $room->skirtingLength],
-            ],
-            FinishCategory::FloorStone => [
-                [
-                    'workId' => 'FLOOR_STONE_INSTALL',
-                    'quantity' => $area,
-                    'coefficients' => $this->tileFormatCoefficients($zone),
-                ],
-                ['workId' => 'SKIRTING_INSTALL', 'quantity' => $room->skirtingLength],
-            ],
-            FinishCategory::CeilingPaint => [['workId' => 'CEIL_PAINT', 'quantity' => $area]],
-            FinishCategory::GypsumFlat => [['workId' => 'CEIL_GYPSUM_FLAT', 'quantity' => $area]],
-            FinishCategory::GypsumComplex => [['workId' => 'CEIL_GYPSUM_COMPLEX', 'quantity' => $area]],
-            FinishCategory::StretchCeiling => [['workId' => 'CEIL_STRETCH', 'quantity' => $area]],
-            default => [],
-        };
-    }
-
-    /** Wall-tile format => its own tariff row. */
-    private const WALL_TILE_WORKS = [
-        'LARGE' => 'TILE_INSTALL_LARGE',
-        'MOSAIC' => 'TILE_INSTALL_MOSAIC',
-        'STANDARD' => 'TILE_INSTALL_STANDARD',
-    ];
-
-    /**
-     * Wall tiling: the format picks the tariff row, the layout picks the coefficient.
-     *
-     * The format must NOT also add K_TILE_LARGE. Large-format wall tile has its own
-     * rate (18 ₼/m² against the standard 15) — that difference IS the surcharge, and
-     * multiplying it by K_TILE_LARGE (1.25) again charged 22.50 ₼/m² for work the
-     * admin priced at 18. Mosaic, on the same code path, never got a coefficient, so
-     * the rule was not even applied consistently.
-     *
-     * The layout coefficient now reaches every format. A diagonal large-format wall
-     * used to lose K_TILE_DIAGONAL (1.15) completely, because the LARGE branch
-     * returned before the layout was ever looked at.
-     */
-    private function tileInstallStep(SurfaceZone $zone): array
-    {
-        $format = strtoupper((string) $zone->option('format', 'STANDARD'));
-
-        return [
-            'workId' => self::WALL_TILE_WORKS[$format] ?? self::WALL_TILE_WORKS['STANDARD'],
-            'quantity' => $zone->area,
-            'coefficients' => $this->layoutCoefficients($zone),
-        ];
-    }
-
-    /**
-     * Floors and stone have a single tariff row for every format, so there the
-     * format has to come from the coefficient — the opposite of walls above.
-     */
-    private function tileFormatCoefficients(SurfaceZone $zone): array
-    {
-        $coefficients = strtoupper((string) $zone->option('format', 'STANDARD')) === 'LARGE'
-            ? ['K_TILE_LARGE']
-            : [];
-
-        return array_merge($coefficients, $this->layoutCoefficients($zone));
-    }
-
-    private function layoutCoefficients(SurfaceZone $zone): array
-    {
-        return strtoupper((string) $zone->option('layout', '')) === 'DIAGONAL'
-            ? ['K_TILE_DIAGONAL']
-            : [];
-    }
-
-    private function plasterCoefficients(SurfaceZone $zone): array
-    {
-        $thickness = (float) $zone->option('plasterThicknessMm', $this->config->float('PLASTER_DEFAULT_THICKNESS_MM', 20));
-
-        return $thickness > $this->config->float('PLASTER_THICK_THRESHOLD_MM', 30)
-            ? ['K_PLASTER_THICK']
-            : [];
     }
 }

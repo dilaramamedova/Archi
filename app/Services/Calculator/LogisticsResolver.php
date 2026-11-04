@@ -2,15 +2,19 @@
 
 namespace App\Services\Calculator;
 
-use App\Models\Product;
+use App\Enums\Calculator\LineSource;
 
 /**
- * Delivery, manual lifting and external access (master spec §14).
+ * Delivery and manual lifting (master spec §14), estimated from the object.
  *
- * The one rule that matters here: missing product weight or volume never becomes
- * 0 AZN. If the catalog does not know what the materials weigh, the logistics lines
- * are flagged incomplete and the frontend says so, instead of quietly quoting free
- * delivery for two tonnes of screed.
+ * The catalog rarely knows what a product weighs, and a fallback-priced material
+ * has no product at all — so weighing the basket produced "0 ₼, cannot be
+ * calculated" on almost every estimate, which is an underestimate dressed as
+ * honesty. The delivery is now a norm: one trip per DELIVERY_AREA_PER_TRIP square
+ * metres, and MATERIAL_KG_PER_M2 of material to carry up when there is no lift.
+ * Both numbers are the admin's.
+ *
+ * Nothing is delivered when the visitor buys every material themselves.
  */
 class LogisticsResolver
 {
@@ -18,86 +22,46 @@ class LogisticsResolver
 
     /**
      * @param  array<int, EstimateLine>  $materialLines
-     * @param  array<int, Product>  $products
      * @return array{requests: array<int, WorkRequest>, meta: array<string, mixed>}
      */
-    public function resolve(array $materialLines, array $products, array $object, array $input): array
+    public function resolve(array $materialLines, array $object, array $derived): array
     {
-        $weight = 0.0;
-        $volume = 0.0;
-        $unknown = 0;
+        $supplied = array_filter(
+            $materialLines,
+            fn (EstimateLine $line) => $line->source !== LineSource::ManualQuote && $line->quantity > 0,
+        );
 
-        foreach ($materialLines as $line) {
-            $productId = $line->meta['productId'] ?? null;
-            $product = $productId ? ($products[(int) $productId] ?? null) : null;
+        $area = (float) ($object['area'] ?? 0) ?: (float) ($derived['TOTAL_FLOOR_AREA'] ?? 0);
 
-            if (! $product) {
-                // A fallback-priced category has no physical product behind it yet.
-                $unknown++;
-
-                continue;
-            }
-
-            $lineWeight = (float) ($product->weight_kg ?? 0);
-            $lineVolume = (float) ($product->volume_m3 ?? 0);
-
-            if ($lineWeight <= 0 && $lineVolume <= 0) {
-                $unknown++;
-
-                continue;
-            }
-
-            $weight += $lineWeight * $line->quantity;
-            $volume += $lineVolume * $line->quantity;
+        if ($supplied === [] || $area <= 0) {
+            return ['requests' => [], 'meta' => ['trips' => 0, 'estimatedWeightKg' => 0.0, 'complete' => true]];
         }
 
-        $meta = [
-            'totalWeightKg' => round($weight, 2),
-            'totalVolumeM3' => round($volume, 3),
-            'productsWithoutLogisticsData' => $unknown,
-            'complete' => $unknown === 0 && ($weight > 0 || $volume > 0),
-        ];
+        $perTrip = max(1.0, $this->config->float('DELIVERY_AREA_PER_TRIP', 40));
+        $trips = max(1, (int) ceil($area / $perTrip));
+        $weight = round($area * $this->config->float('MATERIAL_KG_PER_M2', 25), 2);
 
-        $requests = [];
-
-        $weightCapacity = max(0.1, $this->config->float('DELIVERY_VEHICLE_WEIGHT_CAPACITY', 1500));
-        $volumeCapacity = max(0.1, $this->config->float('DELIVERY_VEHICLE_VOLUME_CAPACITY', 12));
-
-        if ($weight > 0 || $volume > 0) {
-            $trips = (int) ceil(max($weight / $weightCapacity, $volume / $volumeCapacity));
-            $trips = max(1, $trips);
-
-            $requests[] = new WorkRequest(
+        $requests = [
+            new WorkRequest(
                 workId: 'LOG_DELIVERY_TRIP',
                 quantity: $trips,
-                meta: ['weightKg' => round($weight, 2), 'volumeM3' => round($volume, 3), 'trips' => $trips],
-            );
+                meta: ['area' => $area, 'areaPerTrip' => $perTrip],
+            ),
+        ];
 
-            $manualLift = $this->manualLift($weight, $object);
-
-            if ($manualLift) {
-                $requests[] = $manualLift;
-            }
+        if ($lift = $this->manualLift($weight, $object)) {
+            $requests[] = $lift;
         }
 
-        // External access is asked here, in the works step, and only when the object
-        // actually needs it — not as a stray toggle on the object screen (audit §2.2).
-        $platformDays = (float) ($input['platformDays'] ?? 0);
-
-        if (($input['externalAccess'] ?? false) && $platformDays > 0) {
-            $requests[] = new WorkRequest('LOG_PLATFORM_DAY', $platformDays);
-        }
-
-        if (($scaffold = (float) ($input['scaffoldQty'] ?? 0)) > 0) {
-            $requests[] = new WorkRequest('LOG_SCAFFOLD', $scaffold);
-        }
-
-        return ['requests' => $requests, 'meta' => $meta];
+        return [
+            'requests' => $requests,
+            'meta' => ['trips' => $trips, 'estimatedWeightKg' => $weight, 'complete' => true],
+        ];
     }
 
     /**
      * Manual lifting is only charged when there is no freight lift and the floor is
-     * above the free threshold — and only when the weight is actually known.
+     * above the free threshold.
      */
     private function manualLift(float $weight, array $object): ?WorkRequest
     {
@@ -116,7 +80,7 @@ class LogisticsResolver
         return new WorkRequest(
             workId: 'LOG_MANUAL_LIFT',
             quantity: round($weight * $chargeableFloors, 2),
-            meta: ['weightKg' => round($weight, 2), 'chargeableFloors' => $chargeableFloors, 'freeFloors' => $free],
+            meta: ['weightKg' => $weight, 'chargeableFloors' => $chargeableFloors, 'freeFloors' => $free],
         );
     }
 }
