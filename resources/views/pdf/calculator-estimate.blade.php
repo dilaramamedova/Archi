@@ -46,7 +46,8 @@
     body { font-family: 'DejaVu Sans', sans-serif; font-size: 9.5px; color: #1a1a1a; padding: 26px 30px; }
     .head { border-bottom: 2px solid #c8a24e; padding-bottom: 10px; margin-bottom: 14px; }
     .brand { font-size: 19px; font-weight: bold; letter-spacing: 2px; }
-    .brand span { color: #c8a24e; }
+    .brand img { width: 26px; height: 26px; vertical-align: middle; margin-right: 8px; }
+    .brand span { vertical-align: middle; }
     .title { font-size: 13px; font-weight: bold; margin-top: 6px; }
     .meta { color: #666; margin-top: 3px; }
     table { width: 100%; border-collapse: collapse; }
@@ -66,7 +67,8 @@
 <body>
 
 <div class="head">
-    <div class="brand">ARCH<span>İ</span></div>
+    {{-- dompdf reads the PNG straight from disk; its SVG support is too thin for the mark. --}}
+    <div class="brand"><img src="{{ public_path('assets/logo-archi-192.png') }}" alt=""><span>ARCHİ</span></div>
     <div class="title">{{ $tt('summary.h', ':area m² üçün təmir smetası', ['area' => $az((float) ($derived['TOTAL_FLOOR_AREA'] ?? 0))]) }}</div>
     <div class="meta">
         {{ $snapshot->created_at->format('d.m.Y H:i') }}

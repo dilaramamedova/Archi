@@ -14,7 +14,7 @@
 <footer>
   <div class="inner">
     <div class="foot-top">
-      <a href="{{ route('home') }}" aria-label="{{ t('common.site_name') }}"><img class="foot-logo" src="/assets/logo-archi-white.png" alt="ARCHI"></a>
+      <a href="{{ route('home') }}" aria-label="{{ t('common.site_name') }}"><img class="foot-logo" src="/assets/logo-archi.svg" alt="ARCHI"></a>
       <a class="foot-products" href="{{ route('catalog') }}"><p>{{ t('footer.go_products') }}</p><img src="/assets/icon-arrow-right-white.svg" alt=""></a>
     </div>
 

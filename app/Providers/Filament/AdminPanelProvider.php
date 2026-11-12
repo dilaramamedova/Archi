@@ -43,6 +43,11 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->authGuard('admin')
+            // The site's brand mark, so the panel is recognisably ARCHI's.
+            ->brandName('ARCHI')
+            ->brandLogo(asset('assets/logo-archi.svg'))
+            ->brandLogoHeight('2.25rem')
+            ->favicon(asset('favicon.svg'))
             ->colors([
                 'primary' => Color::Amber,
             ])

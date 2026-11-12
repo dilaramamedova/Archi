@@ -31,7 +31,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>{{ $title ?? t('common.site_name') }}</title>
-<link rel="icon" href="/assets/logo-archi-black.png" type="image/png">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#231f20">
 
 {{-- Fonts: Inter (whole site) + Manrope (business pages, --font-b2b) --}}
 <link rel="preconnect" href="https://fonts.googleapis.com">

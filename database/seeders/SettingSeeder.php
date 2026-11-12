@@ -10,8 +10,8 @@ class SettingSeeder extends Seeder
     public function run(): void
     {
         $settings = [
-            'site_logo' => '/assets/logo-archi-black.png',
-            'site_logo_white' => '/assets/logo-archi-white.png',
+            'site_logo' => '/assets/logo-archi.svg',
+            'site_logo_white' => '/assets/logo-archi.svg',
             'site_name' => json_encode(['az' => 'ARCHİ', 'ru' => 'ARCHI', 'en' => 'ARCHI']),
 
             'sale_marquee_enabled' => '1',

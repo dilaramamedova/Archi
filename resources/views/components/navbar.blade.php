@@ -50,7 +50,7 @@
       <span></span><span></span><span></span>
     </button>
 
-    <a href="{{ route('home') }}" aria-label="{{ t('nav.logo_aria') }}"><img class="logo" src="/assets/logo-archi-black.png" alt="ARCHI"></a>
+    <a href="{{ route('home') }}" aria-label="{{ t('nav.logo_aria') }}"><img class="logo" src="/assets/logo-archi.svg" alt="ARCHI"></a>
 
     <div class="search"
          data-url-api="/api/search"
@@ -147,7 +147,7 @@
     <div class="mob-overlay" id="mobOverlay"></div>
     <nav class="mob-drawer" id="mobDrawer" aria-label="{{ t('nav.mobile_nav_aria') }}">
       <div class="mob-drawer-head">
-        <a href="{{ route('home') }}"><img class="logo" src="/assets/logo-archi-black.png" alt="ARCHI"></a>
+        <a href="{{ route('home') }}"><img class="logo" src="/assets/logo-archi.svg" alt="ARCHI"></a>
         <button class="mob-close" id="mobClose" type="button" aria-label="{{ t('nav.close_menu_aria') }}">✕</button>
       </div>
 
