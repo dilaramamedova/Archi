@@ -29,8 +29,7 @@ final class CardProduct
         $errors = $result['errors'];
         $missing = $result['missing'];
 
-        $quote = $schema['sale']['type'] === CardSchema::SALE_AREA
-            && $schema['sale']['quote_when']
+        $quote = $schema['sale']['quote_when']
             && CardSchema::holds($schema['sale']['quote_when'], $result['answers']);
 
         // Brand: one from the list, a typed new one ("Brendi tapmadım"), or «Brendsiz».
@@ -45,7 +44,7 @@ final class CardProduct
         $country = strtoupper(trim((string) ($data['origin_country'] ?? '')));
         if ($country !== '' && ! IsoCountries::isValid($country)) {
             $errors['origin_country'] = CardText::get('country_invalid', 'İstehsal ölkəsi siyahıdan seçilməlidir');
-        } elseif ($country === '') {
+        } elseif ($country === '' && ($schema['country_required'] ?? true)) {
             $missing[] = CardText::get('country', 'İstehsal ölkəsi');
             if ($strict) {
                 $errors['origin_country'] = CardText::get('country_required', 'İstehsal ölkəsini seçin');
@@ -62,6 +61,13 @@ final class CardProduct
             $basis = (string) ($data['price_basis'] ?? '');
             if (! in_array($basis, CardSchema::BOARD_BASES, true)) {
                 $errors['price_basis'] = CardText::get('basis_required', 'Qiymət bazasını seçin');
+                $basis = null;
+            }
+        } elseif ($schema['sale']['type'] === CardSchema::SALE_UNIT) {
+            // The seller's sales unit travels in the same field as the board basis.
+            $basis = (string) ($data['price_basis'] ?? '');
+            if (! in_array($basis, $schema['sale']['units'], true)) {
+                $errors['price_basis'] = CardText::get('sale_unit_required', 'Satış vahidini seçin');
                 $basis = null;
             }
         }
@@ -134,6 +140,23 @@ final class CardProduct
             return $columns;
         }
 
+        if ($schema['sale']['type'] === CardSchema::SALE_UNIT) {
+            // Priced and stocked in the seller's unit. A known coverage per unit
+            // (Örtmə sahəsi) is what lets the page add an AZN/m² figure and the
+            // calculator count units.
+            $unit = $basis ?? 'piece';
+            $coverage = $mapped['package_size'] ?? null;
+            $columns['unit'] = $unit;
+            $columns['sale_unit'] = $unit;
+            $columns['sale_factor'] = 1.0;
+            if ($coverage !== null && $coverage > 0) {
+                $columns['package_size'] = $coverage;
+                $columns['package_unit'] = self::unitName($unit);
+            }
+
+            return $columns;
+        }
+
         // Area: priced per m².
         $columns['unit'] = 'm2';
 
@@ -143,18 +166,27 @@ final class CardProduct
 
         $packArea = $mapped['package_size'] ?? null;
         $rollWidth = $mapped['roll_width'] ?? null;
+        $rollLength = $mapped['roll_length'] ?? null;
 
-        if ($packArea !== null && $packArea > 0) {
+        if ($rollWidth !== null && $rollWidth > 0 && $rollLength !== null && $rollLength > 0) {
+            // A whole roll: its price is the m² price × width × length.
+            $area = round($rollWidth * $rollLength, 4);
+            $columns['sale_factor'] = $area;
+            $columns['sale_unit'] = 'roll';
+            $columns['package_size'] = $area;
+            $columns['package_unit'] = self::unitName('roll');
+        } elseif ($packArea !== null && $packArea > 0) {
             $unit = $mapped['package_unit'] ?? 'pack';
             $columns['sale_factor'] = $packArea;
             $columns['sale_unit'] = $unit;
             $columns['package_size'] = $packArea;
             $columns['package_unit'] = self::unitName($unit);
-        } elseif ($rollWidth !== null && $rollWidth > 0) {
+        } elseif ($rollWidth !== null && $rollWidth > 0 && $schema['sale']['cut_unit'] !== 'm2') {
             // A roll is cut to length: one running metre is roll width × 1 m.
             $columns['sale_factor'] = $rollWidth;
             $columns['sale_unit'] = 'lm';
         }
+        // cut_unit m2 (stretch-ceiling film): the cut is sold by the m² itself.
 
         return $columns;
     }

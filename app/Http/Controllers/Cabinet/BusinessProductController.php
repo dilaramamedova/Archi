@@ -55,7 +55,7 @@ class BusinessProductController extends Controller
      * admin editing a label must not be able to widen what the API accepts.
      * Keep in step with the `business-product-edit.pricing.units` keys.
      */
-    public const UNITS = ['kg', 'litre', 'lm', 'm2', 'pack', 'piece', 'roll', 'set', 'pallet'];
+    public const UNITS = ['kg', 'litre', 'lm', 'm2', 'pack', 'piece', 'roll', 'set', 'pallet', 'pair'];
 
     // ---------------------------------------------------------------- pages
 
@@ -425,6 +425,49 @@ class BusinessProductController extends Controller
     }
 
     /**
+     * The card input with every document field resolved to one value: a new upload
+     * (stored on the public disk under product-docs/), a typed https link, or — on
+     * an edit — the document the product already has. A stored path is only kept
+     * when it really is this product's, so a form cannot point at another file.
+     *
+     * @return array<int|string, mixed>
+     */
+    private function cardWithDocuments(Request $request, array $schema, ?Product $product): array
+    {
+        $card = (array) $request->input('card', []);
+
+        foreach ($schema['fields'] as $field) {
+            if ($field['type'] !== 'document') {
+                continue;
+            }
+
+            $id = $field['id'];
+            $file = $request->file("card.{$id}.file");
+            $url = trim((string) ($card[$id]['url'] ?? ''));
+            $keep = (string) ($card[$id]['keep'] ?? '');
+
+            if ($file) {
+                $check = validator(['file' => $file], ['file' => ['file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:10240']], [], ['file' => $field['name']]);
+                if ($check->fails()) {
+                    throw ValidationException::withMessages(["card.{$id}" => $check->errors()->first('file')]);
+                }
+                $value = $file->store('product-docs', 'public');
+            } elseif ($url !== '') {
+                $value = $url;
+            } elseif ($keep !== '' && $product
+                && ProductAttributeValue::where('product_id', $product->id)->where('attribute_id', $id)->where('value_text', $keep)->exists()) {
+                $value = $keep;
+            } else {
+                $value = '';
+            }
+
+            $card[$id] = ['value' => $value];
+        }
+
+        return $card;
+    }
+
+    /**
      * Create ($product = null) or update a product of a card class. Publishing — or
      * editing a product that is already public — is strict: every required card
      * field must be filled. A draft saves whatever is there and answers with what
@@ -438,14 +481,14 @@ class BusinessProductController extends Controller
             'collection' => ['nullable', 'string', 'max:120'],
             'availability' => ['nullable', 'string', 'max:16'],
             'lead_time_days' => ['nullable', 'integer', 'min:1', 'max:365'],
-            'price_basis' => ['nullable', 'string', 'max:8'],
+            'price_basis' => ['nullable', 'string', 'max:8'], // board basis or sales unit
             'card' => ['nullable', 'array'],
         ]);
 
         $publish = (bool) ($validated['publish'] ?? false);
         $strict = $publish || (bool) $product?->is_visible;
 
-        $check = CardProduct::check($schema, $validated + $extra, (array) $request->input('card', []), $strict);
+        $check = CardProduct::check($schema, $validated + $extra, $this->cardWithDocuments($request, $schema, $product), $strict);
         $errors = $check['errors'];
 
         $images = $product

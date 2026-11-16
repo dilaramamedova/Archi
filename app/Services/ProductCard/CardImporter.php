@@ -60,15 +60,25 @@ final class CardImporter
             $section = Category::query()->where('slug', $data['section'])->whereNull('parent_id')->first()
                 ?? throw new RuntimeException("Section «{$data['section']}» not found");
 
-            $group = $this->group($section, $data['group']);
+            // One group (`group` + `classes` + `plain`) or several (`groups`, each
+            // with its own classes and plain classes).
+            $groups = $data['groups'] ?? [[
+                ...$data['group'],
+                'classes' => $data['classes'] ?? [],
+                'plain' => $data['plain'] ?? [],
+            ]];
 
-            $sort = 1;
-            foreach ($data['classes'] as $slug => $class) {
-                $this->cardClass($group, $slug, $class, $sort++);
-            }
+            foreach (array_values($groups) as $i => $def) {
+                $group = $this->group($section, ['sort_order' => $i] + $def);
 
-            foreach ($data['plain'] ?? [] as $slug) {
-                $this->plainClass($group, $slug, $sort++);
+                $sort = 1;
+                foreach ($def['classes'] ?? [] as $slug => $class) {
+                    $this->cardClass($group, $slug, $class, $sort++);
+                }
+
+                foreach ($def['plain'] ?? [] as $slug) {
+                    $this->plainClass($group, $slug, $sort++);
+                }
             }
 
             foreach ($data['merge'] ?? [] as $from => $into) {
@@ -89,7 +99,7 @@ final class CardImporter
         $group->fill([
             'parent_id' => $section->id,
             'name' => $def['name'],
-            'sort_order' => $def['sort_order'] ?? 0,
+            'sort_order' => $def['sort_order'],
             'is_active' => true,
         ])->save();
 
@@ -108,7 +118,11 @@ final class CardImporter
                 'code' => $def['code'] ?? null,
                 'sale' => $def['sale'] ?? CardSchema::SALE_AREA,
                 'quote_when' => $def['quote_when'] ?? null,
-            ]),
+                'units' => $def['units'] ?? null,
+                'cut_unit' => $def['cut_unit'] ?? null,
+                // Stored only when it differs from the default (required).
+                'country_required' => ($def['country_required'] ?? true) ? null : false,
+            ], fn ($v) => $v !== null),
         ])->save();
 
         $pivot = [];

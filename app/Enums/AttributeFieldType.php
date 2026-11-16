@@ -22,6 +22,9 @@ enum AttributeFieldType: string
     // min–max pair. Stored as value_min = length (min), value_max = max length,
     // value_numeric = width — see App\Services\ProductCard\CardSchema.
     case Size = 'size';
+    // A document: an uploaded file (public disk, product-docs/) or an https link,
+    // stored in value_text.
+    case Document = 'document';
 
     public function label(): string
     {
@@ -35,6 +38,7 @@ enum AttributeFieldType: string
             self::Text => 'Mətn',
             self::Textarea => 'Uzun mətn',
             self::Size => 'Ölçü (uzunluq × en)',
+            self::Document => 'Sənəd (fayl və ya link)',
         });
     }
 

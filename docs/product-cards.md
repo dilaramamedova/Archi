@@ -45,6 +45,24 @@ sadə formla qalır. Boşalan köhnə qruplar (Universal, Taxta, Polimer, Xalça
 > `CatalogClassifierSeeder` ağacı yenidən qurur və pivotları silir. Ondan sonra
 > həmişə `ProductCardSeeder` işləməlidir (DatabaseSeeder-də ardıcıllıq belədir).
 
+## Tavanlar ağacı (17.11.2026)
+
+`Archi_AZ_Tavan_Kataloq_AZ.xlsx`: 9 tavan kartı (T01–T09) və 26 komplektləşdirici kartı
+(K1_1–K7_4). Excel-in 4-cü səviyyəsi (Komplektləşdiricilər → alt qrup → kart) 3
+səviyyəli ağaca belə yığılıb: `Tavanlar` → **`Tavan növləri`** (9 kart + sadə formlu
+Kesson və boya/lambir sinfi) və hər komplektləşdirici alt qrupu üçün bir qrup (7 qrup;
+plintus/qaltel «Divarboyu və dekorativ elementlər»də sadə formla). Köhnə 4 qrup bağlanıb.
+
+Qərarlar (müştəri ilə razılaşdırılıb):
+- «Siyahı / Əlaqəli siyahı» (profil kodu, uyğun model) üçün lüğət yoxdur — mətn sahəsi;
+  «Uyğunluq» = tavan növlərindən çoxlu seçim + «istehsalçı / seriya / model» mətni.
+- «İki / üç rəqəm», «minimum və maksimum» — ayrı rəqəm sahələri (`lte` qaydası ilə).
+- Siyahı (select) yalnız standart ölçülərə: alçıpan, Armstrong, kaset modulu, Grilyato,
+  dartma tavan eni. Komplektləşdirici ölçüləri sərbəst rəqəmdir.
+- Dartma tavan: rulon → tam rulon (m² × en × uzunluq), kəsim → m², layihə ölçüsü və ya
+  «materiallar və montaj» → sorğu.
+- Komplektləşdiricilərdə istehsal ölkəsi məcburi deyil (`country_required: false`).
+
 ## Kart faylının formatı
 
 ```php
@@ -58,12 +76,17 @@ sadə formla qalır. Boşalan köhnə qruplar (Universal, Taxta, Polimer, Xalça
     ],
 ],
 'plain' => [...],                        // qrupa köçən, kartsız siniflər
+// Bir bölmədə bir neçə qrup: 'groups' => [[slug, name, classes, plain], …]
+// Sinif ayarları: sale (area | board | unit), units (unit üçün icazəli vahidlər:
+// piece, lm, pack, set, pair, roll), cut_unit (rulondan kəsim: lm | m2),
+// quote_when (bir şərt və ya şərtlər siyahısı — hər hansı biri), country_required.
 'merge' => ['köhnə' => 'yeni'],          // məhsullar köçür, köhnə sinif bağlanır
 'retire_groups' => [...],                // boş qalanda bağlanan qruplar
 ```
 
 Sahə: `slug`, `name`, `type` (`dropdown`, `multiselect`, `decimal`, `size`, `text`,
-`textarea`), `options` — atributun özünə aiddir və eyni slug bir neçə sinifdə
+`textarea`, `document` — fayl (public disk, `product-docs/`, PDF/şəkil ≤ 10 MB) və ya
+`https://` link), `options` — atributun özünə aiddir və eyni slug bir neçə sinifdə
 işlədilirsə **eyni olmalıdır** (importer fərqi görəndə dayanır). Sinfə aid olanlar:
 
 | Açar | Mənası |
@@ -76,6 +99,7 @@ işlədilirsə **eyni olmalıdır** (importer fərqi görəndə dayanır). Sinf�
 | `rules.only` | Yalnız bu seçimlərlə dərc olunur («Döşəmədə istifadə» → Bəli) |
 | `rules.mixed_when` | Ölçüdə min–maks uzunluq (qarışıq uzunluqlar) |
 | `rules.square_when` | Kvadrat formada uzunluq = en |
+| `rules.integer` | Tam rəqəm (boru sayı, asqı nöqtəsi sayı) |
 | `maps_to` | Məhsul hesabına gedir: `package_size`, `package_unit`, `roll_width`, `length_mm`, `width_mm` |
 
 Seçim: `value` (az/ru/en), `slug`, `prompt` (seçiləndə mətn soruşulur: «Digər» →
@@ -105,6 +129,11 @@ səbət və sifariş onu istifadə edir:
 - **Rulon** (`roll_width` var, qablaşdırma yox): `sale_factor` = rulonun eni, satış
   poqon metrlə; stok metrlə.
 - **Taxta** (`board`): baza `piece` → 1, `lm` → uzunluq (m), `m2` → uzunluq × en.
+- **Rulon tam** (`roll_width` + `roll_length`): `sale_factor` = en × uzunluq, vahid rulon.
+  `cut_unit: m2` olan sinifdə kəsim m² ilə satılır (dartma tavan).
+- **Satıcının vahidi** (`unit`): satıcı icazəli vahidlərdən birini seçir (`price_basis`
+  sahəsi), qiymət və stok həmin vahidlədir; «Örtmə sahəsi» (`package_size`) yazılsa,
+  səhifədə ≈ AZN/m² də göstərilir.
 - **Sorğu** (`quote_when`): qiymət yoxdur, səbətə əlavə olunmur; məhsul səhifəsində
   «Hesablama tələb et» forması `consultation_requests`-ə (`source = product`) yazır.
 

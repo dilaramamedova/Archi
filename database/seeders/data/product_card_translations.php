@@ -11,6 +11,7 @@ $r = fn (string $az, string $ru, string $en): array => compact('az', 'ru', 'en')
 return [
     'business-product-edit' => [
         'pricing.units.pallet' => $r('Palet', 'Паллета', 'Pallet'),
+        'pricing.units.pair' => $r('Cüt', 'Пара', 'Pair'),
     ],
 
     'product-card' => [
@@ -38,6 +39,15 @@ return [
         'price_hint_roll' => $r('AZN/m². Rulondan fasiləsiz kəsilir.', 'AZN/м². Отрезается от рулона без разрыва.', 'AZN/m². Cut from the roll in one piece.'),
         'price_hint_board' => $r('Seçilmiş qiymət bazasında.', 'В выбранной базе цены.', 'In the chosen price basis.'),
         'old_price_hint' => $r('Yalnız endirim varsa; cari qiymətlə eyni vahiddə və ondan böyük.', 'Только при скидке; в той же единице и больше текущей цены.', 'Only with a discount; same unit as, and higher than, the current price.'),
+        'sale_unit' => $r('Satış vahidi', 'Единица продажи', 'Sales unit'),
+        'sale_unit_hint' => $r('Qiymət və stok bu vahidlə yazılır.', 'Цена и остаток указываются в этой единице.', 'Price and stock are given in this unit.'),
+        'price_hint_unit' => $r('AZN, seçilmiş satış vahidi üzrə.', 'AZN за выбранную единицу продажи.', 'AZN per the chosen sales unit.'),
+        'stock_hint_unit' => $r('Seçilmiş satış vahidində miqdar.', 'Количество в выбранной единице продажи.', 'Quantity in the chosen sales unit.'),
+        'price_hint_m2' => $r('AZN/m². Rulondan kəsilərək m² ilə satılır.', 'AZN/м². Отрезается от рулона и продаётся по м².', 'AZN/m². Cut from the roll and sold by the m².'),
+        'stock_hint_m2' => $r('Mövcud kəsim sahəsi, m².', 'Доступная площадь отреза, м².', 'Available cut area, m².'),
+        'form.doc_current' => $r('Mövcud sənəd', 'Текущий документ', 'Current document'),
+        'form.doc_replace' => $r('— dəyişmək üçün yeni fayl və ya link verin', '— чтобы заменить, загрузите файл или дайте ссылку', '— upload a file or give a link to replace it'),
+        'form.doc_url' => $r('və ya link: https://…', 'или ссылка: https://…', 'or a link: https://…'),
         'availability' => $r('Mövcudluq', 'Наличие', 'Availability'),
         'availability_in_stock' => $r('Stokda', 'В наличии', 'In stock'),
         'availability_on_order' => $r('Sifarişlə', 'Под заказ', 'Made to order'),
@@ -57,7 +67,10 @@ return [
         'text_required' => $r(':name: «:option» seçilibsə, :prompt', '«:name»: при выборе «:option» — :prompt', ':name: with «:option» chosen, :prompt'),
         'text_long' => $r(':name çox uzundur', '«:name» слишком длинное', ':name is too long'),
         'numeric' => $r(':name rəqəm olmalıdır', '«:name» должно быть числом', ':name must be a number'),
-        'not_in_list' => $r(':name: siyahıdakı dəyərlərdən birini seçin', '«:name»: выберите одно из значений списка', ':name: choose one of the listed values'),
+        'integer' => $r(':name tam rəqəm olmalıdır', '«:name» должно быть целым числом', ':name must be a whole number'),
+        'document_invalid' => $r(':name: fayl yükləyin və ya https:// ilə başlayan link yazın', '«:name»: загрузите файл или укажите ссылку https://', ':name: upload a file or give an https:// link'),
+        'sale_unit_required' => $r('Satış vahidini seçin', 'Выберите единицу продажи', 'Choose the sales unit'),
+        'not_in_list' =>$r(':name: siyahıdakı dəyərlərdən birini seçin', '«:name»: выберите одно из значений списка', ':name: choose one of the listed values'),
         'out_of_range' =>$r(':name üçün dəyər düzgün deyil', 'Неверное значение «:name»', 'Invalid value for :name'),
         'size_incomplete' => $r(':name: uzunluq və en yazılmalıdır', '«:name»: укажите длину и ширину', ':name: enter the length and width'),
         'size_mixed' => $r(':name: minimum uzunluq, maksimum uzunluq və en yazılmalıdır', '«:name»: укажите мин. длину, макс. длину и ширину', ':name: enter the min. length, max. length and width'),
@@ -79,7 +92,9 @@ return [
 
         // Product page
         'page.brand' => $r('Brend', 'Бренд', 'Brand'),
-        'page.sku' => $r('Artikul', 'Артикул', 'Article no.'),
+        'page.document' => $r('Sənədə bax', 'Открыть документ', 'View document'),
+        'page.coverage' => $r('Örtmə sahəsi', 'Площадь покрытия', 'Coverage'),
+        'page.sku' =>$r('Artikul', 'Артикул', 'Article no.'),
         'page.lead_time' => $r(':days gün ərzində hazır olur', 'Готово за :days дн.', 'Ready in :days days'),
         'page.quote_title' => $r('Qiymət ölçülərə görə hesablanır', 'Цена рассчитывается по размерам', 'Priced to your dimensions'),
         'page.quote_note' => $r('Sorğu göndərin — ölçülər, işlər və məbləğ sizinlə razılaşdırılır.', 'Отправьте запрос — размеры, работы и сумма согласуются с вами.', 'Send a request — sizes, work and the amount are agreed with you.'),

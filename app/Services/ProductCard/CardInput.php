@@ -114,6 +114,7 @@ final class CardInput
             'dropdown', 'multiselect' => $this->choice($field, $raw, $answers, $key, $name),
             'size' => $this->size($field, $raw, $answers, $key, $name),
             'decimal', 'numeric' => $this->number($field, $raw, $key, $name),
+            'document' => $this->document($field, $raw, $key, $name),
             default => $this->text($field, $raw, $key, $name),
         };
     }
@@ -214,6 +215,13 @@ final class CardInput
             return;
         }
 
+        // «Tam rəqəm»: counts (pipes through one element, suspension points in a kit).
+        if (! empty($field['rules']['integer']) && abs($value - round($value)) > 0.00001) {
+            $this->errors[$key] = CardText::get('integer', ':name tam rəqəm olmalıdır', ['name' => $name]);
+
+            return;
+        }
+
         // A field with a list is a choice from that list, not a free number.
         if ($field['presets'] !== [] && ! $this->listed($value, $field['presets'])) {
             $this->notListed($key, $name);
@@ -308,6 +316,33 @@ final class CardInput
 
         $this->mapped['length_mm'] ??= $length;
         $this->mapped['width_mm'] ??= $width;
+    }
+
+    /**
+     * A document is a stored file path (the controller has already put an upload on
+     * the public disk under product-docs/) or an https link. Anything else — another
+     * scheme, a path outside product-docs/ — is refused.
+     */
+    private function document(array $field, array $raw, string $key, string $name): void
+    {
+        $value = trim((string) ($raw['value'] ?? ''));
+
+        if ($value === '') {
+            $this->absent($field, $key, $name);
+
+            return;
+        }
+
+        $isFile = str_starts_with($value, 'product-docs/') && ! str_contains($value, '..');
+        $isLink = filter_var($value, FILTER_VALIDATE_URL) && str_starts_with(strtolower($value), 'https://') && mb_strlen($value) <= 500;
+
+        if (! $isFile && ! $isLink) {
+            $this->errors[$key] = CardText::get('document_invalid', ':name: fayl yükləyin və ya https:// ilə başlayan link yazın', ['name' => $name]);
+
+            return;
+        }
+
+        $this->rows[] = ['attribute_id' => $field['id'], 'value_text' => $value];
     }
 
     private function text(array $field, array $raw, string $key, string $name): void

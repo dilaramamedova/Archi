@@ -60,11 +60,26 @@ final class CardForm
     /** The price basis of a board class — shown above the price. */
     public static function basisField(): Forms\Components\Select
     {
+        $type = fn (callable $get): ?string => self::schema($get('sub_category_id'))['sale']['type'] ?? null;
+
+        // Board: the basis of the price. Unit classes: the unit the product is sold,
+        // priced and stocked in — only the ones the class allows.
         return Forms\Components\Select::make('price_basis')
-            ->label('Qiymət bazası')
-            ->options(['piece' => 'AZN/ədəd', 'lm' => 'AZN/poqon metr', 'm2' => 'AZN/m²'])
-            ->helperText('Teras taxtası: qiymət bir bazada yazılır, satış bütöv taxta ilədir.')
-            ->visible(fn (callable $get): bool => (self::schema($get('sub_category_id'))['sale']['type'] ?? null) === CardSchema::SALE_BOARD);
+            ->label(fn (callable $get): string => $type($get) === CardSchema::SALE_UNIT ? 'Satış vahidi' : 'Qiymət bazası')
+            ->options(function (callable $get) use ($type): array {
+                if ($type($get) !== CardSchema::SALE_UNIT) {
+                    return ['piece' => 'AZN/ədəd', 'lm' => 'AZN/poqon metr', 'm2' => 'AZN/m²'];
+                }
+
+                return collect(self::schema($get('sub_category_id'))['sale']['units'])
+                    ->mapWithKeys(fn ($u) => [$u => CardProduct::unitName($u)])
+                    ->all();
+            })
+            ->required(fn (callable $get): bool => in_array($type($get), [CardSchema::SALE_BOARD, CardSchema::SALE_UNIT], true))
+            ->helperText(fn (callable $get): string => $type($get) === CardSchema::SALE_UNIT
+                ? 'Qiymət və stok bu vahidlə yazılır.'
+                : 'Teras taxtası: qiymət bir bazada yazılır, satış bütöv taxta ilədir.')
+            ->visible(fn (callable $get): bool => in_array($type($get), [CardSchema::SALE_BOARD, CardSchema::SALE_UNIT], true));
     }
 
     /** Brand-level fields for the «Əsas» tab. */
@@ -80,6 +95,7 @@ final class CardForm
                 ->label('İstehsal ölkəsi')
                 ->options(fn (): array => IsoCountries::options('az'))
                 ->searchable()
+                ->required(fn (callable $get): bool => (self::schema($get('sub_category_id'))['country_required'] ?? false) === true)
                 ->helperText('Məhsulun faktiki istehsal olunduğu ölkə; brendin qeydiyyat ölkəsi deyil.')
                 ->visible(fn (callable $get): bool => self::isCard($get)),
 
@@ -211,6 +227,26 @@ final class CardForm
                         ->visible($shown);
                     break;
 
+                case 'document':
+                    // A file on the public disk (product-docs/) or an https link —
+                    // beforeSave() folds the two into the stored value.
+                    $components[] = Grid::make(2)
+                        ->schema([
+                            Forms\Components\FileUpload::make("{$base}.file")
+                                ->label($label.' — fayl')
+                                ->disk('public')
+                                ->directory('product-docs')
+                                ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/webp'])
+                                ->maxSize(10240),
+                            Forms\Components\TextInput::make("{$base}.url")
+                                ->label('və ya link')
+                                ->url()
+                                ->helperText($f['required'] ? 'Fayl və ya link məcburidir.' : $f['hint']),
+                        ])
+                        ->visible($shown)
+                        ->columnSpanFull();
+                    break;
+
                 case 'textarea':
                     $components[] = Forms\Components\Textarea::make("{$base}.value")
                         ->label($label)->rows(2)
@@ -302,9 +338,19 @@ final class CardForm
             return [];
         }
 
+        $card = CardProduct::formState($product, $schema);
+
+        // Documents: the stored value back into the file / link pair.
+        foreach ($schema['fields'] as $f) {
+            if ($f['type'] === 'document' && isset($card[$f['id']]['value'])) {
+                $doc = (string) $card[$f['id']]['value'];
+                $card[$f['id']] = str_starts_with($doc, 'https://') ? ['url' => $doc] : ['file' => $doc];
+            }
+        }
+
         return [
-            'card' => CardProduct::formState($product, $schema),
-            'price_basis' => $schema['sale']['type'] === CardSchema::SALE_BOARD ? $product->unit : null,
+            'card' => $card,
+            'price_basis' => in_array($schema['sale']['type'], [CardSchema::SALE_BOARD, CardSchema::SALE_UNIT], true) ? $product->unit : null,
         ];
     }
 
@@ -318,6 +364,16 @@ final class CardForm
     public static function beforeSave(array $data): array
     {
         $card = Arr::pull($data, 'card') ?? [];
+
+        // Documents: an uploaded file wins over a link; either becomes the value.
+        foreach ((self::schema($data['sub_category_id'] ?? null)['fields'] ?? []) as $f) {
+            if ($f['type'] !== 'document') {
+                continue;
+            }
+            $file = $card[$f['id']]['file'] ?? null;
+            $file = is_array($file) ? (array_values($file)[0] ?? null) : $file;
+            $card[$f['id']] = ['value' => trim((string) ($file ?: ($card[$f['id']]['url'] ?? '')))];
+        }
         $basis = Arr::pull($data, 'price_basis');
         $schema = self::schema($data['sub_category_id'] ?? null);
 
@@ -371,6 +427,7 @@ final class CardForm
                 'dropdown' => 'option',
                 'multiselect' => 'options',
                 'size' => $field['presets'] !== [] ? 'pair' : 'length',
+                'document' => 'url',
                 default => 'value',
             };
         }

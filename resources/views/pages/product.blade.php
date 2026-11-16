@@ -160,6 +160,11 @@
             @if ($sale['sold_old_price'])<s class="ml-1 text-black/40">{{ number_format($sale['sold_old_price'], 2) }} ₼</s>@endif
           </div>
         @endif
+        @if ($sale && $sale['per_m2'] !== null)
+          <div class="pd-price-alt">
+            {{ $tOr('product-card.page.coverage', 'Örtmə sahəsi') }} {{ $num($sale['coverage'], 4) }} m² · ≈ <b>{{ number_format($sale['per_m2'], 2) }} ₼/m²</b>
+          </div>
+        @endif
         @endif
         {{-- Laminate (TZ §5): the seller's price stays the main figure; the other
              unit is derived for display only. --}}
@@ -391,7 +396,13 @@
         {{-- Category card: brand, country, collection, then the card's parameters. --}}
         <div class="pd-specs">
           @foreach ($card['rows'] as $row)
-            <div class="row"><div class="k">{{ $row['name'] }}</div><div class="v">{{ $row['value'] }}</div></div>
+            <div class="row"><div class="k">{{ $row['name'] }}</div><div class="v">
+              @if (! empty($row['url']))
+                <a class="pd-spec-link" href="{{ $row['url'] }}" target="_blank" rel="noopener noreferrer">{{ $row['value'] }} ↗</a>
+              @else
+                {{ $row['value'] }}
+              @endif
+            </div></div>
           @endforeach
         </div>
         @else

@@ -31,8 +31,11 @@ function setShown(node, shown) {
   });
 }
 
-const holds = (cond, answers) => !cond || !cond.attr
-  || (answers[cond.attr] || []).some((slug) => (cond.in || []).includes(slug));
+// One {attr, in} condition, or a list of them where any one holding is enough.
+const holds = (cond, answers) => {
+  if (Array.isArray(cond)) return cond.some((c) => holds(c, answers));
+  return !cond || !cond.attr || (answers[cond.attr] || []).some((slug) => (cond.in || []).includes(slug));
+};
 
 export function createCardForm({ form }) {
   const block = document.getElementById('cardBlock');
@@ -237,8 +240,40 @@ export function createCardForm({ form }) {
     return i;
   }
 
+  // A document: upload a file (PDF / image) or give an https link. On an edit the
+  // stored one is shown and kept unless replaced.
+  function documentField(f, val) {
+    const wrap = el('div', 'flex w-full flex-col gap-2');
+    const current = val?.value || '';
+    if (current) {
+      const row = el('div', 'flex items-center gap-2 text-[13px]');
+      const keep = el('input');
+      keep.type = 'hidden';
+      keep.name = `card[${f.id}][keep]`;
+      keep.value = current;
+      const link = el('a', 'font-semibold text-ink underline', L.lDocCurrent || 'Mövcud sənəd');
+      link.href = current.startsWith('http') ? current : `/storage/${current}`;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      row.append(keep, link, el('span', 'text-black/45', L.lDocReplace || '— dəyişmək üçün yeni fayl və ya link verin'));
+      wrap.appendChild(row);
+    }
+    const file = el('input', 'block w-full text-sm text-black/70 file:mr-3 file:h-[38px] file:rounded file:border file:border-black/20 file:bg-white file:px-4 file:text-[13px] file:font-semibold file:text-ink');
+    file.type = 'file';
+    file.accept = 'application/pdf,image/jpeg,image/png,image/webp';
+    file.name = `card[${f.id}][file]`;
+    const url = el('input', CTRL);
+    url.type = 'url';
+    url.maxLength = 500;
+    url.placeholder = L.lDocUrl || 'və ya link: https://…';
+    url.name = `card[${f.id}][url]`;
+    if (current.startsWith('http')) url.value = current;
+    wrap.append(file, url);
+    return wrap;
+  }
+
   function fieldNode(f, val) {
-    const full = ['multiselect', 'textarea'].includes(f.type)
+    const full = ['multiselect', 'textarea', 'document'].includes(f.type)
       || (f.type === 'size' && (!f.presets?.length || !!f.rules?.mixed_when));
     const node = el('div', 'flex min-w-0 flex-col items-start gap-2' + (full ? ' sm:col-span-2' : ''));
     node.dataset.cardField = String(f.id);
@@ -247,7 +282,8 @@ export function createCardForm({ form }) {
       : f.type === 'multiselect' ? multiselect(f, val)
         : f.type === 'size' ? size(f, val)
           : (f.type === 'decimal' || f.type === 'numeric') ? decimal(f, val)
-            : text(f, val);
+            : f.type === 'document' ? documentField(f, val)
+              : text(f, val);
     node.appendChild(control);
     if (f.hint) node.appendChild(el('p', 'text-[13px] leading-[1.45] text-black/50', f.hint));
     const err = el('p', ERR);
@@ -330,17 +366,42 @@ export function createCardForm({ form }) {
   function syncSale() {
     const a = answers();
     const type = schema.sale?.type || 'area';
-    const quote = type === 'area' && holds(schema.sale?.quote_when || { attr: '__never__', in: [] }, a);
+    const quote = holds(schema.sale?.quote_when || { attr: '__never__', in: [] }, a);
     const visible = (key) => schema.fields.some((f) => f.maps_to === key
       && !block.querySelector(`[data-card-field="${f.id}"]`)?.hidden);
-    const roll = type === 'area' && visible('roll_width') && !visible('package_size');
+    // A roll sold whole counts like a pack; a cut is sold by the running metre or,
+    // for stretch-ceiling film, by the m² itself.
+    const wholeRoll = type === 'area' && visible('roll_width') && visible('roll_length');
+    const cut = type === 'area' && visible('roll_width') && !wholeRoll && !visible('package_size');
+    const cutM2 = cut && schema.sale?.cut_unit === 'm2';
 
     setShown(quoteNote, quote);
     setShown(priceRow, !quote);
-    form.querySelectorAll('[data-card-sale="board"]').forEach((n) => setShown(n, type === 'board'));
+    form.querySelectorAll('[data-card-sale]').forEach((n) => setShown(n, !quote && n.dataset.cardSale === type));
 
-    if (priceHint) priceHint.textContent = type === 'board' ? priceHint.dataset.lBoard : (roll ? priceHint.dataset.lRoll : priceHint.dataset.lArea);
-    if (stockHint) stockHint.textContent = type === 'board' ? stockHint.dataset.lBoard : (roll ? stockHint.dataset.lRoll : stockHint.dataset.lPack);
+    // A unit class offers only its own units.
+    const allowed = (schema.sale?.units || []).map(String);
+    form.querySelectorAll('[data-card-sale="unit"] option').forEach((o) => {
+      if (!o.value) return;
+      const ok = allowed.includes(o.value);
+      o.hidden = !ok;
+      o.disabled = !ok;
+      if (!ok && o.selected) o.parentElement.value = '';
+    });
+
+    const pick = (node, area) => (type === 'board' ? node.dataset.lBoard
+      : type === 'unit' ? node.dataset.lUnit
+        : cutM2 ? (node.dataset.lM2 || area)
+          : cut ? node.dataset.lRoll : area);
+    if (priceHint) priceHint.textContent = pick(priceHint, priceHint.dataset.lArea);
+    if (stockHint) stockHint.textContent = pick(stockHint, stockHint.dataset.lPack);
+
+    // Some cards (ceiling accessories) leave the country optional.
+    const countryLabel = document.querySelector('#countryField .ui-label-b2b');
+    if (countryLabel) {
+      countryLabel.dataset.base ??= countryLabel.textContent.replace(/\s*\*$/, '');
+      countryLabel.textContent = countryLabel.dataset.base + (schema.country_required === false ? '' : ' *');
+    }
 
     syncAvailability(quote);
   }

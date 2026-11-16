@@ -27,6 +27,12 @@ final class CardSchema
 
     public const SALE_BOARD = 'board';
 
+    /** Sold in a unit the seller picks (ədəd / metr / qablaşdırma …), priced per that unit. */
+    public const SALE_UNIT = 'unit';
+
+    /** Every unit a SALE_UNIT class may offer. */
+    public const SALE_UNITS = ['piece', 'lm', 'pack', 'set', 'pair', 'roll'];
+
     /** Price bases a board class may be priced in (TZ D11 «Qiymət bazası»). */
     public const BOARD_BASES = ['piece', 'lm', 'm2'];
 
@@ -74,8 +80,14 @@ final class CardSchema
             'name' => (string) $subCategory->name,
             'sale' => [
                 'type' => $settings['sale'] ?? self::SALE_AREA,
+                // One {attr, in} condition or a list of them (any one holding).
                 'quote_when' => $settings['quote_when'] ?? null,
+                // SALE_UNIT: the units the seller may sell in.
+                'units' => array_values((array) ($settings['units'] ?? [])),
+                // SALE_AREA cut from a roll: by the running metre (lm) or by m².
+                'cut_unit' => $settings['cut_unit'] ?? 'lm',
             ],
+            'country_required' => (bool) ($settings['country_required'] ?? true),
             'fields' => $subCategory->attributes
                 ->map(fn (Attribute $a) => self::field($a))
                 ->values()
@@ -176,6 +188,17 @@ final class CardSchema
      */
     public static function holds(?array $condition, array $answers): bool
     {
+        // A list of conditions holds when any of them does.
+        if ($condition && array_is_list($condition)) {
+            foreach ($condition as $one) {
+                if (is_array($one) && self::holds($one, $answers)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         if (! $condition || empty($condition['attr'])) {
             return true;
         }

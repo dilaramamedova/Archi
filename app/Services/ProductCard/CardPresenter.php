@@ -46,6 +46,20 @@ final class CardPresenter
         }
 
         foreach ($schema['fields'] as $field) {
+            // A document is a link: an uploaded file on the public disk or the URL.
+            if ($field['type'] === 'document') {
+                $doc = (string) ($values->get($field['id'])?->first()?->value_text ?? '');
+                if ($doc !== '') {
+                    $rows[] = [
+                        'name' => $field['name'],
+                        'value' => CardText::get('page.document', 'Sənədə bax'),
+                        'url' => str_starts_with($doc, 'https://') ? $doc : storage_url($doc),
+                    ];
+                }
+
+                continue;
+            }
+
             $value = self::value($field, $values->get($field['id']));
             if ($value !== null) {
                 $rows[] = ['name' => $field['name'], 'value' => $value];
@@ -113,6 +127,11 @@ final class CardPresenter
                 ? $product->salePrice((float) $product->old_price) : null,
             'sold_area' => $area,
             'stock_area' => $area !== null && (int) $product->stock > 0 ? round($area * (int) $product->stock, 2) : null,
+            // Sold by the piece / pack with a known coverage: the m² figure beside it.
+            'per_m2' => $product->unit !== 'm2' && $product->sale_unit === $product->unit
+                && (float) $product->package_size > 0 && (float) $product->price > 0
+                ? round((float) $product->price / (float) $product->package_size, 2) : null,
+            'coverage' => $product->unit !== 'm2' && (float) $product->package_size > 0 ? (float) $product->package_size : null,
             'availability' => (string) ($product->availability ?: Product::IN_STOCK),
             'lead_time_days' => $product->lead_time_days,
         ];

@@ -207,7 +207,7 @@
           <p data-err-for="brand_id new_brand" hidden class="{{ $errCls }}"></p>
         </x-cabinet.field>
         {{-- Category card: every card asks where the product is made. --}}
-        <x-cabinet.field data-card-only hidden :label="$tOr('product-card.country', 'İstehsal ölkəsi') . ' *'" for="pOriginCountry">
+        <x-cabinet.field data-card-only hidden :label="$tOr('product-card.country', 'İstehsal ölkəsi') . ' *'" for="pOriginCountry" id="countryField">
           <select id="pOriginCountry" name="origin_country"
                   class="h-[43px] w-full rounded border border-black/15 bg-white px-3.5 text-sm text-ink outline-none transition focus:border-black/40">
             <option value="">{{ t('register.form.select_placeholder') }}</option>
@@ -293,7 +293,10 @@
            data-l-length-min="{{ $tOr('product-card.form.length_min', 'Min. uzunluq') }}"
            data-l-length-max="{{ $tOr('product-card.form.length_max', 'Maks. uzunluq') }}"
            data-l-width="{{ $tOr('product-card.form.width', 'En') }}"
-           data-l-required="{{ $tOr('product-card.required', '«:name» doldurulmalıdır') }}"></div>
+           data-l-required="{{ $tOr('product-card.required', '«:name» doldurulmalıdır') }}"
+           data-l-doc-current="{{ $tOr('product-card.form.doc_current', 'Mövcud sənəd') }}"
+           data-l-doc-replace="{{ $tOr('product-card.form.doc_replace', '— dəyişmək üçün yeni fayl və ya link verin') }}"
+           data-l-doc-url="{{ $tOr('product-card.form.doc_url', 'və ya link: https://…') }}"></div>
 
       <div id="attrBasic" class="flex w-full flex-col gap-4"></div>
 
@@ -392,13 +395,31 @@
         </x-cabinet.field>
       </div>
 
+      {{-- Category card, unit classes: what one sold unit is; price and stock follow it.
+           Only the units this class allows stay selectable (business-product-card.js). --}}
+      <div class="cab-field-row" data-card-sale="unit" hidden>
+        <x-cabinet.field :label="$tOr('product-card.sale_unit', 'Satış vahidi') . ' *'" for="pSaleUnit">
+          <select id="pSaleUnit" name="price_basis"
+                  class="h-[43px] w-full rounded border border-black/15 bg-white px-3.5 text-sm text-ink outline-none transition focus:border-black/40">
+            <option value="">{{ t('register.form.select_placeholder') }}</option>
+            @foreach (\App\Services\ProductCard\CardSchema::SALE_UNITS as $su)
+              <option value="{{ $su }}" @selected($isEdit && $product->sale_unit === $su && $product->unit === $su)>{{ $tOr('business-product-edit.pricing.units.'.$su, $su) }}</option>
+            @endforeach
+          </select>
+          <p class="text-[13px] leading-[1.45] text-black/50">{{ $tOr('product-card.sale_unit_hint', 'Qiymət və stok bu vahidlə yazılır.') }}</p>
+          <p data-err-for="price_basis" hidden class="{{ $errCls }}"></p>
+        </x-cabinet.field>
+      </div>
+
       <div class="cab-field-row" id="priceRow">
         <x-cabinet.field :label="t('business-product-edit.pricing.price') . ' *'" for="pPrice">
           <x-ui.input variant="b2b" id="pPrice" name="price" type="number" step="0.01" min="0" :value="$isEdit && ! $product->quote_only ? $product->price : ''" placeholder="23.90" required />
           <p id="cardPriceHint" data-card-only hidden class="text-[13px] leading-[1.45] text-black/50"
              data-l-area="{{ $tOr('product-card.price_hint_area', 'AZN/m². Satış tam qablaşdırma ilədir — qablaşdırmanın qiyməti sahədən hesablanır.') }}"
              data-l-roll="{{ $tOr('product-card.price_hint_roll', 'AZN/m². Rulondan fasiləsiz kəsilir.') }}"
-             data-l-board="{{ $tOr('product-card.price_hint_board', 'Seçilmiş qiymət bazasında.') }}"></p>
+             data-l-board="{{ $tOr('product-card.price_hint_board', 'Seçilmiş qiymət bazasında.') }}"
+             data-l-unit="{{ $tOr('product-card.price_hint_unit', 'AZN, seçilmiş satış vahidi üzrə.') }}"
+             data-l-m2="{{ $tOr('product-card.price_hint_m2', 'AZN/m². Rulondan kəsilərək m² ilə satılır.') }}"></p>
           <p data-err-for="price" hidden class="{{ $errCls }}"></p>
         </x-cabinet.field>
         <x-cabinet.field :label="t('business-product-edit.pricing.old_price')" for="pOldPrice">
@@ -441,7 +462,9 @@
           <p id="cardStockHint" data-card-only hidden class="text-[13px] leading-[1.45] text-black/50"
              data-l-pack="{{ $tOr('product-card.stock_hint_pack', 'Tam qablaşdırma (və ya satılan vahid) sayı. m² qarşılığı avtomatik hesablanır.') }}"
              data-l-roll="{{ $tOr('product-card.stock_hint_roll', 'Mövcud fasiləsiz uzunluq, metr.') }}"
-             data-l-board="{{ $tOr('product-card.stock_hint_board', 'Bütöv taxta sayı.') }}"></p>
+             data-l-board="{{ $tOr('product-card.stock_hint_board', 'Bütöv taxta sayı.') }}"
+             data-l-unit="{{ $tOr('product-card.stock_hint_unit', 'Seçilmiş satış vahidində miqdar.') }}"
+             data-l-m2="{{ $tOr('product-card.stock_hint_m2', 'Mövcud kəsim sahəsi, m².') }}"></p>
           <p data-err-for="stock" hidden class="{{ $errCls }}"></p>
         </x-cabinet.field>
         <x-cabinet.field data-card-only hidden :label="$tOr('product-card.lead_time', 'Hazırlanma müddəti, gün')" for="pLeadTime" id="leadTimeField">
