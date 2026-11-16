@@ -18,6 +18,9 @@ class SubCategory extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        // Category product card (docs/product-cards.md).
+        'card_enabled' => 'boolean',
+        'card_settings' => 'array',
     ];
 
     public function category(): BelongsTo
@@ -38,7 +41,7 @@ class SubCategory extends Model
     {
         return $this->belongsToMany(Attribute::class, 'attribute_sub_category')
             ->using(SubCategoryAttribute::class)
-            ->withPivot(['is_required', 'is_filterable', 'filter_priority', 'unit', 'sort_order'])
+            ->withPivot(['is_required', 'is_filterable', 'filter_priority', 'unit', 'sort_order', 'hint', 'presets', 'visible_when', 'rules', 'maps_to'])
             ->withTimestamps()
             ->orderBy('attribute_sub_category.sort_order');
     }

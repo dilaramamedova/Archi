@@ -18,6 +18,10 @@ enum AttributeFieldType: string
     case Range = 'range';
     case Text = 'text';
     case Textarea = 'textarea';
+    // Length × width of one piece (mm); with a mixed-length format the length is a
+    // min–max pair. Stored as value_min = length (min), value_max = max length,
+    // value_numeric = width — see App\Services\ProductCard\CardSchema.
+    case Size = 'size';
 
     public function label(): string
     {
@@ -30,6 +34,7 @@ enum AttributeFieldType: string
             self::Range => 'Aralıq (min–maks)',
             self::Text => 'Mətn',
             self::Textarea => 'Uzun mətn',
+            self::Size => 'Ölçü (uzunluq × en)',
         });
     }
 

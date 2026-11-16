@@ -44,6 +44,11 @@ class Product extends Model
         'features' => 'array',
         'frequently_bought_together' => 'array',
         'accessories' => 'array',
+        // Category product card (docs/product-cards.md).
+        'is_unbranded' => 'boolean',
+        'quote_only' => 'boolean',
+        'sale_factor' => 'decimal:6',
+        'lead_time_days' => 'integer',
     ];
 
     public function user(): BelongsTo
@@ -154,7 +159,44 @@ class Product extends Model
      */
     public function isOrderable(): bool
     {
-        return (bool) $this->is_approved && (bool) $this->is_visible;
+        return (bool) $this->is_approved && (bool) $this->is_visible
+            && ! $this->quote_only && $this->availability !== self::UNAVAILABLE;
+    }
+
+    public const IN_STOCK = 'in_stock';
+
+    public const ON_ORDER = 'on_order';
+
+    public const UNAVAILABLE = 'unavailable';
+
+    public const AVAILABILITIES = [self::IN_STOCK, self::ON_ORDER, self::UNAVAILABLE];
+
+    /**
+     * What one unit in the cart costs. The price is kept the way the seller typed it
+     * (AZN/m² for flooring); a card class sells whole packs, running metres of a roll
+     * or whole boards, and sale_factor is how much of the priced unit one of those is.
+     */
+    public function salePrice(?float $price = null): float
+    {
+        $price ??= (float) $this->price;
+        $factor = $this->sale_factor !== null ? (float) $this->sale_factor : 1.0;
+
+        return round($price * $factor, 2);
+    }
+
+    /** Unit key of what the cart counts: the sold unit for card products, else the price unit. */
+    public function saleUnit(): ?string
+    {
+        return $this->sale_unit ?: $this->unit;
+    }
+
+    /**
+     * Made to order: stock does not cap the quantity — the seller ships after
+     * lead_time_days instead.
+     */
+    public function isMadeToOrder(): bool
+    {
+        return $this->availability === self::ON_ORDER;
     }
 
     /**

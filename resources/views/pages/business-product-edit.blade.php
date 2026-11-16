@@ -119,39 +119,17 @@
         data-l-image-required="{{ $tOr('business-product-edit.save.error_image', 'Ən azı 1 şəkil əlavə edin') }}"
         class="flex flex-col gap-5">
 
-    {{-- Images --}}
-    <x-cabinet.card gap="gap-4" :title="t('business-product-edit.images.title')" :desc="t('business-product-edit.images.desc')">
-      <span data-lam-publish-badge="images" hidden class="{{ $badgeCls }} self-start"></span>
-      <div class="flex flex-wrap gap-3" id="imageSlots">
-        @if ($isEdit)
-          @foreach ($product->images as $img)
-            <div class="image-slot group relative h-[150px] w-[200px] overflow-hidden rounded border border-black/15" data-existing-id="{{ $img->id }}">
-              <img src="{{ storage_url($img->path) }}" alt="" class="size-full object-cover">
-              <button type="button" data-remove-image
-                      class="absolute right-2 top-2 hidden size-7 items-center justify-center rounded-full bg-black/60 text-white group-hover:flex">✕</button>
-            </div>
-          @endforeach
-        @endif
-        <label class="flex h-[150px] w-[200px] cursor-pointer flex-col items-center justify-center gap-2 rounded border border-dashed border-black/25 text-black/40 transition hover:border-black/50" id="addImageSlot">
-          <span class="text-xl">＋</span>
-          <span class="text-xs font-medium">{{ t('business-product-edit.images.add') }}</span>
-          <input type="file" accept="image/jpeg,image/png,image/webp" multiple class="hidden" id="imageInput">
-        </label>
-      </div>
-      <p data-err-for="images" hidden class="{{ $errCls }}"></p>
-    </x-cabinet.card>
+    {{-- Order follows the client's product card: first WHERE the product belongs (the
+         class decides which fields follow), then what it is (name, brand, origin,
+         collection, article), its photos, the class parameters, and last price and
+         stock. The card/row/field wrappers ship overflow-hidden from the cabinet shell;
+         the combobox dropdowns are absolutely positioned, so the wrappers around them
+         get overflow-visible! or the lists would be clipped. --}}
 
-    {{-- Basic info. The card/row/field wrappers ship overflow-hidden from the cabinet
-         shell; the combobox dropdowns are absolutely positioned, so these three
-         wrappers get overflow-visible! or the lists would be clipped. --}}
-    <x-cabinet.card gap="gap-4" :title="t('business-product-edit.basic.title')" class="overflow-visible!">
-      <x-cabinet.field full :label="t('business-product-edit.basic.name') . ' *'" for="pName">
-        <x-ui.input variant="b2b" id="pName" name="name" :value="$isEdit ? $product->name : ''" :placeholder="t('business-product-edit.basic.name_placeholder')" required />
-      </x-cabinet.field>
-
-      {{-- Classifier cascade level 1+2: Bölmə (root section) → Qrup (child group).
-           The GROUP id is what products.category_id stores; the section id rides
-           along so the backend can verify the chain. --}}
+    {{-- 1. Category: Bölmə → Qrup → Məhsul sinfi. The GROUP id is what
+         products.category_id stores; the section id rides along so the backend can
+         verify the chain. --}}
+    <x-cabinet.card gap="gap-4" :title="$tOr('product-card.section.category', 'Kateqoriya')" class="overflow-visible!">
       <div class="cab-field-row overflow-visible!">
         <x-cabinet.field class="overflow-visible!" :label="$tOr('product-form-attrs.cascade.section', 'Bölmə') . ' *'" for="pSection">
           <div class="relative w-full" data-combo="section"
@@ -179,23 +157,32 @@
         </x-cabinet.field>
       </div>
 
-      {{-- Cascade level 3 (Sinif = product class) + brand. The class row half is
-           shown by JS as soon as the chosen group actually has active classes. --}}
+      {{-- Cascade level 3 (Sinif = product class), shown by JS as soon as the chosen
+           group actually has active classes. --}}
       @php $showSubRow = $isEdit && ($product->sub_category_id || $comboData['classes']->where('group_id', $product->category_id)->isNotEmpty()); @endphp
+      <x-cabinet.field full class="overflow-visible!" :label="$tOr('product-form-attrs.cascade.class', 'Məhsul sinfi')" for="pSubCategory"
+                       id="subCatRow" :style="$showSubRow ? '' : 'display:none'">
+        <div class="relative w-full" data-combo="subcategory"
+             data-l-empty="{{ $tOr('business-product-edit.combo.empty', 'Nəticə tapılmadı') }}">
+          <input type="text" id="pSubCategory" data-combo-input autocomplete="off" role="combobox" aria-expanded="false"
+                 value="{{ $isEdit ? $product->subCategory?->name : '' }}"
+                 placeholder="{{ t('business-product-edit.basic.select') }}"
+                 class="{{ $comboInputCls }}">
+          <input type="hidden" name="sub_category_id" data-combo-id value="{{ $isEdit ? $product->sub_category_id : '' }}">
+          <span class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-black/40">▾</span>
+          <ul data-combo-list class="{{ $comboListCls }}"></ul>
+        </div>
+        <p class="text-[13px] leading-[1.45] text-black/50">{{ $tOr('product-card.class_hint', 'Sinfi seçdikdən sonra ona aid parametrlər aşağıda açılır.') }}</p>
+      </x-cabinet.field>
+    </x-cabinet.card>
+
+    {{-- 2. What the product is: name, brand, country of manufacture, collection, article. --}}
+    <x-cabinet.card gap="gap-4" :title="t('business-product-edit.basic.title')" class="overflow-visible!">
+      <x-cabinet.field full :label="t('business-product-edit.basic.name') . ' *'" for="pName">
+        <x-ui.input variant="b2b" id="pName" name="name" :value="$isEdit ? $product->name : ''" :placeholder="t('business-product-edit.basic.name_placeholder')" required />
+      </x-cabinet.field>
+
       <div class="cab-field-row overflow-visible!">
-        <x-cabinet.field class="overflow-visible!" :label="$tOr('product-form-attrs.cascade.class', 'Məhsul sinfi')" for="pSubCategory"
-                         id="subCatRow" :style="$showSubRow ? '' : 'display:none'">
-          <div class="relative w-full" data-combo="subcategory"
-               data-l-empty="{{ $tOr('business-product-edit.combo.empty', 'Nəticə tapılmadı') }}">
-            <input type="text" id="pSubCategory" data-combo-input autocomplete="off" role="combobox" aria-expanded="false"
-                   value="{{ $isEdit ? $product->subCategory?->name : '' }}"
-                   placeholder="{{ t('business-product-edit.basic.select') }}"
-                   class="{{ $comboInputCls }}">
-            <input type="hidden" name="sub_category_id" data-combo-id value="{{ $isEdit ? $product->sub_category_id : '' }}">
-            <span class="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-xs text-black/40">▾</span>
-            <ul data-combo-list class="{{ $comboListCls }}"></ul>
-          </div>
-        </x-cabinet.field>
         <x-cabinet.field class="overflow-visible!" :label="t('business-product-edit.basic.brand')" for="pBrand">
           <x-slot:badge><span data-lam-publish-badge="brand_id" hidden class="{{ $badgeCls }}"></span></x-slot:badge>
           <div class="relative w-full" data-combo="brand"
@@ -211,12 +198,35 @@
             <ul data-combo-list class="{{ $comboListCls }}"></ul>
           </div>
           <p class="text-[13px] leading-[1.45] text-black/50">{{ $tOr('business-product-edit.basic.brand_hint', 'Siyahıda yoxdursa, brendin adını yazın — yeni brend kimi əlavə olunacaq.') }}</p>
+          {{-- Category card: a product may honestly have no brand. --}}
+          <label data-card-only hidden class="inline-flex cursor-pointer items-center gap-2 text-[13px] text-ink">
+            <input type="checkbox" name="is_unbranded" value="1" id="pUnbranded" @checked($isEdit && $product->is_unbranded) class="size-4 accent-ink">
+            {{ $tOr('product-card.unbranded', 'Brendsiz') }}
+          </label>
           <p id="brandPendingNote" hidden class="text-[13px] leading-[1.45] text-warn"></p>
           <p data-err-for="brand_id new_brand" hidden class="{{ $errCls }}"></p>
+        </x-cabinet.field>
+        {{-- Category card: every card asks where the product is made. --}}
+        <x-cabinet.field data-card-only hidden :label="$tOr('product-card.country', 'İstehsal ölkəsi') . ' *'" for="pOriginCountry">
+          <select id="pOriginCountry" name="origin_country"
+                  class="h-[43px] w-full rounded border border-black/15 bg-white px-3.5 text-sm text-ink outline-none transition focus:border-black/40">
+            <option value="">{{ t('register.form.select_placeholder') }}</option>
+            @foreach ($countries ?? [] as $code => $countryName)
+              <option value="{{ $code }}" @selected($isEdit && $product->origin_country === $code)>{{ $countryName }}</option>
+            @endforeach
+          </select>
+          <p class="text-[13px] leading-[1.45] text-black/50">{{ $tOr('product-card.country_hint', 'Məhsulun faktiki istehsal olunduğu ölkə; brendin qeydiyyat ölkəsi deyil.') }}</p>
+          <p data-err-for="origin_country" hidden class="{{ $errCls }}"></p>
         </x-cabinet.field>
       </div>
 
       <div class="cab-field-row">
+        {{-- Category card: the brand's collection (suggestions from the brand). --}}
+        <x-cabinet.field data-card-only hidden :label="$tOr('product-card.collection', 'Kolleksiya')" for="pCollection">
+          <x-ui.input variant="b2b" id="pCollection" name="collection" maxlength="120" list="pCollectionList"
+                      :value="$isEdit ? $product->collection : ''" :placeholder="$tOr('product-card.collection_placeholder', 'Məs.: Classic Oak')" />
+          <datalist id="pCollectionList" data-endpoint="{{ route('business.api.collections') }}"></datalist>
+        </x-cabinet.field>
         <x-cabinet.field :label="t('business-product-edit.basic.sku')" for="pSku">
           <x-ui.input variant="b2b" id="pSku" name="sku" :value="$isEdit ? $product->sku : ''" :placeholder="t('business-product-edit.basic.sku_placeholder')" />
         </x-cabinet.field>
@@ -226,6 +236,29 @@
       </div>
     </x-cabinet.card>
 
+    {{-- 3. Photos --}}
+    <x-cabinet.card gap="gap-4" :title="t('business-product-edit.images.title')" :desc="t('business-product-edit.images.desc')">
+      <span data-lam-publish-badge="images" hidden class="{{ $badgeCls }} self-start"></span>
+      <div class="flex flex-wrap gap-3" id="imageSlots">
+        @if ($isEdit)
+          @foreach ($product->images as $img)
+            <div class="image-slot group relative h-[150px] w-[200px] overflow-hidden rounded border border-black/15" data-existing-id="{{ $img->id }}">
+              <img src="{{ storage_url($img->path) }}" alt="" class="size-full object-cover">
+              <button type="button" data-remove-image
+                      class="absolute right-2 top-2 hidden size-7 items-center justify-center rounded-full bg-black/60 text-white group-hover:flex">✕</button>
+            </div>
+          @endforeach
+        @endif
+        <label class="flex h-[150px] w-[200px] cursor-pointer flex-col items-center justify-center gap-2 rounded border border-dashed border-black/25 text-black/40 transition hover:border-black/50" id="addImageSlot">
+          <span class="text-xl">＋</span>
+          <span class="text-xs font-medium">{{ t('business-product-edit.images.add') }}</span>
+          <input type="file" accept="image/jpeg,image/png,image/webp" multiple class="hidden" id="imageInput">
+        </label>
+      </div>
+      <p data-err-for="images" hidden class="{{ $errCls }}"></p>
+    </x-cabinet.card>
+
+    {{-- 4. The class parameters --}}
     {{-- ONE place for everything a seller can say about the product, in three layers:
          1. the class's own fields (loaded from the class-definition endpoint; only
             required basic ones up front, the rest behind "Daha ətraflı doldur"),
@@ -252,6 +285,16 @@
       <div id="laminateBlock" hidden class="w-full"
            data-lookup="{{ route('business.api.laminate.lookup') }}"></div>
 
+      {{-- Category card (docs/product-cards.md): rendered by business-product-card.js
+           from the class form's `card` schema; empty for classes without one. --}}
+      <div id="cardBlock" hidden class="flex w-full flex-col gap-4"
+           data-l-select="{{ $tOr('product-form-attrs.field.select', 'Seçin') }}"
+           data-l-length="{{ $tOr('product-card.form.length', 'Uzunluq') }}"
+           data-l-length-min="{{ $tOr('product-card.form.length_min', 'Min. uzunluq') }}"
+           data-l-length-max="{{ $tOr('product-card.form.length_max', 'Maks. uzunluq') }}"
+           data-l-width="{{ $tOr('product-card.form.width', 'En') }}"
+           data-l-required="{{ $tOr('product-card.required', '«:name» doldurulmalıdır') }}"></div>
+
       <div id="attrBasic" class="flex w-full flex-col gap-4"></div>
 
       <button type="button" id="attrProToggle" style="display:none"
@@ -270,7 +313,7 @@
            `data-generic-match` lists the words a class field must contain for this
            one to step aside and `data-generic-except` the look-alikes that must not
            count — see syncGenericFields() in the page module. --}}
-      <div id="genericAttrs" data-laminate-hide="dimensions material color country" class="flex w-full flex-col gap-4 border-t border-black/10 pt-4">
+      <div id="genericAttrs" data-card-hide data-laminate-hide="dimensions material color country" class="flex w-full flex-col gap-4 border-t border-black/10 pt-4">
         <p class="text-[13px] leading-[1.45] text-black/50">{{ $tOr('product-form-attrs.generic.desc', 'Ümumi xüsusiyyətlər. Seçdiyiniz sinif eyni sahəni özü soruşursa, buradakı təkrar sahə gizlənir.') }}</p>
         <div class="grid w-full grid-cols-2 items-start gap-4 max-[640px]:grid-cols-1">
           <div data-generic-field data-generic-match="ölçü|qabarit" data-generic-except="göz ölçüsü|çip ölçüsü|yataq yerinin ölçüsü">
@@ -298,7 +341,7 @@
 
       {{-- Layer 3: free-form rows. Saved into the same `specifications` JSON the
            admin KeyValue field edits, so both surfaces stay in sync. --}}
-      <div data-laminate-hide="free_attributes" class="flex w-full flex-col items-start gap-2 border-t border-black/10 pt-4">
+      <div data-card-hide data-laminate-hide="free_attributes" class="flex w-full flex-col items-start gap-2 border-t border-black/10 pt-4">
         <p class="ui-label-b2b">{{ $tOr('business-product-edit.attributes.title', 'Siyahıda olmayan xüsusiyyət') }}</p>
         <p class="text-[13px] leading-[1.45] text-black/50">{{ $tOr('business-product-edit.attributes.desc', 'Yuxarıdakı sahələrdə olmayan nəyisə yazmaq istəyirsinizsə — məsələn: Çəki → 5 kq.') }}</p>
         <div id="attrRows" class="flex w-full flex-col gap-3"
@@ -327,20 +370,57 @@
 
     <script type="application/json" id="attrInitial">@json(['values' => $attrInitial, 'applications' => $appInitial])</script>
     <script type="application/json" id="laminateInitial">@json($laminateInitial)</script>
+    <script type="application/json" id="cardInitial">@json($cardInitial ?? null)</script>
 
     {{-- Pricing & stock --}}
     <x-cabinet.card gap="gap-4" :title="t('business-product-edit.pricing.title')">
-      <div class="cab-field-row">
-        <x-cabinet.field :label="t('business-product-edit.pricing.price') . ' *'" for="pPrice">
-          <x-ui.input variant="b2b" id="pPrice" name="price" type="number" step="0.01" min="0" :value="$isEdit ? $product->price : ''" placeholder="23.90" required />
-        </x-cabinet.field>
-        <x-cabinet.field :label="t('business-product-edit.pricing.old_price')" for="pOldPrice">
-          <x-ui.input variant="b2b" id="pOldPrice" name="old_price" type="number" step="0.01" min="0" :value="$isEdit ? $product->old_price : ''" :placeholder="t('business-product-edit.pricing.old_price_placeholder')" />
+      {{-- Category card: a custom-size stone has no automatic price (filled by JS). --}}
+      <p id="cardQuoteNote" hidden class="rounded border border-black/10 bg-gray-soft2 px-4 py-3 text-[13px] leading-[1.45] text-black/70">{{ $tOr('product-card.quote_note', 'Fərdi ölçüdə qiymət avtomatik göstərilmir: alıcı «Hesablama tələb et» ilə sorğu göndərir, ölçülər və məbləğ razılaşdırılır.') }}</p>
+
+      {{-- Category card, board classes: the one basis the price is given in. --}}
+      <div class="cab-field-row" data-card-sale="board" hidden>
+        <x-cabinet.field :label="$tOr('product-card.price_basis', 'Qiymət bazası') . ' *'" for="pPriceBasis">
+          <select id="pPriceBasis" name="price_basis"
+                  class="h-[43px] w-full rounded border border-black/15 bg-white px-3.5 text-sm text-ink outline-none transition focus:border-black/40">
+            <option value="">{{ t('register.form.select_placeholder') }}</option>
+            @foreach (['piece' => 'AZN/ədəd', 'lm' => 'AZN/poqon metr', 'm2' => 'AZN/m²'] as $basis => $basisLabel)
+              <option value="{{ $basis }}" @selected($isEdit && $product->sale_unit === 'piece' && $product->unit === $basis)>{{ $tOr('product-card.basis.'.$basis, $basisLabel) }}</option>
+            @endforeach
+          </select>
+          <p class="text-[13px] leading-[1.45] text-black/50">{{ $tOr('product-card.price_basis_hint', 'Qiyməti yalnız bir bazada yazın — digərləri taxtanın ölçüsündən hesablanır. Satış bütöv taxta ilədir.') }}</p>
+          <p data-err-for="price_basis" hidden class="{{ $errCls }}"></p>
         </x-cabinet.field>
       </div>
 
+      <div class="cab-field-row" id="priceRow">
+        <x-cabinet.field :label="t('business-product-edit.pricing.price') . ' *'" for="pPrice">
+          <x-ui.input variant="b2b" id="pPrice" name="price" type="number" step="0.01" min="0" :value="$isEdit && ! $product->quote_only ? $product->price : ''" placeholder="23.90" required />
+          <p id="cardPriceHint" data-card-only hidden class="text-[13px] leading-[1.45] text-black/50"
+             data-l-area="{{ $tOr('product-card.price_hint_area', 'AZN/m². Satış tam qablaşdırma ilədir — qablaşdırmanın qiyməti sahədən hesablanır.') }}"
+             data-l-roll="{{ $tOr('product-card.price_hint_roll', 'AZN/m². Rulondan fasiləsiz kəsilir.') }}"
+             data-l-board="{{ $tOr('product-card.price_hint_board', 'Seçilmiş qiymət bazasında.') }}"></p>
+          <p data-err-for="price" hidden class="{{ $errCls }}"></p>
+        </x-cabinet.field>
+        <x-cabinet.field :label="t('business-product-edit.pricing.old_price')" for="pOldPrice">
+          <x-ui.input variant="b2b" id="pOldPrice" name="old_price" type="number" step="0.01" min="0" :value="$isEdit ? $product->old_price : ''" :placeholder="t('business-product-edit.pricing.old_price_placeholder')" />
+          <p data-card-only hidden class="text-[13px] leading-[1.45] text-black/50">{{ $tOr('product-card.old_price_hint', 'Yalnız endirim varsa; cari qiymətlə eyni vahiddə və ondan böyük.') }}</p>
+          <p data-err-for="old_price" hidden class="{{ $errCls }}"></p>
+        </x-cabinet.field>
+      </div>
+
+      {{-- Stock: for a category card the availability decides what follows — the
+           stock count when in stock, the lead time when made to order, nothing when
+           unavailable; every other class keeps the unit + stock pair. --}}
       <div class="cab-field-row">
-        <x-cabinet.field :label="t('business-product-edit.pricing.unit') . ' *'" for="pUnit">
+        <x-cabinet.field data-card-only hidden :label="$tOr('product-card.availability', 'Mövcudluq') . ' *'" for="pAvailability">
+          <select id="pAvailability" name="availability"
+                  class="h-[43px] w-full rounded border border-black/15 bg-white px-3.5 text-sm text-ink outline-none transition focus:border-black/40">
+            @foreach (['in_stock' => 'Stokda', 'on_order' => 'Sifarişlə', 'unavailable' => 'Mövcud deyil'] as $av => $avLabel)
+              <option value="{{ $av }}" @selected(($isEdit ? $product->availability : 'in_stock') === $av)>{{ $tOr('product-card.availability_'.$av, $avLabel) }}</option>
+            @endforeach
+          </select>
+        </x-cabinet.field>
+        <x-cabinet.field data-card-hide :label="t('business-product-edit.pricing.unit') . ' *'" for="pUnit">
           {{-- The empty first option is load-bearing. Without it the browser
                pre-selects whichever unit happens to sort first ("Kq"), so a
                seller who never touches this field silently publishes parquet
@@ -356,10 +436,23 @@
           </select>
           <p data-err-for="unit" hidden class="{{ $errCls }} mt-1.5"></p>
         </x-cabinet.field>
-        <x-cabinet.field :label="t('business-product-edit.pricing.stock') . ' *'" for="pStock">
+        <x-cabinet.field :label="t('business-product-edit.pricing.stock') . ' *'" for="pStock" id="stockField">
           <x-ui.input variant="b2b" id="pStock" name="stock" type="number" min="0" :value="$isEdit ? $product->stock : ''" placeholder="148" required />
+          <p id="cardStockHint" data-card-only hidden class="text-[13px] leading-[1.45] text-black/50"
+             data-l-pack="{{ $tOr('product-card.stock_hint_pack', 'Tam qablaşdırma (və ya satılan vahid) sayı. m² qarşılığı avtomatik hesablanır.') }}"
+             data-l-roll="{{ $tOr('product-card.stock_hint_roll', 'Mövcud fasiləsiz uzunluq, metr.') }}"
+             data-l-board="{{ $tOr('product-card.stock_hint_board', 'Bütöv taxta sayı.') }}"></p>
+          <p data-err-for="stock" hidden class="{{ $errCls }}"></p>
+        </x-cabinet.field>
+        <x-cabinet.field data-card-only hidden :label="$tOr('product-card.lead_time', 'Hazırlanma müddəti, gün')" for="pLeadTime" id="leadTimeField">
+          <x-ui.input variant="b2b" id="pLeadTime" name="lead_time_days" type="number" min="1" max="365"
+                      :value="$isEdit ? $product->lead_time_days : ''" placeholder="7" />
+          <p class="text-[13px] leading-[1.45] text-black/50">{{ $tOr('product-card.lead_time_hint', 'Göndərişə hazırlıq müddəti, daşınma vaxtı deyil.') }}</p>
+          <p data-err-for="lead_time_days" hidden class="{{ $errCls }}"></p>
         </x-cabinet.field>
       </div>
+
+      <p class="border-t border-black/10 pt-4 text-[13px] font-semibold text-black/55">{{ $tOr('product-card.section.logistics', 'Sifariş və logistika — məcburi deyil') }}</p>
 
       <div class="cab-field-row">
         <x-cabinet.field :label="t('business-product-edit.pricing.min_order')" for="pMinOrder">
@@ -374,7 +467,7 @@
            what lets the renovation calculator quote "21 paket" instead of "44.94 m²"
            and count a delivery trip — a product without them still sells, its estimate
            line simply stays at the required quantity. --}}
-      <div class="cab-field-row" data-laminate-hide="package">
+      <div class="cab-field-row" data-card-hide data-laminate-hide="package">
         <x-cabinet.field :label="$tOr('business-product-edit.pricing.package_size', 'Bir paketdəki miqdar')" for="pPackageSize">
           <x-ui.input variant="b2b" id="pPackageSize" name="package_size" type="number" step="0.0001" min="0"
                       :value="$isEdit ? $product->package_size : ''" placeholder="2.22" />
@@ -414,6 +507,10 @@
     </x-cabinet.card>
 
     <script type="application/json" id="comboData">@json($comboData)</script>
+
+    {{-- Category card: what still blocks publishing (after a draft save). --}}
+    <div id="cardMissing" hidden class="rounded border border-warn/40 bg-warn-soft px-5 py-4 text-sm text-ink"
+         data-l-title="{{ $tOr('product-card.missing_title', 'Dərc etmək üçün bunlar doldurulmalıdır:') }}"></div>
 
     {{-- Laminate: what still blocks publishing (filled by the laminate module). --}}
     <div id="laminateMissing" hidden class="rounded border border-warn/40 bg-warn-soft px-5 py-4 text-sm text-ink"></div>

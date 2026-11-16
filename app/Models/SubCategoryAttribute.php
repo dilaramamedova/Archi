@@ -15,5 +15,9 @@ class SubCategoryAttribute extends Pivot
         'is_required' => 'boolean',
         'is_filterable' => 'boolean',
         'filter_priority' => FilterPriority::class,
+        'hint' => 'array',
+        'presets' => 'array',
+        'visible_when' => 'array',
+        'rules' => 'array',
     ];
 }

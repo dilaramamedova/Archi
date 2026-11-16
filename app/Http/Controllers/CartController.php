@@ -117,13 +117,19 @@ class CartController extends Controller
             ->map(fn (CartItem $item) => [
                 'id' => $item->product->id,
                 'name' => $item->product->name,
-                'price' => (float) $item->product->price,
-                'unit' => $item->product->unit,
+                // One cart unit: a pack / running metre / board for category-card products.
+                'price' => $item->product->salePrice(),
+                'unit' => $item->product->saleUnit(),
+                // The renovation calculator bills by the catalogue unit (m²) and the
+                // pack size, not by the cart unit.
+                'basePrice' => (float) $item->product->price,
+                'baseUnit' => $item->product->unit,
                 'image' => $item->product->mainImageUrl,
                 'packageSize' => $item->product->package_size ? (float) $item->product->package_size : null,
                 'quantity' => max(1, (int) $item->quantity),
                 // The cart page caps its +/- stepper with this; the calculator ignores it.
-                'stock' => (int) $item->product->stock,
+                // Made to order: stock does not cap the quantity.
+                'stock' => $item->product->isMadeToOrder() ? 9999 : (int) $item->product->stock,
                 'cat' => (string) ($item->product->category?->name ?? ''),
             ])
             ->values();

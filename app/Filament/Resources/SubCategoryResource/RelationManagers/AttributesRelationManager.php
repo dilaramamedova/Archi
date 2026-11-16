@@ -50,6 +50,23 @@ final class AttributesRelationManager extends RelationManager
                 ->label('Sıra')
                 ->numeric()
                 ->default(0),
+
+            // Category card (docs/product-cards.md). Conditions and rules come from
+            // the card file (product-cards:import); here only what an admin tunes.
+            Forms\Components\TagsInput::make('presets')
+                ->label('Seçim siyahısı (kart)')
+                ->helperText('Doldurulubsa, sahə siyahıdan seçilir və başqa dəyər qəbul olunmur: rəqəm (məs. 8) və ya ölçü (məs. 600×600).'),
+
+            Forms\Components\Select::make('maps_to')
+                ->label('Məhsul sahəsinə yazılır (kart)')
+                ->options([
+                    'package_size' => 'Paketin / satılan vahidin sahəsi (m²)',
+                    'package_unit' => 'Satış vahidi',
+                    'roll_width' => 'Rulonun eni (m)',
+                    'length_mm' => 'Taxtanın uzunluğu (mm)',
+                    'width_mm' => 'Taxtanın eni (mm)',
+                ])
+                ->nullable(),
         ];
     }
 

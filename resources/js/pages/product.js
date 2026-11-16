@@ -92,7 +92,11 @@ function initAddToCart() {
       const name = (document.querySelector('.pd-info h1') || {}).textContent || '';
       const cat = (document.querySelector('.pd-info .cat') || {}).textContent || '';
       const now = (document.querySelector('.pd-price .now') || {}).textContent || '0';
-      const price = parseFloat(now.replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+      // A category-card product is bought by the pack / running metre / board: the
+      // server hands the price of one such unit, the headline shows the m² price.
+      const price = d.cartPrice !== undefined
+        ? (+d.cartPrice || 0)
+        : (parseFloat(now.replace(/[^\d.,]/g, '').replace(',', '.')) || 0);
       const qtyInput = document.getElementById('qtyVal');
       const qty = qtyInput ? Math.max(1, +qtyInput.value || 1) : 1;
       const id = +d.productId || null;
@@ -431,8 +435,37 @@ function initReveal() {
   document.querySelectorAll('.reveal').forEach((el) => io.observe(el));
 }
 
+// «Hesablama tələb et» (category card, custom size): a consultation request that
+// names the product — same endpoint as the home page lead form.
+function initQuoteForm() {
+  const form = document.getElementById('pdQuoteForm');
+  if (!form) return;
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const submit = form.querySelector('[type="submit"]');
+    submit.disabled = true;
+    try {
+      const response = await fetch(form.action, { method: 'POST', headers: { Accept: 'application/json' }, body: new FormData(form) });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok) {
+        popup.success(data.message);
+        form.reset();
+      } else {
+        const errors = Object.values(data.errors || {}).flat().join(' ');
+        popup.error(errors || data.message || form.dataset.lError || document.body.dataset.errGeneric);
+      }
+    } catch {
+      popup.error(form.dataset.lError || document.body.dataset.errGeneric);
+    } finally {
+      submit.disabled = false;
+    }
+  });
+}
+
 export default function init() {
   initGallery();
+  initQuoteForm();
   initQty();
   initAddToCart();
   initWish();

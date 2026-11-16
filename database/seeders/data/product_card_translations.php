@@ -1,0 +1,89 @@
+<?php
+
+/*
+ * Copy of the category product cards (docs/product-cards.md): the seller form, the
+ * validation messages (App\Services\ProductCard\CardText) and the product page.
+ * Upserted by migration 2026_11_16_100100 and by TranslationsSeeder.
+ */
+
+$r = fn (string $az, string $ru, string $en): array => compact('az', 'ru', 'en');
+
+return [
+    'business-product-edit' => [
+        'pricing.units.pallet' => $r('Palet', 'Паллета', 'Pallet'),
+    ],
+
+    'product-card' => [
+        // Seller form
+        'unbranded' => $r('Brendsiz', 'Без бренда', 'Unbranded'),
+        'country' => $r('İstehsal ölkəsi', 'Страна производства', 'Country of manufacture'),
+        'country_hint' => $r('Məhsulun faktiki istehsal olunduğu ölkə; brendin qeydiyyat ölkəsi deyil.', 'Страна, где товар фактически произведён, а не страна регистрации бренда.', 'Where the product is actually made, not where the brand is registered.'),
+        'collection' => $r('Kolleksiya', 'Коллекция', 'Collection'),
+        'collection_placeholder' => $r('Məs.: Classic Oak', 'Напр.: Classic Oak', 'E.g. Classic Oak'),
+        'collection_hint' => $r('Brendin kolleksiyası; məcburi deyil.', 'Коллекция бренда; необязательно.', 'The brand collection; optional.'),
+        'form.length' => $r('Uzunluq', 'Длина', 'Length'),
+        'form.length_min' => $r('Min. uzunluq', 'Мин. длина', 'Min. length'),
+        'form.length_max' => $r('Maks. uzunluq', 'Макс. длина', 'Max. length'),
+        'form.width' => $r('En', 'Ширина', 'Width'),
+        'section.category' => $r('Kateqoriya', 'Категория', 'Category'),
+        'section.logistics' => $r('Sifariş və logistika — məcburi deyil', 'Заказ и логистика — необязательно', 'Ordering and logistics — optional'),
+        'class_hint' => $r('Sinfi seçdikdən sonra ona aid parametrlər aşağıda açılır.', 'После выбора класса ниже откроются его параметры.', 'Once you pick the class, its parameters open below.'),
+        'quote_note' => $r('Fərdi ölçüdə qiymət avtomatik göstərilmir: alıcı «Hesablama tələb et» ilə sorğu göndərir, ölçülər və məbləğ razılaşdırılır.', 'Для индивидуального размера цена не показывается: покупатель отправляет запрос «Запросить расчёт», размеры и сумма согласовываются.', 'Custom sizes show no automatic price: the buyer sends a «Request a quote» and the size and amount are agreed.'),
+        'price_basis' => $r('Qiymət bazası', 'База цены', 'Price basis'),
+        'price_basis_hint' => $r('Qiyməti yalnız bir bazada yazın — digərləri taxtanın ölçüsündən hesablanır. Satış bütöv taxta ilədir.', 'Укажите цену только в одной базе — остальные рассчитываются по размеру доски. Продаётся целыми досками.', 'Give the price in one basis only — the others follow from the board size. Sold as whole boards.'),
+        'basis.piece' => $r('AZN/ədəd', 'AZN/шт.', 'AZN/piece'),
+        'basis.lm' => $r('AZN/poqon metr', 'AZN/пог. м', 'AZN/linear metre'),
+        'basis.m2' => $r('AZN/m²', 'AZN/м²', 'AZN/m²'),
+        'price_hint_area' => $r('AZN/m². Satış tam qablaşdırma ilədir — qablaşdırmanın qiyməti sahədən hesablanır.', 'AZN/м². Продажа целыми упаковками — цена упаковки считается по площади.', 'AZN/m². Sold in full packs — the pack price follows from its area.'),
+        'price_hint_roll' => $r('AZN/m². Rulondan fasiləsiz kəsilir.', 'AZN/м². Отрезается от рулона без разрыва.', 'AZN/m². Cut from the roll in one piece.'),
+        'price_hint_board' => $r('Seçilmiş qiymət bazasında.', 'В выбранной базе цены.', 'In the chosen price basis.'),
+        'old_price_hint' => $r('Yalnız endirim varsa; cari qiymətlə eyni vahiddə və ondan böyük.', 'Только при скидке; в той же единице и больше текущей цены.', 'Only with a discount; same unit as, and higher than, the current price.'),
+        'availability' => $r('Mövcudluq', 'Наличие', 'Availability'),
+        'availability_in_stock' => $r('Stokda', 'В наличии', 'In stock'),
+        'availability_on_order' => $r('Sifarişlə', 'Под заказ', 'Made to order'),
+        'availability_unavailable' => $r('Mövcud deyil', 'Нет в наличии', 'Unavailable'),
+        'lead_time' => $r('Hazırlanma müddəti, gün', 'Срок подготовки, дней', 'Lead time, days'),
+        'lead_time_hint' => $r('Göndərişə hazırlıq müddəti, daşınma vaxtı deyil.', 'Срок подготовки к отправке, не время доставки.', 'Time to get it ready to ship, not the delivery time.'),
+        'stock_hint_pack' => $r('Tam qablaşdırma (və ya satılan vahid) sayı. m² qarşılığı avtomatik hesablanır.', 'Количество целых упаковок (или единиц продажи). Площадь в м² считается автоматически.', 'Number of full packs (or sold units). The m² equivalent is calculated.'),
+        'stock_hint_roll' => $r('Mövcud fasiləsiz uzunluq, metr.', 'Доступная длина без разрыва, м.', 'Available continuous length, metres.'),
+        'stock_hint_board' => $r('Bütöv taxta sayı.', 'Количество целых досок.', 'Number of whole boards.'),
+        'missing_title' => $r('Dərc etmək üçün bunlar doldurulmalıdır:', 'Для публикации нужно заполнить:', 'To publish, fill in:'),
+
+        // Validation (App\Services\ProductCard\CardInput / CardProduct)
+        'required' => $r('«:name» doldurulmalıdır', 'Заполните «:name»', '«:name» is required'),
+        'invalid_option' => $r(':name üçün yanlış seçim', 'Неверный выбор для «:name»', 'Invalid choice for :name'),
+        'exclusive' => $r(':name: «Göstərilməyib» başqa seçimlə birlikdə seçilə bilməz', '«:name»: «Не указано» нельзя выбрать вместе с другим вариантом', ':name: «Not specified» cannot be combined with another choice'),
+        'only' => $r(':name: bu kateqoriyada yalnız «:allowed» cavabı olan məhsullar yerləşdirilir', '«:name»: в этой категории размещаются только товары с ответом «:allowed»', ':name: only products answering «:allowed» are listed in this category'),
+        'text_required' => $r(':name: «:option» seçilibsə, :prompt', '«:name»: при выборе «:option» — :prompt', ':name: with «:option» chosen, :prompt'),
+        'text_long' => $r(':name çox uzundur', '«:name» слишком длинное', ':name is too long'),
+        'numeric' => $r(':name rəqəm olmalıdır', '«:name» должно быть числом', ':name must be a number'),
+        'not_in_list' => $r(':name: siyahıdakı dəyərlərdən birini seçin', '«:name»: выберите одно из значений списка', ':name: choose one of the listed values'),
+        'out_of_range' =>$r(':name üçün dəyər düzgün deyil', 'Неверное значение «:name»', 'Invalid value for :name'),
+        'size_incomplete' => $r(':name: uzunluq və en yazılmalıdır', '«:name»: укажите длину и ширину', ':name: enter the length and width'),
+        'size_mixed' => $r(':name: minimum uzunluq, maksimum uzunluq və en yazılmalıdır', '«:name»: укажите мин. длину, макс. длину и ширину', ':name: enter the min. length, max. length and width'),
+        'size_order' => $r(':name: maksimum uzunluq minimumdan kiçik ola bilməz', '«:name»: макс. длина не может быть меньше минимальной', ':name: the max. length cannot be below the min.'),
+        'size_square' => $r(':name: kvadrat formada uzunluq və en bərabər olmalıdır', '«:name»: у квадратной формы длина и ширина равны', ':name: a square shape has equal length and width'),
+        'less_than' => $r(':name «:other» dəyərindən kiçik olmalıdır', '«:name» должно быть меньше «:other»', ':name must be less than :other'),
+        'not_greater' => $r(':name «:other» dəyərindən böyük ola bilməz', '«:name» не может быть больше «:other»', ':name cannot exceed :other'),
+        'brand' => $r('Brend', 'Бренд', 'Brand'),
+        'brand_required' => $r('Brendi seçin, yazın və ya «Brendsiz» qeyd edin', 'Выберите или впишите бренд либо отметьте «Без бренда»', 'Pick or type a brand, or tick «Unbranded»'),
+        'country_required' => $r('İstehsal ölkəsini seçin', 'Выберите страну производства', 'Choose the country of manufacture'),
+        'country_invalid' => $r('İstehsal ölkəsi siyahıdan seçilməlidir', 'Страну нужно выбрать из списка', 'Choose the country from the list'),
+        'availability_required' => $r('Mövcudluğu seçin', 'Выберите наличие', 'Choose the availability'),
+        'basis_required' => $r('Qiymət bazasını seçin', 'Выберите базу цены', 'Choose the price basis'),
+        'price' => $r('Qiymət', 'Цена', 'Price'),
+        'price_required' => $r('Qiyməti yazın', 'Укажите цену', 'Enter the price'),
+        'old_price' => $r('Əvvəlki qiymət cari qiymətdən böyük olmalıdır', 'Прежняя цена должна быть выше текущей', 'The previous price must be higher than the current one'),
+        'lead_time_invalid' => $r('Hazırlanma müddəti 1–365 gün olmalıdır', 'Срок подготовки — от 1 до 365 дней', 'Lead time must be 1–365 days'),
+        'images' => $r('Şəkil', 'Фото', 'Photo'),
+
+        // Product page
+        'page.brand' => $r('Brend', 'Бренд', 'Brand'),
+        'page.sku' => $r('Artikul', 'Артикул', 'Article no.'),
+        'page.lead_time' => $r(':days gün ərzində hazır olur', 'Готово за :days дн.', 'Ready in :days days'),
+        'page.quote_title' => $r('Qiymət ölçülərə görə hesablanır', 'Цена рассчитывается по размерам', 'Priced to your dimensions'),
+        'page.quote_note' => $r('Sorğu göndərin — ölçülər, işlər və məbləğ sizinlə razılaşdırılır.', 'Отправьте запрос — размеры, работы и сумма согласуются с вами.', 'Send a request — sizes, work and the amount are agreed with you.'),
+        'page.quote_placeholder' => $r('Ölçülər, sahə, qeydlər', 'Размеры, площадь, примечания', 'Sizes, area, notes'),
+        'page.quote_button' => $r('Hesablama tələb et', 'Запросить расчёт', 'Request a quote'),
+    ],
+];

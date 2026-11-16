@@ -9,6 +9,7 @@ use App\Models\SpecialistProfile;
 use App\Models\Wishlist;
 use App\Services\Laminate\LaminateCatalog;
 use App\Services\Laminate\LaminatePresenter;
+use App\Services\ProductCard\CardPresenter;
 use App\Support\ProductViewCounter;
 use Illuminate\Support\Collection;
 
@@ -45,6 +46,9 @@ class ProductController extends Controller
             $product->loadMissing(['brand', 'laminateSpec']);
             $laminateCard = (new LaminatePresenter)->present($product);
         }
+
+        // Category card (docs/product-cards.md): its own rows, prices and stock.
+        $card = $laminateCard ? null : CardPresenter::present($product);
 
         ProductViewCounter::record($product->id);
 
@@ -90,7 +94,7 @@ class ProductController extends Controller
             ->take(4)
             ->get();
 
-        return view('pages.product', compact('product', 'related', 'specialists', 'fbtProducts', 'attributeSpecs', 'ratingCounts', 'isWished', 'laminateCard'));
+        return view('pages.product', compact('product', 'related', 'specialists', 'fbtProducts', 'attributeSpecs', 'ratingCounts', 'isWished', 'laminateCard', 'card'));
     }
 
     /**

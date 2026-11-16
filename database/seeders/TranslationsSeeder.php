@@ -41,6 +41,11 @@ class TranslationsSeeder extends Seeder
             $groups[$group] = array_merge($groups[$group] ?? [], $items);
         }
 
+        // Category product cards (docs/product-cards.md).
+        foreach (require database_path('seeders/data/product_card_translations.php') as $group => $items) {
+            $groups[$group] = array_merge($groups[$group] ?? [], $items);
+        }
+
         foreach ($groups as $group => $items) {
             foreach ($items as $key => $value) {
                 Translation::updateOrCreate(

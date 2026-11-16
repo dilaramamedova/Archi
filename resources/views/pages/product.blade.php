@@ -20,6 +20,21 @@
     $inStock = (int) $product->stock > 0;
     $unitLabel = $product->unit ? $tOr('business-product-edit.pricing.units.'.$product->unit, $product->unit) : '';
 
+    // Category card (docs/product-cards.md): price per m² (or the chosen basis) as
+    // the seller typed it, plus what one sold unit — a pack, a running metre of
+    // roll, a board — costs and covers. Availability replaces the bare stock count.
+    $card ??= null;
+    $sale = $card['sale'] ?? null;
+    $unitName = fn (?string $u) => $u ? mb_strtolower($tOr('business-product-edit.pricing.units.'.$u, $u)) : '';
+    $num = fn ($v, $d = 2) => rtrim(rtrim(number_format((float) $v, $d, ',', ' '), '0'), ',');
+    if ($sale) {
+        $inStock = $sale['availability'] === 'in_stock' && (int) $product->stock > 0;
+    }
+    $onOrder = $sale && $sale['availability'] === 'on_order';
+    $quote = $sale && $sale['quote'];
+    $canBuy = ! $sale || (! $quote && ($inStock || $onOrder));
+    $cartUnit = $sale && $sale['sold_unit'] ? $unitName($sale['sold_unit']) : $unitLabel;
+
     // Only the specs the seller actually filled in; rows without data are omitted.
     $specLabelKeys = [
         'dimensions' => 'product.specs.size_k',
@@ -119,6 +134,13 @@
         </div>
         @endif
 
+        @if ($quote)
+        {{-- Custom size: no automatic price — the buyer asks for an estimate. --}}
+        <div class="pd-quote">
+          <p class="pd-quote-t">{{ $tOr('product-card.page.quote_title', 'Qiymət ölçülərə görə hesablanır') }}</p>
+          <p class="pd-quote-d">{{ $tOr('product-card.page.quote_note', 'Sorğu göndərin — ölçülər, işlər və məbləğ sizinlə razılaşdırılır.') }}</p>
+        </div>
+        @else
         <div class="pd-price">
           <span class="now">{{ number_format($product->price, 2) }} ₼</span>
           @if ($product->old_price && $product->old_price > $product->price)
@@ -130,7 +152,15 @@
             <span class="off">-{{ round((1 - $product->price / $product->old_price) * 100) }}%</span>
           @endif
         </div>
-        @if ($unitLabel)<div class="pd-unit">{{ $unitLabel }}</div>@endif
+        @if ($unitLabel)<div class="pd-unit">{{ $sale ? '/ '.$unitName($product->unit) : $unitLabel }}</div>@endif
+        @if ($sale && $sale['sold_price'] !== null)
+          <div class="pd-price-alt">
+            1 {{ $unitName($sale['sold_unit']) }}@if ($sale['sold_area']) ({{ $num($sale['sold_area'], 4) }} m²)@endif:
+            <b>{{ number_format($sale['sold_price'], 2) }} ₼</b>
+            @if ($sale['sold_old_price'])<s class="ml-1 text-black/40">{{ number_format($sale['sold_old_price'], 2) }} ₼</s>@endif
+          </div>
+        @endif
+        @endif
         {{-- Laminate (TZ §5): the seller's price stays the main figure; the other
              unit is derived for display only. --}}
         @if ($laminateCard && $laminateCard['prices'])
@@ -169,15 +199,34 @@
         </div>
 
         {{-- Single source of truth for stock, built from the real quantity. --}}
-        <div class="pd-stock" data-in-stock="{{ $inStock ? 'true' : 'false' }}"><i></i>
-          @if ($inStock)
-            {{ t('common.badge_in_stock') }} — {{ number_format($product->stock) }}@if ($unitLabel) {{ $unitLabel }}@endif
+        <div class="pd-stock" data-in-stock="{{ ($inStock || $onOrder) ? 'true' : 'false' }}"><i></i>
+          @if ($sale && $onOrder)
+            {{ $tOr('product-card.availability_on_order', 'Sifarişlə') }}@if ($sale['lead_time_days']) — {{ str_replace(':days', $sale['lead_time_days'], $tOr('product-card.page.lead_time', ':days gün ərzində hazır olur')) }}@endif
+          @elseif ($sale && $sale['availability'] === 'unavailable')
+            {{ $tOr('product-card.availability_unavailable', 'Mövcud deyil') }}
+          @elseif ($inStock)
+            {{ t('common.badge_in_stock') }} — {{ number_format($product->stock) }}@if ($cartUnit) {{ $cartUnit }}@endif
+            @if ($sale && $sale['stock_area'])<span class="text-black/45">(≈ {{ $num($sale['stock_area']) }} m²)</span>@endif
           @else
             {{ t('product.info.out_of_stock') }}
           @endif
         </div>
 
-        <div class="pd-buy">
+        @if ($quote)
+          {{-- «Hesablama tələb et»: a consultation request that names the product. --}}
+          <form class="pd-quote-form" id="pdQuoteForm" action="{{ route('consultation-requests.store') }}" method="post"
+                data-l-error="{{ t('home.lead.error') }}">
+            @csrf
+            <input type="hidden" name="source" value="product">
+            <input type="hidden" name="product_ref" value="{{ $product->name }} — {{ url()->current() }}">
+            <x-ui.input name="full_name" type="text" :placeholder="t('home.lead.name_placeholder')" required maxlength="120" />
+            <x-ui.input name="phone" type="tel" :placeholder="t('home.lead.phone_placeholder')" required maxlength="25" />
+            <x-ui.textarea name="message" rows="2" maxlength="1500" :placeholder="$tOr('product-card.page.quote_placeholder', 'Ölçülər, sahə, qeydlər')" />
+            <x-ui.button variant="primary" type="submit" class="h-[46px] w-full rounded text-sm font-semibold">{{ $tOr('product-card.page.quote_button', 'Hesablama tələb et') }}</x-ui.button>
+          </form>
+        @endif
+
+        <div class="pd-buy" @if (! $canBuy) hidden style="display:none" @endif>
           <div class="pd-qty">
             <button type="button" id="qtyMinus" aria-label="{{ t('product.info.qty_minus') }}">−</button>
             {{-- The seller's minimum order, not a flat 1. For cement (10) or brick
@@ -196,7 +245,8 @@
                   {{-- popup buttons shown after a successful add (shared/popup.js) --}}
                   data-btn-goto-cart="{{ t('common.go_to_cart') }}"
                   data-btn-continue="{{ t('common.continue') }}"
-                  data-cart-unit="{{ $unitLabel ?: t('product.info.cart_unit') }}"
+                  data-cart-unit="{{ $cartUnit ?: t('product.info.cart_unit') }}"
+                  @if ($sale) data-cart-price="{{ number_format($product->salePrice(), 2, '.', '') }}" @endif
                   {{-- brand?->name, not the model itself (which stringifies to JSON) --}}
                   data-cart-brand="{{ $product->brand?->name ?? $product->category?->name ?? t('common.site_name') }}"
                   data-cart-img="{{ $mainImg ?? '' }}"
@@ -280,7 +330,7 @@
           // and the legacy flat specifications.
           $hasSpecsTab = $laminateCard
               ? ($laminateCard['rows'] !== [] || $laminateCard['documents'] !== [])
-              : ($attributeSpecs->isNotEmpty() || $specs->isNotEmpty());
+              : ($card ? $card['rows'] !== [] : ($attributeSpecs->isNotEmpty() || $specs->isNotEmpty()));
       @endphp
       <div class="pd-tabs" id="pdTabs">
         <button data-on="true" data-pane="desc">{{ t('product.about.tab_desc') }}</button>
@@ -337,6 +387,13 @@
               </div>
             </div>
           @endif
+        @elseif ($card)
+        {{-- Category card: brand, country, collection, then the card's parameters. --}}
+        <div class="pd-specs">
+          @foreach ($card['rows'] as $row)
+            <div class="row"><div class="k">{{ $row['name'] }}</div><div class="v">{{ $row['value'] }}</div></div>
+          @endforeach
+        </div>
         @else
         <div class="pd-specs">
           {{-- Structured classifier attributes first (translated option values,

@@ -269,6 +269,10 @@ Route::middleware(['auth', 'role:seller,admin'])->group(function () {
     Route::get('/business/api/laminate/lookup', [BusinessProductController::class, 'laminateLookup'])
         ->middleware('throttle:30,1')
         ->name('business.api.laminate.lookup');
+    // Category card: collections already used with a brand (suggestions for the field).
+    Route::get('/business/api/collections', [BusinessProductController::class, 'collections'])
+        ->middleware('throttle:60,1')
+        ->name('business.api.collections');
     Route::post('/business/products', [BusinessProductController::class, 'store'])->name('business.products.store');
     Route::put('/business/products/{product}', [BusinessProductController::class, 'update'])->name('business.products.update');
     Route::post('/business/products/{product}/toggle', [BusinessProductController::class, 'toggleVisibility'])->name('business.products.toggle');

@@ -107,7 +107,11 @@ export default function init() {
         quantity: Math.max(1, Math.ceil(+c.qty || 1)),
       }));
 
-    return [...server, ...local];
+    // /api/cart/items prices a category-card product by the pack it is sold in; the
+    // estimate works in the catalogue unit (m²) and the pack size.
+    const base = server.map((p) => (p.basePrice !== undefined ? { ...p, price: p.basePrice, unit: p.baseUnit } : p));
+
+    return [...base, ...local];
   };
 
   let cartProducts = mergeCart(readJson(page.dataset.cart, []) || []);

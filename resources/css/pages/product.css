@@ -151,6 +151,11 @@
   /* laminate: the derived second price under the seller's own price */
   .pd-price-alt      { @apply mt-1.5 text-sm text-black/55; }
   .pd-price-alt b    { @apply font-semibold text-ink; }
+  /* Category card, custom size: no price, an estimate request instead. */
+  .pd-quote          { @apply mt-1 rounded border border-black/10 bg-gray-soft2 px-4 py-3; }
+  .pd-quote-t        { @apply text-[17px] font-semibold text-ink; }
+  .pd-quote-d        { @apply mt-1 text-[13px] leading-[1.5] text-black/55; }
+  .pd-quote-form     { @apply mt-4 flex flex-col gap-2.5; }
 
   .pd-section       { @apply pt-12 pb-2; }
 

@@ -4,6 +4,7 @@
 // multipart AJAX submit.
 
 import { createLaminateForm, uuid } from './business-product-laminate.js';
+import { createCardForm } from './business-product-card.js';
 
 const csrf = () => document.querySelector('meta[name="csrf-token"]')?.content || '';
 
@@ -151,6 +152,8 @@ export default function () {
     form,
     imageCount: () => document.querySelectorAll('#imageSlots .image-slot').length,
   });
+  // Category card (docs/product-cards.md): the class's own parameter form.
+  const cardForm = createCardForm({ form });
   // One key per page load: a double submit of the same create cannot make two products.
   const idempotencyKey = uuid();
 
@@ -388,8 +391,19 @@ export default function () {
     function render(def, values, selectedApps, useInitial = false) {
       // Leaving laminate restores the generic blocks before this class decides them.
       if (!def.laminate) laminate.deactivate();
+      cardForm.deactivate();
       basicWrap.innerHTML = '';
       proWrap.innerHTML = '';
+
+      // A category card replaces every other layer of this section.
+      if (def.card) {
+        proToggle.style.display = 'none';
+        appBlock.style.display = 'none';
+        appsPresent.disabled = true;
+        if (classDesc) classDesc.style.display = '';
+        cardForm.activate(def.card, useInitial);
+        return;
+      }
       const upfront = (def.fields || []).filter(isUpfront);
       const extras = (def.fields || []).filter((f) => !isUpfront(f));
 
@@ -438,6 +452,7 @@ export default function () {
     function clear() {
       requestSeq++;
       laminate.deactivate();
+      cardForm.deactivate();
       basicWrap.innerHTML = '';
       proWrap.innerHTML = '';
       appChips.innerHTML = '';
@@ -703,9 +718,11 @@ export default function () {
       if (res.ok && data.success) {
         // A laminate draft may still lack what publishing needs — say what, and
         // let the seller read it before the page moves on.
-        const missing = isLaminate ? laminate.handleSuccess(data) : [];
+        const isCard = cardForm.active;
+        const missing = isLaminate ? laminate.handleSuccess(data) : (isCard ? cardForm.handleSuccess(data) : []);
+        const title = isLaminate ? laminate.missingTitle() : cardForm.missingTitle();
         const message = missing.length
-          ? `${data.message}\n\n${laminate.missingTitle()}\n${missing.map((m) => `• ${m}`).join('\n')}`
+          ? `${data.message}\n\n${title}\n${missing.map((m) => `• ${m}`).join('\n')}`
           : data.message;
         // The Promise resolves when the popup closes (autoClose or user action).
         const shown = archiPopup.success(message, data.redirect && !missing.length ? { autoClose: 1800 } : {});
@@ -714,7 +731,7 @@ export default function () {
         const firstError = data.errors ? Object.values(data.errors)[0][0] : (data.message || document.body.dataset.errGeneric);
         // Laminate also puts each message under its own field (422 field errors,
         // 409 version / idempotency conflicts) — nothing the seller typed is reset.
-        const slot = isLaminate ? laminate.handleFailure(data) : null;
+        const slot = isLaminate ? laminate.handleFailure(data) : (cardForm.active ? cardForm.handleFailure(data) : null);
         archiPopup.error(firstError).then(() => slot?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
         buttons.forEach((b) => (b.disabled = false));
       }

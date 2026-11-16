@@ -244,7 +244,9 @@ class OrderController extends Controller
                 $lines[$key] = [
                     'product' => $product,
                     'qty' => $qty,
-                    'unit_price' => (float) $product->price,
+                    // A category-card product is bought by the pack / running metre /
+                    // board; its price is stored per m² (or the chosen basis).
+                    'unit_price' => $product->salePrice(),
                     'index' => $index,
                 ];
             }
@@ -268,7 +270,7 @@ class OrderController extends Controller
                 ]);
             }
 
-            if ($qty > $stock) {
+            if ($qty > $stock && ! $product->isMadeToOrder()) {
                 throw ValidationException::withMessages([
                     "items.$index.qty" => self::text(
                         'cart.errors.out_of_stock',

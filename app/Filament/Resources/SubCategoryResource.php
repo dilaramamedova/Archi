@@ -88,6 +88,13 @@ class SubCategoryResource extends Resource
                 Forms\Components\Toggle::make('is_active')
                     ->label('Aktiv')
                     ->default(true),
+
+                // Category card (docs/product-cards.md): this class's products are
+                // added with its own parameter form, on the site and here.
+                Forms\Components\Toggle::make('card_enabled')
+                    ->label('Kateqoriya kartı')
+                    ->helperText('Açıq olduqda məhsul bu sinifin «Atributlar» siyahısındakı parametrlərlə əlavə olunur. Kartlar `php artisan product-cards:import` ilə yüklənir.')
+                    ->default(false),
             ]),
         ]);
     }

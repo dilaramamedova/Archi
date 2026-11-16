@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Enums\AttributeFieldType;
 use App\Filament\Concerns\TranslatesAdminMessages;
+use App\Filament\Resources\ProductResource\CardForm;
 use App\Filament\Resources\ProductResource\Pages;
 use App\Models\Attribute;
 use App\Models\Product;
@@ -146,13 +147,20 @@ class ProductResource extends Resource
                         ->preload()
                         ->nullable(),
 
+                    // Category card (docs/product-cards.md): brand-level fields, in
+                    // the card's order — brand, country, collection, then the article.
+                    ...CardForm::commonFields(),
+
                     Forms\Components\TextInput::make('sku')
-                        ->label('SKU')
+                        ->label('SKU (artikul)')
                         ->unique(ignoreRecord: true)
                         ->nullable(),
                 ]),
 
                 Tabs\Tab::make('Qiymət')->schema([
+                    // Category card, board classes: the basis comes before the price.
+                    CardForm::basisField(),
+
                     Forms\Components\TextInput::make('price')
                         ->label('Qiymət (₼)')
                         ->numeric()
@@ -171,6 +179,10 @@ class ProductResource extends Resource
                         ->nullable()
                         ->suffix('%'),
 
+                    // Category card: availability, price basis (the card computes the
+                    // unit, the pack size and what one sold unit costs).
+                    ...CardForm::pricingFields(),
+
                     Forms\Components\Select::make('unit')
                         ->label('Ölçü vahidi')
                         ->options([
@@ -182,8 +194,10 @@ class ProductResource extends Resource
                             'set' => 'Dəst',
                             'roll' => 'Rulon',
                             'pack' => 'Paket',
+                            'pallet' => 'Palet',
                         ])
-                        ->default('piece'),
+                        ->default('piece')
+                        ->visible(fn (callable $get): bool => ! CardForm::isCard($get)),
 
                     Forms\Components\TextInput::make('stock')
                         ->label('Stok')
@@ -212,13 +226,15 @@ class ProductResource extends Resource
                         ->helperText('Kalkulyator üçün: 1 paket neçə m² / p.m / kq örtür. Boş buraxsanız, miqdar paketsiz hesablanır.')
                         ->numeric()
                         ->minValue(0)
-                        ->nullable(),
+                        ->nullable()
+                        ->visible(fn (callable $get): bool => ! CardForm::isCard($get)),
 
                     Forms\Components\TextInput::make('package_unit')
                         ->label('Paketin adı')
                         ->helperText('Smetada göstərilir: paket, qutu, rulon, kisə …')
                         ->maxLength(24)
-                        ->nullable(),
+                        ->nullable()
+                        ->visible(fn (callable $get): bool => ! CardForm::isCard($get)),
 
                     Forms\Components\TextInput::make('weight_kg')
                         ->label('Çəkisi (1 vahid)')
@@ -278,7 +294,10 @@ class ProductResource extends Resource
                         ->multiple()
                         ->searchable()
                         ->preload()
-                        ->visible(fn (): bool => ClassifierFields::enabled()),
+                        ->visible(fn (callable $get): bool => ClassifierFields::enabled() && ! CardForm::isCard($get)),
+
+                    // Category card (docs/product-cards.md) — replaces every other block here.
+                    CardForm::section(),
 
                     Section::make('Klassifikator xüsusiyyətləri')
                         ->description('Seçilmiş məhsul sinfinin (alt kateqoriyanın) atributları. Sinif seçmək üçün "Əsas" tabında alt kateqoriyanı təyin edin.')
@@ -286,6 +305,7 @@ class ProductResource extends Resource
                         ->columns(2)
                         ->visible(fn (callable $get): bool => ClassifierFields::enabled()
                             && (bool) $get('sub_category_id')
+                            && ! CardForm::isCard($get)
                             && ! LaminateCatalog::isLaminateClass((int) $get('sub_category_id'))),
 
                     // Laminate has a typed card the seller fills in (TZ «Ламинат»); the
@@ -313,7 +333,8 @@ class ProductResource extends Resource
                         ])
                         // A laminate card has no free rows (TZ §3) — the seller form
                         // does not offer them, so neither does the admin.
-                        ->visible(fn (callable $get): bool => ! LaminateCatalog::isLaminateClass((int) $get('sub_category_id'))),
+                        ->visible(fn (callable $get): bool => ! CardForm::isCard($get)
+                            && ! LaminateCatalog::isLaminateClass((int) $get('sub_category_id'))),
                 ]),
 
                 Tabs\Tab::make('Əlavə')->schema([

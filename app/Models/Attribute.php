@@ -32,7 +32,7 @@ class Attribute extends Model
     {
         return $this->belongsToMany(SubCategory::class, 'attribute_sub_category')
             ->using(SubCategoryAttribute::class)
-            ->withPivot(['is_required', 'is_filterable', 'filter_priority', 'unit', 'sort_order'])
+            ->withPivot(['is_required', 'is_filterable', 'filter_priority', 'unit', 'sort_order', 'hint', 'presets', 'visible_when', 'rules', 'maps_to'])
             ->withTimestamps();
     }
 

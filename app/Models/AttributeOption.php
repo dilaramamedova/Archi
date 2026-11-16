@@ -12,7 +12,12 @@ class AttributeOption extends Model
 
     protected $guarded = ['id'];
 
-    public array $translatable = ['value'];
+    public array $translatable = ['value', 'text_prompt'];
+
+    protected $casts = [
+        'visible_when' => 'array',
+        'is_exclusive' => 'boolean',
+    ];
 
     public function attribute(): BelongsTo
     {

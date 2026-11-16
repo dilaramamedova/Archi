@@ -38,6 +38,7 @@ class DatabaseSeeder extends Seeder
             LegalPageSeeder::class,
             DemoSeeder::class,
             CatalogClassifierSeeder::class,
+            ProductCardSeeder::class,
             NavigationSeeder::class,
             CalculatorSeeder::class,
         ]);

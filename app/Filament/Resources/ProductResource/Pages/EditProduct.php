@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ProductResource\Pages;
 
 use App\Filament\Resources\ProductResource;
+use App\Filament\Resources\ProductResource\CardForm;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Arr;
@@ -17,6 +18,9 @@ class EditProduct extends EditRecord
      */
     private array $classifierAttributeValues = [];
 
+    /** Category card rows (null when the class has no card). */
+    private ?array $cardRows = null;
+
     protected function getHeaderActions(): array
     {
         return [Actions\DeleteAction::make()];
@@ -26,12 +30,13 @@ class EditProduct extends EditRecord
     {
         $data['attribute_values'] = ProductResource::attributeValuesFormState($this->getRecord());
 
-        return $data;
+        return [...$data, ...CardForm::fillState($this->getRecord())];
     }
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $this->classifierAttributeValues = Arr::pull($data, 'attribute_values') ?? [];
+        [$data, $this->cardRows] = CardForm::beforeSave($data);
 
         return $data;
     }
@@ -39,5 +44,7 @@ class EditProduct extends EditRecord
     protected function afterSave(): void
     {
         ProductResource::syncAttributeValues($this->getRecord(), $this->classifierAttributeValues);
+        // After the classifier sync: a card product's values are exactly its card's.
+        CardForm::afterSave($this->getRecord(), $this->cardRows);
     }
 }

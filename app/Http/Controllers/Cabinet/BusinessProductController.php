@@ -20,7 +20,10 @@ use App\Services\Laminate\LaminateDocuments;
 use App\Services\Laminate\LaminateFormSchema;
 use App\Services\Laminate\LaminateRequestException;
 use App\Services\Laminate\LaminateSpecService;
+use App\Services\ProductCard\CardProduct;
+use App\Services\ProductCard\CardSchema;
 use App\Services\SearchService;
+use App\Support\IsoCountries;
 use App\Support\ClassifierFields;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -52,7 +55,7 @@ class BusinessProductController extends Controller
      * admin editing a label must not be able to widen what the API accepts.
      * Keep in step with the `business-product-edit.pricing.units` keys.
      */
-    public const UNITS = ['kg', 'litre', 'lm', 'm2', 'pack', 'piece', 'roll', 'set'];
+    public const UNITS = ['kg', 'litre', 'lm', 'm2', 'pack', 'piece', 'roll', 'set', 'pallet'];
 
     // ---------------------------------------------------------------- pages
 
@@ -106,6 +109,8 @@ class BusinessProductController extends Controller
             'brands' => Brand::orderBy('name->az')->get(),
             'subCategories' => SubCategory::active()->ordered()->get(),
             'quota' => $this->productQuota($request->user()),
+            'countries' => IsoCountries::options(),
+            'cardInitial' => null,
         ]);
     }
 
@@ -127,6 +132,11 @@ class BusinessProductController extends Controller
             // The laminate card in the payload's own shape, for the form to pre-fill.
             'laminateInitial' => LaminateCatalog::isLaminateClass($product->sub_category_id)
                 ? $this->laminate->formValues($product->laminateSpec()->first(), $product)
+                : null,
+            'countries' => IsoCountries::options(),
+            // Category card: stored answers in the form's own input shape.
+            'cardInitial' => ($schema = CardSchema::for($product->sub_category_id))
+                ? CardProduct::formState($product, $schema)
                 : null,
         ]);
     }
@@ -173,6 +183,18 @@ class BusinessProductController extends Controller
     {
         app()->setLocale(session('locale', config('app.locale')));
         $locale = app()->getLocale();
+
+        // A class with a category card (docs/product-cards.md) gets exactly that card,
+        // whatever the retired classifier switch says.
+        if ($card = CardSchema::for($subCategory->id)) {
+            return response()->json([
+                'id' => $subCategory->id,
+                'name' => (string) $subCategory->name,
+                'fields' => [],
+                'applications' => [],
+                'card' => $card,
+            ]);
+        }
 
         // Class-specific fields are switched off: every class gets the plain form.
         if (! ClassifierFields::enabled()) {
@@ -230,7 +252,12 @@ class BusinessProductController extends Controller
     {
         $this->guardProductQuota($request->user());
 
+        $card = $this->cardSchema($request);
         $validated = $this->validateProduct($request);
+
+        if ($card) {
+            return $this->saveCard($request, $validated, $card, null);
+        }
 
         if (LaminateCatalog::isLaminateClass(isset($validated['sub_category_id']) ? (int) $validated['sub_category_id'] : null)) {
             return $this->storeLaminate($request, $validated);
@@ -282,7 +309,12 @@ class BusinessProductController extends Controller
     public function update(Request $request, Product $product): JsonResponse
     {
         $this->authorizeProduct($request, $product);
+        $card = $this->cardSchema($request);
         $validated = $this->validateProduct($request);
+
+        if ($card) {
+            return $this->saveCard($request, $validated, $card, $product);
+        }
 
         if (LaminateCatalog::isLaminateClass(isset($validated['sub_category_id']) ? (int) $validated['sub_category_id'] : null)) {
             return $this->updateLaminate($request, $product, $validated);
@@ -338,6 +370,171 @@ class BusinessProductController extends Controller
             'message' => $wasApproved
                 ? t('business-cabinet.product_resubmitted')
                 : t('business-cabinet.saved'),
+            'redirect' => route('business.profile.products'),
+        ]);
+    }
+
+    // ---------------------------------------------------------------- category card
+
+    /**
+     * Collection names already used with a brand on published products — the
+     * suggestions behind the card's «Kolleksiya» field ("brendə aid siyahıdan").
+     */
+    public function collections(Request $request): JsonResponse
+    {
+        $brandId = (int) $request->query('brand_id');
+
+        if ($brandId <= 0) {
+            return response()->json([]);
+        }
+
+        return response()->json(
+            Product::query()
+                ->where('brand_id', $brandId)
+                ->whereNotNull('collection')
+                ->where(fn ($q) => $q->where(fn ($p) => $p->visible()->approved())->orWhere('user_id', $request->user()->id))
+                ->distinct()
+                ->orderBy('collection')
+                ->limit(100)
+                ->pluck('collection')
+                ->values(),
+        );
+    }
+
+    /**
+     * The card of the class the form posts, or null. A card asks for its own price
+     * and stock block, so the generic "stock is required" and "price is required"
+     * get neutral defaults here — the card decides what is really needed (a draft
+     * may be incomplete, a custom-size stone has no price, a made-to-order item no
+     * stock).
+     */
+    private function cardSchema(Request $request): ?array
+    {
+        $schema = CardSchema::for((int) $request->input('sub_category_id'));
+
+        if ($schema) {
+            $request->merge([
+                'stock' => $request->filled('stock') ? $request->input('stock') : 0,
+                'price' => $request->filled('price') ? $request->input('price') : 0,
+                'unit' => null,
+                'attributes' => [],
+            ]);
+        }
+
+        return $schema;
+    }
+
+    /**
+     * Create ($product = null) or update a product of a card class. Publishing — or
+     * editing a product that is already public — is strict: every required card
+     * field must be filled. A draft saves whatever is there and answers with what
+     * still blocks publishing.
+     */
+    private function saveCard(Request $request, array $validated, array $schema, ?Product $product): JsonResponse
+    {
+        $extra = $request->validate([
+            'origin_country' => ['nullable', 'string', 'size:2'],
+            'is_unbranded' => ['nullable', 'boolean'],
+            'collection' => ['nullable', 'string', 'max:120'],
+            'availability' => ['nullable', 'string', 'max:16'],
+            'lead_time_days' => ['nullable', 'integer', 'min:1', 'max:365'],
+            'price_basis' => ['nullable', 'string', 'max:8'],
+            'card' => ['nullable', 'array'],
+        ]);
+
+        $publish = (bool) ($validated['publish'] ?? false);
+        $strict = $publish || (bool) $product?->is_visible;
+
+        $check = CardProduct::check($schema, $validated + $extra, (array) $request->input('card', []), $strict);
+        $errors = $check['errors'];
+
+        $images = $product
+            ? $product->images()->whereIn('id', array_map('intval', (array) $request->input('kept_image_ids', [])))->count()
+            : 0;
+        $images += count($request->file('images') ?? []);
+
+        if ($images === 0) {
+            $check['missing'][] = $this->msg('product-card.images', 'Şəkil');
+            if ($strict) {
+                $errors['images'] = $this->msg('business-product-edit.save.error_image', 'Ən azı 1 şəkil əlavə edin');
+            }
+        }
+
+        if ($errors !== []) {
+            throw ValidationException::withMessages($errors);
+        }
+
+        $columns = $check['columns'];
+        $unbranded = $columns['is_unbranded'];
+        if ($unbranded) {
+            $validated['brand_id'] = null;
+            $validated['new_brand'] = null;
+        }
+
+        $attributes = [
+            ...$this->productAttributes($validated),
+            ...$columns,
+            // The card replaces the generic size / material / colour / country fields
+            // and the free rows; only the logistics notes stay.
+            'specifications' => array_filter([
+                'barcode' => $validated['barcode'] ?? null,
+                'shelf' => $validated['shelf'] ?? null,
+            ]),
+            'price' => $columns['quote_only'] ? 0 : $validated['price'],
+            'old_price' => $columns['quote_only'] ? null : ($validated['old_price'] ?? null),
+            'stock' => $columns['availability'] === Product::IN_STOCK ? (int) $validated['stock'] : 0,
+        ];
+
+        $wasApproved = (bool) $product?->is_approved;
+
+        $product = DB::transaction(function () use ($request, $product, $attributes, $publish, $check): Product {
+            if ($product === null) {
+                User::whereKey($request->user()->id)->lockForUpdate()->first();
+                $this->guardProductQuota($request->user()->fresh());
+
+                $product = Product::create([
+                    ...$attributes,
+                    'user_id' => $request->user()->id,
+                    'slug' => $this->uniqueSlug($request->input('name')),
+                    'is_visible' => $publish,
+                    'is_approved' => false,
+                    'rejected_at' => null,
+                    'rejection_reason' => null,
+                ]);
+            } else {
+                $product->update([
+                    ...$attributes,
+                    'is_visible' => $publish ? true : $product->is_visible,
+                    // Substantive edits send the product back to moderation.
+                    'is_approved' => false,
+                    'rejected_at' => null,
+                    'rejection_reason' => null,
+                ]);
+
+                // A laminate typed card from before no longer describes it.
+                LaminateSpec::query()->where('product_id', $product->id)->delete();
+                DictionaryRequest::query()->where('product_id', $product->id)->pending()->delete();
+                $product->applications()->detach();
+            }
+
+            CardProduct::saveValues($product, $check['rows']);
+
+            return $product;
+        });
+
+        $this->syncImages($request, $product);
+
+        $message = match (true) {
+            $wasApproved => t('business-cabinet.product_resubmitted'),
+            $publish => t('business-cabinet.product_submitted'),
+            default => t('business-cabinet.draft_saved'),
+        };
+
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            // A draft may still lack what publishing needs — the form lists it.
+            'missing' => $publish ? [] : array_values(array_unique($check['missing'])),
             'redirect' => route('business.profile.products'),
         ]);
     }

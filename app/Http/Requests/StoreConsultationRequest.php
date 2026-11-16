@@ -18,10 +18,19 @@ final class StoreConsultationRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $message = filled($this->input('message')) ? trim((string) $this->input('message')) : null;
+
+        // «Hesablama tələb et» on a product page: the request names the product so the
+        // team knows what to quote. The reference is shortened, never trusted as HTML.
+        if ($this->input('source') === ConsultationRequestSource::Product->value && filled($this->input('product_ref'))) {
+            $ref = str((string) $this->input('product_ref'))->squish()->limit(300)->toString();
+            $message = trim("Məhsul: {$ref}\n".($message ?? ''));
+        }
+
         $this->merge([
             'full_name' => trim((string) $this->input('full_name')),
             'phone' => trim((string) $this->input('phone')),
-            'message' => filled($this->input('message')) ? trim((string) $this->input('message')) : null,
+            'message' => $message,
             'source' => $this->input('source') ?: ConsultationRequestSource::Home->value,
             'b2b_plan' => $this->input('b2b_plan') ?: null,
         ]);
