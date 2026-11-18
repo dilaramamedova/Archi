@@ -68,6 +68,7 @@ class AppServiceProvider extends ServiceProvider
         CalculatorMaterialNorm::class => [VersionedCache::CALCULATOR],
         CalculatorSetting::class => [VersionedCache::CALCULATOR],
         CalculatorCity::class => [VersionedCache::CALCULATOR],
+        \App\Models\CalculatorRoomType::class => [VersionedCache::CALCULATOR],
     ];
 
     public function register(): void

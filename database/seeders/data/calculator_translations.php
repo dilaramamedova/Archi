@@ -49,6 +49,114 @@ return [
         ],
 
         'actions.next' => ['az' => 'Dəqiq hesabla  →', 'ru' => 'Рассчитать точно  →', 'en' => 'Calculate precisely  →'],
+
+        // TZ 17.11.2026 «Qiymətin izahı» — what the per-m² price covers, under the sum.
+        'result.includes' => [
+            'az' => 'Qiymətə işlər, :level səviyyəli materiallar və podratçının idarəetməsi daxildir',
+            'ru' => 'В цену входят работы, материалы уровня «:level» и управление подрядчика',
+            'en' => 'The price includes labour, :level-level materials and contractor management',
+        ],
+        // The White Box / finishing composition approved by Archi on 17.11.2026.
+        'composition.title' => ['az' => 'White Box və tam təmirin tərkibi', 'ru' => 'Состав White Box и полного ремонта', 'en' => 'What White Box and full renovation include'],
+        'composition.section' => ['az' => 'Bölmə', 'ru' => 'Раздел', 'en' => 'Section'],
+        'composition.white_box' => ['az' => 'White Box', 'ru' => 'White Box', 'en' => 'White Box'],
+        'composition.finish' => ['az' => 'Bitirmə mərhələsi', 'ru' => 'Чистовой этап', 'en' => 'Finishing stage'],
+        'composition.note' => [
+            'az' => 'Tam təmir = White Box + bitirmə mərhələsi. Dizayn layihəsi və müəllif nəzarəti ayrıca xidmətdir.',
+            'ru' => 'Полный ремонт = White Box + чистовой этап. Дизайн-проект и авторский надзор — отдельные услуги.',
+            'en' => 'Full renovation = White Box + the finishing stage. The design project and author supervision are separate services.',
+        ],
+        'composition.walls.name' => ['az' => 'Divarlar', 'ru' => 'Стены', 'en' => 'Walls'],
+        'composition.walls.wb' => [
+            'az' => 'arakəsmələr, astar, suvaq, tor, şpaklyovka, zımparalama, son astar, rəngləmə (iş və boya)',
+            'ru' => 'перегородки, грунт, штукатурка, сетка, шпаклёвка, шлифовка, финишный грунт, покраска (работа и краска)',
+            'en' => 'partitions, primer, plaster, mesh, filler, sanding, final primer, painting (labour and paint)',
+        ],
+        'composition.walls.fin' => [
+            'az' => 'divar kağızı, dekorativ örtüklər, panellər, daş, kafel (iş və material)',
+            'ru' => 'обои, декоративные покрытия, панели, камень, плитка (работа и материал)',
+            'en' => 'wallpaper, decorative coatings, panels, stone, tiles (labour and material)',
+        ],
+        'composition.floor.name' => ['az' => 'Döşəmə', 'ru' => 'Пол', 'en' => 'Floor'],
+        'composition.floor.wb' => [
+            'az' => 'şap, özüyayılan döşəmə, səs izolyasiyası, isti döşəmə',
+            'ru' => 'стяжка, наливной пол, шумоизоляция, тёплый пол',
+            'en' => 'screed, self-levelling floor, sound insulation, underfloor heating',
+        ],
+        'composition.floor.fin' => [
+            'az' => 'döşəmə örtükləri, altlıq, plintus',
+            'ru' => 'напольные покрытия, подложка, плинтус',
+            'en' => 'floor coverings, underlay, skirting',
+        ],
+        'composition.ceiling.name' => ['az' => 'Tavan', 'ru' => 'Потолок', 'en' => 'Ceiling'],
+        'composition.ceiling.wb' => [
+            'az' => 'bütün işlər: gipskarton / suvaq, şpaklyovka, astar, rəngləmə',
+            'ru' => 'все работы: гипсокартон / штукатурка, шпаклёвка, грунт, покраска',
+            'en' => 'all works: plasterboard / plaster, filler, primer, painting',
+        ],
+        'composition.ceiling.fin' => [
+            'az' => 'dartma tavan, karnizlər',
+            'ru' => 'натяжной потолок, карнизы',
+            'en' => 'stretch ceiling, cornices',
+        ],
+        'composition.bathroom.name' => ['az' => 'Sanitar qovşaq', 'ru' => 'Санузел', 'en' => 'Bathroom'],
+        'composition.bathroom.wb' => [
+            'az' => 'döşəmə və divarların hidroizolyasiyası',
+            'ru' => 'гидроизоляция пола и стен',
+            'en' => 'waterproofing of the floor and walls',
+        ],
+        'composition.bathroom.fin' => [
+            'az' => 'kafel altı hazırlıq, kafel, yapışqan, ara dolğusu, germetik',
+            'ru' => 'подготовка под плитку, плитка, клей, затирка, герметик',
+            'en' => 'preparation for tiles, tiles, adhesive, grout, sealant',
+        ],
+        'composition.electrics.name' => ['az' => 'Elektrik', 'ru' => 'Электрика', 'en' => 'Electrics'],
+        'composition.electrics.wb' => [
+            'az' => 'bütün nöqtələr, kabel, qofro boru, avtomat açarlı elektrik paneli, işıqlandırma və kondisioner üçün çıxışlar',
+            'ru' => 'все точки, кабель, гофра, электрощит с автоматами, выводы под освещение и кондиционеры',
+            'en' => 'all points, cable, conduit, distribution board with breakers, outlets for lighting and air conditioning',
+        ],
+        'composition.electrics.fin' => [
+            'az' => 'rozetka və açarların üz hissələri, işıqlandırıcılar və onların quraşdırılması',
+            'ru' => 'лицевые части розеток и выключателей, светильники и их установка',
+            'en' => 'socket and switch face plates, light fittings and their installation',
+        ],
+        'composition.plumbing.name' => ['az' => 'Santexnika', 'ru' => 'Сантехника', 'en' => 'Plumbing'],
+        'composition.plumbing.wb' => [
+            'az' => 'nöqtələr, borular və fitinqlər, cihazların quraşdırılması və məişət texnikasının qoşulması',
+            'ru' => 'точки, трубы и фитинги, установка приборов и подключение бытовой техники',
+            'en' => 'points, pipes and fittings, fixture installation and appliance connection',
+        ],
+        'composition.plumbing.fin' => [
+            'az' => 'cihazların və qarışdırıcıların özləri',
+            'ru' => 'сами приборы и смесители',
+            'en' => 'the fixtures and mixer taps themselves',
+        ],
+        'composition.hvac.name' => ['az' => 'Kondisionerlər', 'ru' => 'Кондиционеры', 'en' => 'Air conditioning'],
+        'composition.hvac.wb' => [
+            'az' => 'yalnız çıxışlar (qidalanma, freon xətti, drenaj)',
+            'ru' => 'только выводы (питание, фреоновая трасса, дренаж)',
+            'en' => 'outlets only (power, refrigerant line, drain)',
+        ],
+        'composition.hvac.fin' => ['az' => 'blokların quraşdırılması', 'ru' => 'установка блоков', 'en' => 'unit installation'],
+        'composition.openings.name' => ['az' => 'Qapı və pəncərələr', 'ru' => 'Двери и окна', 'en' => 'Doors and windows'],
+        'composition.openings.wb' => [
+            'az' => 'qapı yerlərinin hazırlanması, pəncərə yanlıqları (otkoslar)',
+            'ru' => 'подготовка дверных проёмов, оконные откосы',
+            'en' => 'door opening preparation, window reveals',
+        ],
+        'composition.openings.fin' => [
+            'az' => 'çərçivə və quraşdırma ilə birlikdə qapılar, pəncərə altlıqları (podokonniklər)',
+            'ru' => 'двери с коробкой и установкой, подоконники',
+            'en' => 'doors with frames and installation, window sills',
+        ],
+        'composition.general.name' => ['az' => 'Ümumi', 'ru' => 'Общее', 'en' => 'General'],
+        'composition.general.wb' => [
+            'az' => 'sökülmə, tikinti tullantılarının daşınması, səthlərin mühafizəsi',
+            'ru' => 'демонтаж, вывоз строительного мусора, защита поверхностей',
+            'en' => 'demolition, construction waste removal, surface protection',
+        ],
+        'composition.general.fin' => ['az' => '—', 'ru' => '—', 'en' => '—'],
     ],
 
     'home' => [
@@ -328,7 +436,8 @@ return [
         'fixtures.basin' => ['az' => 'Əlüzyuyan', 'ru' => 'Раковина', 'en' => 'Basin'],
         'fixtures.shower' => ['az' => 'Duş', 'ru' => 'Душ', 'en' => 'Shower'],
         'fixtures.bathtub' => ['az' => 'Vanna', 'ru' => 'Ванна', 'en' => 'Bathtub'],
-        'fixtures.kitchen_sink' => ['az' => 'Mətbəx qabyuyanı', 'ru' => 'Кухонная мойка', 'en' => 'Kitchen sink'],
+        // "Qabyuyan" reads as the dishwasher, which is now its own fixture.
+        'fixtures.kitchen_sink' => ['az' => 'Mətbəx yuyucusu', 'ru' => 'Кухонная мойка', 'en' => 'Kitchen sink'],
         'fixtures.mixer' => ['az' => 'Qarışdırıcı', 'ru' => 'Смеситель', 'en' => 'Mixer tap'],
         'points.ac' => ['az' => 'Kondisioner', 'ru' => 'Кондиционер', 'en' => 'Air conditioner'],
         'rooms.state_hint' => [
@@ -351,5 +460,157 @@ return [
             'ru' => 'Доставка оценивается по площади.',
             'en' => 'Delivery is estimated from the area.',
         ],
+
+        // ---- TZ 17.11.2026: renovation level, stages, contractor margin, «Sadə»
+        // points, openings, extra finishes. Keys marked (backend) are also read by
+        // the PHP engine / PDF, not only by calculator-detailed.js.
+        'room_types.kitchen_living' => ['az' => 'Mətbəx-qonaq otağı', 'ru' => 'Кухня-гостиная', 'en' => 'Kitchen-living room'], // (backend)
+        'levels.full' => ['az' => 'Tam təmir', 'ru' => 'Полный ремонт', 'en' => 'Full renovation'], // (backend)
+        'levels.white_box' => ['az' => 'White Box', 'ru' => 'White Box', 'en' => 'White Box'], // (backend)
+        'stages.white_box' => ['az' => 'White Box', 'ru' => 'White Box', 'en' => 'White Box'], // (backend)
+        'stages.finish' => ['az' => 'Bitirmə', 'ru' => 'Чистовая', 'en' => 'Finishing'], // (backend)
+        // The stage badge on a work row of step 3 — short, it sits next to the volume.
+        'stages_short.white_box' => ['az' => 'WB', 'ru' => 'WB', 'en' => 'WB'],
+        'stages_short.finish' => ['az' => 'Bitirmə', 'ru' => 'Чистовая', 'en' => 'Finish'],
+
+        'summary.white_box' => ['az' => 'White Box', 'ru' => 'White Box', 'en' => 'White Box'], // (backend)
+        'summary.finish_stage' => ['az' => 'Bitirmə mərhələsi', 'ru' => 'Чистовой этап', 'en' => 'Finishing stage'], // (backend)
+        'summary.logistics_services' => ['az' => 'Logistika və xidmətlər', 'ru' => 'Логистика и услуги', 'en' => 'Logistics and services'], // (backend)
+        'summary.margin' => ['az' => 'Podratçı əlavəsi', 'ru' => 'Надбавка подрядчика', 'en' => 'Contractor margin'], // (backend)
+        'summary.own_materials' => ['az' => 'Özünüz almalı olduğunuz materiallar', 'ru' => 'Материалы, которые вы покупаете сами', 'en' => 'Materials you buy yourself'], // (backend)
+        'summary.own_materials_hint' => [
+            'az' => 'Yekuna daxil deyil. Məbləğ ehtiyat nəzərə alınmaqla, kateqoriyanın orta qiyməti ilə təxmin edilib.',
+            'ru' => 'Не входит в итог. Сумма оценена по средней цене категории с учётом запаса.',
+            'en' => 'Not part of the total. Estimated at the category average price, waste allowance included.',
+        ],
+        'summary.subtotal' => ['az' => 'Aralıq cəm', 'ru' => 'Промежуточный итог', 'en' => 'Subtotal'],
+        'side.margin' => ['az' => 'Podratçı əlavəsi (:percent%)', 'ru' => 'Надбавка подрядчика (:percent%)', 'en' => 'Contractor margin (:percent%)'],
+
+        'notice.points_by_norm' => [ // (backend)
+            'az' => 'Elektrik və santexnika nöqtələri orta norma ilə hesablanıb, dəqiq say layihədən sonra',
+            'ru' => 'Точки электрики и сантехники рассчитаны по средней норме, точное количество — после проекта',
+            'en' => 'Electrical and plumbing points are estimated from average norms; the exact count follows the design project',
+        ],
+        'notice.valid_days' => ['az' => 'Qiymətlər :days gün qüvvədədir', 'ru' => 'Цены действительны :days дн.', 'en' => 'Prices are valid for :days days'], // (backend)
+
+        // Step 1
+        'object.level' => ['az' => 'Təmir səviyyəsi', 'ru' => 'Уровень ремонта', 'en' => 'Renovation level'],
+        'object.level_hint_white_box' => [
+            'az' => 'White Box: qaralama işləri, elektrik və santexnika nöqtələri, rənglənmiş divar və tavan. Bitirmə örtükləri daxil deyil — 3-cü addımda əlavə edə bilərsiniz.',
+            'ru' => 'White Box: черновые работы, точки электрики и сантехники, окрашенные стены и потолок. Чистовые покрытия не входят — их можно добавить на шаге 3.',
+            'en' => 'White Box: rough works, electrical and plumbing points, painted walls and ceiling. Finishing covers are not included — you can add them on step 3.',
+        ],
+        'object.level_hint_full' => [
+            'az' => 'Tam təmir: White Box və bitirmə mərhələsi — döşəmə örtükləri, kafel, qapılar, işıqlandırıcılar, santexnika.',
+            'ru' => 'Полный ремонт: White Box и чистовой этап — напольные покрытия, плитка, двери, светильники, сантехника.',
+            'en' => 'Full renovation: White Box plus the finishing stage — floor coverings, tiles, doors, light fittings, sanitaryware.',
+        ],
+        'object.ceiling_height' => ['az' => 'Tavan hündürlüyü', 'ru' => 'Высота потолков', 'en' => 'Ceiling height'],
+        'object.area_hint' => [
+            'az' => 'Sahə ilkin göstəricidir: smeta otaqların sahələrinin cəmi ilə hesablanır. Tavan hündürlüyü əl ilə dəyişdirilməmiş bütün otaqlara tətbiq olunur.',
+            'ru' => 'Площадь — ориентир: смета считается по сумме площадей комнат. Высота потолков применяется ко всем комнатам, где её не меняли вручную.',
+            'en' => 'The area is a starting point: the estimate uses the sum of the room areas. The ceiling height applies to every room whose height you have not changed.',
+        ],
+        'alerts.rescale_rooms' => [
+            'az' => 'Otaqların ölçüləri yeni sahəyə uyğunlaşdırılsın?',
+            'ru' => 'Подогнать размеры комнат под новую площадь?',
+            'en' => 'Scale the rooms to the new area?',
+        ],
+        'alerts.rescale_yes' => ['az' => 'Uyğunlaşdır', 'ru' => 'Подогнать', 'en' => 'Scale them'],
+        'alerts.rescale_no' => ['az' => 'Olduğu kimi saxla', 'ru' => 'Оставить как есть', 'en' => 'Keep as they are'],
+
+        // Step 2 — area counter and the mismatch dialog
+        'rooms.area_counter' => ['az' => 'Otaqlar: :rooms / :object m²', 'ru' => 'Комнаты: :rooms / :object м²', 'en' => 'Rooms: :rooms / :object m²'],
+        'alerts.area_title' => ['az' => 'Sahələr uyğun gəlmir', 'ru' => 'Площади не совпадают', 'en' => 'The areas do not match'],
+        'alerts.area_message' => [
+            'az' => 'Otaqların cəmi :rooms m², obyektin sahəsi isə :object m²-dir (:deviation% fərq). Smeta otaqların cəmi ilə hesablanır.',
+            'ru' => 'Сумма комнат — :rooms м², а площадь объекта — :object м² (разница :deviation%). Смета считается по сумме комнат.',
+            'en' => 'The rooms add up to :rooms m², while the property area is :object m² (:deviation% apart). The estimate uses the sum of the rooms.',
+        ],
+        'alerts.area_fix' => ['az' => 'Obyektin sahəsini :area m² olaraq düzəlt', 'ru' => 'Исправить площадь объекта на :area м²', 'en' => 'Set the property area to :area m²'],
+        'alerts.area_back' => ['az' => 'Otaqlara qayıt', 'ru' => 'Вернуться к комнатам', 'en' => 'Back to the rooms'],
+        'alerts.area_continue' => ['az' => 'Davam et', 'ru' => 'Продолжить', 'en' => 'Continue'],
+
+        // Step 2 — «Sadə» / «Ətraflı» points
+        'rooms.points_detail' => ['az' => 'Ətraflı / Dəqiqləşdir', 'ru' => 'Подробно / Уточнить', 'en' => 'Details / Adjust'],
+        'rooms.points_reset' => ['az' => 'Orta normaya qaytar', 'ru' => 'Вернуть среднюю норму', 'en' => 'Back to average norms'],
+        'rooms.points_hint' => [
+            'az' => 'Saylar orta norma ilə doldurulub — yalnız dəqiq bildiyinizi dəyişin.',
+            'ru' => 'Количества заполнены по средней норме — меняйте только то, что знаете точно.',
+            'en' => 'The counts are prefilled from average norms — change only what you know for sure.',
+        ],
+        'rooms.by_norm' => ['az' => '(orta norma)', 'ru' => '(средняя норма)', 'en' => '(average norm)'],
+        'rooms.points_none' => ['az' => 'Bu otaq üçün nöqtə nəzərdə tutulmayıb', 'ru' => 'Для этой комнаты точки не предусмотрены', 'en' => 'No points are planned for this room'],
+        'points.lights_spot' => ['az' => 'Spot işıq', 'ru' => 'Точечные светильники', 'en' => 'Spotlights'],
+        'points.lights_pendant' => ['az' => 'Asma işıq', 'ru' => 'Подвесные светильники', 'en' => 'Pendant lights'],
+        'points.lights_chandelier' => ['az' => 'Çilçıraq', 'ru' => 'Люстры', 'en' => 'Chandeliers'],
+        'points.intercom' => ['az' => 'Domofon', 'ru' => 'Домофон', 'en' => 'Intercom'],
+        'fixtures.hygienic_shower' => ['az' => 'Gigiyenik duş', 'ru' => 'Гигиенический душ', 'en' => 'Hygienic shower'],
+        'fixtures.washer' => ['az' => 'Paltaryuyan maşın', 'ru' => 'Стиральная машина', 'en' => 'Washing machine'],
+        'fixtures.dishwasher' => ['az' => 'Qabyuyan maşın', 'ru' => 'Посудомоечная машина', 'en' => 'Dishwasher'],
+        'fixtures.towel_rail' => ['az' => 'Dəsmal quruducusu', 'ru' => 'Полотенцесушитель', 'en' => 'Towel rail'],
+        'fixtures.boiler' => ['az' => 'Su qızdırıcısı (boyler)', 'ru' => 'Водонагреватель (бойлер)', 'en' => 'Water heater (boiler)'],
+        // The one-line «Sadə» summary: «Elektrik: 8 rozetka, 2 açar, 6 işıq».
+        'points_short.sockets' => ['az' => ':n rozetka', 'ru' => 'розеток: :n', 'en' => 'sockets: :n'],
+        'points_short.switches' => ['az' => ':n açar', 'ru' => 'выключателей: :n', 'en' => 'switches: :n'],
+        'points_short.lights' => ['az' => ':n işıq', 'ru' => 'светильников: :n', 'en' => 'lights: :n'],
+        'points_short.wall_lights' => ['az' => ':n bra', 'ru' => 'бра: :n', 'en' => 'wall lights: :n'],
+        'points_short.tv' => ['az' => ':n TV', 'ru' => 'TV: :n', 'en' => 'TV: :n'],
+        'points_short.data' => ['az' => ':n internet', 'ru' => 'интернет: :n', 'en' => 'data: :n'],
+        'points_short.intercom' => ['az' => ':n domofon', 'ru' => 'домофон: :n', 'en' => 'intercom: :n'],
+        'points_short.ac_power' => ['az' => ':n kondisioner', 'ru' => 'кондиционеров: :n', 'en' => 'air conditioners: :n'],
+        'points_short.appliance' => ['az' => ':n texnika xətti', 'ru' => 'линий техники: :n', 'en' => 'appliance lines: :n'],
+        'points_short.water_points' => ['az' => ':n su nöqtəsi', 'ru' => 'точек воды: :n', 'en' => 'water points: :n'],
+        'points_short.sewer_points' => ['az' => ':n kanalizasiya nöqtəsi', 'ru' => 'точек канализации: :n', 'en' => 'sewer points: :n'],
+        'fixtures_short.toilet' => ['az' => 'unitaz', 'ru' => 'унитаз', 'en' => 'toilet'],
+        'fixtures_short.basin' => ['az' => 'lavabo', 'ru' => 'раковина', 'en' => 'basin'],
+        'fixtures_short.shower' => ['az' => 'duş', 'ru' => 'душ', 'en' => 'shower'],
+        'fixtures_short.bathtub' => ['az' => 'vanna', 'ru' => 'ванна', 'en' => 'bathtub'],
+        'fixtures_short.hygienic_shower' => ['az' => 'gigiyenik duş', 'ru' => 'гигиенический душ', 'en' => 'hygienic shower'],
+        'fixtures_short.washer' => ['az' => 'paltaryuyan maşın', 'ru' => 'стиральная машина', 'en' => 'washing machine'],
+        'fixtures_short.kitchen_sink' => ['az' => 'mətbəx yuyucusu', 'ru' => 'мойка', 'en' => 'kitchen sink'],
+        'fixtures_short.dishwasher' => ['az' => 'qabyuyan maşın', 'ru' => 'посудомойка', 'en' => 'dishwasher'],
+        'fixtures_short.mixer' => ['az' => 'qarışdırıcı', 'ru' => 'смеситель', 'en' => 'mixer tap'],
+        'fixtures_short.towel_rail' => ['az' => 'dəsmal quruducusu', 'ru' => 'полотенцесушитель', 'en' => 'towel rail'],
+        'fixtures_short.boiler' => ['az' => 'boyler', 'ru' => 'бойлер', 'en' => 'water heater'],
+
+        // Step 2 — openings, kitchen run, extra finishes
+        'rooms.openings' => ['az' => 'Qapı və pəncərə yerləri', 'ru' => 'Дверные и оконные проёмы', 'en' => 'Door and window openings'],
+        'openings.door' => ['az' => 'Qapı', 'ru' => 'Дверь', 'en' => 'Door'],
+        'openings.window' => ['az' => 'Pəncərə', 'ru' => 'Окно', 'en' => 'Window'],
+        'openings.passage' => ['az' => 'Qapısız keçid', 'ru' => 'Проём без двери', 'en' => 'Doorless opening'],
+        'openings.qty' => ['az' => 'Say', 'ru' => 'Кол-во', 'en' => 'Qty'],
+        'openings.width' => ['az' => 'En', 'ru' => 'Ширина', 'en' => 'Width'],
+        'openings.height' => ['az' => 'Hündürlük', 'ru' => 'Высота', 'en' => 'Height'],
+        'openings.entrance' => ['az' => 'Giriş qapısı', 'ru' => 'Входная дверь', 'en' => 'Entrance door'],
+        'openings.add_door' => ['az' => '+ Qapı', 'ru' => '+ Дверь', 'en' => '+ Door'],
+        'openings.add_window' => ['az' => '+ Pəncərə', 'ru' => '+ Окно', 'en' => '+ Window'],
+        'openings.add_passage' => ['az' => '+ Qapısız keçid', 'ru' => '+ Проём без двери', 'en' => '+ Doorless opening'],
+        'rooms.kitchen_furniture' => ['az' => 'Mətbəx mebelinin uzunluğu', 'ru' => 'Длина кухонной мебели', 'en' => 'Kitchen furniture length'],
+        'rooms.kitchen_furniture_hint' => [
+            'az' => 'Mebelin arxasında plintus vurulmur — bu uzunluq plintusdan çıxılır.',
+            'ru' => 'За мебелью плинтус не ставится — эта длина вычитается из плинтуса.',
+            'en' => 'No skirting goes behind the units — this length comes off the skirting.',
+        ],
+        'rooms.zones_add' => ['az' => '+ Əlavə örtük', 'ru' => '+ Дополнительное покрытие', 'en' => '+ Extra finish'],
+        'rooms.zone_finish' => ['az' => 'Əlavə örtük', 'ru' => 'Дополнительное покрытие', 'en' => 'Extra finish'],
+        'rooms.zone_area' => ['az' => 'Sahə, m²', 'ru' => 'Площадь, м²', 'en' => 'Area, m²'],
+        'rooms.zone_rest' => [
+            'az' => 'Əsas örtük qalan sahəni tutur: :area m²',
+            'ru' => 'Основное покрытие занимает остальное: :area м²',
+            'en' => 'The main finish covers the rest: :area m²',
+        ],
+        'rooms.not_in_white_box' => ['az' => 'White Box-a daxil deyil', 'ru' => 'Не входит в White Box', 'en' => 'Not included in White Box'],
+
+        // Step 3 / 4
+        'works.white_box_hint' => [
+            'az' => 'White Box seçilib: bitirmə işləri söndürülüb. Lazım olanı üzərinə klikləyərək yenidən əlavə edin.',
+            'ru' => 'Выбран White Box: чистовые работы отключены. Нужную работу можно вернуть, нажав на неё.',
+            'en' => 'White Box is selected: finishing works are switched off. Click any of them to add it back.',
+        ],
+        'materials.excluded_estimate' => ['az' => '≈ :amount · yekuna daxil deyil', 'ru' => '≈ :amount · не входит в итог', 'en' => '≈ :amount · not in the total'],
+
+        // WhatsApp — the margin and the reserve are part of the stage totals above them.
+        'alerts.whatsapp_included' => ['az' => 'daxildir', 'ru' => 'включено', 'en' => 'included'],
     ],
 ];

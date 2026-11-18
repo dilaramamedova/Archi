@@ -37,6 +37,9 @@ class CalculatorSeeder extends Seeder
         $this->seedFinishes();
         $this->seedMaterialFallbacks();
 
+        // TZ 17.11.2026: stages, new works / materials, settings, room types.
+        (new CalculatorTzSeeder)->apply(fresh: true);
+
         VersionedCache::bump(VersionedCache::CALCULATOR);
     }
 
@@ -64,6 +67,9 @@ class CalculatorSeeder extends Seeder
                     'material_standard' => $row['standard'],
                     'material_premium' => $row['premium'],
                     'waste_percent' => $row['waste'] ?? 0,
+                    // Prices here are per m²; CalculatorTzSeeder converts paint to
+                    // per-litre and sets the flag again — every run, consistently.
+                    'paint_norm' => false,
                     'is_default' => $row['default'] ?? false,
                     'search_keywords' => $row['keywords'] ?? null,
                     'notes' => $row['notes'] ?? $draft,

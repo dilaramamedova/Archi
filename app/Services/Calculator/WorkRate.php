@@ -28,6 +28,8 @@ class WorkRate
         public readonly float $minimumCharge,
         public readonly PrecisionClass $precisionClass,
         public readonly bool $contingencyEligible,
+        /** WHITE_BOX | FINISH | LAST (the last selected stage) | null (outside both) */
+        public readonly ?string $stage = null,
     ) {}
 
     public static function fromArray(array $row): self
@@ -42,6 +44,7 @@ class WorkRate
             minimumCharge: $row['minimum_charge'],
             precisionClass: PrecisionClass::from($row['precision_class']),
             contingencyEligible: $row['contingency_eligible'],
+            stage: $row['stage'] ?? null,
         );
     }
 

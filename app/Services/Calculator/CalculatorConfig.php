@@ -8,8 +8,10 @@ use App\Models\CalculatorFinish;
 use App\Models\CalculatorMaterialFallback;
 use App\Models\CalculatorMaterialNorm;
 use App\Models\CalculatorQuickRate;
+use App\Models\CalculatorRoomType;
 use App\Models\CalculatorSetting;
 use App\Models\CalculatorWorkRate;
+use App\Enums\Calculator\RoomType;
 use App\Support\VersionedCache;
 
 /**
@@ -26,7 +28,7 @@ class CalculatorConfig
     public const CACHE_DOMAIN = VersionedCache::CALCULATOR;
 
     /** Bumped when the shape of a calculation changes, not when a price changes. */
-    public const CALCULATOR_VERSION = '2.0';
+    public const CALCULATOR_VERSION = '2.1';
 
     private ?array $settings = null;
 
@@ -43,6 +45,8 @@ class CalculatorConfig
     private ?array $quickRates = null;
 
     private ?array $cities = null;
+
+    private ?array $roomTypes = null;
 
     /**
      * The work catalog.
@@ -65,6 +69,9 @@ class CalculatorConfig
             'work_rates',
             VersionedCache::TTL_STRUCTURAL,
             fn () => CalculatorWorkRate::active()->ordered()->get()
+                // A category the code does not know yet cannot be priced into a
+                // line type; the row is skipped rather than taking the estimate down.
+                ->filter(fn (CalculatorWorkRate $rate) => $rate->category instanceof \App\Enums\Calculator\WorkCategory)
                 ->map(fn (CalculatorWorkRate $rate) => [
                     'work_id' => $rate->work_id,
                     'category' => $rate->category->value,
@@ -75,6 +82,7 @@ class CalculatorConfig
                     'minimum_charge' => (float) $rate->minimum_charge,
                     'precision_class' => $rate->precision_class->value,
                     'contingency_eligible' => (bool) $rate->contingency_eligible,
+                    'stage' => $rate->stage,
                 ])
                 ->all(),
         );
@@ -130,6 +138,11 @@ class CalculatorConfig
                     ],
                     'waste_percent' => (float) $finish->waste_percent,
                     'is_default' => (bool) $finish->is_default,
+                    'labour_stage' => $finish->labour_stage,
+                    'material_stage' => $finish->material_stage,
+                    'top_coat_finish' => $finish->top_coat_finish,
+                    'needs_underlay' => (bool) $finish->needs_underlay,
+                    'paint_norm' => (bool) $finish->paint_norm,
                 ])
                 ->all(),
         );
@@ -170,6 +183,7 @@ class CalculatorConfig
                         'STANDARD' => $fallback->standard_price === null ? null : (float) $fallback->standard_price,
                         'PREMIUM' => $fallback->premium_price === null ? null : (float) $fallback->premium_price,
                     ],
+                    'stage' => $fallback->stage,
                 ])
                 ->all(),
         );
@@ -329,6 +343,57 @@ class CalculatorConfig
         return $this->cities = $cities;
     }
 
+    /**
+     * Room types and their «Sadə» norms (admin «Otaq növləri»), in the admin's order.
+     * Every enum case is present: a type without a row falls back to the enum's
+     * built-in defaults, so a deleted row can never take a room type away.
+     *
+     * @return array<string, RoomTypeNorm> keyed by room type
+     */
+    public function roomTypes(): array
+    {
+        if ($this->roomTypes !== null) {
+            return $this->roomTypes;
+        }
+
+        $rows = VersionedCache::remember(
+            self::CACHE_DOMAIN,
+            'room_types',
+            VersionedCache::TTL_STRUCTURAL,
+            fn () => CalculatorRoomType::active()->ordered()->get()
+                ->map(fn (CalculatorRoomType $type) => [
+                    'room_type' => $type->room_type,
+                    'names' => Translated::normalise($type->getTranslations('name')),
+                    'has_plumbing' => (bool) $type->has_plumbing,
+                    'needs_waterproofing' => (bool) $type->needs_waterproofing,
+                    'point_norms' => (array) $type->point_norms,
+                    'fixtures' => (array) $type->fixtures,
+                    'ac_extra_above_m2' => $type->ac_extra_above_m2 === null ? null : (float) $type->ac_extra_above_m2,
+                    'tv_min_area_m2' => $type->tv_min_area_m2 === null ? null : (float) $type->tv_min_area_m2,
+                ])
+                ->all(),
+        );
+
+        $types = [];
+
+        foreach ($rows as $row) {
+            if (RoomType::tryFrom($row['room_type'])) {
+                $types[$row['room_type']] = RoomTypeNorm::fromArray($row);
+            }
+        }
+
+        foreach (RoomType::cases() as $case) {
+            $types[$case->value] ??= RoomTypeNorm::fromEnum($case);
+        }
+
+        return $this->roomTypes = $types;
+    }
+
+    public function roomType(RoomType $type): RoomTypeNorm
+    {
+        return $this->roomTypes()[$type->value] ?? RoomTypeNorm::fromEnum($type);
+    }
+
     /** An unconfigured city is 1.00, not a blocked calculation (master spec audit §2.10). */
     public function cityCoefficient(?string $cityKey): float
     {
@@ -357,6 +422,7 @@ class CalculatorConfig
                     CalculatorSetting::max('updated_at'),
                     CalculatorQuickRate::max('updated_at'),
                     CalculatorCity::max('updated_at'),
+                    CalculatorRoomType::max('updated_at'),
                 ];
 
                 return substr(sha1(implode('|', array_map('strval', $stamps))), 0, 16);

@@ -13,7 +13,19 @@ use App\Models\Product;
 /**
  * The single recalculation entry point (master spec §18.1):
  *
- *     geometry → works → materials → catalog prices → logistics → contingency → totals
+ *     geometry → works → materials → catalog prices → logistics → stages →
+ *     contractor margin → contingency → totals
+ *
+ * Every line belongs to a stage (TZ 17.11.2026 §2): WHITE_BOX or FINISH, or none
+ * for the services outside both (the design project). Logistics and the final
+ * cleaning belong to the last stage the visitor ordered. The money is
+ *
+ *     Base        = works + materials bought through Archi + logistics + services
+ *     Margin      = Base × CONTRACTOR_MARGIN_PERCENT
+ *     Contingency = (eligible Base + its margin) × CONTINGENCY_PERCENT
+ *     Total       = Base + Margin + Contingency (+ VAT in ADDED mode)
+ *
+ * — once per stage and once for the whole job, so the three totals always add up.
  *
  * It is a pure function of (inputs, configuration). Nothing is stored while it runs,
  * so the same inputs and the same rates always produce the same estimate — which is
@@ -21,6 +33,17 @@ use App\Models\Product;
  */
 class EstimateBuilder
 {
+    public const LEVEL_FULL = 'FULL';
+
+    public const LEVEL_WHITE_BOX = 'WHITE_BOX';
+
+    public const STAGE_WHITE_BOX = 'WHITE_BOX';
+
+    public const STAGE_FINISH = 'FINISH';
+
+    /** A rate whose stage is «the last one ordered» (logistics, final cleaning). */
+    public const STAGE_LAST = 'LAST';
+
     public function __construct(
         private readonly CalculatorConfig $config,
         private readonly GeometryEngine $geometry,
@@ -43,9 +66,12 @@ class EstimateBuilder
         // demolition / rewiring defaults (master spec §7).
         $condition = ObjectCondition::fromAny($object['condition'] ?? null) ?? ObjectCondition::Shell;
         $segment = PriceSegment::fromSlug($object['segment'] ?? null) ?? PriceSegment::Standard;
+        $level = strtoupper((string) ($object['level'] ?? '')) === self::LEVEL_WHITE_BOX ? self::LEVEL_WHITE_BOX : self::LEVEL_FULL;
+        $lastStage = $level === self::LEVEL_WHITE_BOX ? self::STAGE_WHITE_BOX : self::STAGE_FINISH;
 
-        $rooms = $this->geometry->buildRooms(is_array($inputs['rooms'] ?? null) ? $inputs['rooms'] : [], $condition);
+        $rooms = $this->geometry->buildRooms(is_array($inputs['rooms'] ?? null) ? $inputs['rooms'] : [], $condition, $object);
         $derived = $this->geometry->deriveQuantities($rooms);
+        $calcArea = round(ModuleResolver::calcArea($object, $derived), 2);
 
         $requests = array_merge(
             $this->dependencies->suggest($rooms),
@@ -55,7 +81,7 @@ class EstimateBuilder
         $selection = is_array($inputs['works'] ?? null) ? $inputs['works'] : [];
         $suggestedIds = array_values(array_unique(array_map(fn (WorkRequest $r) => $r->workId, $requests)));
 
-        $requests = $this->applySelection($requests, $selection);
+        $requests = $this->applySelection($requests, $selection, $level);
         $requests = $this->consolidate($requests);
 
         $cityCoefficient = $this->config->cityCoefficient($object['cityKey'] ?? null);
@@ -67,6 +93,7 @@ class EstimateBuilder
             is_array($inputs['materials'] ?? null) ? $inputs['materials'] : [],
             $products,
             $segment,
+            $level === self::LEVEL_WHITE_BOX ? self::STAGE_FINISH : null,
         );
 
         $basket = is_array($inputs['basket'] ?? null) ? $inputs['basket'] : [];
@@ -94,23 +121,30 @@ class EstimateBuilder
 
         $logisticsLines = $this->priceWorks($this->consolidate($logistics['requests']), $cityCoefficient);
 
-        $lines = array_merge($workLines, $materialLines, $logisticsLines);
+        $lines = array_map(
+            fn (EstimateLine $line) => $line->withStage($this->stageOf($line, $lastStage)),
+            array_merge($workLines, $materialLines, $logisticsLines),
+        );
 
         $totals = $this->totals($lines);
-        $contingency = $this->contingencyLine($lines, $totals['contingencyBase']);
+        $stages = $this->stageTotals($lines);
 
-        if ($contingency) {
+        if ($margin = $this->marginLine($totals['baseSubtotal'], $stages)) {
+            $lines[] = $margin;
+        }
+
+        if ($contingency = $this->contingencyLine($stages)) {
             $lines[] = $contingency;
         }
 
-        $vat = $this->vatLine($totals['baseSubtotal'] + ($contingency?->lineTotal ?? 0));
+        $vat = $this->vatLine($totals['baseSubtotal'] + ($margin?->lineTotal ?? 0) + ($contingency?->lineTotal ?? 0));
 
         if ($vat) {
             $lines[] = $vat;
         }
 
         $grandTotal = round(
-            $totals['baseSubtotal'] + ($contingency?->lineTotal ?? 0) + ($vat?->lineTotal ?? 0),
+            $totals['baseSubtotal'] + ($margin?->lineTotal ?? 0) + ($contingency?->lineTotal ?? 0) + ($vat?->lineTotal ?? 0),
             2,
         );
 
@@ -119,6 +153,11 @@ class EstimateBuilder
             'calculatorVersion' => CalculatorConfig::CALCULATOR_VERSION,
             'configVersion' => $this->config->configVersion(),
             'segment' => $segment->value,
+            'level' => $level,
+            // THE area of the estimate — the sum of the rooms (TZ §5).
+            'calcArea' => $calcArea,
+            // At least one room was filled from the norms: the estimate says so.
+            'pointsByNorm' => (bool) array_filter($rooms, fn (RoomGeometry $room) => $room->pointsByNorm),
             'cityCoefficient' => $cityCoefficient,
             'rooms' => array_map(fn (RoomGeometry $room) => $room->toArray(), $rooms),
             'derived' => $derived,
@@ -132,6 +171,8 @@ class EstimateBuilder
                 'logistics' => $totals['logistics'],
                 'services' => $totals['services'],
                 'baseSubtotal' => $totals['baseSubtotal'],
+                'margin' => $margin?->lineTotal ?? 0.0,
+                'marginPercent' => $this->marginPercent(),
                 'contingency' => $contingency?->lineTotal ?? 0.0,
                 'contingencyPercent' => $this->config->float('CONTINGENCY_PERCENT', 0),
                 'vat' => $vat?->lineTotal ?? 0.0,
@@ -139,6 +180,17 @@ class EstimateBuilder
                 'grandTotalRounded' => $this->config->bool('ROUND_TOTALS_TO_INTEGER', true)
                     ? round($grandTotal)
                     : $grandTotal,
+                'perM2' => $calcArea > 0 ? round($grandTotal / $calcArea, 2) : 0.0,
+                'stages' => [
+                    self::STAGE_WHITE_BOX => $this->publicStage($stages[self::STAGE_WHITE_BOX]),
+                    self::STAGE_FINISH => $this->publicStage($stages[self::STAGE_FINISH]),
+                ],
+                'servicesBlock' => $this->publicStage($stages['SERVICES']),
+                'lastStage' => $lastStage,
+                'excludedMaterials' => round(array_sum(array_map(
+                    fn (EstimateLine $l) => (float) ($l->meta['estimatedTotal'] ?? 0),
+                    array_filter($lines, fn (EstimateLine $l) => ($l->meta['mode'] ?? null) === 'EXCLUDED'),
+                )), 2),
             ],
             'condition' => $condition->value,
             'warnings' => $this->warnings($rooms, $object, $derived, $lines),
@@ -166,7 +218,7 @@ class EstimateBuilder
      * @param  array<int, WorkRequest>  $requests
      * @return array<int, WorkRequest>
      */
-    private function applySelection(array $requests, array $selection): array
+    private function applySelection(array $requests, array $selection, string $level = self::LEVEL_FULL): array
     {
         $kept = [];
         $seen = [];
@@ -174,9 +226,21 @@ class EstimateBuilder
         foreach ($requests as $request) {
             $choice = $selection[$request->workId] ?? null;
             $seen[$request->workId] = true;
+            $explicit = is_array($choice) && ($choice['selected'] ?? null) === true;
 
             if (is_array($choice) && array_key_exists('selected', $choice) && ! $choice['selected']) {
                 continue;
+            }
+
+            // White Box: the finishing stage is off by default, and the visitor can
+            // switch any of it back on in the works step (TZ §3).
+            if ($level === self::LEVEL_WHITE_BOX && ! $explicit
+                && $this->config->workRate($request->workId)?->stage === self::STAGE_FINISH) {
+                continue;
+            }
+
+            if ($explicit) {
+                $request = $request->withMeta(['explicit' => true]);
             }
 
             if (is_array($choice) && ($choice['quantity'] ?? null) !== null && $request->roomId === null) {
@@ -195,7 +259,7 @@ class EstimateBuilder
             $quantity = (float) ($choice['quantity'] ?? 0);
 
             if ($quantity > 0) {
-                $kept[] = new WorkRequest($workId, $quantity, suggested: false);
+                $kept[] = new WorkRequest($workId, $quantity, suggested: false, meta: ['explicit' => true]);
             }
         }
 
@@ -286,6 +350,7 @@ class EstimateBuilder
                 contingencyEligible: $rate->contingencyEligible,
                 meta: $request->meta + ['suggested' => $request->suggested]
                     + ($rate->minimumCharge > 0 ? ['minimumChargeOrder' => $rate->minimumCharge] : []),
+                stage: $rate->stage,
             );
         }
 
@@ -367,11 +432,14 @@ class EstimateBuilder
         $totals = ['works' => 0.0, 'materials' => 0.0, 'logistics' => 0.0, 'services' => 0.0, 'contingencyBase' => 0.0];
 
         foreach ($lines as $line) {
+            // `services` is what sits outside both stages (the design project); the
+            // final cleaning belongs to the last stage and is counted with logistics,
+            // so the summary's «Logistika və xidmətlər» row never counts it twice.
             $bucket = match ($line->lineType) {
                 LineType::Work => 'works',
                 LineType::Material => 'materials',
                 LineType::Logistics => 'logistics',
-                LineType::Service => 'services',
+                LineType::Service => $line->stage === null ? 'services' : 'logistics',
                 default => null,
             };
 
@@ -396,15 +464,133 @@ class EstimateBuilder
     }
 
     /**
-     * The financial reserve — a separate row, applied to the eligible subtotal only.
-     * It is not the material waste percentage and must never be applied on top of it
-     * a second time (master spec §15).
+     * Which stage a line belongs to. A rate's own stage wins; LAST — logistics and
+     * the final cleaning — and anything without a stage (a cart product, a work the
+     * admin added without one) go to the last stage the visitor ordered. Only the
+     * services stay outside both stages.
      */
-    private function contingencyLine(array $lines, float $eligibleSubtotal): ?EstimateLine
+    private function stageOf(EstimateLine $line, string $lastStage): ?string
+    {
+        if (in_array($line->stage, [self::STAGE_WHITE_BOX, self::STAGE_FINISH], true)) {
+            return $line->stage;
+        }
+
+        if ($line->stage === null && $line->lineType === LineType::Service) {
+            return null;
+        }
+
+        return $lastStage;
+    }
+
+    private function marginPercent(): float
+    {
+        return max(0.0, $this->config->float('CONTRACTOR_MARGIN_PERCENT', 0));
+    }
+
+    /**
+     * Base, margin and contingency of each stage and of the services block. The job
+     * totals are the sums of these parts, so the stage totals always add up to the
+     * grand total to the qəpik.
+     *
+     * @param  array<int, EstimateLine>  $lines
+     * @return array<string, array<string, float>>
+     */
+    private function stageTotals(array $lines): array
+    {
+        $empty = ['works' => 0.0, 'materials' => 0.0, 'other' => 0.0, 'base' => 0.0, 'eligible' => 0.0];
+        $stages = [self::STAGE_WHITE_BOX => $empty, self::STAGE_FINISH => $empty, 'SERVICES' => $empty];
+
+        foreach ($lines as $line) {
+            $part = match ($line->lineType) {
+                LineType::Work => 'works',
+                LineType::Material => 'materials',
+                LineType::Logistics, LineType::Service => 'other',
+                default => null,
+            };
+
+            if ($part === null) {
+                continue;
+            }
+
+            $key = $line->stage ?? 'SERVICES';
+            $stages[$key][$part] += $line->lineTotal;
+            $stages[$key]['base'] += $line->lineTotal;
+
+            if ($line->contingencyEligible) {
+                $stages[$key]['eligible'] += $line->lineTotal;
+            }
+        }
+
+        $margin = $this->marginPercent();
+        $contingency = max(0.0, $this->config->float('CONTINGENCY_PERCENT', 0));
+
+        foreach ($stages as $key => $stage) {
+            $stage = array_map(fn (float $v) => round($v, 2), $stage);
+            $stage['margin'] = round($stage['base'] * $margin / 100, 2);
+            $stage['contingencyBase'] = round($stage['eligible'] * (1 + $margin / 100), 2);
+            $stage['contingency'] = round($stage['contingencyBase'] * $contingency / 100, 2);
+            $stage['total'] = round($stage['base'] + $stage['margin'] + $stage['contingency'], 2);
+            $stages[$key] = $stage;
+        }
+
+        return $stages;
+    }
+
+    /** The stage block as the response, the PDF and the WhatsApp text show it. */
+    private function publicStage(array $stage): array
+    {
+        return [
+            'works' => $stage['works'],
+            'materials' => $stage['materials'],
+            'other' => $stage['other'],
+            'base' => $stage['base'],
+            'margin' => $stage['margin'],
+            'contingency' => $stage['contingency'],
+            'total' => $stage['total'],
+        ];
+    }
+
+    /**
+     * The contractor's management and profit (TZ §1) — its own row, on everything
+     * bought through Archi. It is not the contingency, and the contingency is taken
+     * of the base WITH it.
+     */
+    private function marginLine(float $baseSubtotal, array $stages): ?EstimateLine
+    {
+        $percent = $this->marginPercent();
+        $total = round(array_sum(array_column($stages, 'margin')), 2);
+
+        if ($percent <= 0 || $total <= 0) {
+            return null;
+        }
+
+        return EstimateLine::make(
+            itemId: 'CONTRACTOR_MARGIN',
+            lineType: LineType::Contingency,
+            category: WorkCategory::Reserve,
+            name: __('calculator-detailed.summary.margin'),
+            unit: '%',
+            quantitySource: 'fixed',
+            quantity: 1,
+            unitPrice: $total,
+            precisionClass: PrecisionClass::Calculated,
+            source: LineSource::AdminRate,
+            contingencyEligible: false,
+            meta: ['percent' => $percent, 'base' => round($baseSubtotal, 2), 'stages' => array_map(fn ($s) => $s['margin'], $stages)],
+        );
+    }
+
+    /**
+     * The financial reserve — a separate row, applied to the eligible subtotal and
+     * its margin only. It is not the material waste percentage and must never be
+     * applied on top of it a second time (master spec §15).
+     */
+    private function contingencyLine(array $stages): ?EstimateLine
     {
         $percent = $this->config->float('CONTINGENCY_PERCENT', 0);
+        $total = round(array_sum(array_column($stages, 'contingency')), 2);
 
-        if ($percent <= 0 || $eligibleSubtotal <= 0) {
+        if ($percent <= 0 || $total <= 0) {
             return null;
         }
 
@@ -416,11 +602,15 @@ class EstimateBuilder
             unit: '%',
             quantitySource: 'fixed',
             quantity: 1,
-            unitPrice: round($eligibleSubtotal * $percent / 100, 2),
+            unitPrice: $total,
             precisionClass: PrecisionClass::Calculated,
             source: LineSource::AdminRate,
             contingencyEligible: false,
-            meta: ['percent' => $percent, 'base' => round($eligibleSubtotal, 2)],
+            meta: [
+                'percent' => $percent,
+                'base' => round(array_sum(array_column($stages, 'contingencyBase')), 2),
+                'stages' => array_map(fn ($s) => $s['contingency'], $stages),
+            ],
         );
     }
 

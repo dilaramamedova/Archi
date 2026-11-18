@@ -46,6 +46,10 @@ class DependencyEngine
             if ($sealant = $this->sealantStep($room)) {
                 $requests[] = $sealant;
             }
+
+            if ($skirting = $this->skirtingStep($room)) {
+                $requests[] = $skirting;
+            }
         }
 
         return $requests;
@@ -76,6 +80,32 @@ class DependencyEngine
         );
     }
 
+    /**
+     * Skirting runs along the room once, whatever share of the floor is laminate: a
+     * kitchen of laminate plus a porcelain patch is still one skirting length, and a
+     * fully tiled bathroom has none (TZ §12). The length already leaves out the
+     * doorways, the passages and the kitchen furniture.
+     */
+    private function skirtingStep(RoomGeometry $room): ?WorkRequest
+    {
+        $floating = array_values(array_filter(
+            $room->zones,
+            fn (SurfaceZone $zone) => $zone->surface === SurfaceType::Floor && $zone->finish?->family === FinishFamily::Floating,
+        ));
+
+        if ($floating === [] || $room->skirtingLength <= 0) {
+            return null;
+        }
+
+        return new WorkRequest(
+            workId: 'SKIRTING_INSTALL',
+            quantity: $room->skirtingLength,
+            roomId: $room->id,
+            roomName: $room->name,
+            meta: ['source' => 'SKIRTING_LENGTH', 'zone' => SurfaceType::Floor->value, 'finish' => $floating[0]->finish->finishId],
+        );
+    }
+
     /** @return array<int, WorkRequest> */
     private function forZone(SurfaceZone $zone, RoomGeometry $room, ?string $heightCoefficient): array
     {
@@ -93,6 +123,7 @@ class DependencyEngine
                 'meta' => ['finish' => $finish->finishId, 'family' => $finish->family->value, 'source' => 'FINISH'],
             ]],
             $this->followUpSteps($zone, $room),
+            $this->topCoatSteps($zone),
         );
 
         $requests = [];
@@ -160,12 +191,14 @@ class DependencyEngine
             $steps[] = ['workId' => 'WALL_PRIMER_FINISH', 'quantity' => $area];
         }
 
+        // A sanitary room is tanked wall-to-wall whatever goes on the wall — tile to
+        // 1.2 m and paint above is still one waterproofed room (TZ §9).
+        if ($zone->wetZone) {
+            $steps[] = ['workId' => 'TILE_WATERPROOF_WALL', 'quantity' => $area];
+        }
+
         if ($family === FinishFamily::Tile) {
             $steps[] = ['workId' => 'TILE_SURFACE_PREP', 'quantity' => $area];
-
-            if ($zone->wetZone) {
-                $steps[] = ['workId' => 'TILE_WATERPROOF_WALL', 'quantity' => $area];
-            }
         }
 
         // Panels need nothing beyond a sound base.
@@ -223,8 +256,8 @@ class DependencyEngine
     }
 
     /**
-     * What the finish needs after it is on: grout for tile, skirting for a floating
-     * floor. The sealant is NOT here — it belongs to the room (sealantStep()).
+     * What the finish needs after it is on: grout for tile. The sealant and the
+     * skirting are NOT here — they belong to the room (sealantStep(), skirtingStep()).
      *
      * @return array<int, array{workId: string, quantity: float}>
      */
@@ -232,8 +265,37 @@ class DependencyEngine
     {
         return match ($zone->finish->family) {
             FinishFamily::Tile => [['workId' => 'TILE_GROUT', 'quantity' => $zone->area]],
-            FinishFamily::Floating => [['workId' => 'SKIRTING_INSTALL', 'quantity' => $room->skirtingLength]],
             default => [],
         };
+    }
+
+    /**
+     * A finish that is itself a base for another one (TZ §13): a plasterboard ceiling
+     * is filled, sanded, primed and painted — the paint being the top-coat finish's
+     * own labour and material, by the litre. Plasterboard needs no plaster.
+     *
+     * @return array<int, array{workId: string, quantity: float, meta?: array}>
+     */
+    private function topCoatSteps(SurfaceZone $zone): array
+    {
+        $topCoat = $this->config->finish($zone->finish->topCoat);
+
+        if (! $topCoat || $topCoat->finishId === $zone->finish->finishId) {
+            return [];
+        }
+
+        $area = $zone->area;
+        $prefix = $zone->surface === SurfaceType::Ceiling ? 'CEIL' : 'WALL';
+
+        return [
+            ['workId' => $prefix.'_PUTTY', 'quantity' => $area],
+            ['workId' => $prefix.'_SANDING', 'quantity' => $area],
+            ['workId' => $prefix === 'CEIL' ? 'CEIL_PRIMER_BASE' : 'WALL_PRIMER_FINISH', 'quantity' => $area],
+            [
+                'workId' => $topCoat->finishId,
+                'quantity' => $area,
+                'meta' => ['finish' => $topCoat->finishId, 'family' => $topCoat->family->value, 'source' => 'FINISH', 'topCoatOf' => $zone->finish->finishId],
+            ],
+        ];
     }
 }

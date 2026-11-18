@@ -34,6 +34,9 @@ class CalculatorFinish extends Model
         'waste_percent' => 'decimal:2',
         'is_default' => 'boolean',
         'is_active' => 'boolean',
+        'needs_underlay' => 'boolean',
+        'paint_norm' => 'boolean',
+        'approved_at' => 'datetime',
     ];
 
     public function updatedBy(): BelongsTo

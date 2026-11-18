@@ -39,6 +39,7 @@
             'PREMIUM' => t('calculator.level.premium'),
         ],
         'whatsapp' => t('calculator.messages.whatsapp', ['area' => '{area}', 'level' => '{level}', 'price' => '{price}']),
+        'includes' => t('calculator.result.includes', ['level' => '{level}']),
         'saved' => t('calculator.messages.saved'),
     ];
 @endphp
@@ -107,9 +108,47 @@
           <b class="text-[32px] font-bold leading-none tracking-[-.5px] text-ink max-[640px]:text-[28px]" id="qcPrice">—</b>
           <span class="text-sm font-medium text-black/50" id="qcCurrency"></span>
         </div>
+        {{-- What the per-m² price covers (TZ 17.11.2026 «Qiymətin izahı»). The level
+             name is filled in by calculator.js, so it follows the chosen category. --}}
+        <p class="mt-2 hidden text-[13px] leading-[1.45] text-black/60" id="qcIncludes"></p>
         {{-- Secondary breakdown: present, but never competing with the sum (TZ §18) --}}
         <dl class="mt-3 hidden grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12px] text-black/50" id="qcDetails"></dl>
       </div>
+
+      {{-- The White Box / finishing composition approved by Archi on 17.11.2026, so a
+           visitor comparing 450 and 650 AZN/m² can see what the difference buys. A
+           native <details>: it opens without JavaScript and is announced as a
+           disclosure by screen readers. --}}
+      @php
+          $compositionRows = ['walls', 'floor', 'ceiling', 'bathroom', 'electrics', 'plumbing', 'hvac', 'openings', 'general'];
+      @endphp
+      <details class="qc-comp group rounded-ds border border-black/10">
+        <summary class="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink [&::-webkit-details-marker]:hidden">
+          <span>{{ t('calculator.composition.title') }}</span>
+          <span class="text-black/40 transition-transform duration-150 group-open:rotate-180" aria-hidden="true">▾</span>
+        </summary>
+        <div class="border-t border-black/10 px-4 pt-3 pb-4">
+          <table class="qc-comp-table w-full border-collapse text-left text-[12px] leading-[1.45] text-black/70">
+            <thead>
+              <tr>
+                <th class="w-[22%] pb-2 font-semibold text-ink">{{ t('calculator.composition.section') }}</th>
+                <th class="pb-2 font-semibold text-ink">{{ t('calculator.composition.white_box') }}</th>
+                <th class="pb-2 font-semibold text-ink">{{ t('calculator.composition.finish') }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @foreach ($compositionRows as $row)
+                <tr class="border-t border-black/8">
+                  <th scope="row" class="py-2 pr-3 align-top font-semibold text-ink">{{ t("calculator.composition.$row.name") }}</th>
+                  <td class="py-2 pr-3 align-top" data-label="{{ t('calculator.composition.white_box') }}">{{ t("calculator.composition.$row.wb") }}</td>
+                  <td class="py-2 align-top" data-label="{{ t('calculator.composition.finish') }}">{{ t("calculator.composition.$row.fin") }}</td>
+                </tr>
+              @endforeach
+            </tbody>
+          </table>
+          <p class="mt-3 text-[12px] leading-[1.5] text-black/45">{{ t('calculator.composition.note') }}</p>
+        </div>
+      </details>
 
       <p class="text-[12px] leading-[1.5] text-black/45">{{ t('calculator.disclaimer') }}</p>
 

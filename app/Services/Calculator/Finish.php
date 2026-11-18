@@ -30,6 +30,13 @@ class Finish
         public readonly array $materialPrices,
         public readonly float $wastePercent,
         public readonly bool $isDefault,
+        public readonly ?string $labourStage = null,
+        public readonly ?string $materialStage = null,
+        /** The finish put on top of this one (plasterboard → CEILING_PAINT). */
+        public readonly ?string $topCoat = null,
+        public readonly bool $needsUnderlay = false,
+        /** Material bought by the litre: area × coats / coverage, priced per litre. */
+        public readonly bool $paintNorm = false,
     ) {}
 
     public static function fromArray(array $row): self
@@ -45,6 +52,11 @@ class Finish
             materialPrices: $row['material_prices'],
             wastePercent: $row['waste_percent'],
             isDefault: $row['is_default'],
+            labourStage: $row['labour_stage'] ?? null,
+            materialStage: $row['material_stage'] ?? null,
+            topCoat: $row['top_coat_finish'] ?? null,
+            needsUnderlay: (bool) ($row['needs_underlay'] ?? false),
+            paintNorm: (bool) ($row['paint_norm'] ?? false),
         );
     }
 
@@ -85,6 +97,7 @@ class Finish
             minimumCharge: $this->minimumCharge,
             precisionClass: PrecisionClass::Calculated,
             contingencyEligible: true,
+            stage: $this->labourStage,
         );
     }
 }

@@ -179,6 +179,88 @@
   .dc-sec button        { @apply flex-1 cursor-pointer rounded-ds border border-black/10 bg-white p-3 text-[13px] font-medium text-ink [font-family:inherit]; }
   .dc-outline           { @apply cursor-pointer rounded-ds border-[1.5px] border-ink bg-white p-3.5 text-[15px] font-semibold text-ink [font-family:inherit]; }
 
+  /* ---- TZ 17.11.2026: levels, stages, «Sadə» points, openings, zones ------------- */
+
+  /* a finish chip that White Box does not include — still selectable, only marked */
+  .dc-chip.nwb          { @apply border-dashed; }
+  .dc-chip.nwb.on       { @apply border-solid; }
+  .dc-nwb-note          { @apply text-[12px] leading-[1.45] text-[#8a6d1b]; }
+
+  /* a quiet text button: «Ətraflı / Dəqiqləşdir», «+ Əlavə örtük», «Orta normaya qaytar» */
+  .dc-link              { @apply cursor-pointer border-none p-0 text-[13px] font-semibold text-ink underline decoration-black/25 underline-offset-[3px] [background:none] [font-family:inherit] hover:decoration-ink; }
+
+  /* «Sadə» summary of a room's points: one line instead of ~20 counters */
+  .dc-norm              { @apply flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-ds border border-black/10 bg-white px-3.5 py-3; }
+  .dc-norm-t            { @apply min-w-0 flex-1 basis-[240px] text-[13px] leading-[1.5] text-black/70; }
+
+  /* «Otaqlar: 67.20 / 69 m²» */
+  .dc-areabox           { @apply flex flex-col gap-2; }
+  .dc-areacount         { @apply self-start rounded-ds bg-[#f1f3f5] px-3 py-1.5 text-[13px] font-semibold text-ink tabular-nums; }
+  .dc-areacount.warn    { @apply bg-amber-50 text-amber-900; }
+
+  /* openings — one card per door / window / passage row */
+  .dc-op                { @apply flex flex-col gap-2.5 rounded-ds border border-black/10 bg-white p-3.5; }
+  /* quantity · width · height on one row at every width: the count needs two digits,
+     the two sizes need four plus "mm", so the count column is the narrow one */
+  .dc-op .dc-fields     { @apply grid grid-cols-[minmax(56px,.6fr)_1fr_1fr] gap-2.5; }
+  .dc-op .dc-fields .dc-fb { @apply min-w-0; }
+  .dc-op .dc-fb .ip input  { @apply min-w-0; }
+  .dc-op-h              { @apply flex items-center justify-between; }
+  .dc-op-h b            { @apply text-[13px] font-semibold text-ink; }
+  .dc-op-h .rm          { @apply cursor-pointer border-none text-[13px] font-medium text-[#c0392b] [background:none] [font-family:inherit]; }
+  .dc-op-adds           { @apply flex flex-wrap gap-2; }
+  .dc-op-add            { @apply cursor-pointer rounded-ds border border-dashed border-black/28 bg-transparent px-3 py-2 text-[13px] font-semibold text-black/60 [font-family:inherit] hover:border-ink hover:text-ink; }
+
+  /* extra finish zones: finish select · m² · remove */
+  .dc-zone              { @apply flex flex-wrap items-center gap-2; }
+  .dc-zone select       { @apply min-w-0 flex-[1_1_180px]; }
+  .dc-zone .dc-zone-a   { @apply min-w-0 flex-[0_0_120px]; }
+  .dc-zone .dc-zone-a .ip { @apply py-2; }
+  .dc-zone-rm           { @apply flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-ds border border-black/10 bg-white text-lg leading-none text-black/50 [font-family:inherit] hover:text-[#c0392b]; }
+
+  /* works: «202.8 m²» and the stage badge on the right of the row */
+  .dc-wr .pr            { @apply flex shrink-0 items-center gap-2 whitespace-nowrap tabular-nums; }
+  .dc-stage             { @apply rounded-ds px-1.5 py-0.5 text-[10px] font-bold tracking-[.3px] uppercase; }
+  .dc-stage.wb          { @apply bg-[#e8eef7] text-[#2f4b7c]; }
+  .dc-stage.fin         { @apply bg-[#fff2d9] text-[#8a6d1b]; }
+
+  /* step 4: what an own-bought material will roughly cost — outside the total */
+  .dc-mr .price.own     { @apply font-medium text-black/50; }
+
+  /* neutral notice: «Elektrik və santexnika nöqtələri orta norma ilə hesablanıb…» */
+  .dc-notice            { @apply rounded-ds bg-[#eef3fa] px-4 py-3 text-[13px] leading-[1.45] text-[#2f4b7c]; }
+
+  /* the three totals: White Box · Bitirmə · Yekun */
+  .dc-tiles             { @apply grid grid-cols-3 gap-2.5 max-[640px]:grid-cols-1; }
+  /* stacked on a phone, each tile is one line — label left, figure right */
+  .dc-tile              { @apply flex flex-col gap-1 rounded-ds border border-black/10 bg-white px-4 py-3 max-[640px]:flex-row max-[640px]:items-baseline max-[640px]:justify-between max-[640px]:py-2.5; }
+  .dc-tile span         { @apply text-[12px] font-semibold text-black/50; }
+  .dc-tile b            { @apply text-lg font-bold whitespace-nowrap text-ink tabular-nums; }
+  .dc-tile.grand        { @apply border-yellow-line bg-[#fffdf0]; }
+
+  /* the stage structure of the final estimate */
+  .dc-struct            { @apply flex flex-col gap-2 rounded-ds border border-black/10 p-4; }
+  .dc-struct .h         { @apply mt-1.5 text-[13px] font-bold tracking-[.2px] text-ink uppercase first:mt-0; }
+  .dc-struct .r         { @apply flex justify-between gap-3 text-sm text-black/70; }
+  .dc-struct .r b       { @apply font-semibold whitespace-nowrap text-ink tabular-nums; }
+  .dc-struct .r.sub     { @apply pl-3 text-[13px] text-black/55; }
+  .dc-struct .r.sub b   { @apply font-medium; }
+  .dc-struct .r.subtotal{ @apply border-t border-black/8 pt-1.5 font-semibold text-ink; }
+
+  /* own materials — a shopping list beside the estimate, never inside it */
+  .dc-own               { @apply flex flex-col gap-2.5 rounded-ds border border-dashed border-black/20 p-4; }
+  .dc-own-h             { @apply flex items-baseline justify-between gap-3; }
+  .dc-own-h b           { @apply text-[15px] font-semibold text-ink; }
+  .dc-own-h span        { @apply text-sm font-semibold whitespace-nowrap text-black/60; }
+
+  /* side panel — the same structure, compact */
+  .dc-sum .rows .r.head     { @apply mt-1 text-[12px] font-bold tracking-[.2px] text-ink uppercase; }
+  .dc-sum .rows .r.sub      { @apply pl-2.5 text-[13px] text-black/50; }
+  .dc-sum .rows .r.sub b    { @apply font-medium; }
+  .dc-sum .rows .r.subtotal { @apply font-semibold text-ink; }
+  .dc-sum .rows .stages     { @apply flex flex-col gap-1.5 rounded-ds bg-[#f6f7f8] px-3 py-2.5; }
+  .dc-sum .rows .r.stage    { @apply text-[13px]; }
+
   /* ---- mobile (Figma "calculator-detailed — Addım 1…6", 375) ----------------------
      Three things do not survive the narrow viewport and are rebuilt here; everything
      else only steps down a size. */
@@ -265,6 +347,18 @@
 
     .dc-sum  { @apply gap-2.5 p-4; }
     .dc-room { @apply gap-3 p-3.5; }
+
+    /* an opening card sits inside the room card: quantity, width and height share
+       one row at 360, so the input boxes give up some of their side padding */
+    .dc-op                { @apply p-3; }
+    .dc-op .dc-fb .ip     { @apply px-2.5; }
+    .dc-op .dc-fb > span  { @apply text-[12px]; }
+
+    /* a work row: the name wraps, the volume and the badge keep their own line end */
+    .dc-wr                { @apply items-start; }
+    .dc-wr .pr            { @apply flex-col items-end gap-1; }
+
+    .dc-zone .dc-zone-a   { @apply flex-[1_1_96px]; }
   }
 
   /* ---- touch targets ----
@@ -277,5 +371,24 @@
   @media (max-width: 900px) {
     .dc-pick       { @apply inline-flex min-h-11 items-center justify-center py-0; }
     .dc-room-h .rm { @apply -my-3 -mr-2 inline-flex min-h-11 items-center py-3 pr-2 pl-3; }
+    .dc-op-h .rm   { @apply -my-3 -mr-2 inline-flex min-h-11 items-center py-3 pr-2 pl-3; }
+    .dc-link       { @apply inline-flex min-h-11 items-center; }
+    .dc-op-add     { @apply min-h-11; }
+    .dc-zone-rm    { @apply size-11; }
   }
+}
+
+/* The area-mismatch dialog (calculator-detailed.js → confirmAreaMismatch) has three
+   long answers — «Obyektin sahəsini 67.20 m² olaraq düzəlt» does not fit a third of
+   the shared popup's 420px button row. Stacked full-width here, for this dialog only.
+   Deliberately OUTSIDE @layer: the popup's height/flex come from utilities, which
+   win over anything in the components layer regardless of specificity. */
+#archiPopup.dc-pop-stack [data-pbtn] {
+  flex: 1 1 100%;
+  height: auto;
+  min-height: 46px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  white-space: normal;
+  line-height: 1.3;
 }

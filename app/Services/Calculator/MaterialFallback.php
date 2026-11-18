@@ -19,6 +19,7 @@ class MaterialFallback
         public readonly string $unit,
         /** @var array<string, float|null> segment => price */
         public readonly array $prices,
+        public readonly ?string $stage = null,
     ) {}
 
     public static function fromArray(array $row): self
@@ -29,6 +30,7 @@ class MaterialFallback
             names: $row['names'],
             unit: $row['unit'],
             prices: $row['prices'],
+            stage: $row['stage'] ?? null,
         );
     }
 

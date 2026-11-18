@@ -37,6 +37,7 @@ export default function init() {
   const priceEl = document.getElementById('qcPrice');
   const currencyEl = document.getElementById('qcCurrency');
   const detailsEl = document.getElementById('qcDetails');
+  const includesEl = document.getElementById('qcIncludes');
   const ctaEl = document.getElementById('qcNext');
 
   const state = {
@@ -109,6 +110,7 @@ export default function init() {
       currencyEl.textContent = '';
       detailsEl.classList.add('hidden');
       detailsEl.classList.remove('grid');
+      includesEl?.classList.add('hidden');
       if (ctaEl) ctaEl.href = config.detailedCalculatorUrl;
 
       return;
@@ -116,6 +118,14 @@ export default function init() {
 
     priceEl.textContent = format(result.total);
     currencyEl.textContent = config.showFromPrefix ? labels.fromSuffix : labels.currency;
+
+    // «Qiymətə işlər, Standart səviyyəli materiallar və podratçının idarəetməsi
+    // daxildir» — the visitor should know the margin is already in this figure,
+    // because the detailed estimate shows it as its own row.
+    if (includesEl && labels.includes) {
+      includesEl.textContent = labels.includes.replace('{level}', labels.segments?.[state.segment] || '');
+      includesEl.classList.remove('hidden');
+    }
 
     detailsEl.classList.remove('hidden');
     detailsEl.classList.add('grid');

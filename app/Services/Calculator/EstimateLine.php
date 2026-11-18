@@ -42,6 +42,8 @@ class EstimateLine
         public readonly ?string $roomName = null,
         public readonly bool $contingencyEligible = true,
         public readonly array $meta = [],
+        /** WHITE_BOX | FINISH, or null for what sits outside both stages (TZ §2). */
+        public readonly ?string $stage = null,
     ) {}
 
     /**
@@ -68,6 +70,7 @@ class EstimateLine
         ?string $roomName = null,
         bool $contingencyEligible = true,
         array $meta = [],
+        ?string $stage = null,
     ): self {
         $quantity = max(0.0, $quantity);
 
@@ -78,7 +81,7 @@ class EstimateLine
                 $itemId, $lineType, $category, $name, $unit, $quantitySource,
                 $quantity, null, $coefficients, $minimumCharge,
                 PrecisionClass::Estimated, LineSource::PriceMissing, 0.0,
-                $roomId, $roomName, $contingencyEligible, $meta,
+                $roomId, $roomName, $contingencyEligible, $meta, $stage,
             );
         }
 
@@ -98,7 +101,17 @@ class EstimateLine
             $itemId, $lineType, $category, $name, $unit, $quantitySource,
             $quantity, $unitPrice, $coefficients, $minimumCharge,
             $precisionClass, $source, round($total, 2),
-            $roomId, $roomName, $contingencyEligible, $meta,
+            $roomId, $roomName, $contingencyEligible, $meta, $stage,
+        );
+    }
+
+    public function withStage(?string $stage): self
+    {
+        return new self(
+            $this->itemId, $this->lineType, $this->category, $this->name, $this->unit, $this->quantitySource,
+            $this->quantity, $this->unitPrice, $this->coefficients, $this->minimumCharge,
+            $this->precisionClass, $this->source, $this->lineTotal,
+            $this->roomId, $this->roomName, $this->contingencyEligible, $this->meta, $stage,
         );
     }
 
@@ -198,6 +211,7 @@ class EstimateLine
             'roomId' => $this->roomId,
             'roomName' => $this->roomName,
             'contingencyEligible' => $this->contingencyEligible,
+            'stage' => $this->stage,
             'trace' => $this->shortTrace(),
             'meta' => $this->meta,
         ];

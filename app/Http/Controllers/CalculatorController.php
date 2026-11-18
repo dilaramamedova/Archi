@@ -22,6 +22,7 @@ use App\Services\Calculator\EstimateBuilder;
 use App\Services\Calculator\Finish;
 use App\Services\Calculator\MaterialFallback;
 use App\Services\Calculator\QuickCalculator;
+use App\Services\Calculator\RoomTypeNorm;
 use App\Services\Calculator\Units;
 use App\Services\Calculator\WorkRate;
 use Illuminate\Http\JsonResponse;
@@ -128,6 +129,9 @@ class CalculatorController extends Controller
                 'unit' => $rate->unit,
                 'quantitySource' => $rate->quantitySource,
                 'precisionClass' => $rate->precisionClass->value,
+                // WHITE_BOX | FINISH | LAST | null — the works step marks each row and a
+                // White Box estimate switches the FINISH ones off (TZ 17.11.2026 §2–§3).
+                'stage' => $rate->stage,
                 // The rate itself is deliberately not exposed: the "İşlər" step shows
                 // no prices (master spec §10, §20) — money appears in the estimate.
             ], $this->config->workRates())),
@@ -140,6 +144,9 @@ class CalculatorController extends Controller
                 'name' => $finish->name(),
                 'unit' => $finish->unit,
                 'isDefault' => $finish->isDefault,
+                'labourStage' => $finish->labourStage,
+                'materialStage' => $finish->materialStage,
+                'topCoat' => $finish->topCoat,
             ], $this->config->finishes())),
             'families' => array_map(fn (FinishFamily $family) => [
                 'value' => $family->value,
@@ -150,6 +157,7 @@ class CalculatorController extends Controller
                 'group' => $fallback->group,
                 'name' => $fallback->name(),
                 'unit' => $fallback->unit,
+                'stage' => $fallback->stage,
             ], $this->config->materialFallbacks())),
             'cities' => array_values(array_map(fn (CityRate $city) => [
                 'key' => $city->key,
@@ -177,6 +185,14 @@ class CalculatorController extends Controller
                 'surfaceStates' => $this->enumPayload(SurfaceState::cases()),
                 'warmFloorTypes' => array_map(fn (WarmFloorType $t) => ['value' => $t->value], WarmFloorType::cases()),
                 'segments' => array_map(fn (PriceSegment $s) => ['value' => $s->value, 'label' => __($s->labelKey())], PriceSegment::cases()),
+                'levels' => [
+                    ['value' => EstimateBuilder::LEVEL_FULL, 'label' => __('calculator-detailed.levels.full')],
+                    ['value' => EstimateBuilder::LEVEL_WHITE_BOX, 'label' => __('calculator-detailed.levels.white_box')],
+                ],
+                'stages' => [
+                    ['value' => EstimateBuilder::STAGE_WHITE_BOX, 'label' => __('calculator-detailed.stages.white_box')],
+                    ['value' => EstimateBuilder::STAGE_FINISH, 'label' => __('calculator-detailed.stages.finish')],
+                ],
             ],
             'settings' => [
                 'contingencyPercent' => $this->config->float('CONTINGENCY_PERCENT', 0),
@@ -188,6 +204,10 @@ class CalculatorController extends Controller
                 // unit (see App\Services\Calculator\Units).
                 'payloadVersion' => Units::PAYLOAD_VERSION,
                 'defaultRoomHeightMm' => $this->config->float('DEFAULT_ROOM_HEIGHT_MM', 2800),
+                // The object's ceiling height starts from the same admin setting (TZ §4).
+                'defaultCeilingHeightMm' => $this->config->float('DEFAULT_ROOM_HEIGHT_MM', 2800),
+                'contractorMarginPercent' => $this->config->float('CONTRACTOR_MARGIN_PERCENT', 0),
+                'spotAreaM2' => $this->config->float('SPOT_AREA_M2', 2.7),
                 'defaultDoor' => [
                     'widthMm' => $this->config->float('DEFAULT_DOOR_WIDTH_MM', 900),
                     'heightMm' => $this->config->float('DEFAULT_DOOR_HEIGHT_MM', 2100),
@@ -289,7 +309,13 @@ class CalculatorController extends Controller
             'inputs' => $session->inputs ?? [],
             'derived' => $estimate['derived'],
             'lines' => $estimate['lines'],
-            'totals' => $estimate['totals'],
+            // The PDF and the admin panel need these next to the money, and a
+            // snapshot is read without recalculating anything.
+            'totals' => $estimate['totals'] + [
+                'level' => $estimate['level'] ?? 'FULL',
+                'calcArea' => $estimate['calcArea'] ?? null,
+                'pointsByNorm' => $estimate['pointsByNorm'] ?? false,
+            ],
             'config_version' => $estimate['configVersion'],
             'calculator_version' => $estimate['calculatorVersion'],
             'currency' => $estimate['currency'],
@@ -335,7 +361,8 @@ class CalculatorController extends Controller
             'email' => $validated['email'] ?? auth()->user()?->email,
             'message' => $validated['message'] ?? null,
             'total_amount' => $estimate['grandTotal'] ?? null,
-            'area' => data_get($session->inputs, 'object.area'),
+            // The rooms' area — the one the estimate was calculated from (TZ §5).
+            'area' => $estimate['calcArea'] ?? data_get($session->inputs, 'object.area'),
             'city_key' => data_get($session->inputs, 'object.cityKey'),
             'room_count' => count((array) data_get($session->inputs, 'rooms', [])),
         ]);
@@ -536,15 +563,17 @@ class CalculatorController extends Controller
         ], $cases);
     }
 
+    /**
+     * Room types in the admin's order, with their «Sadə» norms (admin «Otaq növləri»).
+     * The defaults are the norms of an empty room; the effective counts of a real room
+     * come back with every estimate (rooms[].points / fixtures).
+     */
     private function roomTypePayload(): array
     {
-        return array_map(fn (RoomType $type) => [
-            'value' => $type->value,
-            'label' => __($type->labelKey()),
-            'isWet' => $type->isWet(),
-            'hasWetWalls' => $type->hasWetWalls(),
-            'defaultPoints' => $type->defaultPoints(),
-            'defaultFixtures' => $type->defaultFixtures(),
-        ], RoomType::cases());
+        return array_values(array_map(function (RoomTypeNorm $norm) {
+            $type = RoomType::from($norm->roomType);
+
+            return ['label' => $norm->name() ?: __($type->labelKey())] + $norm->toConfigArray();
+        }, $this->config->roomTypes()));
     }
 }

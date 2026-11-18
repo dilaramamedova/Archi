@@ -19,6 +19,8 @@ class SurfaceZone
         public readonly ?Finish $finish,
         public readonly SurfaceState $currentState,
         public readonly bool $wetZone = false,
+        /** The room's main finish of this surface; false for an extra zone (TZ §10). */
+        public readonly bool $isMain = true,
     ) {}
 
     public function toArray(): array
@@ -31,6 +33,7 @@ class SurfaceZone
             'family' => $this->finish?->family->value,
             'currentState' => $this->currentState->value,
             'wetZone' => $this->wetZone,
+            'isMain' => $this->isMain,
         ];
     }
 }

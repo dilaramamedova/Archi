@@ -6,6 +6,7 @@ use App\Enums\Calculator\PrecisionClass;
 use App\Enums\Calculator\WorkCategory;
 use App\Filament\Resources\CalculatorWorkRateResource\Pages;
 use App\Filament\Resources\Concerns\ExplainsCalculator;
+use App\Filament\Resources\Concerns\HasStageAndApproval;
 use App\Models\CalculatorWorkRate;
 use Filament\Actions;
 use Filament\Forms;
@@ -29,6 +30,7 @@ use Illuminate\Database\Eloquent\Model;
 class CalculatorWorkRateResource extends Resource
 {
     use ExplainsCalculator;
+    use HasStageAndApproval;
 
     protected static ?string $model = CalculatorWorkRate::class;
 
@@ -54,7 +56,7 @@ class CalculatorWorkRateResource extends Resource
     public static function getGlobalSearchResultDetails(Model $record): array
     {
         return [
-            'Bölmə' => self::CATEGORY_LABELS[$record->category?->value ?? $record->category] ?? '',
+            'Bölmə' => self::categoryLabel($record->category),
             'Qiymət' => $record->rate !== null
                 ? number_format((float) $record->rate, 2).' AZN / '.$record->unit
                 : 'dəqiqləşdirilir',
@@ -70,6 +72,7 @@ class CalculatorWorkRateResource extends Resource
         'ELECTRICAL' => 'Elektrik',
         'PLUMBING' => 'Santexnika',
         'HVAC' => 'Kondisioner',
+        'VENTILATION' => 'Ventilyasiya',
         'DOORS' => 'Qapılar',
         'LIGHTING' => 'İşıqlandırma',
         'LOGISTICS' => 'Logistika (daşınma, qaldırma)',
@@ -114,18 +117,21 @@ class CalculatorWorkRateResource extends Resource
         'ParquetArea' => 'Parket döşənən sahə (m²)',
         'GypsumCeilingArea' => 'Alçıpan tavanın sahəsi (m²)',
         'StretchCeilingArea' => 'Gərilmə tavanın sahəsi (m²)',
-        'SkirtingLength' => 'Plintusun uzunluğu — otağın perimetri minus qapı yerləri (p.m)',
+        'SkirtingLength' => 'Plintusun uzunluğu — otağın perimetri minus qapı yerləri, qapısız keçidlər və mətbəx mebeli (p.m)',
+        'WindowSlopesLength' => 'Pəncərə yanlıqları: hər pəncərə üçün (en + 2 × hündürlük) × say (p.m)',
+        'WindowSillLength' => 'Pəncərə altlıqları: pəncərələrin enlərinin cəmi (p.m)',
+        'IntercomPointCount' => 'Domofon nöqtələrinin sayı — otaqlar addımında və ya norma ilə',
         'CorniceLength' => 'Karnizin uzunluğu (p.m)',
         'ShadowGapLength' => 'Kölgə profilinin uzunluğu (p.m)',
         'SealantLength' => 'Hermetiklənən birləşmələrin uzunluğu (p.m)',
         'Tile45Length' => '45° kəsilən kənarların uzunluğu (p.m)',
-        'ObjectArea' => 'Obyektin ümumi sahəsi — 1-ci addımda yazılan (m²)',
+        'ObjectArea' => 'Obyektin sahəsi — otaqların sahələrinin cəmi (m²); otaq daxil edilənədək 1-ci addımdakı rəqəm',
         'ConditionedArea' => 'Kondisionerlənən sahə (m²)',
         'DoorCount' => 'Sökülən qapıların sayı (ədəd)',
         'InteriorDoorCount' => 'Quraşdırılan otaqarası qapıların sayı (ədəd)',
         'HiddenDoorCount' => 'Gizli qapıların sayı (ədəd)',
         'SlidingDoorCount' => 'Sürgülü qapıların sayı (ədəd)',
-        'DoorOpeningPrepCount' => 'Hazırlanan qapı yerlərinin sayı (ədəd)',
+        'DoorOpeningPrepCount' => 'Otaqlararası qapı yerlərinin sayı — giriş qapısı sayılmır (ədəd)',
         'FixtureCount' => 'Sökülən santexnika avadanlığının sayı (ədəd)',
         'ElectricalPointCount' => 'Sökülən elektrik nöqtələrinin sayı',
         'SocketCount' => 'Rozetka nöqtələrinin sayı — otaqlar addımında yazılır',
@@ -163,8 +169,8 @@ class CalculatorWorkRateResource extends Resource
         'DishwasherCount' => 'Qabyuyan maşınların sayı (ədəd)',
         'TowelRailCount' => 'Dəsmalqurudanların sayı (ədəd)',
         'SplitUnitCount' => 'Split kondisionerlərin sayı (komplekt)',
-        'SplitExtraRouteMeters' => 'Standartdan artıq trassa uzunluğu (m)',
-        'CondensateDrainMeters' => 'Drenaj borusunun uzunluğu (m)',
+        'SplitExtraRouteMeters' => 'Freon xəttinin uzunluğu: kondisioner sayı × AC_ROUTE_M_PER_UNIT (m)',
+        'CondensateDrainMeters' => 'Drenaj borusunun uzunluğu: kondisioner sayı × AC_DRAIN_M_PER_UNIT (m)',
         'CondensatePumpCount' => 'Drenaj nasoslarının sayı (ədəd)',
         'MultiOutdoorCount' => 'Multi-split xarici bloklarının sayı (ədəd)',
         'MultiIndoorCount' => 'Multi-split daxili bloklarının sayı (ədəd)',
@@ -179,9 +185,9 @@ class CalculatorWorkRateResource extends Resource
         'ChandelierCount' => 'Çilçıraqların sayı (ədəd)',
         'LedStripMeters' => 'LED lentin uzunluğu (p.m)',
         'LedProfileMeters' => 'LED profilin uzunluğu (p.m)',
-        'DebrisVolume' => 'Tikinti tullantısının həcmi (m³) — sistem sahəyə görə hesablayır',
+        'DebrisVolume' => 'Tikinti tullantısının həcmi (m³): sahə × CONSTRUCTION_WASTE_M3_PER_M2, sökülmə olduqda + sökülmə tullantısı',
         'DebrisTrips' => 'Tullantı daşıma reyslərinin sayı — həcmə görə hesablanır',
-        'DeliveryTrips' => 'Çatdırılma reyslərinin sayı — məhsulların çəkisinə görə',
+        'DeliveryTrips' => 'Çatdırılma reyslərinin sayı — otaqların sahəsi / bir reysə düşən sahə',
         'LiftKgFloors' => 'Əl ilə qaldırma: kiloqram × mərtəbə',
         'PlatformDays' => 'Asma platformanın iş günlərinin sayı',
         'ScaffoldQty' => 'İskelenin miqdarı (m²/gün)',
@@ -235,13 +241,25 @@ class CalculatorWorkRateResource extends Resource
                         ->datalist(['m²', 'p.m', 'm', 'm³', 'əd', 'nöqtə', 'xətt', 'komplekt', 'reys', 'gün', 'ay'])
                         ->helperText('Qiymət bu vahidin biri üçündür. Məs. «m²» seçsəniz, qiymət 1 m²-in qiymətidir.'),
 
+                    // The engine decides how much of a work there is; the field only names
+                    // that rule. It is shown, not edited, once the row exists (TZ §36).
                     Forms\Components\Select::make('quantity_source')
                         ->label('Miqdar haradan gəlir')
-                        ->options(self::QUANTITY_SOURCES)
+                        ->options(fn (?CalculatorWorkRate $record) => self::QUANTITY_SOURCES
+                            + ($record?->quantity_source && ! isset(self::QUANTITY_SOURCES[$record->quantity_source])
+                                ? [$record->quantity_source => $record->quantity_source]
+                                : []))
                         ->searchable()
                         ->required()
+                        ->disabledOn('edit')
                         ->allowHtml(false)
-                        ->helperText('Kalkulyator bu ölçünü müştərinin cavablarından özü hesablayır və sizin qiymətə vurur.'),
+                        ->helperText('Yalnız oxumaq üçündür: kalkulyator bu ölçünü müştərinin cavablarından özü hesablayır '
+                            .'və sizin qiymətə vurur. Hesablama qaydası kodda müəyyən edilib, buradan dəyişdirilmir.'),
+
+                    self::stageSelect('stage', 'Smetanın hansı mərhələsinə aiddir',
+                        'White Box — qaralama (suvaq, şap, kommunikasiyalar, boya); Bitirmə — örtüklər, cihazlar, qapılar. '
+                        .'«White Box» səviyyəli hesablamada bitirmə işləri susmaya görə söndürülür. '
+                        .'Logistika və yekun təmizlik müştərinin seçdiyi sonuncu mərhələyə düşür.', withLast: true),
                 ])
                 ->columns(2),
 
@@ -279,6 +297,8 @@ class CalculatorWorkRateResource extends Resource
                         ->helperText('«Təxmini» seçsəniz, müştəri smetada bu sətrin yanında ulduz və '
                             .'«dəqiq qiymət layihə əsasında müəyyən edilir» xəbərdarlığını görəcək. '
                             .'VRF kondisioner kimi işlər üçün istifadə olunur.'),
+
+                    ...self::approvalFields(),
 
                     Forms\Components\Toggle::make('contingency_eligible')
                         ->label('Ehtiyat faizi bu işə də hesablansın')
@@ -342,11 +362,15 @@ class CalculatorWorkRateResource extends Resource
                     ))
                     ->wrap(),
 
+                // An unknown category (added in the database before the code) shows as
+                // its raw value instead of taking the whole page down (TZ §37).
                 Tables\Columns\TextColumn::make('category')
                     ->label('Bölmə')
-                    ->formatStateUsing(fn ($state) => self::CATEGORY_LABELS[$state?->value ?? $state] ?? (string) $state)
+                    ->formatStateUsing(fn ($state) => self::categoryLabel($state))
                     ->badge()
                     ->sortable(),
+
+                self::stageColumn(),
 
                 Tables\Columns\TextInputColumn::make('rate')
                     ->label('Qiymət, AZN')
@@ -367,6 +391,8 @@ class CalculatorWorkRateResource extends Resource
                 Tables\Columns\ToggleColumn::make('is_active')
                     ->label('Aktiv'),
 
+                self::approvalColumn(),
+
                 Tables\Columns\TextColumn::make('work_id')
                     ->label('Texniki ID')
                     ->searchable()
@@ -383,6 +409,10 @@ class CalculatorWorkRateResource extends Resource
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Aktivlik'),
 
+                self::stageFilter(withLast: true),
+
+                self::approvalFilter(),
+
                 Tables\Filters\Filter::make('missing_rate')
                     ->label('Yalnız qiyməti doldurulmayanlar')
                     ->query(fn ($query) => $query->whereNull('rate')),
@@ -397,7 +427,7 @@ class CalculatorWorkRateResource extends Resource
                 .'«Sistem → Tərcümələr» bölməsindən dəyişilir. Qiymət axtarırsınızsa, işin adını '
                 .'və ya sadə sözlə yazmağa çalışın: «kafel», «boya», «qapı».')
             ->actions([Actions\EditAction::make()->label('Redaktə')])
-            ->bulkActions([Actions\DeleteBulkAction::make()])
+            ->bulkActions([self::approveBulkAction(), Actions\DeleteBulkAction::make()])
             ->paginated([25, 50, 100, 'all'])
             ->defaultPaginationPageOption(50);
     }
@@ -409,6 +439,13 @@ class CalculatorWorkRateResource extends Resource
             'create' => Pages\CreateCalculatorWorkRate::route('/create'),
             'edit' => Pages\EditCalculatorWorkRate::route('/{record}/edit'),
         ];
+    }
+
+    public static function categoryLabel(mixed $state): string
+    {
+        $value = $state instanceof WorkCategory ? $state->value : (string) $state;
+
+        return self::CATEGORY_LABELS[$value] ?? $value;
     }
 
     /** Categories are enum-backed; the select must never drift from them. */

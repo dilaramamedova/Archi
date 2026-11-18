@@ -31,6 +31,14 @@ class WorkRequest
         return $this->workId.'|'.($this->roomId ?? '-').'|'.implode(',', $this->coefficientIds);
     }
 
+    public function withMeta(array $meta): self
+    {
+        return new self(
+            $this->workId, $this->quantity, $this->roomId, $this->roomName,
+            $this->coefficientIds, $this->suggested, $this->precisionClass, $meta + $this->meta,
+        );
+    }
+
     public function withQuantity(float $quantity): self
     {
         return new self(

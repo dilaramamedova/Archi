@@ -66,6 +66,21 @@ const num = (n) => {
 /** Quantities: same rule, no currency. */
 const qty = (n) => num(n);
 
+/** Two decimals — a sum of room areas must not read "67.19999999". */
+const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+
+/**
+ * Line types that carry the stage structure's own rows (margin, contingency, VAT)
+ * rather than a work or a material. From 2026-11-18 those figures have their own
+ * place at the bottom of the estimate, so listing them again among the category
+ * groups would count them twice in the reader's head.
+ */
+const ITEM_LINE_TYPES = ['WORK', 'MATERIAL', 'LOGISTICS', 'SERVICE'];
+const isTotalsLine = (line) => ! ITEM_LINE_TYPES.includes(line.lineType) || line.category === 'RESERVE';
+
+/** "Materialı özüm alacağam" — a shopping-list line, never part of the total. */
+const isOwnMaterial = (line) => line.lineType === 'MATERIAL' && line.meta?.mode === 'EXCLUDED';
+
 export default function init() {
   const page = document.getElementById('dcPage');
   if (! page) return;
@@ -124,7 +139,38 @@ export default function init() {
   const STEP_CAPTIONS = [T.object.k, T.rooms.k, T.works.k, T.materials.k, T.cart.k, T.summary.k];
 
   const enums = CONFIG.enums;
+  const settings = CONFIG.settings || {};
   const labelOf = (list, value) => (list.find((x) => x.value === value) || {}).label || value;
+  const roomTypeOf = (value) => enums.roomTypes.find((r) => r.value === value) || {};
+
+  /**
+   * The ceiling every new room starts from (TZ 17.11.2026, «Tavan hündürlüyü»). The
+   * older config called the same setting defaultRoomHeightMm; both are read so this
+   * page works on either side of the backend change.
+   */
+  const DEFAULT_CEILING_MM = settings.defaultCeilingHeightMm ?? settings.defaultRoomHeightMm ?? 2800;
+
+  /** Renovation level — the quick calculator's White Box / Tam təmir, one screen later. */
+  const levels = enums.levels?.length
+    ? enums.levels
+    : [
+        { value: 'FULL', label: T.levels?.full || 'FULL' },
+        { value: 'WHITE_BOX', label: T.levels?.white_box || 'WHITE_BOX' },
+      ];
+
+  /** Room types that carry a kitchen run — its length comes off the skirting. */
+  const KITCHEN_TYPES = ['KITCHEN', 'KITCHEN_LIVING'];
+
+  /**
+   * Which counters a room type has. `pointKeys` / `fixtureKeys` arrive with the
+   * admin-editable room types; the older config only had the default maps, whose keys
+   * were the same list.
+   */
+  const pointKeysOf = (type) => type.pointKeys || Object.keys(type.defaultPoints || {});
+  const fixtureKeysOf = (type) => type.fixtureKeys || Object.keys(type.defaultFixtures || {});
+
+  /** Lighting is billed per kind of fitting but read as one number: "6 işıq". */
+  const LIGHT_KEYS = ['lights_spot', 'lights_pendant', 'lights_chandelier', 'lights'];
 
   /**
    * The finishes are admin rows (calculator_finishes), not a fixed list: whatever
@@ -148,6 +194,13 @@ export default function init() {
     return pick ? pick.id : null;
   };
 
+  /**
+   * Finishes of a surface that belong to the finishing stage (`labourStage`), i.e.
+   * the ones a White Box estimate leaves out. Empty on a backend that does not know
+   * stages yet, which simply means nothing gets marked.
+   */
+  const finishStageFinishes = (surface) => finishes.filter((f) => f.surface === surface && f.labourStage === 'FINISH');
+
   const conditionOf = (value) => enums.conditions.find((c) => c.value === value) || enums.conditions[0] || {};
 
   const state = {
@@ -163,6 +216,11 @@ export default function init() {
       rewireElectrics: true,
       designProject: false,
       segment: CONFIG.quick.defaults.segment,
+      // FULL | WHITE_BOX. White Box makes the server switch every FINISH-stage work
+      // off by default; the visitor can still tick any of them back on step 3.
+      level: 'FULL',
+      // Rooms whose height the visitor never touched follow this value.
+      ceilingHeightMm: DEFAULT_CEILING_MM,
     },
     rooms: [],
     works: {},
@@ -182,6 +240,13 @@ export default function init() {
     demolitionTouched: false,
     rewireTouched: false,
   };
+
+  /**
+   * Rooms whose «Ətraflı» point editor is open although nothing in it was changed
+   * yet. Screen state only: a reload falls back to «Sadə» unless the visitor edited
+   * a counter, which is recorded on the room itself (`pointsTouched`).
+   */
+  const pointsOpen = new Set();
 
   /**
    * The condition seeds the two object switches until the visitor sets them
@@ -213,7 +278,14 @@ export default function init() {
     if (type === 'WHITE_BOX') state.object.condition = 'SHELL';
     else if (type === 'FULL_RENOVATION') state.object.condition = 'OLD_RENOVATION';
 
+    applyLevelFromQuick(type);
     applyConditionDefaults();
+  }
+
+  /** The quick calculator's renovation type is this page's level, one to one. */
+  function applyLevelFromQuick(type) {
+    if (type === 'WHITE_BOX') state.object.level = 'WHITE_BOX';
+    else if (type === 'FULL_RENOVATION') state.object.level = 'FULL';
   }
 
   /**
@@ -251,31 +323,113 @@ export default function init() {
   /** Nearest 10 mm — the step of the fields, so a seeded value lands on it too. */
   const mm = (metres) => Math.round((metres * 1000) / MM_STEP) * MM_STEP;
 
+  /** The same snap for a value that is already in millimetres. */
+  const snapMm = (value) => Math.round((Number(value) || 0) / MM_STEP) * MM_STEP;
+
+  /**
+   * A fresh opening of the given type. DOOR / WINDOW / PASSAGE (a doorless
+   * opening: it comes off the wall area and the skirting, but no door is fitted).
+   * A passage takes the door's default size — it is usually the hole a door would
+   * have hung in.
+   */
+  function newOpening(type, qtyValue = 1) {
+    const size = type === 'WINDOW' ? settings.defaultWindow : settings.defaultDoor;
+    const opening = { type, widthMm: size?.widthMm ?? 0, heightMm: size?.heightMm ?? 0, qty: qtyValue };
+
+    // An entrance door is not an interior door: no installation and no opening
+    // preparation are billed for it. Every door starts as an interior one.
+    if (type === 'DOOR') Object.assign(opening, { installNewDoor: true, isEntrance: false });
+
+    return opening;
+  }
+
+  /**
+   * Older saved rooms and rooms built by older code have no zone lists, and a room
+   * must always offer at least one door row and one window row to type into (qty 0
+   * means "none" and is dropped from the payload).
+   */
+  function normaliseRoom(room) {
+    room.openings = Array.isArray(room.openings) ? room.openings : [];
+    if (! room.openings.some((o) => o.type === 'DOOR')) room.openings.unshift(newOpening('DOOR', 0));
+    if (! room.openings.some((o) => o.type === 'WINDOW')) room.openings.push(newOpening('WINDOW', 0));
+    room.openings.forEach((o) => {
+      if (o.type === 'DOOR') o.isEntrance = !! o.isEntrance;
+    });
+    room.floorZones = Array.isArray(room.floorZones) ? room.floorZones : [];
+    room.wallZones = Array.isArray(room.wallZones) ? room.wallZones : [];
+    room.points = room.points || {};
+    room.fixtures = room.fixtures || {};
+    room.pointsTouched = !! room.pointsTouched;
+    room.heightTouched = !! room.heightTouched;
+    if (KITCHEN_TYPES.includes(room.roomType)) room.kitchenFurnitureMm ??= 0;
+
+    return room;
+  }
+
   function newRoom(roomType, roomArea, index) {
     // A plausible rectangle for the share of the area this room takes: the visitor
     // corrects the two dimensions, and every wall quantity follows from them.
     const side = Math.max(1.5, Math.sqrt(Math.max(roomArea, 4)));
-    const type = enums.roomTypes.find((r) => r.value === roomType) || {};
+    const type = roomTypeOf(roomType);
 
-    return {
+    return normaliseRoom({
       id: `room-${index + 1}-${Math.random().toString(36).slice(2, 7)}`,
       name: labelOf(enums.roomTypes, roomType),
       roomType,
       lengthMm: mm(side * 1.2),
       widthMm: mm(side / 1.2),
-      heightMm: CONFIG.settings.defaultRoomHeightMm,
+      // Every room starts at the object's ceiling and follows it until the visitor
+      // types this room's own height (`heightTouched`). Before this, a 3 200 mm flat
+      // meant correcting five rooms one by one.
+      heightMm: state.object.ceilingHeightMm || DEFAULT_CEILING_MM,
+      heightTouched: false,
       currentState: null, // null → the object condition seeds it on the server
       ...roomFinishes(type),
       openings: [
-        { type: 'DOOR', widthMm: CONFIG.settings.defaultDoor.widthMm, heightMm: CONFIG.settings.defaultDoor.heightMm, qty: 1, installNewDoor: true },
-        { type: 'WINDOW', widthMm: CONFIG.settings.defaultWindow.widthMm, heightMm: CONFIG.settings.defaultWindow.heightMm, qty: roomType === 'BATHROOM' || roomType === 'WC' || roomType === 'CORRIDOR' ? 0 : 1 },
+        newOpening('DOOR', 1),
+        newOpening('WINDOW', roomType === 'BATHROOM' || roomType === 'WC' || roomType === 'CORRIDOR' ? 0 : 1),
       ],
+      // Extra finishes on part of a surface, e.g. 2 m² of porcelain at the door of a
+      // laminate kitchen-living room; the main finish covers whatever is left.
+      floorZones: [],
+      wallZones: [],
       // Bathrooms and WCs get a warm floor by default; a kitchen is wet underfoot
       // but rarely heated.
       warmFloor: { type: type.hasWetWalls ? 'ELECTRIC' : 'NONE', area: null },
+      // «Sadə» mode: the server fills the points and fixtures from its norms (room
+      // type + area + ceiling) and ignores these maps until `pointsTouched`.
       points: {},
       fixtures: {},
-    };
+      pointsTouched: false,
+    });
+  }
+
+  /** Σ of the rooms' floor areas as typed — what the estimate is calculated on. */
+  const roomsArea = () => round2(state.rooms.reduce((sum, r) => sum + ((r.lengthMm || 0) * (r.widthMm || 0)) / 1e6, 0));
+
+  /** How far, in %, the rooms' sum is from the area stated on step 1. */
+  function areaDeviation() {
+    const objectArea = +state.object.area || 0;
+
+    return objectArea > 0 ? (Math.abs(roomsArea() - objectArea) / objectArea) * 100 : 0;
+  }
+
+  const areaMismatch = () => areaDeviation() > (settings.areaTolerancePercent ?? 5);
+
+  /**
+   * Scale every room so their sum matches a new object area. Both sides get the
+   * square root of the ratio, so the rooms keep their proportions; the result is
+   * snapped to the 10 mm step of the fields.
+   */
+  function scaleRoomsTo(area) {
+    const current = roomsArea();
+    if (! (current > 0) || ! (area > 0)) return;
+
+    const k = Math.sqrt(area / current);
+    state.rooms.forEach((room) => {
+      room.lengthMm = snapMm(room.lengthMm * k);
+      room.widthMm = snapMm(room.widthMm * k);
+    });
   }
 
   /** The three finishes a room of this type starts with. */
@@ -294,9 +448,18 @@ export default function init() {
       // Shape version: from 2 on, room and opening dimensions are millimetres.
       v: CONFIG.settings.payloadVersion,
       object: state.object,
-      rooms: state.rooms.map((room) => ({
+      rooms: state.rooms.map(({ kitchenFurnitureMm, ...room }) => ({
         ...room,
+        // The kitchen run is only meaningful for the two kitchen types; a room that
+        // was a kitchen a minute ago must not keep shortening its skirting.
+        ...(KITCHEN_TYPES.includes(room.roomType) ? { kitchenFurnitureMm: Math.max(0, +kitchenFurnitureMm || 0) } : {}),
         openings: room.openings.filter((o) => o.qty > 0),
+        floorZones: (room.floorZones || []).filter((z) => z.finish && z.areaM2 > 0),
+        wallZones: (room.wallZones || []).filter((z) => z.finish && z.areaM2 > 0),
+        // «Sadə»: the server derives the counts from its norms and ignores the maps;
+        // sending them empty keeps that true on a server that predates the flag.
+        points: room.pointsTouched ? room.points : {},
+        fixtures: room.pointsTouched ? room.fixtures : {},
         warmFloor: room.warmFloor.type === 'NONE' ? { type: 'NONE' } : room.warmFloor,
       })),
       works: state.works,
@@ -324,13 +487,16 @@ export default function init() {
    *       `heightMm`)
    *   3 — three surface states and three object conditions; materials and works
    *       keyed by finish id; the engineering modules derived from the rooms
+   *   4 — renovation level and object ceiling height; per-room `pointsTouched`
+   *       («Sadə» / «Ətraflı») and `heightTouched`; lighting split by kind
+   *       (`lights` → `lights_chandelier`); floor / wall zones; PASSAGE openings
    *
    * This marker exists for exactly this moment: reading an old blob as if it were
    * current would turn a visitor's 4.5 m room into 4.5 mm, or their "old tile" into
    * no state at all. upgradeSaved() converts it instead of discarding their answers —
    * the same steps the server takes in Units::upgradePayload().
    */
-  const STATE_VERSION = 3;
+  const STATE_VERSION = 4;
 
   function persist() {
     try {
@@ -381,8 +547,17 @@ export default function init() {
    */
   function upgradeSaved(saved) {
     if (saved.v === STATE_VERSION) return saved;
-    if (saved.v !== 1 && saved.v !== 2) return null;
+    if (! [1, 2, 3].includes(saved.v)) return null;
 
+    // The steps are chained: a v1 blob goes 1 → 2 → 3 → 4, a v3 one only the last step.
+    if (saved.v === 1 || saved.v === 2) upgradeTo3(saved);
+    upgradeTo4(saved);
+
+    return saved;
+  }
+
+  /** v1 / v2 → v3: metres to millimetres, then the 2026-11 simplification. */
+  function upgradeTo3(saved) {
     if (saved.v === 1) {
       const toMm = (node, from, to) => {
         if (Number.isFinite(+node[from]) && node[to] === undefined) node[to] = Math.round(+node[from] * 1000);
@@ -416,9 +591,41 @@ export default function init() {
     saved.materials = rekey(saved.materials, LEGACY.materials);
     saved.works = rekey(saved.works, LEGACY.works);
     saved.modules = { services: { finalCleaning: saved.modules?.services?.finalCleaning ?? true } };
-    saved.v = STATE_VERSION;
+    saved.v = 3;
+  }
 
-    return saved;
+  /**
+   * v3 → v4 (TZ 17.11.2026). A room whose counts the visitor had edited keeps them
+   * as «Ətraflı»; every other room becomes «Sadə» and is priced from the norms. The
+   * single ceiling-light count becomes chandeliers — the server maps the old key
+   * the same way. The object ceiling is taken from the first room, and a room that
+   * differs from it is treated as one whose height was typed by hand.
+   */
+  function upgradeTo4(saved) {
+    const object = saved.object || {};
+    const rooms = saved.rooms || [];
+
+    object.level = object.level || 'FULL';
+    object.ceilingHeightMm = object.ceilingHeightMm || +rooms[0]?.heightMm || DEFAULT_CEILING_MM;
+    saved.object = object;
+
+    rooms.forEach((room) => {
+      const points = room.points || {};
+
+      if (points.lights !== undefined) {
+        if (points.lights_chandelier === undefined) points.lights_chandelier = points.lights;
+        delete points.lights;
+      }
+
+      room.points = points;
+      room.fixtures = room.fixtures || {};
+      room.pointsTouched = Object.keys(room.points).length > 0 || Object.keys(room.fixtures).length > 0;
+      room.heightTouched = +room.heightMm !== +object.ceilingHeightMm;
+      room.floorZones = room.floorZones || [];
+      room.wallZones = room.wallZones || [];
+    });
+
+    saved.v = 4;
   }
 
   /** @returns {boolean} true when a previous session was restored */
@@ -447,13 +654,16 @@ export default function init() {
     // the room type's default rather than sending an id the server will ignore.
     const known = new Set(finishes.map((f) => f.id));
     state.rooms.forEach((room) => {
-      const type = enums.roomTypes.find((r) => r.value === room.roomType) || {};
+      const type = roomTypeOf(room.roomType);
       const defaults = roomFinishes(type);
 
       ['floorFinish', 'wallFinish', 'ceilingFinish'].forEach((key) => {
         if (room[key] && ! known.has(room[key])) room[key] = defaults[key];
       });
-      room.fixtures = room.fixtures || {};
+      normaliseRoom(room);
+      // Same rule for the extra zones: a switched-off finish is dropped, not sent.
+      room.floorZones = room.floorZones.filter((z) => known.has(z.finish));
+      room.wallZones = room.wallZones.filter((z) => known.has(z.finish));
     });
 
     return true;
@@ -578,14 +788,25 @@ export default function init() {
   const totals = () => state.estimate?.totals || null;
   const lines = () => state.estimate?.lines || [];
   const roomsDerived = () => state.estimate?.rooms || [];
+  const derivedRoom = (id) => roomsDerived().find((r) => r.id === id);
+
+  /**
+   * The ONE area of the estimate: Σ of the room floor areas. Header, side panel and
+   * every per-m² line use it; step 1's area is only the starting figure.
+   */
+  const calcArea = () => state.estimate?.calcArea ?? state.estimate?.derived?.TOTAL_FLOOR_AREA ?? 0;
 
   // ---------- shared markup -------------------------------------------------------
 
-  function chips(groupKey, options, current, extra = '') {
+  /**
+   * @param {Set<string>|null} flagged values drawn as "not in White Box" (dashed);
+   *   the explanation sits under the chip row, see notInWhiteBox().
+   */
+  function chips(groupKey, options, current, extra = '', flagged = null) {
     return (
       `<div class="dc-chips" ${extra} data-group="${groupKey}">` +
       options
-        .map((o) => `<button type="button" class="dc-chip ${current === o.value ? 'on' : ''}" data-v="${esc(o.value)}">${esc(o.label)}</button>`)
+        .map((o) => `<button type="button" class="dc-chip ${current === o.value ? 'on' : ''} ${flagged?.has(o.value) ? 'nwb' : ''}" data-v="${esc(o.value)}">${esc(o.label)}</button>`)
         .join('') +
       '</div>'
     );
@@ -623,13 +844,18 @@ export default function init() {
     const t = T.object;
     const o = state.object;
 
+    const levelHint = o.level === 'WHITE_BOX' ? t.level_hint_white_box : t.level_hint_full;
+
     return `<div class="dc-sh"><div class="k">${esc(t.k)}</div><h2>${esc(t.h)}</h2></div>
   <div class="dc-group"><label>${esc(t.type)}</label>${chips('objectType', enums.objectTypes, o.objectType)}</div>
+  <div class="dc-group"><label>${esc(t.level || '')}</label>${chips('level', levels, o.level)}${levelHint ? `<p class="${CLS.note}">${esc(levelHint)}</p>` : ''}</div>
   <div class="dc-fields">
     ${field(t.area, numberInput('data-o="area"', o.area, T.units.m2))}
+    ${field(t.ceiling_height || T.rooms.height, mmInput('data-o="ceilingHeightMm"', o.ceilingHeightMm))}
     <div class="dc-fb"><span>${esc(t.city)}</span><div class="ip">${select('cityKey', CONFIG.cities.map((c) => ({ value: c.key, label: c.name })), o.cityKey)}</div></div>
     ${field(t.floor, numberInput('data-o="floor" step="1"', o.floor))}
   </div>
+  ${t.area_hint ? `<p class="${CLS.note}">${esc(t.area_hint)}</p>` : ''}
   <div class="dc-group"><label>${esc(t.condition)}</label>${chips('condition', enums.conditions, o.condition)}</div>
   <div class="dc-group"><label>${esc(t.segment)}</label>${chips('segment', enums.segments, o.segment)}</div>
   <div class="dc-group"><label>${esc(t.extra)}</label>
@@ -645,51 +871,239 @@ export default function init() {
   }
 
   /**
-   * Rozetka, açar, su nöqtəsi… — the per-room point counts. The engine has always
-   * billed them (rate × count) from the room type's defaults, but until this editor
-   * existed the visitor could neither see nor change the counts their estimate was
-   * built on. Only the keys that exist for this room type are shown, defaults
-   * pre-filled, and one edited key never resets the others.
+   * The counts a room is priced on, restricted to the keys its type has.
+   *
+   * «Sadə» (`pointsTouched` false): what the server derived from its norms — the
+   * estimate's `rooms[].points / fixtures` — falling back to the type's defaults
+   * until the first estimate arrives. «Ətraflı»: the visitor's own numbers first,
+   * and the server's for any key they have not set.
    */
-  function pointsEditor(room, index) {
-    const defaults = (enums.roomTypes.find((r) => r.value === room.roomType) || {}).defaultPoints || {};
-    const keys = Object.keys(defaults);
+  function effectiveCounts(room, measured = derivedRoom(room.id)) {
+    const type = roomTypeOf(room.roomType);
+    const pick = (keys, ...sources) => Object.fromEntries(keys.map((key) => {
+      const source = sources.find((s) => s && s[key] !== undefined && s[key] !== null);
 
-    if (! keys.length) return '';
+      return [key, Math.max(0, Math.trunc(+(source?.[key] ?? 0)) || 0)];
+    }));
+    const own = room.pointsTouched;
 
-    const labels = T.points || {};
-    const inputs = keys
-      .map((key) => {
-        const value = room.points?.[key] ?? defaults[key];
-        // An air-conditioner point is where a split unit hangs — the engine prices
-        // the unit's installation from this count, so the label names the unit.
-        const label = key === 'ac_power' ? (labels.ac || labels[key]) : labels[key];
-
-        return field(label || key, numberInput(`data-pt="${index}" data-pk="${esc(key)}" step="1"`, value));
-      })
-      .join('');
-
-    return `<div class="dc-group"><label>${esc(T.rooms.points_label || '')}</label><div class="dc-fields">${inputs}</div></div>`;
+    return {
+      points: pick(pointKeysOf(type), own ? room.points : null, measured?.points, type.defaultPoints),
+      fixtures: pick(fixtureKeysOf(type), own ? room.fixtures : null, measured?.fixtures, type.defaultFixtures),
+    };
   }
 
   /**
-   * Unitaz, əlüzyuyan, duş… — the sanitary fixtures of a wet room. Same rules as the
-   * points: defaults from the room type, every count editable, one edit never resets
-   * the others. Each fixture is installed, bought and — in an old flat — the old one
-   * removed, so this one list drives three lines.
+   * «Elektrik: 8 rozetka, 2 açar, 6 işıq · Santexnika: unitaz, lavabo (orta norma)».
+   *
+   * The whole point of «Sadə» is that the visitor never has to count ~90 points
+   * from drawings they do not have — but they still see what the estimate assumed.
+   * Lighting is one figure here (spots + pendants + chandeliers); water and sewer
+   * points follow from the fixtures and are only named when there are no fixtures.
    */
-  function fixturesEditor(room, index) {
-    const defaults = (enums.roomTypes.find((r) => r.value === room.roomType) || {}).defaultFixtures || {};
-    const keys = Object.keys(defaults);
+  function normSummary(room, counts, byNorm) {
+    const P = T.points_short || {};
+    const F = T.fixtures_short || {};
+    const type = roomTypeOf(room.roomType);
+    const electric = [];
+    let lightsDone = false;
 
-    if (! keys.length) return '';
+    pointKeysOf(type).forEach((key) => {
+      if (key === 'water_points' || key === 'sewer_points') return;
 
-    const labels = T.fixtures || {};
-    const inputs = keys
-      .map((key) => field(labels[key] || key, numberInput(`data-fx="${index}" data-fk="${esc(key)}" step="1"`, room.fixtures?.[key] ?? defaults[key])))
+      if (LIGHT_KEYS.includes(key)) {
+        if (lightsDone) return;
+        lightsDone = true;
+        const lights = LIGHT_KEYS.reduce((sum, k) => sum + (counts.points[k] || 0), 0);
+        if (lights > 0) electric.push(tr(P.lights || ':n', { n: lights }));
+
+        return;
+      }
+
+      const n = counts.points[key] || 0;
+      if (n > 0) electric.push(tr(P[key] || `:n ${key}`, { n }));
+    });
+
+    const plumbing = fixtureKeysOf(type)
+      .filter((key) => counts.fixtures[key] > 0)
+      .map((key) => `${F[key] || T.fixtures?.[key] || key}${counts.fixtures[key] > 1 ? ` ×${counts.fixtures[key]}` : ''}`);
+
+    if (! plumbing.length && counts.points.water_points > 0) {
+      plumbing.push(tr(P.water_points || ':n', { n: counts.points.water_points }));
+    }
+
+    const parts = [
+      electric.length ? `${T.category?.electrical || ''}: ${electric.join(', ')}` : '',
+      plumbing.length ? `${T.category?.plumbing || ''}: ${plumbing.join(', ')}` : '',
+    ].filter(Boolean);
+
+    if (! parts.length) return T.rooms.points_none || '';
+
+    return parts.join(' · ') + (byNorm && T.rooms.by_norm ? ` ${T.rooms.by_norm}` : '');
+  }
+
+  /**
+   * Rozetka, açar, unitaz… — the room's electrical points and sanitary fixtures.
+   *
+   * By default a room is in «Sadə» mode: one summary line built from the counts the
+   * server derived from its norms, and a «Ətraflı / Dəqiqləşdir» button. The button
+   * opens every counter of this room type, PREFILLED with those same counts, so the
+   * visitor corrects only what they actually know. The first edit turns the room
+   * «Ətraflı» (`pointsTouched`) and from then on the server uses the visitor's full
+   * maps; «Orta normaya qaytar» hands the room back to the norms.
+   */
+  function pointsSection(room, index, measured) {
+    const t = T.rooms;
+    const type = roomTypeOf(room.roomType);
+    const pointKeys = pointKeysOf(type);
+    const fixtureKeys = fixtureKeysOf(type);
+
+    if (! pointKeys.length && ! fixtureKeys.length) return '';
+
+    const counts = effectiveCounts(room, measured);
+
+    if (! room.pointsTouched && ! pointsOpen.has(room.id)) {
+      const byNorm = measured?.pointsByNorm ?? true;
+
+      return `<div class="dc-group"><label>${esc(t.points_label || '')}</label>
+      <div class="dc-norm">
+        <div class="dc-norm-t">${esc(normSummary(room, counts, byNorm))}</div>
+        <button type="button" class="dc-link" data-pts-open="${index}">${esc(t.points_detail || '')}</button>
+      </div></div>`;
+    }
+
+    const P = T.points || {};
+    const F = T.fixtures || {};
+
+    const pointInputs = pointKeys
+      // An air-conditioner point is where a split unit hangs — the engine prices the
+      // unit's installation from this count, so the label names the unit.
+      .map((key) => field((key === 'ac_power' ? (P.ac || P[key]) : P[key]) || key,
+        numberInput(`data-pt="${index}" data-pk="${esc(key)}" step="1"`, counts.points[key])))
       .join('');
 
-    return `<div class="dc-group"><label>${esc(T.rooms.fixtures_label || '')}</label><div class="dc-fields">${inputs}</div></div>`;
+    const fixtureInputs = fixtureKeys
+      .map((key) => field(F[key] || key, numberInput(`data-fx="${index}" data-fk="${esc(key)}" step="1"`, counts.fixtures[key])))
+      .join('');
+
+    return `<div class="dc-group"><label>${esc(t.points_label || '')}</label>
+      ${room.pointsTouched ? '' : (t.points_hint ? `<p class="${CLS.note}">${esc(t.points_hint)}</p>` : '')}
+      ${pointInputs ? `<div class="dc-fields">${pointInputs}</div>` : ''}
+    </div>
+    ${fixtureInputs ? `<div class="dc-group"><label>${esc(t.fixtures_label || '')}</label><div class="dc-fields">${fixtureInputs}</div></div>` : ''}
+    <div><button type="button" class="dc-link" data-pts-reset="${index}">${esc(t.points_reset || '')}</button></div>`;
+  }
+
+  /**
+   * Door, window and doorless-passage rows. Each row is its own size and count, so a
+   * kitchen with two windows of different sizes is two rows. A room always keeps at
+   * least one door row and one window row (qty 0 = none); passages are optional.
+   */
+  function openingsEditor(room, index) {
+    const t = T.rooms;
+    const o = T.openings || {};
+    const ofType = (type) => room.openings.filter((x) => x.type === type).length;
+    const titles = { DOOR: o.door || t.doors, WINDOW: o.window || t.windows, PASSAGE: o.passage || 'PASSAGE' };
+
+    const rows = room.openings
+      .map((op, oi) => {
+        const attrs = (key) => `data-op="${index}" data-oi="${oi}" data-of="${key}"`;
+        const removable = op.type === 'PASSAGE' || ofType(op.type) > 1;
+
+        // An entrance door is neither installed nor prepared as an interior door, so
+        // its "new door" switch is not offered at all.
+        const doorToggles = op.type === 'DOOR'
+          ? `<div class="dc-toggles">
+          <div class="dc-tg ${op.isEntrance ? 'on' : ''}" data-otg="${index}:${oi}:isEntrance"><span>${esc(o.entrance || '')}</span><div class="dc-sw"></div></div>
+          ${op.isEntrance ? '' : `<div class="dc-tg ${op.installNewDoor ? 'on' : ''}" data-otg="${index}:${oi}:installNewDoor"><span>${esc(t.install_door)}</span><div class="dc-sw"></div></div>`}
+        </div>`
+          : '';
+
+        return `<div class="dc-op">
+        <div class="dc-op-h"><b>${esc(titles[op.type] || op.type)}</b>${removable ? `<button type="button" class="rm" data-orm="${index}:${oi}">${esc(t.remove)}</button>` : ''}</div>
+        <div class="dc-fields">
+          <div class="dc-fb dc-fb-sm"><span>${esc(o.qty || '')}</span><div class="ip">${numberInput(`${attrs('qty')} step="1"`, op.qty ?? 0)}</div></div>
+          <div class="dc-fb dc-fb-sm"><span>${esc(o.width || '')}</span><div class="ip">${mmInput(attrs('widthMm'), op.widthMm ?? 0)}</div></div>
+          <div class="dc-fb dc-fb-sm"><span>${esc(o.height || '')}</span><div class="ip">${mmInput(attrs('heightMm'), op.heightMm ?? 0)}</div></div>
+        </div>
+        ${doorToggles}
+      </div>`;
+      })
+      .join('');
+
+    const adds = ['DOOR', 'WINDOW', 'PASSAGE']
+      .map((type) => `<button type="button" class="dc-op-add" data-oadd="${index}:${type}">${esc(o[`add_${type.toLowerCase()}`] || `+ ${titles[type]}`)}</button>`)
+      .join('');
+
+    return `<div class="dc-group"><label>${esc(t.openings || '')}</label>
+      <div class="${CLS.colStack}">${rows}</div>
+      <div class="dc-op-adds">${adds}</div>
+    </div>`;
+  }
+
+  /**
+   * «White Box-a daxil deyil: Laminat, Parket…» under a finish chip row. Shown only
+   * on a White Box estimate, and only once the backend reports `labourStage`; the
+   * chips stay selectable — the visitor may well want a finish on top of White Box.
+   */
+  function notInWhiteBox(surface) {
+    if (state.object.level !== 'WHITE_BOX') return '';
+
+    const names = finishStageFinishes(surface).map((f) => f.name);
+
+    return names.length && T.rooms.not_in_white_box
+      ? `<p class="dc-nwb-note">${esc(T.rooms.not_in_white_box)}: ${esc(names.join(', '))}</p>`
+      : '';
+  }
+
+  const flaggedFinishes = (surface) => (state.object.level === 'WHITE_BOX'
+    ? new Set(finishStageFinishes(surface).map((f) => f.id))
+    : null);
+
+  /**
+   * Extra finishes on part of a surface — `floorZones` / `wallZones`, each
+   * `{finish, areaM2}`. The room's main finish covers whatever is left, and the line
+   * under the zones says how much that is, from the server's own floor / net wall
+   * area so it can never disagree with the estimate.
+   */
+  function zonesEditor(room, index, surface, measured) {
+    const key = surface === 'FLOOR' ? 'floorZones' : 'wallZones';
+    const zones = room[key] || [];
+    const options = finishesFor(surface);
+    const t = T.rooms;
+
+    const rows = zones
+      .map((zone, zi) => `<div class="dc-zone">
+        ${select(`zone:${index}:${key}:${zi}`, options, zone.finish, `aria-label="${esc(t.zone_finish || '')}"`)}
+        <div class="dc-fb dc-zone-a"><div class="ip">${numberInput(`data-zone="${index}:${key}:${zi}" step="0.1" aria-label="${esc(t.zone_area || '')}"`, zone.areaM2, T.units.m2)}</div></div>
+        <button type="button" class="dc-zone-rm" data-zrm="${index}:${key}:${zi}" aria-label="${esc(t.remove)}">×</button>
+      </div>`)
+      .join('');
+
+    const surfaceArea = surface === 'FLOOR' ? measured?.floorArea : measured?.netWallArea;
+    const used = zones.reduce((sum, z) => sum + (+z.areaM2 || 0), 0);
+    const rest = zones.length && Number.isFinite(surfaceArea) && t.zone_rest
+      ? `<p class="${CLS.note}">${esc(tr(t.zone_rest, { area: qty(round2(Math.max(0, surfaceArea - used))) }))}</p>`
+      : '';
+
+    return `${rows ? `<div class="${CLS.colStack}">${rows}</div>` : ''}${rest}
+      <div><button type="button" class="dc-link" data-zadd="${index}:${key}">${esc(t.zones_add || '')}</button></div>`;
+  }
+
+  /**
+   * «Otaqlar: 67.20 / 69 m²» above the rooms, and the yellow warning when the two
+   * disagree by more than the admin's tolerance. Rebuilt in place while the visitor
+   * types a dimension — it holds no field, so updating it interrupts nothing.
+   */
+  function areaCounter() {
+    const mismatch = areaMismatch();
+    const counter = tr(T.rooms.area_counter || ':rooms / :object m²', {
+      rooms: qty(roomsArea()),
+      object: qty(+state.object.area || 0),
+    });
+
+    return `<div class="dc-areacount ${mismatch ? 'warn' : ''}">${esc(counter)}</div>`
+      + (mismatch ? `<div class="${CLS.warn}">${esc(tr(T.notice.area_mismatch, { deviation: num(Math.round(areaDeviation() * 10) / 10) }))}</div>` : '');
   }
 
   /** The room's own state, or — until the visitor picks one — the object's. */
@@ -721,8 +1135,6 @@ export default function init() {
           return `<div class="dc-collapsed" data-open="${index}"><div><b>${esc(room.name)}</b><span class="a">${esc(summary)}</span></div><span class="${CLS.editHint}">${esc(t.edit)}</span></div>`;
         }
 
-        const door = room.openings.find((o) => o.type === 'DOOR') || {};
-        const win = room.openings.find((o) => o.type === 'WINDOW') || {};
         const removable = state.rooms.length > 1 ? `data-rm="${index}"` : 'disabled';
 
         // Every derived quantity is shown back to the visitor: the specification asks
@@ -736,34 +1148,36 @@ export default function init() {
             }))}</div>`
           : '';
 
+        // The kitchen run comes off the skirting (TZ 17.11.2026 §P2): only asked
+        // where there is a kitchen.
+        const kitchenField = KITCHEN_TYPES.includes(room.roomType)
+          ? field(t.kitchen_furniture || '', mmInput(`data-r="${index}" data-f="kitchenFurnitureMm"`, room.kitchenFurnitureMm ?? 0))
+          : '';
+
         return `<div class="dc-room exp">
       <div class="dc-room-h"><b>${esc(room.name)}</b><button class="rm" ${removable}>${esc(t.remove)}</button></div>
       <div class="dc-group"><label>${esc(t.type)}</label>${chips('roomType', enums.roomTypes.map((r) => ({ value: r.value, label: r.label })), room.roomType, `data-ri="${index}"`)}</div>
       <div class="dc-fields">
         ${field(t.length, mmInput(`data-r="${index}" data-f="lengthMm"`, room.lengthMm))}
         ${field(t.width, mmInput(`data-r="${index}" data-f="widthMm"`, room.widthMm))}
-        <div class="dc-fb dc-fb-sm"><span>${esc(t.height)}</span><div class="ip">${mmInput(`data-r="${index}" data-f="heightMm"`, room.heightMm)}</div></div>
-        <div class="dc-fb dc-fb-sm"><span>${esc(t.doors)}</span><div class="ip">${numberInput(`data-op="${index}" data-ot="DOOR" data-of="qty" step="1"`, door.qty ?? 0)}</div></div>
-        <div class="dc-fb dc-fb-sm"><span>${esc(t.windows)}</span><div class="ip">${numberInput(`data-op="${index}" data-ot="WINDOW" data-of="qty" step="1"`, win.qty ?? 0)}</div></div>
-        ${field(t.door_width, mmInput(`data-op="${index}" data-ot="DOOR" data-of="widthMm"`, door.widthMm ?? 0))}
-        ${field(t.door_height, mmInput(`data-op="${index}" data-ot="DOOR" data-of="heightMm"`, door.heightMm ?? 0))}
-        ${field(t.window_width, mmInput(`data-op="${index}" data-ot="WINDOW" data-of="widthMm"`, win.widthMm ?? 0))}
-        ${field(t.window_height, mmInput(`data-op="${index}" data-ot="WINDOW" data-of="heightMm"`, win.heightMm ?? 0))}
+        ${field(t.height, mmInput(`data-r="${index}" data-f="heightMm"`, room.heightMm))}
+        ${kitchenField}
       </div>
+      ${kitchenField && t.kitchen_furniture_hint ? `<p class="${CLS.note}">${esc(t.kitchen_furniture_hint)}</p>` : ''}
+      ${openingsEditor(room, index)}
       ${derivedLine}
-      <div class="dc-group"><label>${esc(t.floor_cover)}</label>${chips('floorFinish', finishesFor('FLOOR'), room.floorFinish, `data-ri="${index}"`)}</div>
-      <div class="dc-group"><label>${esc(t.wall_cover)}</label>${chips('wallFinish', finishesFor('WALL'), room.wallFinish, `data-ri="${index}"`)}</div>
-      <div class="dc-group"><label>${esc(t.ceiling_cover)}</label>${chips('ceilingFinish', finishesFor('CEILING'), room.ceilingFinish, `data-ri="${index}"`)}</div>
+      <div class="dc-group"><label>${esc(t.floor_cover)}</label>${chips('floorFinish', finishesFor('FLOOR'), room.floorFinish, `data-ri="${index}"`, flaggedFinishes('FLOOR'))}${notInWhiteBox('FLOOR')}${zonesEditor(room, index, 'FLOOR', measured)}</div>
+      <div class="dc-group"><label>${esc(t.wall_cover)}</label>${chips('wallFinish', finishesFor('WALL'), room.wallFinish, `data-ri="${index}"`, flaggedFinishes('WALL'))}${notInWhiteBox('WALL')}${zonesEditor(room, index, 'WALL', measured)}</div>
+      <div class="dc-group"><label>${esc(t.ceiling_cover)}</label>${chips('ceilingFinish', finishesFor('CEILING'), room.ceilingFinish, `data-ri="${index}"`, flaggedFinishes('CEILING'))}${notInWhiteBox('CEILING')}</div>
       <div class="dc-group"><label>${esc(t.state)}</label>${chips('currentState', enums.surfaceStates, roomState(room), `data-ri="${index}"`)}${t.state_hint ? `<p class="${CLS.note}">${esc(t.state_hint)}</p>` : ''}</div>
-      ${pointsEditor(room, index)}
-      ${fixturesEditor(room, index)}
-      <div class="dc-tg ${door.installNewDoor ? 'on' : ''}" data-newdoor="${index}"><span>${esc(t.install_door)}</span><div class="dc-sw"></div></div>
+      ${pointsSection(room, index, measured)}
       <div class="dc-tg ${room.warmFloor.type !== 'NONE' ? 'on' : ''}" data-warm="${index}"><span>${esc(t.heating)}</span><div class="dc-sw"></div></div>
       </div>`;
       })
       .join('');
 
     return `<div class="dc-sh"><div class="k">${esc(t.k)}</div><h2>${esc(t.h)}</h2><div class="d">${esc(t.d)}</div></div>
+  <div class="dc-areabox" id="dcAreaCount">${areaCounter()}</div>
   ${rooms}<button class="dc-add" id="dcAddRoom">${esc(t.add)}</button>`;
   }
 
@@ -781,10 +1195,27 @@ export default function init() {
       workId: f.id,
       name: f.name,
       unit: f.unit,
+      stage: f.labourStage,
       category: f.family === 'TILE' ? 'TILING' : ({ FLOOR: 'FLOOR', WALL: 'WALLS', CEILING: 'CEILING' })[f.surface],
     }));
     const byId = new Map([...CONFIG.works, ...finishWorks].map((w) => [w.workId, w]));
     const active = new Set(lines().filter((l) => l.lineType !== 'MATERIAL').map((l) => l.itemId));
+
+    // «202.8 m²» instead of a bare «m²» (TZ 17.11.2026 §P2): a work's volume is the
+    // sum of its lines over every room. The stage comes from the line when the
+    // engine has priced it, otherwise from the work's own row.
+    const volume = new Map();
+    lines().forEach((line) => {
+      if (line.lineType === 'MATERIAL') return;
+      const entry = volume.get(line.itemId) || { quantity: 0, unit: line.unit, stage: line.stage };
+      entry.quantity += +line.quantity || 0;
+      entry.stage = entry.stage || line.stage;
+      volume.set(line.itemId, entry);
+    });
+
+    const stageBadge = (stage) => (stage
+      ? `<span class="dc-stage ${stage === 'FINISH' ? 'fin' : 'wb'}">${esc(T.stages_short?.[stage.toLowerCase()] || stage)}</span>`
+      : '');
 
     const groups = {};
 
@@ -800,7 +1231,10 @@ export default function init() {
         const rows = works
           .map((work) => {
             const on = state.works[work.workId]?.selected !== false && active.has(work.workId);
-            return `<div class="dc-wr ${on ? 'on' : ''}" data-w="${esc(work.workId)}"><div class="lft"><div class="dc-cb">${CHK}</div><div class="nm">${esc(work.name)}</div></div><div class="pr">${esc(work.unit)}</div></div>`;
+            const measured = on ? volume.get(work.workId) : null;
+            const amount = measured ? `${qty(round2(measured.quantity))} ${measured.unit || work.unit}` : work.unit;
+
+            return `<div class="dc-wr ${on ? 'on' : ''}" data-w="${esc(work.workId)}"><div class="lft"><div class="dc-cb">${CHK}</div><div class="nm">${esc(work.name)}</div></div><div class="pr">${esc(amount)}${stageBadge(measured?.stage || work.stage)}</div></div>`;
           })
           .join('');
 
@@ -812,6 +1246,7 @@ export default function init() {
 
     return `<div class="dc-sh"><div class="k">${esc(t.k)}</div><h2>${esc(t.h)}</h2><div class="d">${esc(t.d)}</div></div>
   <p class="${CLS.note}">${esc(t.auto_hint || '')} ${esc(t.no_prices)}</p>
+  ${state.object.level === 'WHITE_BOX' && t.white_box_hint ? `<div class="${CLS.warn}">${esc(t.white_box_hint)}</div>` : ''}
   ${removedSuggestion ? `<div class="${CLS.warn}">${esc(t.removed_warning)}</div>` : ''}
   ${cards}
   ${modulesBlock()}`;
@@ -854,10 +1289,19 @@ export default function init() {
         const current = selection.mode === 'CATALOG_PRODUCT' ? `PRODUCT:${selection.productId}` : selection.mode;
         const packages = line.meta.packageQty ? ` · ${tr(t.packages, { qty: line.meta.packageQty })}` : '';
 
+        // A material the visitor buys themselves is worth 0 ₼ in the estimate, and a
+        // bare "0 ₼" reads like a free material. What they will roughly spend is
+        // shown instead, marked as outside the total.
+        const price = isOwnMaterial(line)
+          ? (Number.isFinite(+line.meta.estimatedTotal) && line.meta.estimatedTotal !== null
+            ? tr(t.excluded_estimate || '≈ :amount', { amount: money(line.meta.estimatedTotal) })
+            : '')
+          : (line.unitPrice === null ? T.notice.price_missing : money(line.lineTotal));
+
         return `<div class="dc-mr">
       <div class="ml"><b>${esc(line.name)}</b><span>${esc(tr(t.required, { qty: qty(line.quantity), unit: line.unit }))}${esc(packages)}</span></div>
       <div class="mr-r">
-        <span class="price">${esc(line.unitPrice === null ? T.notice.price_missing : money(line.lineTotal))}</span>
+        <span class="price ${isOwnMaterial(line) ? 'own' : ''}">${esc(price)}</span>
         ${select(`material:${categoryId}`, options, current)}
       </div>
     </div>`;
@@ -929,6 +1373,112 @@ export default function init() {
   <div class="${CLS.cartRow}"><b class="${CLS.cartLabel}">${esc(tr(t.summary, { count: included }))}</b><span class="${CLS.sumValue}">${formatMoney(cartTotal)} <span class="${CLS.sumUnit}">${esc(T.currency)}</span></span></div>`;
   }
 
+  // ---------- stage structure (TZ 17.11.2026 §1–2) ---------------------------------
+
+  /** The two stages in the order the estimate reads: White Box first. */
+  const STAGES = ['WHITE_BOX', 'FINISH'];
+  const stageTitle = (key) => (key === 'WHITE_BOX' ? T.summary.white_box : T.summary.finish_stage) || key;
+
+  /** Stages that have anything in them — a White Box estimate has no finishing block. */
+  const stagesWithContent = (total) => STAGES.filter((key) => (+total.stages?.[key]?.base || 0) > 0);
+
+  const marginLabel = (total) => tr(T.side.margin || ':percent%', {
+    percent: num(total.marginPercent ?? settings.contractorMarginPercent ?? 0),
+  });
+  const contingencyLabel = (total) => tr(T.side.contingency, { percent: num(total.contingencyPercent) });
+  const vatLabel = () => tr(T.side.vat, { percent: num(settings.vatPercent) });
+
+  /**
+   * The estimate as the client reads it, top to bottom:
+   *   White Box (works, materials, subtotal) → Bitirmə (works, materials, subtotal)
+   *   → Logistika və xidmətlər → Podratçı əlavəsi → Ehtiyat → (ƏDV) → Yekun.
+   *
+   * Every money row is ADDITIVE: the subtotals, the logistics-and-services row and
+   * the three percentage rows sum to the grand total underneath them. The stage's
+   * `other` (logistics + final cleaning) is not in its subtotal — it is collected in
+   * the logistics-and-services row with the services that belong to no stage.
+   *
+   * @returns {Array<{head?: string, label?: string, value?: number, kind?: string, hint?: string}>}
+   */
+  function structureRows(total) {
+    const rows = [];
+
+    stagesWithContent(total).forEach((key) => {
+      const stage = total.stages[key];
+
+      // «White Box» is an English term: uppercased under lang="az" it reads «WHİTE BOX».
+      rows.push({ head: stageTitle(key), lang: key === 'WHITE_BOX' ? 'en' : null });
+      rows.push({ label: T.summary.works, value: +stage.works || 0, kind: 'sub' });
+      rows.push({ label: T.summary.materials, value: +stage.materials || 0, kind: 'sub' });
+      rows.push({ label: T.summary.subtotal, value: round2((+stage.works || 0) + (+stage.materials || 0)), kind: 'subtotal' });
+    });
+
+    // Whatever of the base is not a stage's works or materials: the stages' `other`
+    // (logistics, final cleaning) plus the services outside both stages. Taken as
+    // the remainder of `baseSubtotal` so the rows add up whatever the server files
+    // under `services` — it also counts the final cleaning there, which already sits
+    // in a stage's `other`, and adding the two would bill the cleaning twice.
+    const stageItems = STAGES.reduce((sum, key) => sum + (+total.stages?.[key]?.works || 0) + (+total.stages?.[key]?.materials || 0), 0);
+    const other = Number.isFinite(+total.baseSubtotal) && total.baseSubtotal !== null
+      ? round2(+total.baseSubtotal - stageItems)
+      : round2(STAGES.reduce((sum, key) => sum + (+total.stages?.[key]?.other || 0), 0) + (+total.servicesBlock?.base || 0));
+
+    rows.push({
+      label: T.summary.logistics_services,
+      value: other,
+      // Delivery and lifting are a norm per m² of the object, and the panel says so.
+      hint: total.logistics > 0 ? T.side.delivery_note : null,
+    });
+    rows.push({ label: marginLabel(total), value: +total.margin || 0 });
+    rows.push({ label: contingencyLabel(total), value: +total.contingency || 0 });
+    rows.push({ label: vatLabel(), value: +total.vat || 0 });
+
+    // A zero row says nothing; a stage subtotal stays even at 0 so the block closes.
+    return rows.filter((row) => row.head || row.kind === 'subtotal' || row.value > 0);
+  }
+
+  /** The three totals: each stage with its own margin and contingency, and the whole. */
+  function stageTotals(total) {
+    return [
+      ...stagesWithContent(total).map((key) => ({ label: stageTitle(key), value: +total.stages[key].total || 0 })),
+      { label: T.side.grand_total, value: total.grandTotalRounded, grand: true },
+    ];
+  }
+
+  /** «Özünüz almalı olduğunuz materiallar» — never inside the estimate rows. */
+  function ownMaterialsBlock() {
+    const own = lines().filter(isOwnMaterial);
+    if (! own.length) return '';
+
+    const t = T.summary;
+    const sum = own.reduce((acc, line) => acc + (+line.meta.estimatedTotal || 0), 0);
+
+    const rows = own
+      .map((line) => {
+        const room = line.roomName ? `<span class="dc-lroom"> · ${esc(line.roomName)}</span>` : '';
+        const amount = Number.isFinite(+line.meta.estimatedTotal) && line.meta.estimatedTotal !== null
+          ? `≈ ${money(line.meta.estimatedTotal)}`
+          : '';
+
+        return `<div class="row"><div class="top"><span class="l">${esc(line.name)}${room}</span><span class="v">${esc(amount)}</span></div><div class="${CLS.trace}">${esc(`${qty(line.quantity)} ${line.unit}`)}</div></div>`;
+      })
+      .join('');
+
+    return `<div class="dc-own">
+      <div class="dc-own-h"><b>${esc(t.own_materials || '')}</b>${sum > 0 ? `<span>≈ ${esc(money(round2(sum)))}</span>` : ''}</div>
+      ${t.own_materials_hint ? `<p class="${CLS.note}">${esc(t.own_materials_hint)}</p>` : ''}
+      <div class="dc-bd">${rows}</div>
+    </div>`;
+  }
+
+  const normNotice = () => (state.estimate?.pointsByNorm && T.notice.points_by_norm
+    ? `<div class="dc-notice">${esc(T.notice.points_by_norm)}</div>`
+    : '');
+
+  const validityNote = () => (settings.estimateValidDays && T.notice.valid_days
+    ? tr(T.notice.valid_days, { days: settings.estimateValidDays })
+    : '');
+
   /**
    * The final estimate. Every group opens down to the individual lines, each with the
    * short trace the engine produced — "184 m² × 8 AZN = 1 472 AZN" — because a client
@@ -939,6 +1489,8 @@ export default function init() {
     const e = state.estimate;
 
     if (! e) return `<div class="dc-sh"><h2>${esc(T.side.calculating)}</h2></div>`;
+
+    const staged = !! e.totals?.stages;
 
     const grouped = state.summaryView === 'room'
       ? groupByRoom()
@@ -979,21 +1531,55 @@ export default function init() {
       })
       .filter(Boolean);
 
-    return `<div class="dc-sh"><div class="k">${esc(t.k)}</div><h2>${esc(tr(t.h, { area: qty(e.derived.TOTAL_FLOOR_AREA || 0) }))}</h2><div class="d">${esc(t.d)}</div></div>
+    // Three totals at a glance — White Box, finishing, the whole — before the detail.
+    const tiles = staged
+      ? `<div class="dc-tiles">${stageTotals(e.totals)
+        .map((tile) => `<div class="dc-tile ${tile.grand ? 'grand' : ''}"><span>${esc(tile.label)}</span><b>${esc(tile.grand ? `${num(tile.value)} ${T.currency_code}` : money(tile.value))}</b></div>`)
+        .join('')}</div>`
+      : '';
+
+    const structure = staged
+      ? `<div class="dc-struct">${structureRows(e.totals)
+        .map((row) => (row.head
+          ? `<div class="h"${row.lang ? ` lang="${row.lang}"` : ''}>${esc(row.head)}</div>`
+          : `<div class="r ${row.kind || ''}"><span>${esc(row.label)}</span><b>${esc(money(row.value))}</b></div>`
+            + (row.hint ? `<div class="${CLS.sideHint}">${esc(row.hint)}</div>` : '')))
+        .join('')}</div>`
+      : '';
+
+    const validity = validityNote();
+
+    return `<div class="dc-sh"><div class="k">${esc(t.k)}</div><h2>${esc(tr(t.h, { area: qty(calcArea()) }))}</h2><div class="d">${esc(t.d)}</div></div>
+  ${warnings.length ? `<div class="${CLS.warn}">${warnings.map(esc).join('<br>')}</div>` : ''}
+  ${normNotice()}
+  ${tiles}
   <div class="dc-chips" data-group="summaryView">
     <button type="button" class="dc-chip ${state.summaryView === 'category' ? 'on' : ''}" data-v="category">${esc(t.by_category)}</button>
     <button type="button" class="dc-chip ${state.summaryView === 'room' ? 'on' : ''}" data-v="room">${esc(t.by_room)}</button>
   </div>
-  ${warnings.length ? `<div class="${CLS.warn}">${warnings.map(esc).join('<br>')}</div>` : ''}
   ${blocks}
   ${e.hasEstimatedLines ? `<p class="${CLS.note}">* ${esc(T.notice.estimated)}</p>` : ''}
-  <div class="dc-total"><b>${esc(t.total)}</b><div class="v"><b>${num(e.totals.grandTotalRounded)}</b><span> ${esc(T.currency_code)}</span></div></div>`;
+  ${ownMaterialsBlock()}
+  ${structure}
+  <div class="dc-total"><b>${esc(t.total)}</b><div class="v"><b>${num(e.totals.grandTotalRounded)}</b><span> ${esc(T.currency_code)}</span></div></div>
+  ${validity ? `<p class="${CLS.note}">${esc(validity)}</p>` : ''}`;
+  }
+
+  /**
+   * The lines the category / room tabs break down. A material the visitor buys
+   * themselves has its own block; and once the backend reports the stage structure,
+   * the margin, contingency and VAT rows live in that structure, not among the groups.
+   */
+  function detailLines() {
+    const staged = !! totals()?.stages;
+
+    return lines().filter((line) => ! isOwnMaterial(line) && ! (staged && isTotalsLine(line)));
   }
 
   function groupByCategory() {
     const groups = new Map();
 
-    lines().forEach((line) => {
+    detailLines().forEach((line) => {
       const key = line.category;
       const group = groups.get(key) || { label: T.category?.[key.toLowerCase()] || key, total: 0, lines: [] };
 
@@ -1008,7 +1594,7 @@ export default function init() {
   function groupByRoom() {
     const groups = new Map();
 
-    lines().forEach((line) => {
+    detailLines().forEach((line) => {
       const key = line.roomId || '_object';
       const group = groups.get(key) || { label: line.roomName || T.steps.object, total: 0, lines: [] };
 
@@ -1026,37 +1612,79 @@ export default function init() {
    * The running estimate. Every row that carries money is listed and the rows add up
    * to the figure above them — a panel whose parts do not sum to its own total is
    * the fastest way to lose a client's trust. Rows worth 0 ₼ are not shown.
+   *
+   * With the stage structure the panel is the same structure as the final estimate,
+   * on every step; without it (an older backend) it is the flat list it always was.
    */
   function sideSummary(total) {
-    const rows = [
-      { label: T.side.works, value: total.works },
-      { label: T.side.materials, value: total.materials },
-      { label: T.side.services, value: total.services },
-      {
-        label: T.side.logistics,
-        value: total.logistics,
-        // The catalog rarely knows what a product weighs, so delivery and lifting
-        // are a norm per m² of the object — and the panel says so.
-        hint: total.logistics > 0 ? T.side.delivery_note : null,
-      },
-      {
-        label: tr(T.side.contingency, { percent: num(total.contingencyPercent) }),
-        value: total.contingency,
-      },
-      { label: tr(T.side.vat, { percent: num(CONFIG.settings.vatPercent) }), value: total.vat },
-    ]
-      .filter((row) => (row.show ?? row.value > 0))
-      .map((row) => `<div class="r"><span>${esc(row.label)}</span><b>${esc(money(row.value))}</b></div>`
-        + (row.hint ? `<div class="${CLS.sideHint}">${esc(row.hint)}</div>` : ''))
-      .join('');
+    const rows = total.stages
+      ? structureRows(total)
+        .map((row) => (row.head
+          ? `<div class="r head"${row.lang ? ` lang="${row.lang}"` : ''}><span>${esc(row.head)}</span></div>`
+          : `<div class="r ${row.kind || ''}"><span>${esc(row.label)}</span><b>${esc(money(row.value))}</b></div>`
+            + (row.hint ? `<div class="${CLS.sideHint}">${esc(row.hint)}</div>` : '')))
+        .join('')
+      : [
+          { label: T.side.works, value: total.works },
+          { label: T.side.materials, value: total.materials },
+          { label: T.side.services, value: total.services },
+          {
+            label: T.side.logistics,
+            value: total.logistics,
+            // The catalog rarely knows what a product weighs, so delivery and lifting
+            // are a norm per m² of the object — and the panel says so.
+            hint: total.logistics > 0 ? T.side.delivery_note : null,
+          },
+          { label: marginLabel(total), value: total.margin },
+          { label: contingencyLabel(total), value: total.contingency },
+          { label: vatLabel(), value: total.vat },
+        ]
+          .filter((row) => (row.show ?? row.value > 0))
+          .map((row) => `<div class="r"><span>${esc(row.label)}</span><b>${esc(money(row.value))}</b></div>`
+            + (row.hint ? `<div class="${CLS.sideHint}">${esc(row.hint)}</div>` : ''))
+          .join('');
+
+    // The stage totals under the grand total, each with its own margin and reserve.
+    const stageLine = total.stages
+      ? stagesWithContent(total)
+        .map((key) => `<div class="r stage"><span>${esc(stageTitle(key))}</span><b>${esc(money(total.stages[key].total))}</b></div>`)
+        .join('')
+      : '';
 
     return `<div class="big"><b>${esc(tr(T.approx, { amount: num(total.grandTotalRounded) }))}</b><span>${esc(T.currency_code)}</span></div>
-     <div class="${CLS.sideMeta}">${esc(tr(T.side.meta, { area: qty(state.estimate.derived.TOTAL_FLOOR_AREA || 0), rooms: state.rooms.length }))}</div>
+     <div class="${CLS.sideMeta}">${esc(tr(T.side.meta, { area: qty(calcArea()), rooms: state.rooms.length }))}</div>
      <div class="rows">
        ${rows}
        <div class="r total"><span>${esc(T.side.grand_total)}</span><b>${esc(money(total.grandTotal))}</b></div>
+       ${stageLine ? `<div class="stages">${stageLine}</div>` : ''}
      </div>
+     ${state.estimate?.pointsByNorm && T.notice.points_by_norm ? `<div class="${CLS.sideMeta}">${esc(T.notice.points_by_norm)}</div>` : ''}
      ${hasOnlyFallbackMaterials() ? `<div class="${CLS.sideMeta}">${esc(T.side.estimate_only)}</div>` : ''}`;
+  }
+
+  /**
+   * The WhatsApp message, with the figures exactly as the summary shows them: the
+   * grand total, each stage's total, the margin and the reserve that those totals
+   * include, VAT when it is added, how long the prices hold, and the norm notice
+   * when the points were not counted by the visitor.
+   */
+  function whatsappText(total) {
+    const out = [tr(T.alerts.whatsapp, { total: num(total.grandTotalRounded) })];
+    const included = T.alerts.whatsapp_included ? ` (${T.alerts.whatsapp_included})` : '';
+
+    if (total.stages) {
+      stagesWithContent(total).forEach((key) => out.push(`${stageTitle(key)}: ${money(total.stages[key].total)}`));
+      if (total.margin > 0) out.push(`${marginLabel(total)}: ${money(total.margin)}${included}`);
+    }
+
+    if (total.contingency > 0) out.push(`${contingencyLabel(total)}: ${money(total.contingency)}${included}`);
+    if (total.vat > 0) out.push(`${vatLabel()}: ${money(total.vat)}${included}`);
+
+    const validity = validityNote();
+    if (validity) out.push(validity);
+    if (state.estimate?.pointsByNorm && T.notice.points_by_norm) out.push(T.notice.points_by_norm);
+
+    return out.join('\n');
   }
 
   function renderSide() {
@@ -1140,10 +1768,7 @@ export default function init() {
       if (! total) return;
 
       submitRequest('WHATSAPP');
-      window.open(
-        `https://wa.me/?text=${encodeURIComponent(tr(T.alerts.whatsapp, { total: num(total.grandTotalRounded) }))}`,
-        '_blank',
-      );
+      window.open(`https://wa.me/?text=${encodeURIComponent(whatsappText(total))}`, '_blank');
     });
   }
 
@@ -1282,12 +1907,86 @@ export default function init() {
     stepEl.querySelector('#dcReset').addEventListener('click', resetAll);
   }
 
-  function goToStep(i) {
+  /**
+   * @param {{force?: boolean}} options `force` skips the area check below — used by
+   *   the dialog's own "fix" and "continue" buttons.
+   */
+  function goToStep(i, { force = false } = {}) {
     if (i === state.step) return;
+
+    // Leaving the rooms with a sum that disagrees with step 1 (the TZ's test case:
+    // 55 m² stated, 99.21 m² in rooms) asks once — but never blocks.
+    if (! force && state.step === 1 && i > 1 && areaMismatch()) {
+      confirmAreaMismatch(i);
+
+      return;
+    }
+
     state.step = i;
     persist();
     render();
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /**
+   * «Obyektin sahəsini X olaraq düzəlt» / «Otaqlara qayıt» / «Davam et». The
+   * estimate is calculated on the rooms either way; fixing the stated area only makes
+   * step 1 agree with them.
+   */
+  function confirmAreaMismatch(target) {
+    const a = T.alerts;
+    const rooms = roomsArea();
+
+    popup.show({
+      type: 'warning',
+      title: a.area_title || '',
+      message: tr(a.area_message || T.notice.area_mismatch, {
+        rooms: qty(rooms),
+        object: qty(+state.object.area || 0),
+        deviation: num(Math.round(areaDeviation() * 10) / 10),
+      }),
+      buttons: [
+        {
+          text: tr(a.area_fix || ':area', { area: qty(rooms) }),
+          variant: 'primary',
+          onClick: () => {
+            state.object.area = rooms;
+            recalculate({ immediate: true });
+            goToStep(target, { force: true });
+          },
+        },
+        { text: a.area_back || '', variant: 'outline', value: false },
+        { text: a.area_continue || '', variant: 'outline', onClick: () => goToStep(target, { force: true }) },
+      ],
+    });
+
+    // Three long labels do not fit side by side in the popup's one button row; this
+    // page's stylesheet stacks them (see .dc-pop-stack in calculator-detailed.css).
+    document.getElementById('archiPopup')?.classList.add('dc-pop-stack');
+  }
+
+  /**
+   * Area changed on step 1 while the rooms are the visitor's own: offer to scale
+   * them to the new area instead of silently keeping (or silently re-seeding) them.
+   * Asked on `change`, i.e. once the visitor has finished typing the number.
+   */
+  function offerRoomRescale(previousArea) {
+    const area = +state.object.area || 0;
+    const current = roomsArea();
+
+    if (! state.roomsTouched || ! (area > 0) || ! (current > 0) || area === previousArea) return;
+    // The rooms already add up to the new figure — nothing to ask.
+    if (Math.abs(current - area) / area < 0.005) return;
+
+    popup.confirm(T.alerts.rescale_rooms, {
+      confirmText: T.alerts.rescale_yes,
+      cancelText: T.alerts.rescale_no,
+      onConfirm: () => {
+        scaleRoomsTo(area);
+        recalculate({ immediate: true });
+        render();
+      },
+    });
   }
 
   /**
@@ -1356,6 +2055,23 @@ export default function init() {
     );
   }
 
+  /** "2:5:isEntrance" → [2, 5, 'isEntrance'] — the composite data attributes below. */
+  const parts = (value) => String(value || '').split(':').map((p) => (/^\d+$/.test(p) ? +p : p));
+
+  /**
+   * First edit of a «Sadə» room's counter: the room becomes «Ətraflı», and the FULL
+   * maps it was priced on are written to it, so the one number the visitor changed
+   * is the only one that moves.
+   */
+  function touchPoints(room) {
+    if (room.pointsTouched) return;
+
+    const counts = effectiveCounts(room);
+    room.points = counts.points;
+    room.fixtures = counts.fixtures;
+    room.pointsTouched = true;
+  }
+
   function bindMain() {
     // chip groups — object fields, room fields and the summary view switch
     mainEl.querySelectorAll('.dc-chips[data-group]').forEach((group) =>
@@ -1380,16 +2096,22 @@ export default function init() {
           state.roomsTouched = true;
 
           if (key === 'roomType') {
-            const type = enums.roomTypes.find((r) => r.value === value) || {};
+            const type = roomTypeOf(value);
 
             room.name = labelOf(enums.roomTypes, value);
             // The counts belong to the old room type; keeping them would give the
             // new bathroom a living room's eight sockets and no toilet. The
             // finishes follow too, while the visitor has not picked their own.
+            // The room goes back to «Sadə»: the norms of its NEW type apply.
             room.points = {};
             room.fixtures = {};
+            room.pointsTouched = false;
+            pointsOpen.delete(room.id);
             Object.assign(room, roomFinishes(type));
+            room.floorZones = [];
+            room.wallZones = [];
             room.warmFloor = { type: type.hasWetWalls ? 'ELECTRIC' : 'NONE', area: null };
+            if (KITCHEN_TYPES.includes(value)) room.kitchenFurnitureMm ??= 0;
           }
         } else {
           state.object[key] = value;
@@ -1410,7 +2132,8 @@ export default function init() {
 
     mainEl.querySelectorAll('select[data-select]').forEach((el) =>
       el.addEventListener('change', () => {
-        const [kind, id] = el.dataset.select.split(':');
+        const [kind, ...rest] = el.dataset.select.split(':');
+        const id = rest.join(':');
 
         if (kind === 'material') {
           if (el.value.startsWith('PRODUCT:')) {
@@ -1420,6 +2143,11 @@ export default function init() {
           }
         } else if (kind === 'cityKey') {
           state.object.cityKey = el.value;
+        } else if (kind === 'zone') {
+          const [roomIndex, key, zoneIndex] = parts(id);
+          const zone = state.rooms[roomIndex]?.[key]?.[zoneIndex];
+          if (zone) zone.finish = el.value;
+          state.roomsTouched = true;
         }
 
         recalculate({ immediate: true });
@@ -1438,14 +2166,42 @@ export default function init() {
           seedRooms();
         }
 
+        // The object ceiling carries every room whose height was never typed.
+        if (el.dataset.o === 'ceilingHeightMm' && state.object.ceilingHeightMm > 0) {
+          state.rooms.forEach((room) => {
+            if (! room.heightTouched) room.heightMm = state.object.ceilingHeightMm;
+          });
+        }
+
         recalculate();
       }),
     );
 
+    // Edited rooms are not re-seeded on every keystroke of the area; once the number
+    // is finished (`change`), the visitor is asked whether to scale them.
+    const areaEl = mainEl.querySelector('input[data-o="area"]');
+    if (areaEl) {
+      let areaBefore = state.object.area;
+      areaEl.addEventListener('focus', () => { areaBefore = state.object.area; });
+      areaEl.addEventListener('change', () => {
+        offerRoomRescale(areaBefore);
+        areaBefore = state.object.area;
+      });
+    }
+
     mainEl.querySelectorAll('input[data-r]').forEach((el) =>
       el.addEventListener('input', () => {
-        state.rooms[+el.dataset.r][el.dataset.f] = +el.value || 0;
+        const room = state.rooms[+el.dataset.r];
+        room[el.dataset.f] = +el.value || 0;
         state.roomsTouched = true;
+
+        // From now on this room keeps its own height when the object ceiling moves.
+        if (el.dataset.f === 'heightMm') room.heightTouched = true;
+
+        // The counter above the rooms holds no field, so it can follow every digit.
+        const counter = mainEl.querySelector('#dcAreaCount');
+        if (counter) counter.innerHTML = areaCounter();
+
         recalculate();
       }),
     );
@@ -1455,20 +2211,9 @@ export default function init() {
         const room = state.rooms[+el.dataset.pt];
         if (! room) return;
 
-        room.points = { ...(room.points || {}), [el.dataset.pk]: Math.max(0, Math.trunc(+el.value || 0)) };
+        touchPoints(room);
+        room.points = { ...room.points, [el.dataset.pk]: Math.max(0, Math.trunc(+el.value || 0)) };
         state.roomsTouched = true;
-        recalculate();
-      }),
-    );
-
-    mainEl.querySelectorAll('input[data-op]').forEach((el) =>
-      el.addEventListener('input', () => {
-        const room = state.rooms[+el.dataset.op];
-        const opening = room.openings.find((o) => o.type === el.dataset.ot);
-        if (! opening) return;
-
-        state.roomsTouched = true;
-        opening[el.dataset.of] = +el.value || 0;
         recalculate();
       }),
     );
@@ -1478,9 +2223,136 @@ export default function init() {
         const room = state.rooms[+el.dataset.fx];
         if (! room) return;
 
-        room.fixtures = { ...(room.fixtures || {}), [el.dataset.fk]: Math.max(0, Math.trunc(+el.value || 0)) };
+        touchPoints(room);
+        room.fixtures = { ...room.fixtures, [el.dataset.fk]: Math.max(0, Math.trunc(+el.value || 0)) };
         state.roomsTouched = true;
         recalculate();
+      }),
+    );
+
+    // «Ətraflı / Dəqiqləşdir» — opens the counters, prefilled; nothing changes yet.
+    mainEl.querySelectorAll('[data-pts-open]').forEach((el) =>
+      el.addEventListener('click', () => {
+        const room = state.rooms[+el.dataset.ptsOpen];
+        if (! room) return;
+
+        pointsOpen.add(room.id);
+        render();
+      }),
+    );
+
+    // «Orta normaya qaytar» — the room is priced from the norms again.
+    mainEl.querySelectorAll('[data-pts-reset]').forEach((el) =>
+      el.addEventListener('click', () => {
+        const room = state.rooms[+el.dataset.ptsReset];
+        if (! room) return;
+
+        room.points = {};
+        room.fixtures = {};
+        room.pointsTouched = false;
+        pointsOpen.delete(room.id);
+        recalculate({ immediate: true });
+        render();
+      }),
+    );
+
+    mainEl.querySelectorAll('input[data-op]').forEach((el) =>
+      el.addEventListener('input', () => {
+        const opening = state.rooms[+el.dataset.op]?.openings[+el.dataset.oi];
+        if (! opening) return;
+
+        state.roomsTouched = true;
+        opening[el.dataset.of] = +el.value || 0;
+        recalculate();
+      }),
+    );
+
+    // Door switches: «Giriş qapısı» and «Yeni qapı quraşdırılsın».
+    mainEl.querySelectorAll('[data-otg]').forEach((el) =>
+      el.addEventListener('click', () => {
+        const [roomIndex, openingIndex, key] = parts(el.dataset.otg);
+        const opening = state.rooms[roomIndex]?.openings[openingIndex];
+        if (! opening) return;
+
+        opening[key] = ! opening[key];
+        state.roomsTouched = true;
+        recalculate({ immediate: true });
+        render();
+      }),
+    );
+
+    // A new row goes after the last row of its type, so doors stay with doors.
+    mainEl.querySelectorAll('[data-oadd]').forEach((el) =>
+      el.addEventListener('click', () => {
+        const [roomIndex, type] = parts(el.dataset.oadd);
+        const room = state.rooms[roomIndex];
+        if (! room) return;
+
+        const last = room.openings.map((o) => o.type).lastIndexOf(type);
+        room.openings.splice(last === -1 ? room.openings.length : last + 1, 0, newOpening(type, 1));
+        state.roomsTouched = true;
+        recalculate({ immediate: true });
+        render();
+      }),
+    );
+
+    mainEl.querySelectorAll('[data-orm]').forEach((el) =>
+      el.addEventListener('click', () => {
+        const [roomIndex, openingIndex] = parts(el.dataset.orm);
+        const room = state.rooms[roomIndex];
+        if (! room) return;
+
+        room.openings.splice(openingIndex, 1);
+        normaliseRoom(room); // never below one door row and one window row
+        state.roomsTouched = true;
+        recalculate({ immediate: true });
+        render();
+      }),
+    );
+
+    // Extra finish zones: add, change the area, remove. The finish itself is a
+    // <select>, handled with the other selects above.
+    mainEl.querySelectorAll('[data-zadd]').forEach((el) =>
+      el.addEventListener('click', () => {
+        const [roomIndex, key] = parts(el.dataset.zadd);
+        const room = state.rooms[roomIndex];
+        if (! room) return;
+
+        const surface = key === 'floorZones' ? 'FLOOR' : 'WALL';
+        const main = surface === 'FLOOR' ? room.floorFinish : room.wallFinish;
+        const options = finishesFor(surface);
+        // The point of a zone is a DIFFERENT finish, so it starts on one.
+        const finish = (options.find((o) => o.value !== main) || options[0])?.value;
+        if (! finish) return;
+
+        room[key] = [...(room[key] || []), { finish, areaM2: 1 }];
+        state.roomsTouched = true;
+        recalculate({ immediate: true });
+        render();
+      }),
+    );
+
+    mainEl.querySelectorAll('input[data-zone]').forEach((el) =>
+      el.addEventListener('input', () => {
+        const [roomIndex, key, zoneIndex] = parts(el.dataset.zone);
+        const zone = state.rooms[roomIndex]?.[key]?.[zoneIndex];
+        if (! zone) return;
+
+        zone.areaM2 = Math.max(0, +el.value || 0);
+        state.roomsTouched = true;
+        recalculate();
+      }),
+    );
+
+    mainEl.querySelectorAll('[data-zrm]').forEach((el) =>
+      el.addEventListener('click', () => {
+        const [roomIndex, key, zoneIndex] = parts(el.dataset.zrm);
+        const room = state.rooms[roomIndex];
+        if (! room?.[key]) return;
+
+        room[key].splice(zoneIndex, 1);
+        recalculate({ immediate: true });
+        render();
       }),
     );
 
@@ -1507,17 +2379,6 @@ export default function init() {
       }),
     );
 
-    mainEl.querySelectorAll('[data-newdoor]').forEach((el) =>
-      el.addEventListener('click', () => {
-        const door = state.rooms[+el.dataset.newdoor].openings.find((o) => o.type === 'DOOR');
-        if (! door) return;
-
-        door.installNewDoor = ! door.installNewDoor;
-        recalculate({ immediate: true });
-        render();
-      }),
-    );
-
     mainEl.querySelectorAll('[data-warm]').forEach((el) =>
       el.addEventListener('click', () => {
         const room = state.rooms[+el.dataset.warm];
@@ -1528,10 +2389,13 @@ export default function init() {
     );
 
     // A suggested work can be removed; the warning above the list is the consequence.
+    // The row's own state decides the toggle, not the stored override: on a White Box
+    // estimate the server switches FINISH works off with no override stored, and a
+    // click must send `{selected: true}` to bring one back.
     mainEl.querySelectorAll('.dc-wr[data-w]').forEach((el) =>
       el.addEventListener('click', () => {
         const workId = el.dataset.w;
-        const on = state.works[workId]?.selected !== false;
+        const on = el.classList.contains('on');
 
         state.works[workId] = { selected: ! on };
         recalculate({ immediate: true });
@@ -1582,8 +2446,8 @@ export default function init() {
 
   // A returning visitor continues where they left off; only a fresh session is
   // seeded from the quick calculator's hand-over and the default room set. Explicit
-  // URL parameters (the quick calculator's CTA) still win over a restored area and
-  // segment — the visitor set them a moment ago, on purpose.
+  // URL parameters (the quick calculator's CTA) still win over a restored area,
+  // segment and level — the visitor set them a moment ago, on purpose.
   const restored = restore();
 
   if (! restored) {
@@ -1592,6 +2456,7 @@ export default function init() {
   } else {
     if (prefill.area !== undefined) state.object.area = prefill.area;
     if (prefill.segment !== undefined) state.object.segment = prefill.segment;
+    if (prefill.renovationType !== undefined) applyLevelFromQuick(prefill.renovationType);
   }
 
   // ?step=1..6 opens the wizard on a given step. Used for deep links from support

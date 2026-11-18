@@ -9,6 +9,7 @@ namespace App\Enums\Calculator;
 enum RoomType: string
 {
     case Living = 'LIVING';
+    case KitchenLiving = 'KITCHEN_LIVING';
     case Bedroom = 'BEDROOM';
     case Kitchen = 'KITCHEN';
     case Bathroom = 'BATHROOM';
@@ -18,23 +19,32 @@ enum RoomType: string
     case Commercial = 'COMMERCIAL';
     case Other = 'OTHER';
 
-    /**
-     * A wet room for the purposes of floor waterproofing. A kitchen counts: a leak
-     * there reaches the neighbours below exactly like a bathroom leak does.
-     */
-    public function isWet(): bool
+    /** The room has a water line (TZ 17.11.2026 §9). */
+    public function hasPlumbing(): bool
     {
-        return in_array($this, [self::Bathroom, self::Wc, self::Kitchen], true);
+        return in_array($this, [self::Bathroom, self::Wc, self::Kitchen, self::KitchenLiving], true);
     }
 
     /**
-     * Walls are a narrower case. A bathroom is tanked wall-to-wall; a kitchen is not,
-     * and defaulting its whole wall area to waterproofing added hundreds of manats of
-     * membrane nobody asked for. The visitor can still mark a kitchen wall zone wet.
+     * Waterproofing — the whole floor and every wall — belongs to the sanitary rooms
+     * only (Archi's decision, TZ 17.11.2026 §9). A kitchen has plumbing but is not
+     * tanked: that used to add ≈ 570 AZN of membrane to an ordinary kitchen.
      */
-    public function hasWetWalls(): bool
+    public function needsWaterproofing(): bool
     {
         return in_array($this, [self::Bathroom, self::Wc], true);
+    }
+
+    /** @deprecated kept for old callers — a room with plumbing. */
+    public function isWet(): bool
+    {
+        return $this->hasPlumbing();
+    }
+
+    /** @deprecated kept for old callers — a waterproofed room. */
+    public function hasWetWalls(): bool
+    {
+        return $this->needsWaterproofing();
     }
 
     public function labelKey(): string
@@ -51,6 +61,7 @@ enum RoomType: string
         return match ($this) {
             self::Living => ['sockets' => 8, 'switches' => 2, 'lights' => 3, 'wall_lights' => 2, 'tv' => 1, 'data' => 1, 'ac_power' => 1],
             self::Bedroom => ['sockets' => 6, 'switches' => 2, 'lights' => 2, 'wall_lights' => 2, 'tv' => 1, 'data' => 0, 'ac_power' => 1],
+            self::KitchenLiving => ['sockets' => 12, 'switches' => 3, 'lights' => 2, 'tv' => 1, 'data' => 1, 'ac_power' => 1, 'appliance' => 3],
             self::Kitchen => ['sockets' => 10, 'switches' => 2, 'lights' => 3, 'appliance' => 3, 'water_points' => 2, 'sewer_points' => 2],
             self::Bathroom => ['sockets' => 2, 'switches' => 1, 'lights' => 2, 'wall_lights' => 1, 'water_points' => 4, 'sewer_points' => 3],
             self::Wc => ['sockets' => 1, 'switches' => 1, 'lights' => 1, 'water_points' => 2, 'sewer_points' => 2],
@@ -71,7 +82,7 @@ enum RoomType: string
         return match ($this) {
             self::Bathroom => ['toilet' => 1, 'basin' => 1, 'shower' => 1, 'bathtub' => 0, 'mixer' => 2],
             self::Wc => ['toilet' => 1, 'basin' => 1, 'mixer' => 1],
-            self::Kitchen => ['kitchen_sink' => 1, 'mixer' => 1],
+            self::Kitchen, self::KitchenLiving => ['kitchen_sink' => 1, 'mixer' => 1, 'dishwasher' => 1],
             default => [],
         };
     }

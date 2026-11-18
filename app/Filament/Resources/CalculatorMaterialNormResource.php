@@ -125,10 +125,17 @@ class CalculatorMaterialNormResource extends Resource
         return $table
             ->description('Kəsim ehtiyatı = materialın neçə faizi artıq alınır. '
                 .'Sərfiyyat = 1 m²-ə nə qədər material gedir. Smetanın sonundakı maliyyə ehtiyatı ilə '
-                .'qarışdırmayın — o, «Parametrlər» səhifəsindədir.')
+                .'qarışdırmayın — o, «Parametrlər» səhifəsindədir. '
+                // TZ 17.11.2026 §24: one source for the cutting waste, and the
+                // panel says which one.
+                .'Laminat, kafel, parket kimi ÜZLÜKLƏRİN kəsim ehtiyatı «Üzlüklər» səhifəsində, hər üzlüyün öz sətrindədir — '
+                .'buradakı WASTE_* sətirlərindən yalnız plintus (WASTE_SKIRTING) işləyir.')
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label('Material')
+                    ->description(fn ($record): ?string => str_starts_with((string) $record->rule_id, 'WASTE_') && $record->rule_id !== 'WASTE_SKIRTING'
+                        ? 'İstifadə olunmur — üzlüyün öz «Texnoloji ehtiyat» faizi işləyir («Üzlüklər» səhifəsi).'
+                        : null)
                     // Translated JSON column: search every locale path, or
                     // Azerbaijani letters never match.
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query->where(

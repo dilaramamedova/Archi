@@ -25,6 +25,47 @@ deploy tələb etmədən dəyişdirilir (TZ §30/§34, Master Spec §21/§24).
 | Material normaları | `calculator_material_norms` | Sərfiyyat normaları (qrunt, şpaklyovka, suvaq, stəjka, yapışqan, dərz, hidroizolyasiya, boya) |
 | Kalkulyator parametrləri | `calculator_settings` | Contingency %, ƏDV, sahə limitləri, kabel/boru normaları, çatdırılma normaları… |
 | Şəhər əmsalları | `calculator_cities` | Şəhər üzrə əmək əmsalı; Bakı = 1.00 baza |
+| **Otaq növləri** | `calculator_room_types` | «Sadə» rejim normaları: nöqtələr (baza + m²-ə pay), cihazlar, su xətti, hidroizolyasiya |
+
+## TZ 17.11.2026 — mərhələlər, podratçı əlavəsi, normalar
+
+Mənbə: «Texniki_tapsiriq_kalkulyator_Archi_AZ.docx» (L. Abdullayeva). Qəbul obyekti «Sea Breeze»
+`tests/Fixtures/calculator/sea_breeze.php`-dədir, qəbul testləri `tests/Feature/CalculatorTzTest.php`.
+
+- **Pul düsturu** (`EstimateBuilder`): Baza = işlər + Archi vasitəsilə alınan materiallar + logistika +
+  xidmətlər; Əlavə = Baza × `CONTRACTOR_MARGIN_PERCENT` (15); Ehtiyat = (uyğun baza + onun əlavəsi) ×
+  `CONTINGENCY_PERCENT`; Yekun = Baza + Əlavə + Ehtiyat (+ ƏDV). Sətirlər: `CONTRACTOR_MARGIN`, `CONTINGENCY`.
+- **Mərhələ** hər sətirdə (`lines[].stage`): `WHITE_BOX` / `FINISH` / `null` (xidmətlər — dizayn).
+  Mənbə: `calculator_work_rates.stage`, `calculator_finishes.labour_stage/material_stage`,
+  `calculator_material_fallbacks.stage` (materialın öz mərhələsi işinkindən üstündür: rozetka nöqtəsi WB,
+  üz hissəsi FINISH). `LAST` = logistika və yekun təmizlik → seçilmiş sonuncu mərhələ.
+  `totals.stages.{WHITE_BOX,FINISH}` hər biri öz əlavəsi və ehtiyatı ilə; `totals.servicesBlock` — mərhələdən kənar.
+- **Səviyyə** `object.level` = `FULL` | `WHITE_BOX`. White Box-da FINISH işləri və FINISH materialları
+  susmaya görə düşür; `works[id].selected = true` ilə qayıdır.
+- **Vahid sahə** `calcArea` = otaqların cəmi (`ModuleResolver::calcArea`): təmizlik, çatdırılma, qaldırma,
+  dizayn, tullantı. 1-ci addımdakı sahə yalnız otaq yoxdursa işləyir; fərq → `AREA_MISMATCH`.
+- **«Sadə» rejim** (`pointsTouched` = false): nöqtələr `RoomTypeNorm::points()` — `ceil(baza + pay × sahə)`,
+  spot = `ceil(sahə / SPOT_AREA_M2)` yalnız SUSPENDED tavanda, işıqsız otağa 1 çilçıraq; su/kanalizasiya
+  cihazlardan (`RoomTypeNorm::FIXTURE_POINTS`). `pointsTouched` olmayan köhnə payload: `points` göndərilibsə
+  «Ətraflı» sayılır; köhnə `lights` → `lights_chandelier`. Cavabda `rooms[].points/fixtures` effektiv saylardır.
+- **Hidroizolyasiya** yalnız `needs_waterproofing` (BATHROOM, WC): bütün döşəmə + bütün divarlar, üzlükdən asılı deyil.
+- **Gipskarton tavan** (`top_coat_finish` = CEILING_PAINT): CEIL_PUTTY, CEIL_SANDING, CEIL_PRIMER_BASE + tavan boyası
+  (iş və litrlə material), K_HEIGHT ilə.
+- **Yeni miqdarlar**: WINDOW_SLOPES = Σ(en + 2h), WINDOW_SILL = Σ en, DOOR_OPENING_PREP = otaqlararası qapılar
+  (`isEntrance` sayılmır), PASSAGE divardan və plintusdan çıxılır, `kitchenFurnitureMm` plintusdan çıxılır,
+  tullantı həmişə: sahə × `CONSTRUCTION_WASTE_M3_PER_M2` (+ sökülmə), kondisioner çıxışları
+  `AC_ROUTE_M_PER_UNIT` / `AC_DRAIN_M_PER_UNIT` (WB), blok FINISH; işıqlar növə görə (spot/asma/çilçıraq/bra).
+- **Materiallar**: bir işə bir neçə material (`MaterialResolver::ITEMS`), boru/şit/qofro/tor-mayak/altlıq,
+  santexnika və işıqlar növə görə; boya `paint_norm` → litr = sahə × qat / örtmə, qiymət litr üzrə.
+  «Özüm alacağam» → `meta.estimatedTotal`, `totals.excludedMaterials`, yekuna daxil deyil.
+- **Kəsim ehtiyatı tək mənbə**: üzlüklər üçün yalnız `calculator_finishes.waste_percent`; norm cədvəlindəki
+  WASTE_* sətirlərindən yalnız `WASTE_SKIRTING` işləyir (admin paneldə yazılıb).
+- **Data**: `database/seeders/data/calculator_tz_2026_11.php` + `CalculatorTzSeeder`. Prod miqrasiyası
+  `2026_11_18_100100` `apply(fresh: false)` — mövcud qiymət/parametr/otaq növünü yazmır, yalnız çatışmayanı
+  əlavə edir, mərhələ/bayraq qoyur, sətirləri yandırır/söndürür; boyanı m² → litrə bir dəfə çevirir
+  (`paint_norm`). Yeni qiymətlər DRAFT-dır — admin paneldə «Təsdiq» filtri/toplu «Təsdiqlə».
+- Sea Breeze (Archi-nin 17.11 qiymətləri ilə): White Box ≈ 479, tam ≈ 671 AZN/m² (qəbul: 430–480 / 620–680);
+  «Sadə» ilə «Ətraflı» fərqi < 1%.
 
 ## Sadələşdirilmiş model (2026-11)
 

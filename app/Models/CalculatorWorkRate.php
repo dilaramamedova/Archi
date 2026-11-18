@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
+use App\Casts\TolerantWorkCategory;
 use App\Enums\Calculator\PrecisionClass;
-use App\Enums\Calculator\WorkCategory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Spatie\Translatable\HasTranslations;
@@ -23,7 +23,8 @@ class CalculatorWorkRate extends Model
     public array $translatable = ['name'];
 
     protected $casts = [
-        'category' => WorkCategory::class,
+        'category' => TolerantWorkCategory::class,
+        'approved_at' => 'datetime',
         'precision_class' => PrecisionClass::class,
         'rate' => 'decimal:4',
         'minimum_charge' => 'decimal:2',

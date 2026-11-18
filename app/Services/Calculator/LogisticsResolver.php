@@ -31,7 +31,8 @@ class LogisticsResolver
             fn (EstimateLine $line) => $line->source !== LineSource::ManualQuote && $line->quantity > 0,
         );
 
-        $area = (float) ($object['area'] ?? 0) ?: (float) ($derived['TOTAL_FLOOR_AREA'] ?? 0);
+        // The rooms' area, like every other line of the estimate (TZ §5).
+        $area = ModuleResolver::calcArea($object, $derived);
 
         if ($supplied === [] || $area <= 0) {
             return ['requests' => [], 'meta' => ['trips' => 0, 'estimatedWeightKg' => 0.0, 'complete' => true]];

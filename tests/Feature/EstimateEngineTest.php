@@ -276,17 +276,30 @@ class EstimateEngineTest extends TestCase
         $this->assertArrayNotHasKey('HVAC_SPLIT_STD', $this->linesById($this->builder->build($inputs)));
     }
 
-    /** A fitting hangs on every light point, ceiling and wall. */
+    /** A fitting hangs on every light point, and each kind has its own rate and material (TZ §17, §21). */
     public function test_light_fittings_follow_the_light_points(): void
     {
         $inputs = $this->inputs();
-        $inputs['rooms'][0]['points'] = ['lights' => 3, 'wall_lights' => 2];
+        $inputs['rooms'][0]['points'] = ['lights_spot' => 4, 'lights_pendant' => 1, 'wall_lights' => 2];
 
         $lines = $this->linesById($this->builder->build($inputs));
 
-        $this->assertSame(5.0, $lines['LIGHT_FIXTURE_INSTALL']['quantity']);
-        $this->assertSame(60.0, $lines['LIGHT_FIXTURE_INSTALL']['lineTotal']); // 5 × 12
-        $this->assertSame(5.0, $lines['MAT_LIGHTING_BASIC']['quantity']);
+        $this->assertSame(4.0, $lines['LIGHT_SPOT_INSTALL']['quantity']);
+        $this->assertSame(40.0, $lines['LIGHT_SPOT_INSTALL']['lineTotal']); // 4 × 10
+        $this->assertSame(1.0, $lines['LIGHT_PENDANT_INSTALL']['quantity']);
+        $this->assertSame(2.0, $lines['LIGHT_WALL_INSTALL']['quantity']);
+        $this->assertSame(5.0, $lines['ELEC_LIGHT_POINT']['quantity']);   // spots + pendant, one rate
+        $this->assertSame(4.0, $lines['MAT_LIGHT_SPOT']['quantity']);
+        $this->assertSame(2.0, $lines['MAT_LIGHT_WALL']['quantity']);
+        // The visitor named the ceiling lights: the norm's chandelier does not sneak in.
+        $this->assertArrayNotHasKey('LIGHT_CHANDELIER_INSTALL', $lines);
+        $this->assertArrayNotHasKey('LIGHT_FIXTURE_INSTALL', $lines);
+
+        // An old payload's single `lights` count is the ceiling light.
+        $inputs['rooms'][0]['points'] = ['lights' => 3, 'wall_lights' => 2];
+        $legacy = $this->linesById($this->builder->build($inputs));
+        $this->assertSame(3.0, $legacy['LIGHT_CHANDELIER_INSTALL']['quantity']);
+        $this->assertSame(3.0, $legacy['MAT_LIGHT_CHANDELIER']['quantity']);
     }
 
     /** A bathroom's fixtures default from its type, are installed, and pull their pipes. */
@@ -297,16 +310,23 @@ class EstimateEngineTest extends TestCase
 
         $lines = $this->linesById($this->builder->build($inputs));
 
-        // Bathroom defaults: toilet 1, basin 1, shower 1, mixer 2; water 4, sewer 3.
+        // Bathroom norm: toilet, basin, shower, hygienic shower, washer, 2 mixers;
+        // water 5 / sewer 4 from the fixtures (a hygienic shower has no drain).
         $this->assertSame(1.0, $lines['PLUMB_TOILET_INSTALL']['quantity']);
         $this->assertSame(1.0, $lines['PLUMB_SHOWER_INSTALL']['quantity']);
+        $this->assertSame(1.0, $lines['PLUMB_HYGIENIC_SHOWER']['quantity']);
+        $this->assertSame(1.0, $lines['PLUMB_WASHER_CONNECT']['quantity']);
         $this->assertSame(2.0, $lines['PLUMB_MIXER_INSTALL']['quantity']);
         $this->assertArrayNotHasKey('PLUMB_BATHTUB_INSTALL', $lines);
-        $this->assertSame(5.0, $lines['MAT_SANITARY_BASIC']['quantity']);
-        $this->assertSame(12.0, $lines['PLUMB_PIPE_WATER']['quantity']);   // 4 points × 3 m
-        $this->assertSame(9.0, $lines['PLUMB_PIPE_SEWER']['quantity']);    // 3 points × 3 m
+        $this->assertSame(1.0, $lines['MAT_TOILET']['quantity']);
+        $this->assertSame(2.0, $lines['MAT_MIXER']['quantity']);
+        $this->assertLessThan($lines['MAT_TOILET']['unitPrice'], $lines['MAT_MIXER']['unitPrice']);
+        $this->assertSame(15.0, $lines['PLUMB_PIPE_WATER']['quantity']);   // 5 points × 3 m
+        $this->assertSame(12.0, $lines['PLUMB_PIPE_SEWER']['quantity']);   // 4 points × 3 m
+        $this->assertSame(15.0, $lines['MAT_PIPE_WATER']['quantity']);
 
-        // Edited counts win, one key at a time.
+        // Edited counts win, one key at a time («Ətraflı» mode).
+        $inputs['rooms'][0]['pointsTouched'] = true;
         $inputs['rooms'][0]['fixtures'] = ['bathtub' => 1, 'shower' => 0];
         $edited = $this->linesById($this->builder->build($inputs));
 
@@ -404,8 +424,13 @@ class EstimateEngineTest extends TestCase
         $this->assertSame(3000.0, $lines['LOG_MANUAL_LIFT']['quantity']);
         $this->assertSame(450.0, $lines['LOG_MANUAL_LIFT']['lineTotal']);
 
+        // The rooms' area, not the figure typed on the object step (TZ §5).
         $inputs = $this->inputs();
         $inputs['object']['area'] = 100;
+        $this->assertSame(1.0, $this->linesById($this->builder->build($inputs))['LOG_DELIVERY_TRIP']['quantity']);
+
+        $inputs['rooms'][0]['lengthMm'] = 10000;
+        $inputs['rooms'][0]['widthMm'] = 10000;
         $this->assertSame(3.0, $this->linesById($this->builder->build($inputs))['LOG_DELIVERY_TRIP']['quantity']);
     }
 
@@ -426,7 +451,11 @@ class EstimateEngineTest extends TestCase
         $inputs = $this->withFloor('LAMINATE', 'PREPARED');
         $inputs['rooms'][0]['points'] = ['sockets' => 0, 'switches' => 0, 'lights' => 0, 'wall_lights' => 0, 'tv' => 0, 'data' => 0, 'ac_power' => 0];
         $inputs['rooms'][0]['openings'] = [];
-        $inputs['materials'] = ['LAMINATE' => ['mode' => 'EXCLUDED'], 'MAT_SKIRTING' => ['mode' => 'EXCLUDED']];
+        $inputs['materials'] = [
+            'LAMINATE' => ['mode' => 'EXCLUDED'],
+            'MAT_SKIRTING' => ['mode' => 'EXCLUDED'],
+            'MAT_LAMINATE_UNDERLAY' => ['mode' => 'EXCLUDED'],
+        ];
 
         $lines = $this->linesById($this->builder->build($inputs));
 
@@ -444,8 +473,10 @@ class EstimateEngineTest extends TestCase
 
         $this->assertSame(10.0, $totals['contingencyPercent']);
         $this->assertGreaterThan(0, $totals['contingency']);
+        // Every line here is contingency-eligible: reserve = (base + margin) × 10 % (TZ §1).
+        $this->assertEqualsWithDelta($totals['baseSubtotal'] * 1.15 * 0.10, $totals['contingency'], 0.02);
         $this->assertSame(
-            round($totals['baseSubtotal'] + $totals['contingency'], 2),
+            round($totals['baseSubtotal'] + $totals['margin'] + $totals['contingency'], 2),
             $totals['grandTotal'],
         );
     }
@@ -565,6 +596,7 @@ class EstimateEngineTest extends TestCase
         $before = $this->builder->build($this->inputs())['totals'];
 
         CalculatorSetting::where('key', 'CONTINGENCY_PERCENT')->update(['value' => '0']);
+        CalculatorSetting::where('key', 'CONTRACTOR_MARGIN_PERCENT')->update(['value' => '0']);
         CalculatorSetting::where('key', 'CABLE_M_PER_POINT')->update(['value' => '10']);
         VersionedCache::bump(VersionedCache::CALCULATOR);
 
@@ -573,6 +605,7 @@ class EstimateEngineTest extends TestCase
 
         $this->assertGreaterThan(0, $before['contingency']);
         $this->assertSame(0.0, $after['contingency']);
+        $this->assertSame(0.0, $after['margin']);
         $this->assertSame($after['baseSubtotal'], $after['grandTotal']);
         $this->assertSame(180.0, $this->linesById($estimate)['ELEC_CABLE']['quantity']); // 18 points × 10 m
     }
@@ -590,17 +623,22 @@ class EstimateEngineTest extends TestCase
         $on = $this->linesById($this->builder->build($inputs));
 
         $this->assertSame(1.0, $on['DEM_DOOR']['quantity']);
-        $this->assertSame(5.0, $on['DEM_PLUMB_FIXTURE']['quantity']);      // the bathroom's fixtures
+        $this->assertSame(7.0, $on['DEM_PLUMB_FIXTURE']['quantity']);      // the bathroom's fixtures
         $this->assertArrayHasKey('DEM_ELECTRIC_POINT', $on);               // rewired by default
-        $this->assertSame(1.0, $on['DEM_DEBRIS_LOADING']['quantity']);     // 20 m² × 0.05 m³
+        // 20 m² × (0.05 construction + 0.05 demolition) m³
+        $this->assertSame(2.0, $on['DEM_DEBRIS_LOADING']['quantity']);
         $this->assertSame(1.0, $on['DEM_DEBRIS_DISPOSAL']['quantity']);
 
         $inputs['object']['demolitionRequired'] = false;
         $off = $this->linesById($this->builder->build($inputs));
 
-        foreach (['DEM_DOOR', 'DEM_PLUMB_FIXTURE', 'DEM_ELECTRIC_POINT', 'DEM_DEBRIS_LOADING', 'DEM_DEBRIS_DISPOSAL'] as $id) {
+        foreach (['DEM_DOOR', 'DEM_PLUMB_FIXTURE', 'DEM_ELECTRIC_POINT'] as $id) {
             $this->assertArrayNotHasKey($id, $off, $id);
         }
+
+        // Construction waste leaves every job, demolition or not (TZ §16).
+        $this->assertSame(1.0, $off['DEM_DEBRIS_LOADING']['quantity']);   // 20 m² × 0.05 m³
+        $this->assertSame(1.0, $off['DEM_DEBRIS_DISPOSAL']['quantity']);
     }
 
     /** A bare shell someone demolishes in has no old doors or fixtures to remove — only debris. */
@@ -654,7 +692,7 @@ class EstimateEngineTest extends TestCase
         $this->assertArrayNotHasKey('DEM_FLOOR_LAMINATE', $wet);
     }
 
-    /** The debris estimate and the final cleaning read the same object area. */
+    /** The debris estimate and the final cleaning read the one area — the rooms' (TZ §5). */
     public function test_debris_and_cleaning_are_measured_against_the_same_object_area(): void
     {
         $inputs = $this->inputs();
@@ -662,10 +700,12 @@ class EstimateEngineTest extends TestCase
         $inputs['object']['demolitionRequired'] = true;
         $inputs['modules'] = ['services' => ['finalCleaning' => true]];
 
-        $lines = $this->linesById($this->builder->build($inputs));
+        $estimate = $this->builder->build($inputs);
+        $lines = $this->linesById($estimate);
 
-        $this->assertSame(100.0, $lines['LOG_FINAL_CLEANING']['quantity']);
-        $this->assertSame(5.0, $lines['DEM_DEBRIS_LOADING']['quantity']); // 100 × 0.05
+        $this->assertSame(20.0, $estimate['calcArea']);
+        $this->assertSame(20.0, $lines['LOG_FINAL_CLEANING']['quantity']);
+        $this->assertSame(2.0, $lines['DEM_DEBRIS_LOADING']['quantity']); // 20 × (0.05 + 0.05)
     }
 
     // ---- sealant -------------------------------------------------------------------
@@ -712,9 +752,13 @@ class EstimateEngineTest extends TestCase
 
         $inputs = $this->inputs();
         $inputs['object']['designProject'] = true;
-        $inputs['object']['area'] = 100;
+        $inputs['object']['area'] = 100; // ignored: the rooms are 20 m²
 
-        $this->assertSame(1500.0, $this->linesById($this->builder->build($inputs))['SERVICE_DESIGN']['lineTotal']);
+        $estimate = $this->builder->build($inputs);
+        $this->assertSame(300.0, $this->linesById($estimate)['SERVICE_DESIGN']['lineTotal']);
+        // Outside both stages, in its own block (TZ §2).
+        $this->assertNull($this->linesById($estimate)['SERVICE_DESIGN']['stage']);
+        $this->assertSame(300.0, $estimate['totals']['services']);
     }
 
     public function test_the_design_project_is_excluded_from_the_contingency_base(): void

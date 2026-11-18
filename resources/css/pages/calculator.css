@@ -46,6 +46,20 @@
     .qc-tier > .qc-tier-n { grid-area: name; }
     .qc-tier > .qc-tier-p { grid-area: price; }
     .qc-tier > .qc-tier-r { grid-area: rec; }
+
+    /* The composition table (Bölmə | White Box | Bitirmə) has two long text columns;
+       at 360 they would be ~110px each. Each section becomes a block instead: its
+       name, then the two stages, each labelled from the cell's data-label. */
+    .qc-comp-table thead              { @apply hidden; }
+    .qc-comp-table,
+    .qc-comp-table tbody,
+    .qc-comp-table tr,
+    .qc-comp-table th,
+    .qc-comp-table td                 { @apply block w-full; }
+    .qc-comp-table tr                 { @apply py-2; }
+    .qc-comp-table tbody th           { @apply p-0 pb-1; }
+    .qc-comp-table td                 { @apply p-0 pt-0.5; }
+    .qc-comp-table td::before         { content: attr(data-label) ': '; @apply font-semibold text-black/80; }
   }
 
   /* ---- touch targets ----

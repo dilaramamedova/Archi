@@ -24,6 +24,7 @@ class CalculatorMaterialFallback extends Model
         'standard_price' => 'decimal:4',
         'premium_price' => 'decimal:4',
         'is_active' => 'boolean',
+        'approved_at' => 'datetime',
     ];
 
     public function priceFor(PriceSegment $segment): ?float

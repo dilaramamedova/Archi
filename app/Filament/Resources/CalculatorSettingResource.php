@@ -79,19 +79,24 @@ class CalculatorSettingResource extends Resource
         'DETAILED_CALCULATOR_URL' => '«Dəqiq hesabla» düyməsi müştərini hara aparsın. Adətən ətraflı kalkulyatorun ünvanı.',
 
         'CONTINGENCY_PERCENT' => 'Smetanın sonuna əlavə olunan ehtiyat faizi — gözlənilməz xərclər üçün. 10 yazsanız, yekun məbləğə 10% əlavə olunur və ayrıca sətir kimi görünür. 0 yazsanız ehtiyat sətri ümumiyyətlə çıxmır.',
-        'VAT_MODE' => 'ƏDV necə göstərilsin: INCLUDED = qiymətlərin içindədir, ayrıca sətir yoxdur. ADDED = smetaya ayrıca ƏDV sətri əlavə olunur.',
+        'CONTRACTOR_MARGIN_PERCENT' => 'Podratçının idarəetmə və mənfəəti (TZ 17.11.2026). İşlər + Archi vasitəsilə alınan materiallar + logistika + xidmətlərin cəminə bu faiz gəlir və smetada «Podratçı əlavəsi» adlı ayrıca sətir kimi görünür. Ehtiyat faizi ilə qarışdırmayın: ehtiyat (baza + əlavə) üzərindən hesablanır. 0 yazsanız əlavə sətri çıxmır.',
+        'VAT_MODE' =>'ƏDV necə göstərilsin: INCLUDED = qiymətlərin içindədir, ayrıca sətir yoxdur. ADDED = smetaya ayrıca ƏDV sətri əlavə olunur.',
         'VAT_PERCENT' => 'ƏDV faizi. Yalnız yuxarıdakı rejim ADDED olduqda işləyir.',
         'ROUND_TOTALS_TO_INTEGER' => 'Yekun məbləğ tam ədədə yuvarlaqlaşsın? 1 = «27 093 AZN», 0 = «27 092.70 AZN».',
 
         'AREA_TOLERANCE_PERCENT' => 'Müştərinin 1-ci addımda yazdığı sahə ilə otaqların cəmi arasında icazə verilən fərq. Fərq bundan çox olsa xəbərdarlıq çıxır, amma hesablama dayanmır.',
 
         'FREE_LIFT_FLOORS' => 'Lift olmayanda neçə mərtəbəyə görə pul alınmasın. 1 yazsanız, 1-ci mərtəbə pulsuz, 5-ci mərtəbə üçün 4 mərtəbə hesablanır.',
-        'DELIVERY_AREA_PER_TRIP' => 'Bir çatdırılma reysinə düşən obyekt sahəsi. 40 yazsanız 80 m² obyektə 2 reys hesablanır. Materialların çəkisi kataloqda çox vaxt olmadığı üçün çatdırılma sahəyə görə təxmin edilir.',
+        'DELIVERY_AREA_PER_TRIP' => 'Bir çatdırılma reysinə düşən sahə — otaqların sahələrinin cəmi götürülür. 40 yazsanız 80 m² obyektə 2 reys hesablanır. Materialların çəkisi kataloqda çox vaxt olmadığı üçün çatdırılma sahəyə görə təxmin edilir.',
         'MATERIAL_KG_PER_M2' => 'Obyektin 1 m²-nə düşən materialın təxmini çəkisi (25 = 60 m² obyektə 1.5 ton). Yük lifti olmayanda əl ilə qaldırma (kq × mərtəbə) bu çəki ilə hesablanır.',
         'CABLE_M_PER_POINT' => 'Hər elektrik nöqtəsinə (rozetka, açar, işıq…) neçə metr kabel çəkilir. Yalnız «Elektrik tam yenilənsin» açıq olanda işləyir.',
         'PIPE_M_PER_POINT' => 'Hər su və kanalizasiya nöqtəsinə neçə metr boru çəkilir.',
-        'DEBRIS_VOLUME_PER_M2' => 'Demontajda hər 1 m² sahədən nə qədər tullantı çıxır. 0.05 yazsanız, 100 m² mənzildən 5 m³ tullantı hesablanır.',
-        'DEBRIS_VEHICLE_VOLUME_CAPACITY' => 'Tullantı maşınının bir reysdə apardığı həcm.',
+        'DEBRIS_VOLUME_PER_M2' => 'Demontajda (sökülmə seçiləndə) hər 1 m² sahədən əlavə nə qədər tullantı çıxır. 0.05 yazsanız, 100 m² mənzildən 5 m³ sökülmə tullantısı hesablanır — tikinti tullantısının (CONSTRUCTION_WASTE_M3_PER_M2) üstünə.',
+        'CONSTRUCTION_WASTE_M3_PER_M2' => 'Sökülmə olmasa da hər təmirdə yaranan tikinti tullantısı — otaqların hər 1 m²-nə həcm. 0.05 yazsanız, 70 m² mənzildən 3.5 m³ tullantı daşınır (1 reys). Sökülmə olduqda üstünə yuxarıdakı sökülmə tullantısı gəlir.',
+        'SPOT_AREA_M2' => '«Sadə» rejimdə spotların sayı: alçıpan və ya dartma tavanlı otaqda hər bu qədər m²-yə 1 spot (2.7 yazsanız, 16 m² otağa 6 spot). Rənglənmiş tavanda spot hesablanmır.',
+        'AC_ROUTE_M_PER_UNIT' => 'Hər kondisioner üçün neçə metr freon xətti çəkilir (White Box-a aid çıxış). Miqdar = kondisioner sayı × bu rəqəm.',
+        'AC_DRAIN_M_PER_UNIT' => 'Hər kondisioner üçün neçə metr drenaj borusu çəkilir (White Box-a aid çıxış).',
+        'DEBRIS_VEHICLE_VOLUME_CAPACITY' =>'Tullantı maşınının bir reysdə apardığı həcm.',
 
 
         'DEFAULT_PAINT_COATS' => 'Boya neçə qat vurulur. Boyanın miqdarı buna görə hesablanır.',
@@ -102,7 +107,7 @@ class CalculatorSettingResource extends Resource
         'SCREED_DEFAULT_THICKNESS_MM' => 'Stəjkanın orta qalınlığı.',
 
         // Kalkulyatorda bütün ölçülər millimetrlədir, bu defoltlar da.
-        'DEFAULT_ROOM_HEIGHT_MM' => 'Yeni otaq əlavə ediləndə tavan hündürlüyü kimi hazır gələn rəqəm. Millimetrlə: 2800 = 2.8 m.',
+        'DEFAULT_ROOM_HEIGHT_MM' => '1-ci addımda obyektin tavan hündürlüyü kimi hazır gələn rəqəm; yeni otaqlar onu götürür. Millimetrlə: 2800 = 2.8 m.',
         'DEFAULT_DOOR_WIDTH_MM' => 'Qapının standart eni, millimetrlə (900 = 0.9 m). Divar sahəsindən qapının yeri bu ölçü ilə çıxılır.',
         'DEFAULT_DOOR_HEIGHT_MM' => 'Qapının standart hündürlüyü, millimetrlə (2100 = 2.1 m).',
         'DEFAULT_WINDOW_WIDTH_MM' => 'Pəncərənin standart eni, millimetrlə (1500 = 1.5 m).',

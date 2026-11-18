@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\CalculatorMaterialFallbackResource\Pages;
 use App\Filament\Resources\Concerns\ExplainsCalculator;
+use App\Filament\Resources\Concerns\HasStageAndApproval;
 use App\Models\CalculatorMaterialFallback;
 use Filament\Actions;
 use Filament\Forms;
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Model;
 class CalculatorMaterialFallbackResource extends Resource
 {
     use ExplainsCalculator;
+    use HasStageAndApproval;
 
     protected static ?string $model = CalculatorMaterialFallback::class;
 
@@ -58,6 +60,7 @@ class CalculatorMaterialFallbackResource extends Resource
         'PLUMBING' => 'Santexnika',
         'LIGHTING' => 'İşıqlandırma',
         'ELECTRICAL' => 'Elektrik',
+        'WINDOWS' => 'Pəncərələr (podokonnik)',
     ];
 
     public static function explanationParts(): array
@@ -101,6 +104,10 @@ class CalculatorMaterialFallbackResource extends Resource
                         ->required()
                         ->datalist(['m²', 'p.m', 'əd', 'kq', 'L', 'nöqtə'])
                         ->helperText('Aşağıdakı qiymətlər bu vahidin biri üçündür.'),
+
+                    self::stageSelect('stage', 'Smetanın hansı mərhələsinə aiddir',
+                        'Materialın öz mərhələsi işin mərhələsindən üstündür: məs. rozetka nöqtəsi White Box-dır, '
+                        .'rozetkanın üz hissəsi isə bitirmə. Boş saxlasanız, material öz işinin mərhələsinə düşür.'),
                 ])
                 ->columns(2),
 
@@ -126,6 +133,8 @@ class CalculatorMaterialFallbackResource extends Resource
 
             Section::make('Digər')
                 ->schema([
+                    ...self::approvalFields(),
+
                     Forms\Components\Textarea::make('notes')
                         ->label('Daxili qeyd')
                         ->rows(2)
@@ -180,17 +189,23 @@ class CalculatorMaterialFallbackResource extends Resource
                 Tables\Columns\TextInputColumn::make('premium_price')
                     ->label('Premium, AZN')->rules(['nullable', 'numeric', 'min:0'])->placeholder('—'),
 
+                self::stageColumn(),
+
                 Tables\Columns\ToggleColumn::make('is_active')->label('Aktiv'),
+
+                self::approvalColumn(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('surface_group')->label('Qrup')->options(self::GROUPS),
+                self::stageFilter(),
+                self::approvalFilter(),
                 Tables\Filters\Filter::make('missing_price')
                     ->label('Qiyməti doldurulmayanlar')
                     ->query(fn ($query) => $query->whereNull('standard_price')),
             ])
             ->defaultSort('sort_order')
             ->actions([Actions\EditAction::make()->label('Redaktə')])
-            ->bulkActions([Actions\DeleteBulkAction::make()])
+            ->bulkActions([self::approveBulkAction(), Actions\DeleteBulkAction::make()])
             ->paginated([25, 50, 'all'])
             ->defaultPaginationPageOption(50);
     }
