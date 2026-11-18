@@ -89,6 +89,8 @@ final class CardSchema
                 'units' => array_values((array) ($settings['units'] ?? [])),
                 // SALE_UNIT: unit → condition it needs ("ready-made: ədəd; custom size: m²").
                 'unit_when' => (array) ($settings['unit_when'] ?? []) ?: null,
+                // Made to measure: these answers make the product «Sifarişlə» only.
+                'on_order_when' => $settings['on_order_when'] ?? null,
                 // SALE_AREA cut from a roll: by the running metre (lm) or by m².
                 'cut_unit' => $settings['cut_unit'] ?? 'lm',
             ],

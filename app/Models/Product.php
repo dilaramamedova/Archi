@@ -184,6 +184,74 @@ class Product extends Model
         return round($price * $factor, 2);
     }
 
+    /**
+     * The price as a card shows it: «28.00 ₼ / m²», «45.00 ₼ / rulon», or «Qiymət sorğu
+     * ilə» for a custom size priced on request. The unit is the one the price is in.
+     */
+    public function priceLabel(): string
+    {
+        if ($this->quote_only) {
+            return self::label('product-card.price_on_request', 'Qiymət sorğu ilə');
+        }
+
+        return $this->money((float) $this->price);
+    }
+
+    /** The previous price in the same unit, when it is a real discount. */
+    public function oldPriceLabel(): ?string
+    {
+        return $this->hasDiscount() ? $this->money((float) $this->old_price) : null;
+    }
+
+    /** «-16%», computed from the two prices — the stored discount_percent can be stale. */
+    public function discountLabel(): ?string
+    {
+        return $this->hasDiscount() ? '-'.(int) round((1 - $this->price / $this->old_price) * 100).'%' : null;
+    }
+
+    public function hasDiscount(): bool
+    {
+        return ! $this->quote_only && $this->old_price !== null && (float) $this->old_price > (float) $this->price && (float) $this->price > 0;
+    }
+
+    /**
+     * The stock badge: in stock, made to order, on request or out of stock. A made-
+     * to-order product has no stock count and is still buyable.
+     */
+    public function stockBadge(): string
+    {
+        return match (true) {
+            (bool) $this->quote_only => self::label('product-card.badge_on_request', 'Sorğu ilə'),
+            $this->availability === self::UNAVAILABLE => (string) t('common.badge_out_of_stock'),
+            $this->isMadeToOrder() => self::label('product-card.badge_on_order', 'Sifarişlə'),
+            (int) $this->stock > 0 => (string) t('common.badge_in_stock'),
+            default => (string) t('common.badge_out_of_stock'),
+        };
+    }
+
+    /** What one cart unit is called: «paket», «rulon», «ədəd», «m²». */
+    public function saleUnitLabel(): string
+    {
+        $unit = $this->saleUnit();
+
+        return $unit ? mb_strtolower(self::label('business-product-edit.pricing.units.'.$unit, $unit)) : '';
+    }
+
+    /** A translation, or the literal while the key is not seeded yet. */
+    private static function label(string $key, string $fallback): string
+    {
+        $value = t($key);
+
+        return is_string($value) && $value !== $key ? $value : $fallback;
+    }
+
+    private function money(float $amount): string
+    {
+        $unit = $this->unit ? mb_strtolower(self::label('business-product-edit.pricing.units.'.$this->unit, $this->unit)) : '';
+
+        return number_format($amount, 2, '.', '').' ₼'.($unit !== '' ? ' / '.$unit : '');
+    }
+
     /** Unit key of what the cart counts: the sold unit for card products, else the price unit. */
     public function saleUnit(): ?string
     {

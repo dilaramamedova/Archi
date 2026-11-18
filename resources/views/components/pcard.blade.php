@@ -60,6 +60,14 @@
     // can no longer claim "in stock" / "new" for a product that is neither.
     $badgeList = $badges;
 
+    // With the product at hand its own price wins: the unit («/ m²», «/ rulon»),
+    // «Qiymət sorğu ilə» instead of 0.00 ₼, and one discount figure everywhere.
+    if ($product) {
+        $now = $product->priceLabel();
+        $old = $product->oldPriceLabel();
+        $off = $product->discountLabel();
+    }
+
     if ($badgeList === null && $product) {
         $badgeList = [];
 
@@ -74,9 +82,7 @@
             $badgeList[] = ['label' => t('common.badge_new')];
         }
 
-        $badgeList[] = ['label' => (int) $product->stock > 0
-            ? t('common.badge_in_stock')
-            : t('common.badge_out_of_stock')];
+        $badgeList[] = ['label' => $product->stockBadge()];
     }
 
     $badgeList ??= [];

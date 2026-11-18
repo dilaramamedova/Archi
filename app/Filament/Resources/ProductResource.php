@@ -135,13 +135,17 @@ class ProductResource extends Resource
                         // Live: the "Xüsusiyyətlər" tab rebuilds its attribute
                         // fields from the selected product class.
                         ->live()
+                        // A new class gets an empty card. Without it a checkbox list has
+                        // no starting array, and ticking one box ticked them all.
+                        ->afterStateUpdated(fn ($state, callable $set) => $set('card', CardForm::blankState($state)))
                         // Nullable in the DB and never set by the seller flows — a hard
                         // requirement here made every seeded/seller product unsavable.
                         ->nullable()
                         ->visible(fn (callable $get) => (bool) $get('category_id')),
 
                     Forms\Components\Select::make('brand_id')
-                        ->label('Brend')
+                        // A category card needs a brand or «Brendsiz» (CardProduct::check).
+                        ->label(fn (callable $get): string => CardForm::isCard($get) ? 'Brend *' : 'Brend')
                         ->relationship('brand', 'name')
                         ->searchable()
                         ->preload()
@@ -164,7 +168,9 @@ class ProductResource extends Resource
                     Forms\Components\TextInput::make('price')
                         ->label('Qiymət (₼)')
                         ->numeric()
-                        ->required()
+                        // A category card checks the price itself: a custom size priced
+                        // on request has none (CardProduct::check).
+                        ->required(fn (callable $get): bool => ! CardForm::isCard($get))
                         ->prefix('₼'),
 
                     Forms\Components\TextInput::make('old_price')
@@ -201,7 +207,9 @@ class ProductResource extends Resource
 
                     Forms\Components\TextInput::make('stock')
                         ->label('Stok')
-                        ->numeric()
+                        // Whole units: 120.5 used to be rounded up silently.
+                        ->integer()
+                        ->minValue(0)
                         ->default(0),
 
                     Forms\Components\TextInput::make('sold_count')

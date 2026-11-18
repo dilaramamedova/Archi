@@ -88,6 +88,27 @@ Qərarlar:
 - Excel-in «eyni məhsul həm divar, həm döşəmə üçün → bir qeyd, uyğun kateqoriyalarda
   göstərilir» qaydası hələ yoxdur: məhsulun bir sinfi var. Bu, kataloq işidir (növbəti mərhələ).
 
+## Agent yoxlaması (18.11.2026)
+
+Üç Excel üzrə 6 agent (3 admin, 3 satıcı+alıcı) lokal saytda məhsul əlavə etdi. Düzəlişlər
+(miqrasiya `2026_11_18_120000_apply_card_test_fixes`):
+- Səbət səhifəsi kataloq qiymətini (m²) yox, satılan vahidin qiymətini (`salePrice`) göstərir,
+  vahidin adı ilə («36.96 ₼ / paket»); «Sifarişlə» məhsulun sayı stokla məhdudlaşmır.
+- Qiymət, endirim və stok nişanı bir yerdən: `Product::priceLabel()` («28.00 ₼ / m²»,
+  «Qiymət sorğu ilə»), `discountLabel()` (iki qiymətdən hesablanır — köhnə `discount_percent`
+  sütunu yox), `stockBadge()` («Sifarişlə», «Sorğu ilə»).
+- Döşəmə və Tavan ölçüləri də açıq siyahıdır (Excel: «Hazır ölçü və ya rəqəmlər»).
+- Fərdi ölçü (W01_2, W07, W10, W12_1, W12_2) yalnız «Sifarişlə» (`on_order_when`).
+- Admin: yeni məhsulda çoxseçim boş siyahı ilə başlayır (əvvəl bir qutu hamısını işarələyirdi);
+  sorğu ilə məhsula qiymət tələb olunmur; stok tam rəqəmdir; gizlənmiş sahənin cavabı
+  asılı sahələri açıq saxlamır (server də); siyahısız ölçünün izahı görünür.
+- Satıcı: «Qaralama saxla» brauzer yoxlamasız göndərilir; tək mümkün satış vahidi özü seçilir;
+  kartlı sinifdə «Brend *».
+
+Açıq qalanlar (növbəti mərhələ): kataloq filtrləri kart parametrlərinə görə deyil (brend
+siyahısı və «Səth / Ölçü» filtrləri ümumidir); bir məhsulun bir neçə kateqoriyada göstərilməsi;
+admin formasında şəkil məcburi deyil; kəsr stok (m² kəsim) üçün stok sütunu tam rəqəmdir.
+
 ## Kart faylının formatı
 
 ```php
@@ -104,7 +125,9 @@ Qərarlar:
 // Bir bölmədə bir neçə qrup: 'groups' => [[slug, name, classes, plain], …]
 // Sinif ayarları: sale (area | board | unit), units (unit üçün icazəli vahidlər:
 // piece, lm, pack, set, pair, roll, m2), unit_when (vahid → şərt: həmin vahid yalnız
-// bu cavabda seçilə bilər), cut_unit (rulondan kəsim: lm | m2),
+// bu cavabda seçilə bilər), on_order_when (bu cavabda mövcudluq yalnız «Sifarişlə»),
+// cut_unit (rulondan kəsim: lm | m2),
+// Fayl səviyyəsində: open_size_lists => true — fayldakı bütün siyahılı ölçülər açıqdır.
 // quote_when (bir şərt və ya şərtlər siyahısı — hər hansı biri), country_required.
 'merge' => ['köhnə' => 'yeni'],          // məhsullar köçür, köhnə sinif bağlanır
 'retire_groups' => [...],                // boş qalanda bağlanan qruplar

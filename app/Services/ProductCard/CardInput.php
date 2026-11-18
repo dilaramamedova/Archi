@@ -89,6 +89,10 @@ final class CardInput
             if (! in_array($field['type'], ['dropdown', 'multiselect'], true)) {
                 continue;
             }
+            // A hidden field's answer does not count — its dependants hide with it.
+            if (! CardSchema::holds($field['visible_when'], $answers)) {
+                continue;
+            }
 
             $raw = (array) ($this->input[$field['id']] ?? []);
             $ids = $field['type'] === 'dropdown'
@@ -281,7 +285,8 @@ final class CardInput
         // With a list: a fixed size must be one of the listed pairs; a mixed-length
         // range picks its lengths and its width from the listed ones. An open list
         // («Hazır ölçü seçilir və ya 2 rəqəm daxil edilir») also takes a typed size.
-        if ($field['presets'] !== [] && empty($field['rules']['open'])) {
+        $pickedPair = ! $mixed && $pair !== '' && $pair !== CardSchema::OTHER_SIZE;
+        if ($field['presets'] !== [] && (empty($field['rules']['open']) || $pickedPair)) {
             [$lengths, $widths] = CardSchema::sizeParts($field['presets']);
             $ok = $mixed
                 ? $this->listed($length, $lengths) && $this->listed($lengthMax, $lengths) && $this->listed($width, $widths)
@@ -396,7 +401,10 @@ final class CardInput
         $max = $field['rules']['max'] ?? 1000000;
 
         if ($value <= 0 || ($min !== null && $value < (float) $min) || $value > (float) $max) {
-            $this->errors[$key] = CardText::get('out_of_range', ':name üçün dəyər düzgün deyil', ['name' => $name]);
+            // A card's own limit (absorption ≤ 1,5) is named, not just «wrong».
+            $this->errors[$key] = isset($field['rules']['max'])
+                ? CardText::get('out_of_range_max', ':name 0-dan böyük və :max-dan kiçik olmalıdır',['name' => $name, 'max' => str_replace('.', ',', (string) $max)])
+                : CardText::get('out_of_range', ':name üçün dəyər düzgün deyil', ['name' => $name]);
 
             return false;
         }

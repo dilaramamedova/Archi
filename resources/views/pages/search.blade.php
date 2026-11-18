@@ -58,6 +58,7 @@
             :cat="$p->category?->name"
             :name="$p->name"
             :img="$p->main_image_url"
+            :product="$p"
             :now="number_format($p->price, 2) . ' ₼'"
             :old="$hasDiscount ? number_format($p->old_price, 2) . ' ₼' : null"
             :off="$discountPct"

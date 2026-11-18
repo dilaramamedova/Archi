@@ -159,15 +159,22 @@ class DivarCardTest extends TestCase
         $this->save($this->payload('foto-divar-kagizlari', $this->mural('hazir'), ['price_basis' => 'm2']))
             ->assertStatus(422)->assertJsonValidationErrors(['price_basis']);
 
-        $this->save($this->payload('foto-divar-kagizlari', $this->mural('ferdi', 'm2'), ['price_basis' => 'm2', 'price' => '35']))->assertOk();
+        // «Fərdi istehsalda mövcudluq “Sifarişlə”»: a custom size is never in stock.
+        $this->save($this->payload('foto-divar-kagizlari', $this->mural('ferdi', 'm2'), ['price_basis' => 'm2', 'price' => '35']))
+            ->assertStatus(422)->assertJsonValidationErrors(['availability']);
+
+        $onOrder = ['availability' => 'on_order', 'lead_time_days' => 10];
+        $this->save($this->payload('foto-divar-kagizlari', $this->mural('ferdi', 'm2'), ['price_basis' => 'm2', 'price' => '35'] + $onOrder))->assertOk();
         $custom = Product::latest('id')->firstOrFail();
         $this->assertSame(['m2', 'm2', false], [$custom->unit, $custom->sale_unit, (bool) $custom->quote_only]);
+        $this->assertSame('35.00 ₼ / m²', $custom->priceLabel());
 
         // On request: no price and no unit to pick — the unit is recorded as m².
-        $this->save($this->payload('foto-divar-kagizlari', $this->mural('ferdi', 'sorgu'), ['price' => '']))->assertOk();
+        $this->save($this->payload('foto-divar-kagizlari', $this->mural('ferdi', 'sorgu'), ['price' => ''] + $onOrder))->assertOk();
         $quote = Product::latest('id')->firstOrFail();
         $this->assertTrue((bool) $quote->quote_only);
         $this->assertSame('m2', $quote->unit);
+        $this->assertStringNotContainsString('0.00', $quote->priceLabel());
 
         // A custom size must say how it is priced.
         $this->save($this->payload('foto-divar-kagizlari', $this->mural('ferdi'), ['price_basis' => 'm2']))
@@ -237,5 +244,80 @@ class DivarCardTest extends TestCase
             ->assertHasNoFormErrors();
         $row = $product->attributeValues()->where('attribute_id', $size)->firstOrFail();
         $this->assertEquals([300, 600], [(float) $row->value_min, (float) $row->value_numeric]);
+    }
+
+    public function test_the_cart_page_charges_the_pack_and_badges_follow_availability(): void
+    {
+        $this->save($this->payload('divar-keramik-plitesi', $this->tile('300×600'), ['price' => '28', 'old_price' => '32']))->assertOk();
+        $tile = Product::latest('id')->firstOrFail();
+        $this->save($this->payload('foto-divar-kagizlari', $this->mural('ferdi', 'sorgu'), ['price' => '', 'availability' => 'on_order', 'lead_time_days' => 7]))->assertOk();
+        $quote = Product::latest('id')->firstOrFail();
+        Product::query()->update(['is_approved' => true]);
+
+        // The cart page reprices from the server: one pack, not one m² (28 × 1.44).
+        $buyer = User::factory()->create();
+        \App\Models\CartItem::create(['user_id' => $buyer->id, 'product_id' => $tile->id, 'quantity' => 2]);
+        $html = $this->actingAs($buyer)->get('/cart')->assertOk()->getContent();
+        preg_match('/data-server-cart="([^"]*)"/', $html, $m);
+        $row = json_decode(html_entity_decode($m[1]), true)[0];
+        $this->assertSame([40.32, 'paket'], [$row['price'], $row['unitLabel']]);
+
+        // Catalog: the price carries its unit, a quote has no 0.00 ₼, made to order is no «out of stock».
+        $catalog = $this->get('/catalog')->assertOk();
+        $catalog->assertSee('28.00 ₼ / m²')->assertSee('-13%')->assertSee('Qiymət sorğu ilə')->assertDontSee('0.00 ₼');
+        $this->get('/product/'.$quote->slug)->assertOk()->assertSee('Sorğu ilə');
+        $this->assertSame('Sorğu ilə', $quote->stockBadge());
+
+        $tile->update(['availability' => 'on_order']);
+        $this->assertSame('Sifarişlə', $tile->fresh()->stockBadge());
+    }
+
+    public function test_a_hidden_answer_does_not_keep_its_dependants(): void
+    {
+        $schema = $this->schema('akustik-paneller');
+        $note = $this->field($schema, 'kart-w11-sinaq-qeyd')['id'];
+        $card = $this->card($schema, [
+            'kart-w11-novu' => 'pet', 'kart-divar-olcu' => '2400×600', 'kart-divar-qalinliq' => '9', 'kart-divar-reng' => 'boz',
+            'kart-divar-qablasdirmada-say' => '1',
+            // «Göstərilməyib» hides «Sınaq montajı», so its leftover answer must not open the note.
+            'kart-w11-gosterici' => 'gosterilmeyib', 'kart-w11-sinaq' => 'bosluq', 'kart-w11-sinaq-qeyd' => '40 mm boşluq',
+        ]);
+
+        $this->save($this->payload('akustik-paneller', $card, ['price_basis' => 'piece']))->assertOk();
+        $this->assertFalse(Product::firstOrFail()->attributeValues()->where('attribute_id', $note)->exists());
+    }
+
+    public function test_admin_starts_a_new_card_with_empty_choices_and_saves_a_quote_without_a_price(): void
+    {
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        $this->actingAs(User::factory()->admin()->create(), 'admin');
+
+        // Natural stone (W07) asks «Uyğun montaj üsulu» as a multiple choice: on a new
+        // product it starts as an empty list, so ticking one box ticks only that one.
+        $stone = SubCategory::where('slug', 'divar-ucun-tebii-das')->firstOrFail();
+        $mount = $this->field($this->schema('divar-ucun-tebii-das'), 'kart-w07-montaj')['id'];
+
+        $form = Livewire::test(\App\Filament\Resources\ProductResource\Pages\CreateProduct::class)
+            ->fillForm(['category_id' => $stone->category_id])
+            ->fillForm(['sub_category_id' => $stone->id]);
+        $this->assertSame([], $form->get('data.card.'.$mount.'.options'));
+
+        $schema = $this->schema('foto-divar-kagizlari');
+
+        // An existing custom mural switched to «on request» saves with the price left empty.
+        $this->save($this->payload('foto-divar-kagizlari', $this->mural('ferdi', 'm2'), ['price_basis' => 'm2', 'price' => '35', 'availability' => 'on_order']))->assertOk();
+        $product = Product::firstOrFail();
+        $state = CardForm::fillState($product)['card'];
+        $mode = $this->field($schema, 'kart-divar-ferdi-qiymet');
+
+        Livewire::test(EditProduct::class, ['record' => $product->getRouteKey()])
+            ->fillForm([
+                'price' => null,
+                'card' => array_replace($state, [$mode['id'] => ['option' => collect($mode['options'])->firstWhere('slug', 'sorgu')['id']]]),
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertTrue((bool) $product->fresh()->quote_only);
     }
 }

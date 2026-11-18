@@ -120,6 +120,7 @@ class CartController extends Controller
                 // One cart unit: a pack / running metre / board for category-card products.
                 'price' => $item->product->salePrice(),
                 'unit' => $item->product->saleUnit(),
+                'unitLabel' => $item->product->saleUnitLabel(),
                 // The renovation calculator bills by the catalogue unit (m²) and the
                 // pack size, not by the cart unit.
                 'basePrice' => (float) $item->product->price,

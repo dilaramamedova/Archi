@@ -35,6 +35,8 @@ final class CardImporter
     /** @var list<string> */
     private array $log = [];
 
+    private bool $openSizes = false;
+
     /** @return list<string> */
     public function importFile(string $name): array
     {
@@ -55,6 +57,8 @@ final class CardImporter
     {
         $this->seen = [];
         $this->log = [];
+        // «Hazır ölçü və ya rəqəmlər»: every listed size of the file also takes a typed one.
+        $this->openSizes = (bool) ($data['open_size_lists'] ?? false);
 
         DB::transaction(function () use ($data): void {
             $section = Category::query()->where('slug', $data['section'])->whereNull('parent_id')->first()
@@ -120,6 +124,7 @@ final class CardImporter
                 'quote_when' => $def['quote_when'] ?? null,
                 'units' => $def['units'] ?? null,
                 'unit_when' => $def['unit_when'] ?? null,
+                'on_order_when' => $def['on_order_when'] ?? null,
                 'cut_unit' => $def['cut_unit'] ?? null,
                 // Stored only when it differs from the default (required).
                 'country_required' => ($def['country_required'] ?? true) ? null : false,
@@ -129,6 +134,9 @@ final class CardImporter
         $pivot = [];
         foreach (array_values($def['fields']) as $i => $field) {
             $attribute = $this->attribute($field);
+            if ($this->openSizes && $field['type'] === 'size' && ! empty($field['presets'])) {
+                $field['rules'] = ['open' => true] + ($field['rules'] ?? []);
+            }
             $pivot[$attribute->id] = [
                 'is_required' => (bool) ($field['required'] ?? false),
                 'is_filterable' => false,

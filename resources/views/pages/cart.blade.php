@@ -72,11 +72,15 @@
         ->map(fn ($item) => [
             'id' => $item->product_id,
             'name' => $item->product->name,
-            'price' => (float) $item->product->price,
+            // One cart unit — a pack, a roll, a board — exactly what the order charges
+            // (salePrice), not the catalogue price per m². Mirrors CartController::items().
+            'price' => $item->product->salePrice(),
+            'unitLabel' => $item->product->saleUnitLabel(),
             'qty' => max(1, (int) $item->quantity),
             'img' => $item->product->mainImageUrl,
             'cat' => $item->product->category?->name ?? '',
-            'stock' => (int) $item->product->stock,
+            // Made to order: stock does not cap the quantity.
+            'stock' => $item->product->isMadeToOrder() ? 9999 : (int) $item->product->stock,
         ])
         ->values();
 @endphp

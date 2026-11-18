@@ -81,6 +81,9 @@ $k = fn (string $code, array $name, array $units, array $fields): array => [
 return [
     'section' => 'tavanlar',
 
+    // The workbook says «Hazır ölçü və ya rəqəmlər»: a listed size or a typed one («Başqa ölçü»).
+    'open_size_lists' => true,
+
     'groups' => [
         // ════════════════════════════════════════════════════════════════════
         [

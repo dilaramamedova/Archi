@@ -105,6 +105,9 @@ $t = fn (array $presets): array => ['presets' => $presets] + $thickness;
 
 return [
     'section' => 'dosemeler',
+
+    // The workbook says «Hazır ölçü və ya rəqəmlər»: a listed size or a typed one («Başqa ölçü»).
+    'open_size_lists' => true,
     'group' => [
         'slug' => 'doseme-ortukleri',
         'name' => $n('Döşəmə örtükləri', 'Напольные покрытия', 'Floor coverings'),

@@ -310,6 +310,14 @@ class ProductCardTest extends TestCase
             ->where('attribute_id', $this->field($schema, 'kart-panel-olcusu')['id'])->firstOrFail();
         $this->assertSame(1380.0, (float) $row->value_min);
         $this->assertSame(244.0, (float) $row->value_numeric);
+
+        // «Hazır ölçü və ya 2 rəqəm»: a size off the list is typed through «Başqa ölçü».
+        $this->save($this->payload('laminat', $this->laminateCard([
+            'kart-panel-olcusu' => ['pair' => \App\Services\ProductCard\CardSchema::OTHER_SIZE, 'length' => '1220', 'width' => '200'],
+        ])))->assertOk();
+        $typed = Product::latest('id')->firstOrFail()->attributeValues()
+            ->where('attribute_id', $this->field($schema, 'kart-panel-olcusu')['id'])->firstOrFail();
+        $this->assertSame([1220.0, 200.0], [(float) $typed->value_min, (float) $typed->value_numeric]);
     }
 
     public function test_not_specified_stands_alone_in_a_multiple_choice(): void

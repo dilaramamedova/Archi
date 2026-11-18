@@ -98,7 +98,7 @@
               <span class="b" style="background:{{ $badge->bg_color }};color:{{ $badge->color }}">{{ $badge->name }}</span>
             @endforeach
             @if ($product->badges->isEmpty())
-              <span class="b">{{ $inStock ? t('common.badge_in_stock') : t('common.badge_out_of_stock') }}</span>
+              <span class="b">{{ $product->stockBadge() }}</span>
             @endif
           </div>
           <div class="heart" id="pdHeartTop" role="button" tabindex="0" aria-pressed="{{ $isWished ? 'true' : 'false' }}" data-liked="{{ $isWished ? 'true' : 'false' }}" aria-label="{{ t('product.gallery.favorite') }}"><img src="/assets/icon-heart-pointed.svg" alt=""></div>
@@ -255,7 +255,7 @@
                   {{-- brand?->name, not the model itself (which stringifies to JSON) --}}
                   data-cart-brand="{{ $product->brand?->name ?? $product->category?->name ?? t('common.site_name') }}"
                   data-cart-img="{{ $mainImg ?? '' }}"
-                  data-cart-stock="{{ $inStock ? t('common.badge_in_stock') : t('common.badge_out_of_stock') }}"><img src="/assets/icon-cart.svg" alt="">{{ t('product.info.add_cart') }}</button>
+                  data-cart-stock="{{ $product->stockBadge() }}"><img src="/assets/icon-cart.svg" alt="">{{ t('product.info.add_cart') }}</button>
           <button class="pd-wish" id="pdWish" data-liked="{{ $isWished ? 'true' : 'false' }}" aria-pressed="{{ $isWished ? 'true' : 'false' }}" aria-label="{{ t('product.info.wish') }}"><img src="/assets/icon-heart-pointed.svg" alt=""></button>
         </div>
 
@@ -442,7 +442,7 @@
       <div class="fbt-cards" id="fbtCards">
         @foreach ($fbtProducts as $fbt)
           @php
-              $fbtBadges = [['label' => $fbt->stock > 0 ? t('common.badge_in_stock') : t('common.badge_out_of_stock')]];
+              $fbtBadges = [['label' => $fbt->stockBadge()]];
           @endphp
           <x-pcard :product-id="$fbt->id" :href="route('product.show', $fbt->slug)"
                    :img="$fbt->mainImageUrl"
@@ -451,9 +451,9 @@
                    :reviews="$fbt->reviewsCount > 0 ? $fbt->reviewsCount . ' ' . t('product.fbt.card_reviews') : null"
                    :cat="$fbt->category?->name"
                    :name="$fbt->name"
-                   :now="number_format($fbt->price, 2) . ' ₼'"
-                   :old="$fbt->old_price && $fbt->old_price > $fbt->price ? number_format($fbt->old_price, 2) . ' ₼' : null"
-                   :off="$fbt->old_price && $fbt->old_price > $fbt->price ? '-' . round((1 - $fbt->price / $fbt->old_price) * 100) . '%' : null" />
+                   :now="$fbt->priceLabel()"
+                   :old="$fbt->oldPriceLabel()"
+                   :off="$fbt->discountLabel()" />
         @endforeach
       </div>
     </div>

@@ -183,7 +183,7 @@
       </x-cabinet.field>
 
       <div class="cab-field-row overflow-visible!">
-        <x-cabinet.field class="overflow-visible!" :label="t('business-product-edit.basic.brand')" for="pBrand">
+        <x-cabinet.field class="overflow-visible!" :label="t('business-product-edit.basic.brand')" for="pBrand" id="brandField">
           <x-slot:badge><span data-lam-publish-badge="brand_id" hidden class="{{ $badgeCls }}"></span></x-slot:badge>
           <div class="relative w-full" data-combo="brand"
                data-l-empty="{{ $tOr('business-product-edit.combo.empty', 'Nəticə tapılmadı') }}"
@@ -543,7 +543,9 @@
     <div class="flex items-center justify-between gap-4 rounded bg-black/90 px-6 py-5 max-[900px]:flex-col max-[900px]:items-stretch">
       <p class="text-[13px] font-medium text-white/85">{{ t('business-product-edit.save.note') }}</p>
       <div class="flex gap-2.5 max-[640px]:flex-col">
-        <button type="submit" data-publish="0" @disabled($atLimit)
+        {{-- A draft may be incomplete: the browser's own required-field check would
+             block it before the server (which lists what is missing) is asked. --}}
+        <button type="submit" data-publish="0" formnovalidate @disabled($atLimit)
                 class="h-[41px] rounded border border-white/60 px-5 text-sm font-semibold text-white transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40">{{ t('business-product-edit.save.draft') }}</button>
         <button type="submit" data-publish="1" @disabled($atLimit)
                 class="h-[41px] rounded bg-yellow px-5 text-sm font-semibold text-ink transition hover:brightness-95 disabled:cursor-not-allowed disabled:opacity-40">{{ t('business-product-edit.save.publish') }}</button>

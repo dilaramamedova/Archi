@@ -54,6 +54,10 @@ final class CardProduct
         $availability = (string) ($data['availability'] ?? '');
         if (! in_array($availability, Product::AVAILABILITIES, true)) {
             $errors['availability'] = CardText::get('availability_required', 'Mövcudluğu seçin');
+        } elseif ($availability !== Product::ON_ORDER && ($schema['sale']['on_order_when'] ?? null)
+            && CardSchema::holds($schema['sale']['on_order_when'], $result['answers'])) {
+            // «Fərdi istehsalda mövcudluq “Sifarişlə”» — a custom size is never in stock.
+            $errors['availability'] = CardText::get('availability_custom_on_order','Fərdi ölçüdə mövcudluq «Sifarişlə» olmalıdır');
         }
 
         $basis = null;

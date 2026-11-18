@@ -155,7 +155,7 @@
                                 @if ($product->created_at->gt(now()->subDays(30)))
                                     <div class="card-badge"><p>{{ t('common.badge_new') }}</p></div>
                                 @endif
-                                <div class="card-badge"><p>{{ $product->stock > 0 ? t('common.badge_in_stock') : t('common.badge_out_of_stock') }}</p></div>
+                                <div class="card-badge"><p>{{ $product->stockBadge() }}</p></div>
                             </div>
                             <div class="prod-img a"><img src="{{ $product->mainImageUrl ?? '/assets/product-marble-tile.png' }}" alt=""></div>
                         </div>
@@ -172,11 +172,11 @@
                             </div>
                             <div class="card-price">
                                 <div class="grp">
-                                    <p class="now">{{ number_format($product->price, 2) }} ₼</p>
-                                    @if ($hasDiscount)<p class="old">{{ number_format($product->old_price, 2) }} ₼</p>@endif
+                                    <p class="now">{{ $product->priceLabel() }}</p>
+                                    @if ($product->hasDiscount())<p class="old">{{ $product->oldPriceLabel() }}</p>@endif
                                 </div>
-                                @if ($hasDiscount && $product->discount_percent)
-                                    <div class="card-off"><p>-{{ $product->discount_percent }}%</p></div>
+                                @if ($product->hasDiscount())
+                                    <div class="card-off"><p>{{ $product->discountLabel() }}</p></div>
                                 @endif
                             </div>
                         </div>

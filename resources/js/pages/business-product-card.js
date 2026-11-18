@@ -408,6 +408,11 @@ export function createCardForm({ form }) {
       o.disabled = !ok;
       if (!ok && o.selected) o.parentElement.value = '';
     });
+    // Only one unit possible (a roll, a pack, m² for a custom size): pick it.
+    form.querySelectorAll('[data-card-sale="unit"] select').forEach((sel) => {
+      const open = [...sel.options].filter((o) => o.value && !o.disabled);
+      if (open.length === 1 && !sel.value) sel.value = open[0].value;
+    });
 
     const pick = (node, area) => (type === 'board' ? node.dataset.lBoard
       : type === 'unit' ? node.dataset.lUnit
@@ -416,11 +421,27 @@ export function createCardForm({ form }) {
     if (priceHint) priceHint.textContent = pick(priceHint, priceHint.dataset.lArea);
     if (stockHint) stockHint.textContent = pick(stockHint, stockHint.dataset.lPack);
 
+    // Every card needs a brand (or «Brendsiz»): mark it like the other required fields.
+    const brandLabel = document.querySelector('#brandField .ui-label-b2b');
+    if (brandLabel) {
+      brandLabel.dataset.base ??= brandLabel.textContent.replace(/\s*\*$/, '');
+      brandLabel.textContent = brandLabel.dataset.base + ' *';
+    }
+
     // Some cards (ceiling accessories) leave the country optional.
     const countryLabel = document.querySelector('#countryField .ui-label-b2b');
     if (countryLabel) {
       countryLabel.dataset.base ??= countryLabel.textContent.replace(/\s*\*$/, '');
       countryLabel.textContent = countryLabel.dataset.base + (schema.country_required === false ? '' : ' *');
+    }
+
+    // A custom size is made to order only («Fərdi istehsalda mövcudluq “Sifarişlə”»).
+    if (availability) {
+      const forced = !!schema.sale?.on_order_when && holds(schema.sale.on_order_when, a);
+      [...availability.options].forEach((o) => {
+        o.disabled = forced && o.value !== 'on_order';
+      });
+      if (forced && availability.value !== 'on_order') availability.value = 'on_order';
     }
 
     syncAvailability(quote);
@@ -482,6 +503,9 @@ export function createCardForm({ form }) {
     setShown(block, false);
     toggleChrome(false);
     if (missingBox) missingBox.hidden = true;
+    // Classes without a card keep the brand optional.
+    const brandLabel = document.querySelector('#brandField .ui-label-b2b');
+    if (brandLabel?.dataset.base) brandLabel.textContent = brandLabel.dataset.base;
   }
 
   block?.addEventListener('change', refresh);

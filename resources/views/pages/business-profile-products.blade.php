@@ -72,7 +72,7 @@
           <p class="n">{{ $product->name }}</p>
           <p class="c">{{ $product->category?->name ?? '—' }}@if($product->sku) · {{ $product->sku }}@endif</p>
         </div>
-        <p class="bpp-price">{{ number_format($product->price, 2) }} ₼</p>
+        <p class="bpp-price">{{ $product->priceLabel() }}</p>
         <x-ui.badge :tone="$badgeTone === 'error' ? 'warn' : $badgeTone" size="sm">{{ t('business-product-edit.badge.' . $modStatus) }}</x-ui.badge>
         <x-ui.toggle
             :on="$product->is_visible"

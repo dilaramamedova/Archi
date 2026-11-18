@@ -146,6 +146,8 @@ $madeToSize = fn (string $formatAttr, array $readyIn): array => [
     'sale' => 'unit', 'units' => ['piece', 'm2'],
     'unit_when' => ['piece' => ['attr' => $formatAttr, 'in' => $readyIn], 'm2' => ['attr' => $formatAttr, 'in' => ['ferdi']]],
     'quote_when' => ['attr' => 'kart-divar-ferdi-qiymet', 'in' => ['sorgu']],
+    // «Fərdi istehsalda mövcudluq “Sifarişlə”».
+    'on_order_when' => ['attr' => $formatAttr, 'in' => ['ferdi']],
 ];
 
 // Sold whole in the seller's unit.

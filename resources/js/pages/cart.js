@@ -139,6 +139,8 @@ export default function init() {
     if (s.name) row.name = s.name;
     if (s.cat) row.cat = s.cat;
     if (s.img) row.img = s.img;
+    // What one cart unit is — «paket», «rulon» — shown next to the unit price.
+    if (s.unitLabel) row.unitLabel = s.unitLabel;
     if (Number.isFinite(+s.stock)) stockById.set(+row.id, +s.stock);
     return row;
   }
@@ -204,7 +206,7 @@ export default function init() {
         (c, i) => `
     <div class="${CLS.row}" data-i="${i}">
       <img class="${CLS.thumb}" src="${esc(c.img || (c.id && IMAGES[c.id]) || '/assets/product-marble-tile.png')}" alt="" loading="lazy">
-      <div class="${CLS.info}"><b class="${CLS.name}">${esc(c.name)}</b><div class="${CLS.meta}">${esc(c.cat || '')}${c.brand ? ' · ' + esc(c.brand) : ''}</div><div class="${CLS.unit}">${esc(tr(T.unitPrice, { price: fmt(+c.price || 0) }))}</div></div>
+      <div class="${CLS.info}"><b class="${CLS.name}">${esc(c.name)}</b><div class="${CLS.meta}">${esc(c.cat || '')}${c.brand && c.brand !== c.cat ? ' · ' + esc(c.brand) : ''}</div><div class="${CLS.unit}">${esc(tr(T.unitPrice, { price: fmt(+c.price || 0) }))}${(c.unitLabel || c.calc) ? ' / ' + esc(c.unitLabel || c.calc) : ''}</div></div>
       <div class="${CLS.qty}"><button type="button" class="${CLS.qtyBtn}" data-a="dec" aria-label="${esc(T.decrease)}">−</button><span class="${CLS.qtyNum}" data-qty>${c.qty}</span><button type="button" class="${CLS.qtyBtn}" data-a="inc" aria-label="${esc(T.increase)}">+</button></div>
       <div class="${CLS.line}" data-line>${esc(money((+c.price || 0) * (c.qty || 1)))}</div>
       <button type="button" class="${CLS.rm}" data-a="rm" title="${esc(T.remove)}" aria-label="${esc(T.remove)}">×</button>

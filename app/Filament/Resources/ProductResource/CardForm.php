@@ -124,7 +124,12 @@ final class CardForm
 
             Forms\Components\Placeholder::make('card_sale_note')
                 ->label('Satış vahidi')
-                ->content('Kateqoriya kartı: qiymət m²-ə (və ya seçilmiş bazaya) görədir; paket/rulon/taxta qiyməti və paketin sahəsi kartdakı parametrlərdən avtomatik hesablanır. Stok — satılan vahidlərin sayıdır.')
+                ->label('Qiymət necə yazılır')
+                ->content(fn (callable $get): string => match (self::schema($get('sub_category_id'))['sale']['type'] ?? null) {
+                    CardSchema::SALE_UNIT => 'Qiymət və stok yuxarıda seçilmiş satış vahidi ilədir (ədəd, paket, rulon, m² …). Fərdi ölçü «Qiymət sorğu ilə» olanda qiymət yazılmır.',
+                    CardSchema::SALE_BOARD => 'Qiymət seçilmiş bazaya görədir (ədəd, poqon metr və ya m²); satış bütöv taxta ilədir. Stok — taxtaların sayıdır.',
+                    default => 'Qiymət m²-ə görədir; paket və ya rulonun qiyməti kartdakı sahədən avtomatik hesablanır. Stok — satılan paket / rulonların sayıdır.',
+                })
                 ->visible(fn (callable $get): bool => self::isCard($get)),
         ];
     }
@@ -209,6 +214,9 @@ final class CardForm
                     $components[] = Grid::make(3)
                         ->schema([
                             $part("{$base}.length", $label.' — '.($listed && ! $open ? 'min. uzunluq' : 'uzunluq'), $lengths)
+                                // Typed sizes keep the card's hint («Birinci rəqəm en …»);
+                                // a listed one shows it on the select above.
+                                ->helperText($listed ? null : $f['hint'])
                                 ->required($required),
                             $part("{$base}.length_max", 'maks. uzunluq', $lengths)
                                 ->required(fn (callable $get): bool => $required($get) && $mixed($get))
@@ -305,6 +313,11 @@ final class CardForm
         $answers = [];
 
         foreach ($schema['fields'] as $f) {
+            // A hidden field's leftover answer must not keep its own dependants open
+            // («Sınaq montajı» hidden → «Qat və boşluq ölçüsü» hides too).
+            if (! CardSchema::holds($f['visible_when'], $answers)) {
+                continue;
+            }
             if ($f['type'] === 'dropdown') {
                 $ids = [(int) $get("card.{$f['id']}.option")];
             } elseif ($f['type'] === 'multiselect') {
@@ -333,6 +346,19 @@ final class CardForm
     }
 
     // ── Persistence ────────────────────────────────────────────────────────────
+
+    /**
+     * An empty card for a freshly chosen class: every multiple choice starts as an
+     * empty list (a CheckboxList bound to a missing path ticks every box at once).
+     *
+     * @return array<int, array<string, mixed>>
+     */
+    public static function blankState(mixed $subCategoryId): array
+    {
+        return collect(self::schema($subCategoryId)['fields'] ?? [])
+            ->mapWithKeys(fn (array $f) => [$f['id'] => $f['type'] === 'multiselect' ? ['options' => [], 'text' => null] : []])
+            ->all();
+    }
 
     /** Extra fill state for the edit page. */
     public static function fillState(Product $product): array
