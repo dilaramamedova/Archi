@@ -241,8 +241,10 @@ final class CardInput
     {
         $mixed = CardSchema::holds($field['rules']['mixed_when'] ?? ['attr' => '__never__'], $answers);
 
-        // A listed size arrives as one "L×W" choice.
-        if (! $mixed && trim((string) ($raw['pair'] ?? '')) !== '') {
+        // A listed size arrives as one "L×W" choice; «Başqa ölçü» (open list) brings
+        // the typed length and width instead.
+        $pair = trim((string) ($raw['pair'] ?? ''));
+        if (! $mixed && $pair !== '' && $pair !== CardSchema::OTHER_SIZE) {
             [$raw['length'], $raw['width']] = array_pad(CardSchema::splitSize((string) $raw['pair']), 2, null);
         }
 
@@ -277,8 +279,9 @@ final class CardInput
         }
 
         // With a list: a fixed size must be one of the listed pairs; a mixed-length
-        // range picks its lengths and its width from the listed ones.
-        if ($field['presets'] !== []) {
+        // range picks its lengths and its width from the listed ones. An open list
+        // («Hazır ölçü seçilir və ya 2 rəqəm daxil edilir») also takes a typed size.
+        if ($field['presets'] !== [] && empty($field['rules']['open'])) {
             [$lengths, $widths] = CardSchema::sizeParts($field['presets']);
             $ok = $mixed
                 ? $this->listed($length, $lengths) && $this->listed($lengthMax, $lengths) && $this->listed($width, $widths)

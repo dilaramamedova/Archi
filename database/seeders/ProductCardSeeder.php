@@ -13,7 +13,7 @@ use Illuminate\Database\Seeder;
 class ProductCardSeeder extends Seeder
 {
     /** Card files under database/seeders/data/product_cards, in import order. */
-    public const FILES = ['doseme', 'tavan'];
+    public const FILES = ['doseme', 'tavan', 'divar'];
 
     public function run(CardImporter $importer): void
     {

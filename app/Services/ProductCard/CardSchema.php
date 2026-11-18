@@ -31,7 +31,10 @@ final class CardSchema
     public const SALE_UNIT = 'unit';
 
     /** Every unit a SALE_UNIT class may offer. */
-    public const SALE_UNITS = ['piece', 'lm', 'pack', 'set', 'pair', 'roll'];
+    public const SALE_UNITS = ['piece', 'lm', 'pack', 'set', 'pair', 'roll', 'm2'];
+
+    /** The «Başqa ölçü» choice of an open size list (`rules.open`): the size is typed. */
+    public const OTHER_SIZE = '__other__';
 
     /** Price bases a board class may be priced in (TZ D11 «Qiymət bazası»). */
     public const BOARD_BASES = ['piece', 'lm', 'm2'];
@@ -84,6 +87,8 @@ final class CardSchema
                 'quote_when' => $settings['quote_when'] ?? null,
                 // SALE_UNIT: the units the seller may sell in.
                 'units' => array_values((array) ($settings['units'] ?? [])),
+                // SALE_UNIT: unit → condition it needs ("ready-made: ədəd; custom size: m²").
+                'unit_when' => (array) ($settings['unit_when'] ?? []) ?: null,
                 // SALE_AREA cut from a roll: by the running metre (lm) or by m².
                 'cut_unit' => $settings['cut_unit'] ?? 'lm',
             ],

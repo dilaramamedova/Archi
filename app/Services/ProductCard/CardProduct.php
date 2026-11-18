@@ -66,8 +66,18 @@ final class CardProduct
         } elseif ($schema['sale']['type'] === CardSchema::SALE_UNIT) {
             // The seller's sales unit travels in the same field as the board basis.
             $basis = (string) ($data['price_basis'] ?? '');
-            if (! in_array($basis, $schema['sale']['units'], true)) {
+            $unitWhen = (array) ($schema['sale']['unit_when'] ?? []);
+            if ($quote && ! in_array($basis, $schema['sale']['units'], true)) {
+                // Priced on request: the form hides the unit; record the one the
+                // answers point to (a custom size → m²).
+                $basis = collect($schema['sale']['units'])
+                    ->first(fn ($u) => ! isset($unitWhen[$u]) || CardSchema::holds($unitWhen[$u], $result['answers']));
+            } elseif (! in_array($basis, $schema['sale']['units'], true)) {
                 $errors['price_basis'] = CardText::get('sale_unit_required', 'Satış vahidini seçin');
+                $basis = null;
+            } elseif (($cond = $schema['sale']['unit_when'][$basis] ?? null) && ! CardSchema::holds($cond, $result['answers'])) {
+                // The card's own answers decide the unit (a ready-made piece vs a custom size).
+                $errors['price_basis'] = CardText::get('sale_unit_mismatch', 'Bu satış vahidi seçilmiş formata uyğun deyil');
                 $basis = null;
             }
         }

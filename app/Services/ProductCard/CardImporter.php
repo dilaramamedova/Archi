@@ -119,6 +119,7 @@ final class CardImporter
                 'sale' => $def['sale'] ?? CardSchema::SALE_AREA,
                 'quote_when' => $def['quote_when'] ?? null,
                 'units' => $def['units'] ?? null,
+                'unit_when' => $def['unit_when'] ?? null,
                 'cut_unit' => $def['cut_unit'] ?? null,
                 // Stored only when it differs from the default (required).
                 'country_required' => ($def['country_required'] ?? true) ? null : false,

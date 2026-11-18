@@ -197,7 +197,25 @@ export function createCardForm({ form }) {
         const [bl, bw] = splitSize(b);
         return same(al, bl) && same(aw, bw);
       };
-      fixed.appendChild(listSelect(`card[${f.id}][pair]`, f.presets, val?.length_max ? null : val?.pair, pairLabel, null, samePair));
+      const pairBox = listSelect(`card[${f.id}][pair]`, f.presets, val?.length_max ? null : val?.pair, pairLabel, null, samePair);
+      fixed.appendChild(pairBox);
+      // An open list: «Başqa ölçü» reveals typed length × width. A saved size
+      // outside the list stays its own option (listSelect), so an edit needs nothing.
+      if (f.rules?.open) {
+        const sel = pairBox.querySelector('select');
+        sel.appendChild(new Option(L.lOtherSize || 'Başqa ölçü', '__other__'));
+        const typed = el('div', 'flex w-full items-center gap-2 max-[640px]:flex-wrap');
+        typed.append(
+          numberInput(`card[${f.id}][length]`, null, L.lLength || 'Uzunluq'),
+          sep('×'),
+          numberInput(`card[${f.id}][width]`, null, L.lWidth || 'En'),
+        );
+        fixed.classList.add('flex-wrap');
+        fixed.appendChild(typed);
+        const sync = () => setShown(typed, sel.value === '__other__');
+        sel.addEventListener('change', sync);
+        sync();
+      }
       mixedRow.append(
         listSelect(`card[${f.id}][length]`, lengths, val?.length_max ? val?.length : null, show, L.lLengthMin || 'Min. uzunluq'),
         sep('–'),
@@ -379,11 +397,13 @@ export function createCardForm({ form }) {
     setShown(priceRow, !quote);
     form.querySelectorAll('[data-card-sale]').forEach((n) => setShown(n, !quote && n.dataset.cardSale === type));
 
-    // A unit class offers only its own units.
+    // A unit class offers only its own units — and, where the card ties a unit to
+    // an answer (ready-made: ədəd, custom size: m²), only the ones that answer allows.
     const allowed = (schema.sale?.units || []).map(String);
+    const unitWhen = schema.sale?.unit_when || {};
     form.querySelectorAll('[data-card-sale="unit"] option').forEach((o) => {
       if (!o.value) return;
-      const ok = allowed.includes(o.value);
+      const ok = allowed.includes(o.value) && (!unitWhen[o.value] || holds(unitWhen[o.value], a));
       o.hidden = !ok;
       o.disabled = !ok;
       if (!ok && o.selected) o.parentElement.value = '';

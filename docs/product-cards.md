@@ -63,6 +63,31 @@ Qərarlar (müştəri ilə razılaşdırılıb):
   «materiallar və montaj» → sorğu.
 - Komplektləşdiricilərdə istehsal ölkəsi məcburi deyil (`country_required: false`).
 
+## Divar ağacı (18.11.2026)
+
+`Archi_AZ_Divar_Kataloq_AZ.xlsx`: 21 üzlük kartı (W01_1–W12_2) və 16 komplektləşdirici
+kartı (WK01_1–WK08), fayl `divar.php`. `Divarlar və arakəsmələr` bölməsində Excel-in hər
+kateqoriyası (12) və hər komplektləşdirici alt qrupu (7) ayrıca qrupdur; «Arakəsmə
+sistemləri» qalır və Şüşə bloklar ora keçib (sadə form). Köhnə siniflər slug-ları
+saxlanılaraq kartlara çevrilib (`divar-kagizlari` → W01_1, `interyer-boyasi` → W02,
+`dekorativ-suvaq` → W03_1, `dekorativ-kerpic-klinker-interyer-ucun` → W08,
+`taxta-lambir-uzluk` → W09_1, `dekorativ-paneller-mdf…` → W09_2, `akustik-paneller` → W11,
+`moldinqler-bagetler-…` → WK06_1); ümumi «Keramoqranit / Keramik plitə / …» sinfi W04-ə,
+«3D panellər» W09_4-ə birləşdirilib; «Divar və tavan üzlük örtükləri» qrupu bağlanıb.
+
+Qərarlar:
+- «Seçim və ya 2 rəqəm» → **açıq siyahı** (`rules.open`): hazır ölçü seçilir və ya
+  «Başqa ölçü» ilə yazılır. Siyahı plitə, kərpic və panel ölçülərinə qoyulub.
+- «Hazır məhsul: ədəd; fərdi ölçü: m²» (W01_2, W07, W10, W12_1, W12_2) → `sale: unit`,
+  `units: [piece, m2]` və `unit_when` (vahid formatdan asılıdır). Fərdi ölçüdə satıcı
+  «AZN/m² ilə» və ya «Qiymət sorğu ilə» seçir; sorğu → `quote_when`, vahid m² yazılır.
+- Rulon divar kağızı AZN/rulon (`units: [roll]`); boya, suvaq, yapışqan — tam qablaşdırma.
+- Plitə, keramoqranit, mozaika, mantar — AZN/m², qablaşdırmanın sahəsi ilə (`area`).
+- «Rəqəm aralığı» (örtmə sahəsi, sərfiyyat, tikiş eni, panel qalınlığı) — min / maks (`lte`).
+- «Səsudma göstəricisi» — αw / NRC seçimi + əmsal (≤ 1,5); «Göstərilməyib»də əmsal yoxdur.
+- Excel-in «eyni məhsul həm divar, həm döşəmə üçün → bir qeyd, uyğun kateqoriyalarda
+  göstərilir» qaydası hələ yoxdur: məhsulun bir sinfi var. Bu, kataloq işidir (növbəti mərhələ).
+
 ## Kart faylının formatı
 
 ```php
@@ -78,7 +103,8 @@ Qərarlar (müştəri ilə razılaşdırılıb):
 'plain' => [...],                        // qrupa köçən, kartsız siniflər
 // Bir bölmədə bir neçə qrup: 'groups' => [[slug, name, classes, plain], …]
 // Sinif ayarları: sale (area | board | unit), units (unit üçün icazəli vahidlər:
-// piece, lm, pack, set, pair, roll), cut_unit (rulondan kəsim: lm | m2),
+// piece, lm, pack, set, pair, roll, m2), unit_when (vahid → şərt: həmin vahid yalnız
+// bu cavabda seçilə bilər), cut_unit (rulondan kəsim: lm | m2),
 // quote_when (bir şərt və ya şərtlər siyahısı — hər hansı biri), country_required.
 'merge' => ['köhnə' => 'yeni'],          // məhsullar köçür, köhnə sinif bağlanır
 'retire_groups' => [...],                // boş qalanda bağlanan qruplar
@@ -100,6 +126,8 @@ işlədilirsə **eyni olmalıdır** (importer fərqi görəndə dayanır). Sinf�
 | `rules.mixed_when` | Ölçüdə min–maks uzunluq (qarışıq uzunluqlar) |
 | `rules.square_when` | Kvadrat formada uzunluq = en |
 | `rules.integer` | Tam rəqəm (boru sayı, asqı nöqtəsi sayı) |
+| `rules.open` | Ölçü siyahısı açıqdır: siyahıdan seçim və ya «Başqa ölçü» (`__other__`) ilə yazılmış uzunluq × en |
+| `rules.min` / `rules.max` | Rəqəmin sərhədləri (səsudma əmsalı ≤ 1,5) |
 | `maps_to` | Məhsul hesabına gedir: `package_size`, `package_unit`, `roll_width`, `length_mm`, `width_mm` |
 
 Seçim: `value` (az/ru/en), `slug`, `prompt` (seçiləndə mətn soruşulur: «Digər» →
@@ -133,7 +161,8 @@ səbət və sifariş onu istifadə edir:
   `cut_unit: m2` olan sinifdə kəsim m² ilə satılır (dartma tavan).
 - **Satıcının vahidi** (`unit`): satıcı icazəli vahidlərdən birini seçir (`price_basis`
   sahəsi), qiymət və stok həmin vahidlədir; «Örtmə sahəsi» (`package_size`) yazılsa,
-  səhifədə ≈ AZN/m² də göstərilir.
+  səhifədə ≈ AZN/m² də göstərilir. `unit_when` olan sinifdə formada yalnız cavablara
+  uyğun vahidlər qalır, server də yoxlayır; sorğu ilə qiymətdə vahid avtomatik seçilir.
 - **Sorğu** (`quote_when`): qiymət yoxdur, səbətə əlavə olunmur; məhsul səhifəsində
   «Hesablama tələb et» forması `consultation_requests`-ə (`source = product`) yazır.
 
@@ -146,6 +175,8 @@ səbət və sifariş onu istifadə edir:
    siniflərlə tutuşdur və istifadəçiyə xülasə ver.
 2. `database/seeders/data/product_cards/<bölmə>.php` yaz; ortaq atributları
    (`kart-zemanet`, `kart-isti-doseme` …) yenidən istifadə et.
-3. Fayla miqrasiya yaz (`2026_11_16_100100_import_doseme_product_cards.php` nümunədir)
-   və `ProductCardSeeder::FILES`-a əlavə et.
+3. Fayla miqrasiya yaz (`2026_11_18_110000_import_divar_product_cards.php` nümunədir —
+   tərcümələri `firstOrCreate` ilə əlavə edir, admin redaktələri qalır) və
+   `ProductCardSeeder::FILES`-a əlavə et. Slug toqquşmasını əvvəlcə yoxla: importer
+   eyni slug-lu sinfi başqa bölmədən köçürər.
 4. `tests/Feature/ProductCardTest.php` nümunəsi ilə yeni qaydaları testlə.

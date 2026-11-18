@@ -293,6 +293,7 @@
            data-l-length-min="{{ $tOr('product-card.form.length_min', 'Min. uzunluq') }}"
            data-l-length-max="{{ $tOr('product-card.form.length_max', 'Maks. uzunluq') }}"
            data-l-width="{{ $tOr('product-card.form.width', 'En') }}"
+           data-l-other-size="{{ $tOr('product-card.form.other_size', 'Başqa ölçü') }}"
            data-l-required="{{ $tOr('product-card.required', '«:name» doldurulmalıdır') }}"
            data-l-doc-current="{{ $tOr('product-card.form.doc_current', 'Mövcud sənəd') }}"
            data-l-doc-replace="{{ $tOr('product-card.form.doc_replace', '— dəyişmək üçün yeni fayl və ya link verin') }}"

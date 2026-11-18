@@ -185,8 +185,11 @@ final class CardForm
                 case 'size':
                     $mixed = fn (callable $get): bool => CardSchema::holds($f['rules']['mixed_when'] ?? ['attr' => '__never__'], self::answers($schema, $get));
                     $listed = $f['presets'] !== [];
+                    // Open list: the listed pairs plus «Başqa ölçü», which types the size.
+                    $open = $listed && ! empty($f['rules']['open']);
+                    $other = fn (callable $get): bool => $open && $get("{$base}.pair") === CardSchema::OTHER_SIZE;
                     [$lengths, $widths] = CardSchema::sizeParts($f['presets']);
-                    $part = fn (string $path, string $partLabel, array $values) => $listed
+                    $part = fn (string $path, string $partLabel, array $values) => $listed && ! $open
                         ? Forms\Components\Select::make($path)->label($partLabel)->options(self::choices($values))
                         : Forms\Components\TextInput::make($path)->label($partLabel);
 
@@ -195,7 +198,9 @@ final class CardForm
                     if ($listed) {
                         $components[] = Forms\Components\Select::make("{$base}.pair")
                             ->label($label)
-                            ->options(collect($f['presets'])->mapWithKeys(fn ($p) => [(string) $p => str_replace('×', ' × ', (string) $p)])->all())
+                            ->options(collect($f['presets'])->mapWithKeys(fn ($p) => [(string) $p => str_replace('×', ' × ', (string) $p)])
+                                ->when($open, fn ($c) => $c->put(CardSchema::OTHER_SIZE, 'Başqa ölçü'))->all())
+                            ->live()
                             ->required(fn (callable $get): bool => $required($get) && ! $mixed($get))
                             ->helperText($f['hint'])
                             ->visible(fn (callable $get): bool => $shown($get) && ! $mixed($get));
@@ -203,7 +208,7 @@ final class CardForm
 
                     $components[] = Grid::make(3)
                         ->schema([
-                            $part("{$base}.length", $label.' — '.($listed ? 'min. uzunluq' : 'uzunluq'), $lengths)
+                            $part("{$base}.length", $label.' — '.($listed && ! $open ? 'min. uzunluq' : 'uzunluq'), $lengths)
                                 ->required($required),
                             $part("{$base}.length_max", 'maks. uzunluq', $lengths)
                                 ->required(fn (callable $get): bool => $required($get) && $mixed($get))
@@ -211,7 +216,7 @@ final class CardForm
                             $part("{$base}.width", 'en', $widths)
                                 ->required($required),
                         ])
-                        ->visible(fn (callable $get): bool => $shown($get) && (! $listed || $mixed($get)))
+                        ->visible(fn (callable $get): bool => $shown($get) && (! $listed || $mixed($get) || $other($get)))
                         ->columnSpanFull();
                     break;
 
@@ -342,6 +347,11 @@ final class CardForm
 
         // Documents: the stored value back into the file / link pair.
         foreach ($schema['fields'] as $f) {
+            // An open size list: a typed size outside the list shows as «Başqa ölçü».
+            if ($f['type'] === 'size' && ! empty($f['rules']['open']) && isset($card[$f['id']]['pair'])
+                && ! in_array($card[$f['id']]['pair'], array_map('strval', $f['presets']), true)) {
+                $card[$f['id']]['pair'] = CardSchema::OTHER_SIZE;
+            }
             if ($f['type'] === 'document' && isset($card[$f['id']]['value'])) {
                 $doc = (string) $card[$f['id']]['value'];
                 $card[$f['id']] = str_starts_with($doc, 'https://') ? ['url' => $doc] : ['file' => $doc];
