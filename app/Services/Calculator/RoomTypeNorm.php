@@ -2,6 +2,7 @@
 
 namespace App\Services\Calculator;
 
+use App\Enums\Calculator\LightingType;
 use App\Enums\Calculator\RoomType;
 
 /**
@@ -29,9 +30,21 @@ class RoomTypeNorm
 
     /** Every point key the form and the engine know, in display order. */
     public const POINT_KEYS = [
-        'sockets', 'switches', 'lights_spot', 'lights_pendant', 'lights_chandelier', 'wall_lights',
-        'tv', 'data', 'intercom', 'ac_power', 'appliance', 'water_points', 'sewer_points',
+        'sockets', 'switches', 'lights_spot', 'lights_track', 'track_rail_m', 'lights_pendant', 'lights_chandelier',
+        'wall_lights', 'led_output', 'tv', 'data', 'intercom', 'ac_power', 'appliance', 'water_points', 'sewer_points',
     ];
+
+    /**
+     * Point keys that are a length, not a count: the track rail, in running metres
+     * to one decimal (TZ 19.11.2026 §44). Every other key is a whole number.
+     */
+    public const LENGTH_KEYS = ['track_rail_m'];
+
+    /**
+     * Never a «Sadə» norm: LED outputs exist only where the visitor counts them
+     * («Ətraflı» mode, TZ 19.11.2026 §45).
+     */
+    public const DETAILED_ONLY_KEYS = ['led_output'];
 
     /** Every fixture key the form and the engine know, in display order. */
     public const FIXTURE_KEYS = [
@@ -98,18 +111,42 @@ class RoomTypeNorm
     /**
      * The «Sadə» counts for a room of this type and size.
      *
-     * Spots are not a room-type norm: they follow the ceiling. A plasterboard or
-     * stretch ceiling gets one spot per SPOT_AREA_M2, on top of the chandeliers and
-     * pendants; a painted slab gets none. A room left with no ceiling light at all
-     * (a bathroom under a painted slab) gets one, so no room is ever dark.
+     * The ceiling lights follow the room's lighting type (TZ 19.11.2026 §43):
      *
-     * @return array<string, int>
+     *   SPOT        one spot per SPOT_AREA_M2, on top of the chandeliers and pendants
+     *               (never fewer than the type's own spot norm — a wardrobe's);
+     *   TRACK       one track light per TRACK_LIGHT_AREA_M2 and TRACK_RAIL_M_PER_M2
+     *               metres of rail per m² (to 0.1 m); the feed points follow the rail
+     *               (GeometryEngine) and count as electrical points;
+     *   CHANDELIER  only the room type's own norms (a painted slab).
+     *
+     * A room left with no ceiling light at all (a bathroom under a painted slab) gets
+     * one chandelier, so no room is ever dark. LED outputs are never a norm.
+     *
+     * `$lighting` also takes the pre-2026-11-19 bool «suspended ceiling», and
+     * `$lightNorms` a bare SPOT_AREA_M2, so an older caller keeps its meaning.
+     *
+     * @param  LightingType|bool  $lighting
+     * @param  array{spotAreaM2?: float, trackLightAreaM2?: float, trackRailMPerM2?: float}|float  $lightNorms
+     * @return array<string, int|float>  whole counts; `track_rail_m` in metres
      */
-    public function points(float $area, bool $suspendedCeiling, float $spotAreaM2): array
+    public function points(float $area, LightingType|bool $lighting, array|float $lightNorms = []): array
     {
+        if (is_bool($lighting)) {
+            $lighting = LightingType::forCeiling($lighting);
+        }
+
+        if (! is_array($lightNorms)) {
+            $lightNorms = ['spotAreaM2' => (float) $lightNorms];
+        }
+
         $points = [];
 
         foreach ($this->pointNorms as $key => $norm) {
+            if (in_array($key, self::DETAILED_ONLY_KEYS, true)) {
+                continue;
+            }
+
             $points[$key] = (int) ceil(round($norm['base'] + $norm['per_m2'] * $area, 2));
         }
 
@@ -121,17 +158,27 @@ class RoomTypeNorm
             $points['tv'] = 0;
         }
 
-        $points['lights_spot'] = $suspendedCeiling && $spotAreaM2 > 0 && $area > 0
-            ? (int) ceil(round($area / $spotAreaM2, 2))
-            : 0;
+        $spotArea = (float) ($lightNorms['spotAreaM2'] ?? 0);
+        $trackArea = (float) ($lightNorms['trackLightAreaM2'] ?? 0);
+        $railPerM2 = (float) ($lightNorms['trackRailMPerM2'] ?? 0);
 
-        $ceilingLights = ($points['lights_spot'] ?? 0) + ($points['lights_chandelier'] ?? 0) + ($points['lights_pendant'] ?? 0);
+        if ($lighting === LightingType::Spot && $spotArea > 0 && $area > 0) {
+            $points['lights_spot'] = max($points['lights_spot'] ?? 0, (int) ceil(round($area / $spotArea, 2)));
+        }
+
+        if ($lighting === LightingType::Track && $area > 0) {
+            $points['lights_track'] = $trackArea > 0 ? (int) ceil(round($area / $trackArea, 2)) : 0;
+            $points['track_rail_m'] = round($area * $railPerM2, 1);
+        }
+
+        $ceilingLights = ($points['lights_spot'] ?? 0) + ($points['lights_chandelier'] ?? 0)
+            + ($points['lights_pendant'] ?? 0) + ($points['lights_track'] ?? 0);
 
         if ($ceilingLights === 0 && $area > 0) {
             $points['lights_chandelier'] = 1;
         }
 
-        return array_filter($points, fn (int $v) => $v > 0);
+        return array_filter($points, fn ($v) => $v > 0);
     }
 
     /** The fixtures at their norm — only the ones the room has. */
@@ -172,7 +219,10 @@ class RoomTypeNorm
             'needsWaterproofing' => $this->needsWaterproofing,
             'pointKeys' => self::POINT_KEYS,
             'fixtureKeys' => self::FIXTURE_KEYS,
-            'defaultPoints' => $this->points(0.0, false, 0.0),
+            'defaultPoints' => $this->points(0.0, LightingType::Chandelier),
+            'lengthKeys' => self::LENGTH_KEYS,
+            'defaultOpenings' => RoomType::tryFrom($this->roomType)?->defaultOpenings() ?? ['DOOR' => 1, 'WINDOW' => 1],
+            'defaultFloorFamily' => RoomType::tryFrom($this->roomType)?->defaultFloorFamily(),
             'defaultFixtures' => $this->defaultFixtures(),
             'pointNorms' => $this->pointNorms,
             'acExtraAboveM2' => $this->acExtraAboveM2,

@@ -90,6 +90,23 @@
 
   /* portfolio */
   .pp-sec              { @apply flex flex-col gap-6; }
+
+  /* Briqadir / Makler block (docs/specialist-kinds.md) — facts row, labelled chip rows,
+     and the crew list as a two-column grid of name + trade/years. */
+  .pp-kind-facts       { @apply flex flex-wrap gap-x-8 gap-y-3 empty:hidden; }
+  .pp-kind-fact        { @apply flex flex-col gap-1; }
+  .pp-kind-fact .k,
+  .pp-kind-row .k      { @apply text-sm text-black/50; }
+  .pp-kind-fact .v     { @apply text-lg font-semibold text-ink; }
+  .pp-kind-flag        { @apply inline-flex items-center gap-2 rounded-ds bg-[#effaf3] px-3 py-2 text-sm font-semibold text-ink; }
+  .pp-kind-flag img    { @apply size-4; }
+  .pp-kind-row         { @apply flex flex-col gap-2.5; }
+  .pp-kind-row .txt    { @apply text-base leading-[1.5] break-words text-black/70; }
+  .pp-crew             { @apply grid grid-cols-2 gap-2.5 max-[640px]:grid-cols-1; }
+  .pp-crew-m           { @apply grid grid-cols-[36px_minmax(0,1fr)] items-center gap-x-3 rounded-ds border border-black/10 px-3 py-2.5; }
+  .pp-crew-m .av       { @apply row-span-2 flex size-9 items-center justify-center rounded-full bg-gray-soft text-sm font-bold text-ink; }
+  .pp-crew-m .n        { @apply truncate text-sm font-semibold text-ink; }
+  .pp-crew-m .s        { @apply truncate text-[13px] text-black/50 empty:hidden; }
   .pp-grid             { @apply flex flex-col gap-4; }
   .pp-grow             { @apply flex gap-4 max-[900px]:flex-wrap; }
   .pp-tile             { @apply relative h-[230px] min-w-0 flex-1 overflow-hidden rounded-ds max-[900px]:flex-[1_1_calc(50%-8px)] max-[640px]:flex-[1_1_100%]; }

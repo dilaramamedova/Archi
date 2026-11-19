@@ -40,6 +40,9 @@ class CalculatorSeeder extends Seeder
         // TZ 17.11.2026: stages, new works / materials, settings, room types.
         (new CalculatorTzSeeder)->apply(fresh: true);
 
+        // TZ №2 19.11.2026: track system, LED outputs, BALCONY / WARDROBE.
+        (new CalculatorTz2Seeder)->apply(fresh: true);
+
         VersionedCache::bump(VersionedCache::CALCULATOR);
     }
 

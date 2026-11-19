@@ -826,7 +826,8 @@ class EstimateEngineTest extends TestCase
 
         $upgraded = Units::upgradePayload($old);
 
-        $this->assertSame(3, $upgraded['v']);
+        // Upgraded all the way to the current shape (v4 since TT №2: lighting types).
+        $this->assertSame(Units::PAYLOAD_VERSION, $upgraded['v']);
         $this->assertSame('PREPARED', $upgraded['object']['condition']);
         $this->assertArrayNotHasKey('marketType', $upgraded['object']);
         $this->assertSame('OLD', $upgraded['rooms'][0]['currentState']);

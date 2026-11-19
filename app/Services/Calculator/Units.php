@@ -37,8 +37,11 @@ final class Units
      *   3 — finishes are calculator_finishes rows; three surface states and three
      *       object conditions; materials and works keyed by finish id; the
      *       engineering modules derived from the rooms
+     *   4 — lighting type (TZ №2 19.11.2026): `object.lightingType` (AUTO | SPOT |
+     *       TRACK | CHANDELIER) and an optional per-room `lightingType`; new point
+     *       keys `lights_track`, `track_rail_m` (metres), `led_output`
      */
-    public const PAYLOAD_VERSION = 3;
+    public const PAYLOAD_VERSION = 4;
 
     /** v2 material category → v3 finish id (the finish now carries its own material). */
     private const LEGACY_MATERIALS = [
@@ -129,7 +132,26 @@ final class Units
             $inputs = self::toFinishRows($inputs);
         }
 
+        if ($version < 4) {
+            $inputs = self::toLightingTypes($inputs);
+        }
+
         $inputs['v'] = self::PAYLOAD_VERSION;
+
+        return $inputs;
+    }
+
+    /**
+     * v3 → v4: the object follows the ceiling (AUTO) — spots under a suspended ceiling,
+     * chandeliers under a painted one, which is exactly how a v3 estimate was priced.
+     * Rooms carry no type of their own, so they follow the object; the new point keys
+     * are simply absent (zero, or the norm in «Sadə» mode).
+     */
+    private static function toLightingTypes(array $inputs): array
+    {
+        $object = is_array($inputs['object'] ?? null) ? $inputs['object'] : [];
+        $object['lightingType'] ??= 'AUTO';
+        $inputs['object'] = $object;
 
         return $inputs;
     }

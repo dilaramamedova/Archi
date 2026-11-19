@@ -157,6 +157,16 @@ return [
             'en' => 'demolition, construction waste removal, surface protection',
         ],
         'composition.general.fin' => ['az' => '—', 'ru' => '—', 'en' => '—'],
+
+        // TZ №2 19.11.2026 §47 — under the «Tam təmir» total.
+        'result.design_note' => [
+            'az' => 'Dizayn üzlükləri (parket, dekorativ suvaq, kərpic, divar kağızı) və trek işıqlandırma qiyməti artırır — dəqiq məbləğ üçün ətraflı kalkulyatordan istifadə edin',
+            'ru' => 'Дизайнерские покрытия (паркет, декоративная штукатурка, кирпич, обои) и трековое освещение повышают стоимость — для точной суммы воспользуйтесь подробным калькулятором',
+            'en' => 'Designer finishes (parquet, decorative plaster, brick, wallpaper) and track lighting raise the price — use the detailed calculator for an exact amount',
+        ],
+        // §39 the PDF button
+        'actions.pdf_loading' => ['az' => 'PDF hazırlanır…', 'ru' => 'Готовим PDF…', 'en' => 'Preparing the PDF…'],
+        'errors.pdf_failed' => ['az' => 'PDF hazırlanmadı, yenidən cəhd edin', 'ru' => 'PDF не подготовлен, попробуйте ещё раз', 'en' => 'The PDF could not be prepared, please try again'],
     ],
 
     'home' => [
@@ -612,5 +622,54 @@ return [
 
         // WhatsApp — the margin and the reserve are part of the stage totals above them.
         'alerts.whatsapp_included' => ['az' => 'daxildir', 'ru' => 'включено', 'en' => 'included'],
+
+        // ── TZ №2 19.11.2026 ─────────────────────────────────────────────────────
+        // §43 lighting type: the object default and the room's own choice.
+        'lighting.label' => ['az' => 'İşıqlandırma növü', 'ru' => 'Тип освещения', 'en' => 'Lighting type'],
+        'lighting.auto' => ['az' => 'Tavana görə (avtomatik)', 'ru' => 'По потолку (автоматически)', 'en' => 'By the ceiling (automatic)'],
+        'lighting.spot' => ['az' => 'Spotlar', 'ru' => 'Точечные светильники', 'en' => 'Spotlights'],
+        'lighting.track' => ['az' => 'Trek sistemi', 'ru' => 'Трековая система', 'en' => 'Track system'],
+        'lighting.chandelier' => ['az' => 'Yalnız çilçıraq və asma işıqlar', 'ru' => 'Только люстры и подвесные светильники', 'en' => 'Chandeliers and pendants only'],
+        'lighting.object_hint' => [
+            'az' => 'Əl ilə dəyişdirilməmiş bütün otaqlara tətbiq olunur. «Tavana görə»: gipskarton və dartma tavanda spotlar, rənglənmiş tavanda çilçıraq.',
+            'ru' => 'Применяется ко всем комнатам, где тип не меняли вручную. «По потолку»: споты при гипсокартонном и натяжном потолке, люстра при окрашенном.',
+            'en' => 'Applies to every room whose type you have not changed. «By the ceiling»: spots under plasterboard and stretch ceilings, a chandelier under a painted one.',
+        ],
+        'lighting.track_hint' => [
+            'az' => 'Trek: hər :area m²-ə 1 işıq, hər m²-ə :rail x.m şina, hər :feed x.m şinaya 1 qidalanma nöqtəsi (orta norma).',
+            'ru' => 'Трек: 1 светильник на :area м², :rail пог. м шины на м², 1 точка питания на :feed пог. м шины (средняя норма).',
+            'en' => 'Track: 1 light per :area m², :rail m of rail per m², 1 feed point per :feed m of rail (average norm).',
+        ],
+        // §44 / §45 new counters and their one-line summary.
+        'points.lights_track' => ['az' => 'Trek işığı', 'ru' => 'Трековые светильники', 'en' => 'Track lights'],
+        'points.track_rail_m' => ['az' => 'Trek şinası, x.m', 'ru' => 'Шинопровод, пог. м', 'en' => 'Track rail, m'],
+        'points.led_output' => ['az' => 'LED işıqlandırma çıxışı (220V)', 'ru' => 'Вывод 220V для LED-подсветки', 'en' => 'LED lighting output (220V)'],
+        'points_short.lights_track' => ['az' => ':n trek işığı', 'ru' => 'трековых светильников: :n', 'en' => 'track lights: :n'],
+        'points_short.track_rail_m' => ['az' => ':n x.m şina', 'ru' => 'шины: :n пог. м', 'en' => 'rail: :n m'],
+        'points_short.track_feed' => ['az' => ':n şina qidalanması', 'ru' => 'точек питания шины: :n', 'en' => 'rail feed points: :n'],
+        'points_short.led_output' => ['az' => ':n LED çıxışı', 'ru' => 'LED-выводов: :n', 'en' => 'LED outputs: :n'],
+        // §46 room types and the typical-set variants.
+        'room_types.balcony' => ['az' => 'Balkon / lociya', 'ru' => 'Балкон / лоджия', 'en' => 'Balcony / loggia'],
+        'room_types.wardrobe' => ['az' => 'Qarderob', 'ru' => 'Гардеробная', 'en' => 'Walk-in wardrobe'],
+        'rooms.add_variant' => ['az' => '+ :room', 'ru' => '+ :room', 'en' => '+ :room'],
+        // §39 the PDF button
+        'actions.pdf_loading' => ['az' => 'PDF hazırlanır…', 'ru' => 'Готовим PDF…', 'en' => 'Preparing the PDF…'],
+        'error.pdf_failed' => ['az' => 'PDF hazırlanmadı, yenidən cəhd edin', 'ru' => 'PDF не подготовлен, попробуйте ещё раз', 'en' => 'The PDF could not be prepared, please try again'],
+        // §40 every time on the PDF is Baku time
+        'notice.baku_time' => ['az' => 'Bakı vaxtı', 'ru' => 'время Баку', 'en' => 'Baku time'],
+        // QA of TT №2: the heated part of a room's floor, and the units in RU / EN.
+        'rooms.warm_area' => ['az' => 'İsti döşəmə sahəsi', 'ru' => 'Площадь тёплого пола', 'en' => 'Heated floor area'],
+        'rooms.warm_area_hint' => [
+            'az' => 'Boş qalsa, bütün döşəmə qızdırılır. Mebelin altına isti döşəmə çəkilmir.',
+            'ru' => 'Если оставить пустым, обогревается весь пол. Под мебелью тёплый пол не укладывают.',
+            'en' => 'Leave empty to heat the whole floor. Warm floors are not laid under furniture.',
+        ],
+        'units.lm' => ['az' => 'p.m', 'ru' => 'пог. м', 'en' => 'lm'],
+        'units.set' => ['az' => 'dəst', 'ru' => 'компл.', 'en' => 'set'],
+        'units.kg' => ['az' => 'kq', 'ru' => 'кг', 'en' => 'kg'],
+        'units.trip' => ['az' => 'reys', 'ru' => 'рейс', 'en' => 'trip'],
+        'units.day' => ['az' => 'gün', 'ru' => 'дн.', 'en' => 'day'],
+        'units.l' => ['az' => 'L', 'ru' => 'л', 'en' => 'L'],
+        'units.m3' => ['az' => 'm³', 'ru' => 'м³', 'en' => 'm³'],
     ],
 ];

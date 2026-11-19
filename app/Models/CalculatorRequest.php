@@ -25,7 +25,24 @@ class CalculatorRequest extends Model
         'total_amount' => 'decimal:2',
         'area' => 'decimal:2',
         'handled_at' => 'datetime',
+        // [{type, at}] — every press of a button for this estimate (TZ №2 §41).
+        'events' => 'array',
     ];
+
+    /**
+     * «PDF + WhatsApp» — the buttons pressed for this estimate, in order, each once.
+     * A request from before the events column has only its own type.
+     */
+    public function actionsLabel(): string
+    {
+        $types = collect($this->events ?: [['type' => $this->type?->value]])
+            ->pluck('type')
+            ->filter()
+            ->unique()
+            ->map(fn (string $type) => RequestType::tryFrom($type)?->shortLabel() ?? $type);
+
+        return $types->implode(' + ');
+    }
 
     public function user(): BelongsTo
     {

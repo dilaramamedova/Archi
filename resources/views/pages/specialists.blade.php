@@ -226,7 +226,15 @@
                     </div>
                   </div>
                   <div class="name">{{ $s->user->name }}</div>
-                  <div class="meta"><span class="m">{{ t('specialists.card.exp', ['years' => $s->experience_years ?? 0]) }}</span><span class="d">·</span><span class="m">{{ \App\Enums\City::display($s->city) ?? '' }}</span></div>
+                  {{-- No «0 il təcrübə»: registration never asks for experience (a new
+                       Briqadir or Makler has none on file), so an empty value is hidden,
+                       as on the profile page. --}}
+                  <div class="meta">@if ($s->experience_years)<span class="m">{{ t('specialists.card.exp', ['years' => $s->experience_years]) }}</span><span class="d">·</span>@endif<span class="m">{{ \App\Enums\City::display($s->city) ?? '' }}</span></div>
+                  {{-- Briqadir / Makler only: «Briqada: 8 nəfər» / «Agentlik: X». --}}
+                  @php $kindLine = \App\Support\SpecialistDetails::summary($s); @endphp
+                  @if ($kindLine)
+                    <div class="kind">{{ $kindLine }}</div>
+                  @endif
                   <div class="foot">
                     {{-- "from X ₼", not the "/m²" wording: the cheapest active service may be
                          priced per job just as easily as per metre. --}}

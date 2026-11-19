@@ -15,6 +15,10 @@ enum RoomType: string
     case Bathroom = 'BATHROOM';
     case Wc = 'WC';
     case Corridor = 'CORRIDOR';
+    // TZ 19.11.2026 §46: a balcony and a wardrobe used to be «Digər otaq», whose norm
+    // gave each three sockets; the project has one.
+    case Balcony = 'BALCONY';
+    case Wardrobe = 'WARDROBE';
     case Office = 'OFFICE';
     case Commercial = 'COMMERCIAL';
     case Other = 'OTHER';
@@ -66,10 +70,37 @@ enum RoomType: string
             self::Bathroom => ['sockets' => 2, 'switches' => 1, 'lights' => 2, 'wall_lights' => 1, 'water_points' => 4, 'sewer_points' => 3],
             self::Wc => ['sockets' => 1, 'switches' => 1, 'lights' => 1, 'water_points' => 2, 'sewer_points' => 2],
             self::Corridor => ['sockets' => 2, 'switches' => 2, 'lights' => 3],
+            self::Balcony, self::Wardrobe => ['sockets' => 1, 'switches' => 1, 'lights' => 1],
             self::Office => ['sockets' => 8, 'switches' => 1, 'lights' => 4, 'data' => 2, 'ac_power' => 1],
             self::Commercial => ['sockets' => 6, 'switches' => 2, 'lights' => 6, 'data' => 2, 'ac_power' => 1],
             self::Other => ['sockets' => 4, 'switches' => 1, 'lights' => 1],
         };
+    }
+
+    /**
+     * The door and window rows a new room of this type starts with (the visitor
+     * corrects them): a wardrobe has a door and no window, a balcony its glazing and
+     * no door of its own — the balcony door belongs to the room it opens from.
+     *
+     * @return array{DOOR: int, WINDOW: int}
+     */
+    public function defaultOpenings(): array
+    {
+        return match ($this) {
+            self::Balcony => ['DOOR' => 0, 'WINDOW' => 1],
+            self::Bathroom, self::Wc, self::Corridor, self::Wardrobe => ['DOOR' => 1, 'WINDOW' => 0],
+            default => ['DOOR' => 1, 'WINDOW' => 1],
+        };
+    }
+
+    /**
+     * A floor that starts tiled although the room has no water line: a balcony is
+     * porcelain under paint walls (TZ №2 Leyla Loft table). Null = the usual rule
+     * (tile in a wet room, the admin's default finish elsewhere).
+     */
+    public function defaultFloorFamily(): ?string
+    {
+        return $this === self::Balcony ? FinishFamily::Tile->value : null;
     }
 
     /**

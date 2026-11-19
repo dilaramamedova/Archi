@@ -7,6 +7,7 @@ use App\Enums\Calculator\RequestType;
 use App\Filament\Resources\CalculatorRequestResource\Pages;
 use App\Filament\Resources\Concerns\ExplainsCalculator;
 use App\Models\CalculatorRequest;
+use App\Services\Calculator\CalculatorConfig;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Resources\Resource;
@@ -80,6 +81,18 @@ class CalculatorRequestResource extends Resource
 
             Section::make('Müraciət')
                 ->schema([
+                    // Baku time (TZ №2 §40) — the database keeps UTC.
+                    Forms\Components\Placeholder::make('created_at_baku')
+                        ->label('Tarix (Bakı vaxtı)')
+                        ->content(fn (?CalculatorRequest $record): string => $record?->created_at
+                            ? $record->created_at->copy()->timezone(CalculatorConfig::TIMEZONE)->format('d.m.Y H:i')
+                            : '—'),
+
+                    // «PDF + WhatsApp» — repeat presses for the same estimate (TZ №2 §41).
+                    Forms\Components\Placeholder::make('actions_label')
+                        ->label('Hərəkətlər')
+                        ->content(fn (?CalculatorRequest $record): string => $record ? self::eventsSummary($record) : '—'),
+
                     Forms\Components\Select::make('status')
                         ->label('Status')
                         ->options(fn () => collect(RequestStatus::cases())
@@ -117,20 +130,23 @@ class CalculatorRequestResource extends Resource
 
     public static function table(Table $table): Table
     {
+        // No table description: the explainer above the table already says the same.
         return $table
-            ->description('Müştərilərin kalkulyatordan göndərdiyi müraciətlər. '
-                .'«Açar təslim» olanlar zəng gözləyir — status sütununu yeniləyin.')
             ->columns([
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Tarix')
-                    ->dateTime('d.m.Y H:i')
+                    ->label('Tarix (Bakı)')
+                    ->dateTime('d.m.Y H:i', CalculatorConfig::TIMEZONE)
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('type')
                     ->label('Növ')
                     ->formatStateUsing(fn (RequestType $state) => $state->label())
                     ->badge()
-                    ->color(fn (RequestType $state) => $state->needsCallback() ? 'warning' : 'gray'),
+                    ->color(fn (RequestType $state) => $state->needsCallback() ? 'warning' : 'gray')
+                    // Repeat presses for the same estimate are events, not new rows.
+                    ->description(fn (CalculatorRequest $record): ?string => count((array) $record->events) > 1
+                        ? $record->actionsLabel()
+                        : null),
 
                 Tables\Columns\TextColumn::make('name')
                     ->label('Müştəri')
@@ -170,6 +186,18 @@ class CalculatorRequestResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->actions([Actions\EditAction::make()->label('Aç')])
             ->bulkActions([Actions\DeleteBulkAction::make()]);
+    }
+
+    /** «PDF + WhatsApp · PDF 16:17, WhatsApp 16:18» — what was pressed, Baku time. */
+    public static function eventsSummary(CalculatorRequest $record): string
+    {
+        $times = collect((array) $record->events)
+            ->filter(fn ($event) => is_array($event) && ! empty($event['at']))
+            ->map(fn (array $event) => (RequestType::tryFrom((string) ($event['type'] ?? ''))?->shortLabel() ?? ($event['type'] ?? '?'))
+                .' '.\Illuminate\Support\Carbon::parse($event['at'])->timezone(CalculatorConfig::TIMEZONE)->format('H:i'))
+            ->implode(', ');
+
+        return $record->actionsLabel().($times !== '' ? ' · '.$times : '');
     }
 
     public static function canCreate(): bool

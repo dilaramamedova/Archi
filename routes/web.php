@@ -117,7 +117,7 @@ Route::get('/register', function () {
     app()->setLocale(session('locale', config('app.locale')));
 
     return view('pages.register', [
-        'specialties' => SpecialistSpecialty::query()->where('is_active', true)->orderBy('sort_order')->pluck('name', 'id'),
+        'specialties' => SpecialistSpecialty::query()->where('is_active', true)->withoutOwnKinds()->orderBy('sort_order')->pluck('name', 'id'),
     ]);
 })->middleware('guest')->name('register');
 Route::get('/forgot-password', fn () => archiView('pages.forgot-password'))->middleware('guest')->name('password.request');
@@ -224,7 +224,9 @@ Route::prefix('api/calculator')->name('api.calculator.')->group(function () {
     Route::post('/sessions/{session}/snapshot', [CalculatorController::class, 'storeSnapshot'])->middleware('throttle:20,1')->name('sessions.snapshot');
     Route::post('/sessions/{session}/request', [CalculatorController::class, 'storeRequest'])->middleware('throttle:10,1')->name('sessions.request');
     Route::get('/snapshots/{snapshot}', [CalculatorController::class, 'showSnapshot'])->name('snapshots.show');
-    Route::get('/snapshots/{snapshot}/pdf', [CalculatorController::class, 'snapshotPdf'])->middleware('throttle:20,1')->name('snapshots.pdf');
+    // The page polls a PDF that is still rendering (202) every 2 s, hence the headroom.
+    Route::get('/snapshots/{snapshot}/pdf', [CalculatorController::class, 'snapshotPdf'])->middleware('throttle:40,1')->name('snapshots.pdf');
+    Route::get('/quick-pdf', [CalculatorController::class, 'quickPdf'])->middleware('throttle:40,1')->name('quick-pdf');
 });
 
 Route::get('/business/register', fn () => archiView('pages.business-register'))->name('business.register');

@@ -11,6 +11,7 @@
 // panel without a release.
 
 import popup from '../shared/popup.js';
+import { busy, downloadPdf } from '../shared/calculator-pdf.js';
 // The validation, the rounding and the hand-off shape are shared with the homepage
 // mini panel so the two screens can never quote different numbers.
 import {
@@ -38,6 +39,7 @@ export default function init() {
   const currencyEl = document.getElementById('qcCurrency');
   const detailsEl = document.getElementById('qcDetails');
   const includesEl = document.getElementById('qcIncludes');
+  const designNoteEl = document.getElementById('qcDesignNote');
   const ctaEl = document.getElementById('qcNext');
 
   const state = {
@@ -111,6 +113,7 @@ export default function init() {
       detailsEl.classList.add('hidden');
       detailsEl.classList.remove('grid');
       includesEl?.classList.add('hidden');
+      designNoteEl?.classList.add('hidden');
       if (ctaEl) ctaEl.href = config.detailedCalculatorUrl;
 
       return;
@@ -125,6 +128,14 @@ export default function init() {
     if (includesEl && labels.includes) {
       includesEl.textContent = labels.includes.replace('{level}', labels.segments?.[state.segment] || '');
       includesEl.classList.remove('hidden');
+    }
+
+    // «Tam təmir» only: designer finishes and track lighting are why a real flat can
+    // come out above this figure in the detailed calculator (TZ №2 §47).
+    if (designNoteEl) {
+      const full = state.renovationType === 'FULL_RENOVATION' && Boolean(labels.designNote);
+      designNoteEl.textContent = full ? labels.designNote : '';
+      designNoteEl.classList.toggle('hidden', ! full);
     }
 
     detailsEl.classList.remove('hidden');
@@ -244,7 +255,29 @@ export default function init() {
     window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, '_blank');
   });
 
-  document.getElementById('qcPdf')?.addEventListener('click', () => window.print());
+  // A real file, rendered by the server from the same three answers (TZ №2 §39) —
+  // not the print dialog. Loading state while it is prepared, a 202 / 503 is polled
+  // every 2 s for up to 15 s, then «PDF hazırlanmadı, yenidən cəhd edin».
+  document.getElementById('qcPdf')?.addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    if (button.disabled || last.error || ! root.dataset.urlPdf) return;
+
+    const restore = busy(button, labels.pdfLoading);
+    const query = new URLSearchParams({
+      area: String(last.area),
+      renovationType: state.renovationType,
+      segment: state.segment,
+    });
+
+    try {
+      await downloadPdf(`${root.dataset.urlPdf}?${query}`, {
+        failedText: labels.pdfFailed || '',
+        filename: 'archi-qiymet.pdf',
+      });
+    } finally {
+      restore();
+    }
+  });
 
   hydrate();
   render();

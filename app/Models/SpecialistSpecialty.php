@@ -55,6 +55,30 @@ final class SpecialistSpecialty extends Model
         return $query->where('category', $category);
     }
 
+    /**
+     * The specialties a visitor picks from a list (register's «Usta / Mütəxəssis»
+     * select). Briqadir and Makler have their own registration cards and are resolved
+     * from the card, so offering them in the list too would be a second, silent way in.
+     */
+    public function scopeWithoutOwnKinds(Builder $query): Builder
+    {
+        return $query->whereNotIn('category', SpecialistCategory::ownKindValues());
+    }
+
+    /**
+     * The single active specialty behind an own kind (Briqadir / Makler) — what
+     * registration assigns when the visitor chose that card.
+     */
+    public static function forKind(SpecialistCategory $kind): ?self
+    {
+        return self::query()
+            ->where('category', $kind->value)
+            ->where('is_active', true)
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->first();
+    }
+
     public function specialists(): HasMany
     {
         return $this->hasMany(SpecialistProfile::class, 'specialist_specialty_id');

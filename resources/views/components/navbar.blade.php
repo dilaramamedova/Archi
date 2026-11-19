@@ -181,6 +181,13 @@
               @endforeach
             @endforeach
           @endif
+          {{-- Mütəxəssislər: the mega panel's cards (header_mega_specialists — Ustalar,
+               Briqadirlər, Maklerlər, …) as indented links, from the same rows. --}}
+          @if ($item->route_name === 'specialists' && $item->children->isEmpty())
+            @foreach ($megaSpecialists as $specItem)
+              <a class="mob-link mob-sub" href="{{ $specItem->resolved_url ?? '#' }}">{{ $specItem->label }}</a>
+            @endforeach
+          @endif
         @endforeach
       </div>
 

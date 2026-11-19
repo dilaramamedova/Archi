@@ -30,4 +30,16 @@ enum ObjectType: string
             ? [RoomType::Living, RoomType::Bedroom, RoomType::Kitchen, RoomType::Bathroom, RoomType::Corridor]
             : [RoomType::Commercial, RoomType::Office, RoomType::Wc, RoomType::Corridor];
     }
+
+    /**
+     * Rooms the typical set offers as a one-click variant rather than seeding them
+     * (TZ 19.11.2026 §46): not every flat has a balcony or a walk-in wardrobe, and
+     * a seeded one would quietly take area from the living room.
+     *
+     * @return array<int, RoomType>
+     */
+    public function optionalRoomTypes(): array
+    {
+        return $this->isResidential() ? [RoomType::Balcony, RoomType::Wardrobe] : [];
+    }
 }

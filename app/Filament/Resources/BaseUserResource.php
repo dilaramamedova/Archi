@@ -5,12 +5,15 @@ declare(strict_types=1);
 namespace App\Filament\Resources;
 
 use App\Enums\City;
+use App\Enums\SpecialistCategory;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Filament\Concerns\CachesNavigationBadge;
+use App\Models\SpecialistSpecialty;
 use App\Models\User;
 use App\Notifications\AccountApprovedNotification;
 use App\Notifications\AccountRejectedNotification;
+use App\Support\SpecialistDetails;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Infolists;
@@ -134,11 +137,22 @@ abstract class BaseUserResource extends Resource
 
     public static function table(Table $table): Table
     {
+        $isSpecialist = static::getManagedRole() === UserRole::Master;
+
         return $table
             ->defaultSort('created_at', 'desc')
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
                 Tables\Columns\TextColumn::make('name')->label('Ad, soyad')->searchable(['first_name', 'last_name', 'name'])->sortable(),
+                // Specialists only: which kind (Usta, Briqadir, Makler, …) — the specialty's
+                // category, the same value the public ?type= filter reads.
+                Tables\Columns\TextColumn::make('specialistProfile.specialty.category')
+                    ->label('Növ')
+                    ->badge()
+                    ->formatStateUsing(fn ($state): string => $state instanceof SpecialistCategory ? $state->singularLabel() : (string) $state)
+                    ->color(fn ($state): string => $state instanceof SpecialistCategory && $state->hasOwnKind() ? 'warning' : 'gray')
+                    ->placeholder('—')
+                    ->visible($isSpecialist),
                 Tables\Columns\TextColumn::make('email')->label('E-poçt')->searchable()->copyable(),
                 Tables\Columns\TextColumn::make('phone')->label('Telefon')->searchable()->placeholder('—'),
                 Tables\Columns\TextColumn::make('status')
@@ -148,9 +162,17 @@ abstract class BaseUserResource extends Resource
                     ->color(fn (UserStatus $state): string => $state->color()),
                 Tables\Columns\TextColumn::make('created_at')->label('Qeydiyyat tarixi')->dateTime('d.m.Y H:i')->sortable(),
             ])
-            ->filters([
+            ->filters(array_values(array_filter([
                 Tables\Filters\SelectFilter::make('status')->label('Status')->options(self::statusOptions()),
-            ])
+                $isSpecialist
+                    ? Tables\Filters\SelectFilter::make('kind')
+                        ->label('Növ')
+                        ->options(SpecialistCategory::singularOptions())
+                        ->query(fn (Builder $query, array $data): Builder => filled($data['value'] ?? null)
+                            ? $query->whereHas('specialistProfile.specialty', fn (Builder $q): Builder => $q->where('category', $data['value']))
+                            : $query)
+                    : null,
+            ])))
             ->recordActions([
                 static::approveAction(),
                 static::rejectAction(),
@@ -202,9 +224,17 @@ abstract class BaseUserResource extends Resource
                 Infolists\Components\TextEntry::make('specialistProfile.skills')->label('Bacarıqlar')->badge()->placeholder('—')->columnSpanFull(),
                 Infolists\Components\TextEntry::make('specialistProfile.about')->label('Haqqında')->placeholder('—')->columnSpanFull(),
                 Infolists\Components\TextEntry::make('specialistProfile.available_slots')->label('Boş slotlar')->placeholder('0'),
-                Infolists\Components\IconEntry::make('specialistProfile.is_on_vacation')->label('Məzuniyyət rejimi')->boolean(),
-                Infolists\Components\IconEntry::make('specialistProfile.is_featured')->label('Seçilmiş')->boolean(),
-                Infolists\Components\IconEntry::make('specialistProfile.is_verified')->label('Təsdiqlənmiş')->boolean(),
+                // Bəli / Xeyr as text: the boolean icon's fallback read «No» in an az panel.
+                Infolists\Components\TextEntry::make('specialistProfile.is_on_vacation')->label('Məzuniyyət rejimi')
+                    ->formatStateUsing(fn ($state): string => $state ? 'Bəli' : 'Xeyr')->placeholder('Xeyr'),
+                Infolists\Components\TextEntry::make('specialistProfile.is_featured')->label('Seçilmiş')
+                    ->formatStateUsing(fn ($state): string => $state ? 'Bəli' : 'Xeyr')->placeholder('Xeyr'),
+                Infolists\Components\TextEntry::make('specialistProfile.is_verified')->label('Təsdiqlənmiş')
+                    ->formatStateUsing(fn ($state): string => $state ? 'Bəli' : 'Xeyr')->placeholder('Xeyr'),
+                Infolists\Components\TextEntry::make('kind_label')->label('Növ')->badge()
+                    ->state(fn (User $record): ?string => $record->specialistProfile?->specialty?->category?->singularLabel())
+                    ->placeholder('—'),
+                ...static::specialistDetailsEntries(),
                 Infolists\Components\RepeatableEntry::make('specialistProfile.services')
                     ->label('Xidmətlər')
                     ->schema([
@@ -229,7 +259,7 @@ abstract class BaseUserResource extends Resource
                         Infolists\Components\TextEntry::make('image_path')->label('Şəkil yolu'),
                         Infolists\Components\IconEntry::make('is_cover')->label('Örtük')->boolean(),
                     ])->columns(3)->columnSpanFull(),
-            ])->columns(2);
+            ])->columns(2)->columnSpanFull();
         }
 
         return $schema->components($components);
@@ -289,7 +319,9 @@ abstract class BaseUserResource extends Resource
             ->schema([
                 Forms\Components\Select::make('specialist_specialty_id')->label('İxtisas')
                     ->relationship('specialty', 'name', fn (Builder $query): Builder => $query->where('is_active', true)->orderBy('sort_order'))
-                    ->searchable()->preload()->required(),
+                    ->searchable()->preload()->required()
+                    // Re-renders the Briqada / Makler fieldsets below when the kind changes.
+                    ->live(),
                 Forms\Components\TextInput::make('experience_years')->label('Təcrübə (il)')->numeric()->minValue(0)->maxValue(80),
                 Forms\Components\Select::make('city')->label('Şəhər')->options(self::cityOptions())->native(false)->required(),
                 Forms\Components\TextInput::make('phone')->label('Əlaqə telefonu')->tel()->maxLength(30),
@@ -310,7 +342,132 @@ abstract class BaseUserResource extends Resource
                     ->label('Ana səhifədə göstər')
                     ->helperText('Yalnız seçilmiş mütəxəssislər üçün keçərlidir — ana səhifə bölməsində görünəcək.'),
                 Forms\Components\Toggle::make('show_in_header')->label('Header-də göstər'),
-            ])->columns(2);
+                ...static::specialistDetailsFieldsets(),
+            ])
+            ->columns(2)
+            // Full width: in the form's right-hand column the crew repeater and the
+            // checkbox lists were squeezed until labels wrapped letter by letter.
+            ->columnSpanFull()
+            // details keeps only the keys of the saved specialty's kind (null for a plain
+            // trade) — the same rule the cabinet applies. See App\Support\SpecialistDetails.
+            ->mutateRelationshipDataBeforeCreateUsing(fn (array $data): array => static::normalizeSpecialistDetails($data))
+            ->mutateRelationshipDataBeforeSaveUsing(fn (array $data): array => static::normalizeSpecialistDetails($data));
+    }
+
+    /**
+     * Briqadir crew / Makler agency fields, shown for the specialty's kind only. Dot
+     * names write into the `details` json column of specialist_profiles.
+     *
+     * @return list<Schemas\Components\Fieldset>
+     */
+    protected static function specialistDetailsFieldsets(): array
+    {
+        $kindIs = fn (SpecialistCategory $kind): \Closure => fn (Schemas\Components\Utilities\Get $get): bool => SpecialistDetails::kindOfSpecialtyId($get('specialist_specialty_id')) === $kind;
+
+        return [
+            Schemas\Components\Fieldset::make('Briqada')
+                ->visible($kindIs(SpecialistCategory::Foreman))
+                ->schema([
+                    Forms\Components\TextInput::make('details.crew_size')->label('Dəstədə neçə nəfər')
+                        ->numeric()->integer()->minValue(1)->maxValue(SpecialistDetails::MAX_CREW_SIZE),
+                    Forms\Components\Toggle::make('details.takes_full_projects')->label('Tam layihə götürür')->inline(false),
+                    Forms\Components\Select::make('details.crew_trades')->label('Dəstənin ixtisasları')
+                        ->multiple()
+                        ->options(fn (): array => SpecialistDetails::tradeOptions())
+                        ->columnSpanFull(),
+                    Forms\Components\Repeater::make('details.crew_members')->label('Dəstə üzvləri')
+                        ->schema([
+                            Forms\Components\TextInput::make('name')->label('Ad, soyad')->required()->maxLength(100),
+                            Forms\Components\Select::make('specialty_id')->label('İxtisas')
+                                ->options(fn (): array => SpecialistDetails::tradeOptions()),
+                            Forms\Components\TextInput::make('experience_years')->label('Təcrübə (il)')
+                                ->numeric()->integer()->minValue(0)->maxValue(80),
+                        ])
+                        ->columns(3)
+                        ->maxItems(SpecialistDetails::MAX_CREW_MEMBERS)
+                        ->defaultItems(0)
+                        ->addActionLabel('Üzv əlavə et')
+                        ->columnSpanFull(),
+                ])->columns(2)->columnSpanFull(),
+            Schemas\Components\Fieldset::make('Makler məlumatları')
+                ->visible($kindIs(SpecialistCategory::Realtor))
+                ->schema([
+                    Forms\Components\TextInput::make('details.agency_name')->label('Agentlik')->maxLength(150),
+                    Forms\Components\TextInput::make('details.license_no')->label('Lisenziya №')->maxLength(60),
+                    Forms\Components\CheckboxList::make('details.deal_types')->label('Əməliyyat növləri')
+                        ->options(fn (): array => SpecialistDetails::dealTypeOptions())
+                        ->required()->columns(3)->columnSpanFull(),
+                    Forms\Components\CheckboxList::make('details.property_types')->label('Əmlak növləri')
+                        ->options(fn (): array => SpecialistDetails::propertyTypeOptions())
+                        ->columns(3)->columnSpanFull(),
+                    Forms\Components\TextInput::make('details.service_areas')->label('Xidmət göstərdiyi ərazilər')
+                        ->maxLength(300)->columnSpanFull(),
+                ])->columns(2)->columnSpanFull(),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected static function normalizeSpecialistDetails(array $data): array
+    {
+        $kind = SpecialistDetails::kindOfSpecialtyId($data['specialist_specialty_id'] ?? null);
+        $data['details'] = SpecialistDetails::normalize($kind, $data['details'] ?? []);
+
+        return $data;
+    }
+
+    /**
+     * Read-only rows of the Briqada / Makler block for the view page.
+     *
+     * @return list<Infolists\Components\TextEntry>
+     */
+    protected static function specialistDetailsEntries(): array
+    {
+        $details = fn (User $record): array => SpecialistDetails::of($record->specialistProfile);
+        $kindIs = fn (SpecialistCategory $kind): \Closure => fn (User $record): bool => SpecialistDetails::kindOf($record->specialistProfile) === $kind;
+        $names = fn (array $ids): array => SpecialistSpecialty::query()->whereIn('id', $ids)->get()
+            ->mapWithKeys(fn (SpecialistSpecialty $s): array => [$s->id => (string) $s->name])->all();
+
+        return [
+            Infolists\Components\TextEntry::make('kind_crew_size')->label('Briqada (nəfər)')
+                ->state(fn (User $record) => $details($record)['crew_size'] ?? null)
+                ->placeholder('—')->visible($kindIs(SpecialistCategory::Foreman)),
+            Infolists\Components\TextEntry::make('kind_full_projects')->label('Tam layihə götürür')
+                ->state(fn (User $record): string => ($details($record)['takes_full_projects'] ?? false) ? 'Bəli' : 'Xeyr')
+                ->visible($kindIs(SpecialistCategory::Foreman)),
+            Infolists\Components\TextEntry::make('kind_crew_trades')->label('Dəstənin ixtisasları')->badge()
+                ->state(fn (User $record): array => array_values($names($details($record)['crew_trades'] ?? [])))
+                ->placeholder('—')->columnSpanFull()->visible($kindIs(SpecialistCategory::Foreman)),
+            Infolists\Components\TextEntry::make('kind_crew_members')->label('Dəstə üzvləri')->listWithLineBreaks()
+                ->state(function (User $record) use ($details, $names): array {
+                    $members = $details($record)['crew_members'] ?? [];
+                    $trades = $names(array_filter(array_column($members, 'specialty_id')));
+
+                    return array_map(fn (array $m): string => collect([
+                        $m['name'],
+                        $m['specialty_id'] ? ($trades[$m['specialty_id']] ?? null) : null,
+                        $m['experience_years'] !== null ? $m['experience_years'].' il' : null,
+                    ])->filter()->implode(' · '), $members);
+                })
+                ->placeholder('—')->columnSpanFull()->visible($kindIs(SpecialistCategory::Foreman)),
+            Infolists\Components\TextEntry::make('kind_agency')->label('Agentlik')
+                ->state(fn (User $record) => $details($record)['agency_name'] ?? null)
+                ->placeholder('—')->visible($kindIs(SpecialistCategory::Realtor)),
+            Infolists\Components\TextEntry::make('kind_license')->label('Lisenziya №')
+                ->state(fn (User $record) => $details($record)['license_no'] ?? null)
+                ->placeholder('—')->visible($kindIs(SpecialistCategory::Realtor)),
+            Infolists\Components\TextEntry::make('kind_deal_types')->label('Əməliyyat növləri')->badge()
+                ->state(fn (User $record): array => array_values(array_intersect_key(SpecialistDetails::dealTypeOptions(), array_flip($details($record)['deal_types'] ?? []))))
+                ->placeholder('—')->visible($kindIs(SpecialistCategory::Realtor)),
+            Infolists\Components\TextEntry::make('kind_property_types')->label('Əmlak növləri')->badge()
+                ->state(fn (User $record): array => array_values(array_intersect_key(SpecialistDetails::propertyTypeOptions(), array_flip($details($record)['property_types'] ?? []))))
+                ->placeholder('—')->visible($kindIs(SpecialistCategory::Realtor)),
+            Infolists\Components\TextEntry::make('kind_service_areas')->label('Xidmət göstərdiyi ərazilər')
+                ->state(fn (User $record) => $details($record)['service_areas'] ?? null)
+                ->placeholder('—')->columnSpanFull()->visible($kindIs(SpecialistCategory::Realtor)),
+        ];
     }
 
     protected static function approveAction(): Actions\Action

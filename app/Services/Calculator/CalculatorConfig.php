@@ -28,7 +28,14 @@ class CalculatorConfig
     public const CACHE_DOMAIN = VersionedCache::CALCULATOR;
 
     /** Bumped when the shape of a calculation changes, not when a price changes. */
-    public const CALCULATOR_VERSION = '2.1';
+    public const CALCULATOR_VERSION = '2.2';
+
+    /**
+     * Every time a client or a manager reads — the PDF header, the validity date,
+     * «Kalkulyator müraciətləri» — is Baku time (TZ №2 19.11.2026, §40). The database
+     * keeps UTC, like the rest of the application.
+     */
+    public const TIMEZONE = 'Asia/Baku';
 
     private ?array $settings = null;
 

@@ -3,6 +3,7 @@
 namespace App\Services\Calculator;
 
 use App\Enums\Calculator\GeometryMode;
+use App\Enums\Calculator\LightingType;
 use App\Enums\Calculator\RoomType;
 use App\Enums\Calculator\WarmFloorType;
 
@@ -55,6 +56,8 @@ class RoomGeometry
         public readonly float $passageArea = 0.0,
         /** Kitchen furniture run, metres — subtracted from the skirting. */
         public readonly float $kitchenFurniture = 0.0,
+        /** The EFFECTIVE lighting type: the room's, the object's or the ceiling's. */
+        public readonly LightingType $lightingType = LightingType::Chandelier,
     ) {}
 
     /** @return array<int, SurfaceZone> */
@@ -161,6 +164,7 @@ class RoomGeometry
             'points' => $this->points,
             'fixtures' => $this->fixtures,
             'pointsByNorm' => $this->pointsByNorm,
+            'lightingType' => $this->lightingType->value,
             'wetZone' => $this->wetZone,
             'hasPlumbing' => $this->wetZone,
             'needsWaterproofing' => $this->needsWaterproofing,

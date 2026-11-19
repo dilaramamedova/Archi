@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Calculator\FinishFamily;
+use App\Enums\Calculator\LightingType;
 use App\Enums\Calculator\ObjectCondition;
 use App\Enums\Calculator\ObjectType;
 use App\Enums\Calculator\PriceSegment;
@@ -19,6 +20,7 @@ use App\Models\Product;
 use App\Services\Calculator\CalculatorConfig;
 use App\Services\Calculator\CityRate;
 use App\Services\Calculator\EstimateBuilder;
+use App\Services\Calculator\EstimatePdf;
 use App\Services\Calculator\Finish;
 use App\Services\Calculator\MaterialFallback;
 use App\Services\Calculator\QuickCalculator;
@@ -171,7 +173,16 @@ class CalculatorController extends Controller
                     // The room set a fresh session starts from, so step 2 is never an
                     // empty screen and a commercial object does not open with a bedroom.
                     'defaultRoomTypes' => array_map(fn (RoomType $room) => $room->value, $type->defaultRoomTypes()),
+                    // One-click variants of the typical set: balcony, wardrobe (TZ №2 §46).
+                    'optionalRoomTypes' => array_map(fn (RoomType $room) => $room->value, $type->optionalRoomTypes()),
                 ], ObjectType::cases()),
+                // SPOT / TRACK / CHANDELIER per room; AUTO (the object default) follows
+                // the ceiling — spots under plasterboard / stretch, chandeliers under
+                // paint (TZ №2 §43).
+                'lightingTypes' => array_map(fn (LightingType $type) => [
+                    'value' => $type->value,
+                    'label' => __($type->labelKey()),
+                ], LightingType::cases()),
                 'conditions' => array_map(fn (ObjectCondition $c) => [
                     'value' => $c->value,
                     'label' => __($c->labelKey()),
@@ -208,6 +219,10 @@ class CalculatorController extends Controller
                 'defaultCeilingHeightMm' => $this->config->float('DEFAULT_ROOM_HEIGHT_MM', 2800),
                 'contractorMarginPercent' => $this->config->float('CONTRACTOR_MARGIN_PERCENT', 0),
                 'spotAreaM2' => $this->config->float('SPOT_AREA_M2', 2.7),
+                // Track norms (TZ №2 §43) — the form only shows them; the server counts.
+                'trackLightAreaM2' => $this->config->float('TRACK_LIGHT_AREA_M2', 1.4),
+                'trackRailMPerM2' => $this->config->float('TRACK_RAIL_M_PER_M2', 0.33),
+                'trackRailFeedM' => $this->config->float('TRACK_RAIL_FEED_M', 3),
                 'defaultDoor' => [
                     'widthMm' => $this->config->float('DEFAULT_DOOR_WIDTH_MM', 900),
                     'heightMm' => $this->config->float('DEFAULT_DOOR_HEIGHT_MM', 2100),
@@ -319,7 +334,11 @@ class CalculatorController extends Controller
             'config_version' => $estimate['configVersion'],
             'calculator_version' => $estimate['calculatorVersion'],
             'currency' => $estimate['currency'],
-            'expires_at' => $validDays > 0 ? now()->addDays($validDays) : null,
+            // «Valid until 26.11» means the end of that day in Baku (TZ №2 §40): the
+            // day is counted on the client's calendar, then stored as UTC.
+            'expires_at' => $validDays > 0
+                ? now(CalculatorConfig::TIMEZONE)->addDays($validDays)->endOfDay()->utc()
+                : null,
         ]);
 
         $session->update(['status' => 'SAVED', 'totals' => $estimate['totals']]);
@@ -347,6 +366,23 @@ class CalculatorController extends Controller
             'message' => ['nullable', 'string', 'max:2000'],
         ]);
 
+        $type = RequestType::from($validated['type']);
+        $visitorKey = auth()->check() ? 'u:'.auth()->id() : 's:'.$request->session()->getId();
+        $estimateHash = $this->estimateHash($session->inputs ?? []);
+
+        // The same visitor pressing «PDF yüklə» and then «WhatsApp» for the same
+        // estimate is one request with two events, not two requests (TZ №2 §41).
+        if ($existing = $this->recentRequest($visitorKey, $estimateHash)) {
+            $this->recordEvent($existing, $type, $validated);
+
+            return response()->json([
+                'id' => $existing->id,
+                'snapshotUuid' => $existing->snapshot?->uuid,
+                'totals' => $existing->snapshot?->totals,
+                'merged' => true,
+            ], 200);
+        }
+
         $snapshot = $this->freeze($session, $request);
         $estimate = $snapshot->totals;
 
@@ -356,6 +392,9 @@ class CalculatorController extends Controller
             'user_id' => auth()->id(),
             'calculator_session_id' => $session->id,
             'calculator_snapshot_id' => $snapshot->id,
+            'visitor_key' => $visitorKey,
+            'estimate_hash' => $estimateHash,
+            'events' => [['type' => $type->value, 'at' => now()->toIso8601String()]],
             'name' => $validated['name'] ?? auth()->user()?->name,
             'phone' => $validated['phone'] ?? auth()->user()?->phone,
             'email' => $validated['email'] ?? auth()->user()?->email,
@@ -374,18 +413,124 @@ class CalculatorController extends Controller
         ], 201);
     }
 
+    /** Requests are merged within this many minutes (TZ №2 §41). */
+    private const REQUEST_MERGE_MINUTES = 30;
+
+    /**
+     * «The same estimate»: the same answers priced on the same configuration. A rate
+     * edited in between makes it a different estimate, and a new request.
+     */
+    private function estimateHash(array $inputs): string
+    {
+        $normalise = function ($value) use (&$normalise) {
+            if (! is_array($value)) {
+                return $value;
+            }
+
+            if (! array_is_list($value)) {
+                ksort($value);
+            }
+
+            return array_map($normalise, $value);
+        };
+
+        return sha1(json_encode($normalise(Units::upgradePayload($inputs))).'|'.$this->config->configVersion());
+    }
+
+    private function recentRequest(string $visitorKey, string $estimateHash): ?CalculatorRequest
+    {
+        return CalculatorRequest::query()
+            ->with('snapshot')
+            ->where('visitor_key', $visitorKey)
+            ->where('estimate_hash', $estimateHash)
+            ->where('created_at', '>=', now()->subMinutes(self::REQUEST_MERGE_MINUTES))
+            ->latest('id')
+            ->first();
+    }
+
+    /**
+     * A repeat press becomes an event on the request. A turnkey order is the one
+     * press that matters more than the ones before it: it promotes the request to a
+     * call-back lead and brings the name and phone with it.
+     */
+    private function recordEvent(CalculatorRequest $existing, RequestType $type, array $validated): void
+    {
+        $events = $existing->events ?: [['type' => $existing->type->value, 'at' => $existing->created_at?->toIso8601String()]];
+        $events[] = ['type' => $type->value, 'at' => now()->toIso8601String()];
+
+        $existing->events = $events;
+
+        if ($type->needsCallback() && ! $existing->type->needsCallback()) {
+            $existing->type = $type;
+            $existing->status = RequestStatus::New;
+        }
+
+        foreach (['name', 'phone', 'email', 'message'] as $field) {
+            if (! empty($validated[$field])) {
+                $existing->{$field} = $validated[$field];
+            }
+        }
+
+        $existing->save();
+    }
+
     /**
      * The frozen estimate as a downloadable PDF. Built from the snapshot, never from
      * a recalculation — the file a client forwards must show the sum they saw
      * (master spec §22), even if a rate was edited a minute after they clicked.
+     *
+     * Rendered once per snapshot and language, then served from disk; a request
+     * that arrives while the file is being rendered gets 202 + Retry-After and the
+     * page polls (TZ №2 §39, see EstimatePdf).
      */
-    public function snapshotPdf(CalculatorSnapshot $snapshot)
+    public function snapshotPdf(CalculatorSnapshot $snapshot, EstimatePdf $pdf)
     {
-        return \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.calculator-estimate', [
-                'snapshot' => $snapshot,
-            ])
-            ->setPaper('a4')
-            ->download('archi-smeta-'.now()->format('Y-m-d').'-'.substr($snapshot->uuid, 0, 8).'.pdf');
+        $locale = app()->getLocale();
+
+        return $pdf->download(
+            "snapshot-{$snapshot->uuid}-{$locale}",
+            'archi-smeta-'.$snapshot->created_at->timezone(CalculatorConfig::TIMEZONE)->format('Y-m-d').'-'.substr($snapshot->uuid, 0, 8).'.pdf',
+            fn () => ['pdf.calculator-estimate', ['snapshot' => $snapshot]],
+        );
+    }
+
+    /**
+     * The quick calculator's «PDF yüklə» (TZ №2 §39): the same three answers and the
+     * same arithmetic as the page, as a one-page file. Before this the button opened
+     * the browser's print dialog, which is not a download.
+     */
+    public function quickPdf(Request $request, EstimatePdf $pdf)
+    {
+        $type = RenovationType::fromSlug($request->input('renovationType', $request->input('type')))
+            ?? $this->quick->defaultRenovationType();
+        $segment = PriceSegment::fromSlug($request->input('segment'))
+            ?? $this->quick->defaultSegment();
+
+        $result = $this->quick->calculate($request->input('area'), $type, $segment);
+
+        if (! $result['valid']) {
+            return response()->json($result, 422);
+        }
+
+        $now = now(CalculatorConfig::TIMEZONE);
+        $locale = app()->getLocale();
+        // One page, ≈ 0.6 s: rendered for every download and never kept, so the time
+        // in its header is the time of THIS download. The key only serialises
+        // identical concurrent presses.
+        $key = 'quick-'.sha1(json_encode([$result, $type->value, $segment->value, $this->config->configVersion()])).'-'.$locale;
+
+        return $pdf->download(
+            $key,
+            'archi-qiymet-'.$now->format('Y-m-d').'.pdf',
+            fn () => ['pdf.calculator-quick', [
+                'result' => $result,
+                'renovationType' => $type,
+                'segment' => $segment,
+                'generatedAt' => $now,
+                'showFromPrefix' => $this->config->bool('SHOW_FROM_PREFIX', true),
+            ]],
+            keep: false,
+        );
     }
 
     /** A snapshot is served exactly as it was stored — never recalculated. */
@@ -452,7 +597,13 @@ class CalculatorController extends Controller
         return $this->builder->build(
             $inputs,
             $this->selectedProducts($inputs),
-            $this->cartItems($request),
+            // The browser cart travels with the answers: a request that carries no
+            // basket of its own (the «PDF yüklə» / WhatsApp / turnkey press, a session
+            // re-opened later) prices the cart the session was saved with. Before this,
+            // freezing a snapshot read the button's own request — which has no basket —
+            // so a guest's cart rows were dropped and the PDF and the admin quoted a
+            // smaller total than the screen (QA of TT №2; the bug predates it).
+            $this->cartItems($request, (array) data_get($inputs, 'basket.items', [])),
         );
     }
 
@@ -500,7 +651,7 @@ class CalculatorController extends Controller
      *
      * @return array<int, array{product: Product, quantity: int}>
      */
-    private function cartItems(Request $request): array
+    private function cartItems(Request $request, array $savedItems = []): array
     {
         /** @var array<int, int> product id => quantity */
         $wanted = [];
@@ -511,7 +662,10 @@ class CalculatorController extends Controller
             }
         }
 
-        foreach ((array) $request->input('basket.items', []) as $row) {
+        // The request's own basket wins; without one, the basket saved with the answers.
+        $rows = $request->has('basket.items') ? (array) $request->input('basket.items', []) : $savedItems;
+
+        foreach ($rows as $row) {
             if (! is_array($row) || ! is_numeric($row['productId'] ?? null)) {
                 continue;
             }

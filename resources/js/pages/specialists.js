@@ -10,6 +10,13 @@ const $$ = (sel, root = document) => Array.prototype.slice.call(root.querySelect
 function buildFilterUrl() {
   const params = new URLSearchParams();
 
+  // The ?type= category (Briqadirlər, Maklerlər, …) arrives from the header mega panel
+  // and has no sidebar control, so it is carried over from the current URL — applying
+  // a city or a sort used to drop it and dump the visitor back on the full directory.
+  // Its own chip (.sp-chip-static) is the way to clear it.
+  const type = new URLSearchParams(window.location.search).get('type');
+  if (type) params.set('type', type);
+
   // Specialization
   const cat = $('#spSpecBlock .sp-cat[data-on="true"]');
   if (cat) params.set('spec', cat.dataset.spec);

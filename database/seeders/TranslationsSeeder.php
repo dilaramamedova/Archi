@@ -46,6 +46,16 @@ class TranslationsSeeder extends Seeder
             $groups[$group] = array_merge($groups[$group] ?? [], $items);
         }
 
+        // Briqadir / Makler specialist kinds (docs/specialist-kinds.md).
+        foreach (require database_path('seeders/data/specialist_kinds_translations.php') as $group => $items) {
+            $groups[$group] = array_merge($groups[$group] ?? [], $items);
+        }
+
+        // …and their QA follow-up (kind-neutral cabinet headings, validation copy).
+        foreach (require database_path('seeders/data/specialist_kinds_qa_translations.php') as $group => $items) {
+            $groups[$group] = array_merge($groups[$group] ?? [], $items);
+        }
+
         foreach ($groups as $group => $items) {
             foreach ($items as $key => $value) {
                 Translation::updateOrCreate(

@@ -73,4 +73,8 @@
   @media (max-width: 900px) {
     .qc-act { @apply inline-flex min-h-11 items-center justify-center; }
   }
+
+  /* «PDF hazırlanır…» while the server renders the file (TZ №2 19.11.2026, §39) */
+  .qc-act.is-loading         { @apply cursor-progress text-black/60; }
+  .qc-act.is-loading::before { content: ''; @apply mr-1.5 inline-block size-3 animate-spin rounded-full border-2 border-black/15 border-t-ink align-[-2px]; }
 }

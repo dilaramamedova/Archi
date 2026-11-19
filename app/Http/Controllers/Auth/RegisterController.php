@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Enums\City;
+use App\Enums\SpecialistCategory;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
 
 class RegisterController extends Controller
 {
@@ -23,6 +25,18 @@ class RegisterController extends Controller
         if (is_numeric($request->input('specialist_specialty_id'))) {
             $request->merge(['specialist_specialty_id' => (int) $request->input('specialist_specialty_id')]);
         }
+
+        // The Briqadir / Makler cards are specialists: register.js posts role=master +
+        // kind. A client that posts the card name as the role (?role=foreman forms,
+        // older JS) is folded into the same shape rather than rejected.
+        if (in_array($request->input('role'), SpecialistCategory::ownKindValues(), true)) {
+            $request->merge(['kind' => $request->input('role'), 'role' => UserRole::Master->value]);
+        }
+
+        $kind = $request->input('role') === UserRole::Master->value && is_string($request->input('kind'))
+            ? SpecialistCategory::tryFrom($request->input('kind'))
+            : null;
+        $kind = $kind?->hasOwnKind() ? $kind : null;
 
         $validated = $request->validate([
             'first_name' => ['required', 'string', 'max:100'],
@@ -34,16 +48,35 @@ class RegisterController extends Controller
             'terms' => ['accepted'],
             // Seller-only
             'company_name' => ['nullable', 'required_if:role,seller', 'string', 'max:255'],
-            // Master-only
+            // Master-only. A Briqadir / Makler sends `kind` instead of a specialty.
+            'kind' => ['nullable', 'string', Rule::in(SpecialistCategory::ownKindValues())],
             'specialist_specialty_id' => [
                 'nullable',
-                'required_if:role,master',
+                Rule::requiredIf(fn (): bool => $request->input('role') === UserRole::Master->value && $kind === null),
                 'integer',
                 Rule::exists('specialist_specialties', 'id')->where('is_active', true),
             ],
             // Accepts either a canonical slug (register select) or an Azerbaijani label (cabinet select).
             'city' => ['nullable', 'required_if:role,master', 'string', Rule::in(City::acceptedValues())],
+        ], [
+            // The generic required_if text quoted the raw role value («Hesab növü master
+            // olduqda…»), which is meaningless to a Makler who never saw that word.
+            'city.required_if' => t('register.form.city_required'),
+            'specialist_specialty_id.required' => t('register.form.specialty_required'),
         ]);
+
+        // The kind's specialty is the single active row of that category (seeded by
+        // 2026_11_19_120100). If an admin deactivated it, the card is closed — say so
+        // instead of silently registering the visitor as something else.
+        $kindSpecialty = $kind !== null ? SpecialistSpecialty::forKind($kind) : null;
+
+        if ($kind !== null && $kindSpecialty === null) {
+            throw ValidationException::withMessages(['kind' => t('register.form.kind_unavailable')]);
+        }
+
+        if ($kindSpecialty !== null) {
+            $validated['specialist_specialty_id'] = $kindSpecialty->id;
+        }
 
         $role = UserRole::from($validated['role']);
         // No account-level vetting at sign-up: every role is active immediately and can

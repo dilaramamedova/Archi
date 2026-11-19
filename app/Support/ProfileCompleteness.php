@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Support;
 
+use App\Enums\SpecialistCategory;
 use App\Models\User;
 
 /**
@@ -45,9 +46,19 @@ final class ProfileCompleteness
         $profile = $user?->specialistProfile;
         $skills = is_array($profile?->skills) ? $profile->skills : [];
 
+        // Briqadir / Makler: their own block counts as one more item — crew size +
+        // trades, or deal + property types. Other specialists get no extra item.
+        $kind = SpecialistDetails::kindOf($profile);
+        $kindCheck = match ($kind) {
+            SpecialistCategory::Foreman => ['specialist-cabinet.crew.heading' => SpecialistDetails::isComplete($kind, SpecialistDetails::of($profile, $kind))],
+            SpecialistCategory::Realtor => ['specialist-cabinet.realtor.heading' => SpecialistDetails::isComplete($kind, SpecialistDetails::of($profile, $kind))],
+            default => [],
+        };
+
         return self::score([
             'specialist-cabinet.photo.heading' => filled($profile?->avatar_path),
             'specialist-cabinet.main.craft' => filled($profile?->specialist_specialty_id) || filled($profile?->craft),
+            ...$kindCheck,
             'specialist-cabinet.main.experience' => filled($profile?->experience_years),
             'specialist-cabinet.main.city' => filled($profile?->city),
             'specialist-cabinet.main.phone' => filled($profile?->phone),

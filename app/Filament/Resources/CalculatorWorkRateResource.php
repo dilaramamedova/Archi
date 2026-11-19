@@ -121,6 +121,11 @@ class CalculatorWorkRateResource extends Resource
         'WindowSlopesLength' => 'Pəncərə yanlıqları: hər pəncərə üçün (en + 2 × hündürlük) × say (p.m)',
         'WindowSillLength' => 'Pəncərə altlıqları: pəncərələrin enlərinin cəmi (p.m)',
         'IntercomPointCount' => 'Domofon nöqtələrinin sayı — otaqlar addımında və ya norma ilə',
+        // TZ №2 19.11.2026 — track system and LED outputs.
+        'TrackLightCount' => 'Trek işıqlarının sayı — «Ətraflı» rejimdə müştəri yazır, «Sadə» rejimdə otaq sahəsi / TRACK_LIGHT_AREA_M2 (ədəd)',
+        'TrackRailMeters' => 'Trek şinasının uzunluğu — «Ətraflı» rejimdə müştəri yazır, «Sadə» rejimdə otaq sahəsi × TRACK_RAIL_M_PER_M2 (x.m)',
+        'TrackFeedPointCount' => 'Şinanın qidalanma nöqtələri: hər otaqda şina uzunluğu / TRACK_RAIL_FEED_M, yuxarı yuvarlaqlaşdırılır, ən azı 1 (nöqtə)',
+        'LedOutputPointCount' => 'LED işıqlandırma üçün 220V çıxışları — yalnız «Ətraflı» rejimdə müştərinin yazdığı say (nöqtə)',
         'CorniceLength' => 'Karnizin uzunluğu (p.m)',
         'ShadowGapLength' => 'Kölgə profilinin uzunluğu (p.m)',
         'SealantLength' => 'Hermetiklənən birləşmələrin uzunluğu (p.m)',

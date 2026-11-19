@@ -107,6 +107,135 @@
 
   </x-cabinet.card>
 
+  {{-- Briqadir / Makler blocks (docs/specialist-kinds.md). Both are rendered and the one
+       matching the selected specialty is shown: specialist-cabinet.js swaps them when the
+       specialty select changes kind, and only the visible block is posted. The server
+       keeps only the keys of the saved specialty's kind either way. --}}
+  @php
+      $kindValue = $kind?->value;
+      $fd = $kindValue === 'foreman' ? $details : \App\Support\SpecialistDetails::normalize(\App\Enums\SpecialistCategory::Foreman, []);
+      $rd = $kindValue === 'realtor' ? $details : \App\Support\SpecialistDetails::normalize(\App\Enums\SpecialistCategory::Realtor, []);
+  @endphp
+  <div class="hidden" data-specialty-kinds='@json($specialtyKinds)'></div>
+
+  <x-cabinet.card gap="gap-[18px]" class="sc-kind [&[hidden]]:hidden" data-kind-block="foreman" :hidden="$kindValue !== 'foreman'"
+      :title="t('specialist-cabinet.crew.heading')"
+      :desc="t('specialist-cabinet.crew.desc')">
+
+    <div class="cab-field-row">
+      <x-cabinet.field :label="t('specialist-cabinet.crew.size')" for="sc-crew-size">
+        <x-ui.input variant="b2b" type="number" min="1" max="{{ \App\Support\SpecialistDetails::MAX_CREW_SIZE }}" id="sc-crew-size"
+                    name="details[crew_size]" class="sc-input" inputmode="numeric"
+                    :value="$fd['crew_size'] ?? ''" />
+      </x-cabinet.field>
+      <x-cabinet.field :label="t('specialist-cabinet.crew.full_projects_label')" tag="p">
+        <label class="sc-opt sc-opt-wide">
+          <input type="checkbox" name="details[takes_full_projects]" @checked($fd['takes_full_projects'])>
+          <span>{{ t('specialist-cabinet.crew.full_projects') }}</span>
+        </label>
+      </x-cabinet.field>
+    </div>
+
+    <x-cabinet.field full :label="t('specialist-cabinet.crew.trades')" tag="p">
+      <div class="sc-opts" data-multi="crew_trades">
+        @foreach ($tradeOptions as $tradeId => $tradeName)
+          <label class="sc-opt">
+            <input type="checkbox" value="{{ $tradeId }}" @checked(in_array($tradeId, $fd['crew_trades'], true))>
+            <span>{{ $tradeName }}</span>
+          </label>
+        @endforeach
+      </div>
+    </x-cabinet.field>
+
+    <x-cabinet.field full :label="t('specialist-cabinet.crew.members')" tag="p">
+      <p class="sc-hint">{{ t('specialist-cabinet.crew.members_hint', ['max' => \App\Support\SpecialistDetails::MAX_CREW_MEMBERS]) }}</p>
+      <div class="sc-crew" data-crew data-max="{{ \App\Support\SpecialistDetails::MAX_CREW_MEMBERS }}">
+        @foreach ($fd['crew_members'] as $member)
+          <div class="sc-crew-row" data-crew-row>
+            <x-ui.input variant="b2b" class="sc-input" data-f="name" maxlength="100"
+                        :placeholder="t('specialist-cabinet.crew.member_name')" :aria-label="t('specialist-cabinet.crew.member_name')"
+                        :value="$member['name']" />
+            <div class="sc-select">
+              <x-ui.select variant="b2b" class="sc-input sc-select-control" data-f="specialty_id"
+                           :aria-label="t('specialist-cabinet.crew.member_specialty')"
+                           :placeholder="t('specialist-cabinet.crew.member_specialty')"
+                           :options="$tradeOptions" :value="$member['specialty_id']" />
+              <img class="car" src="/assets/icon-chevron-down-small.svg" alt="">
+            </div>
+            <x-ui.input variant="b2b" type="number" min="0" max="80" class="sc-input" data-f="experience_years" inputmode="numeric"
+                        :placeholder="t('specialist-cabinet.crew.member_years_ph')" :aria-label="t('specialist-cabinet.crew.member_years')"
+                        :value="$member['experience_years']" />
+            <button type="button" class="sc-crew-x" data-crew-remove aria-label="{{ t('specialist-cabinet.crew.member_remove') }}">&#10005;</button>
+          </div>
+        @endforeach
+      </div>
+      <button type="button" class="sc-skill-add" data-crew-add>{{ t('specialist-cabinet.crew.member_add') }}</button>
+      <template data-crew-template>
+        <div class="sc-crew-row" data-crew-row>
+          <x-ui.input variant="b2b" class="sc-input" data-f="name" maxlength="100"
+                      :placeholder="t('specialist-cabinet.crew.member_name')" :aria-label="t('specialist-cabinet.crew.member_name')" />
+          <div class="sc-select">
+            <x-ui.select variant="b2b" class="sc-input sc-select-control" data-f="specialty_id"
+                         :aria-label="t('specialist-cabinet.crew.member_specialty')"
+                         :placeholder="t('specialist-cabinet.crew.member_specialty')"
+                         :options="$tradeOptions" />
+            <img class="car" src="/assets/icon-chevron-down-small.svg" alt="">
+          </div>
+          <x-ui.input variant="b2b" type="number" min="0" max="80" class="sc-input" data-f="experience_years" inputmode="numeric"
+                      :placeholder="t('specialist-cabinet.crew.member_years_ph')" :aria-label="t('specialist-cabinet.crew.member_years')" />
+          <button type="button" class="sc-crew-x" data-crew-remove aria-label="{{ t('specialist-cabinet.crew.member_remove') }}">&#10005;</button>
+        </div>
+      </template>
+    </x-cabinet.field>
+
+  </x-cabinet.card>
+
+  <x-cabinet.card gap="gap-[18px]" class="sc-kind [&[hidden]]:hidden" data-kind-block="realtor" :hidden="$kindValue !== 'realtor'"
+      :title="t('specialist-cabinet.realtor.heading')"
+      :desc="t('specialist-cabinet.realtor.desc')">
+
+    <div class="cab-field-row">
+      <x-cabinet.field :label="t('specialist-cabinet.realtor.agency')" for="sc-agency">
+        <x-ui.input variant="b2b" id="sc-agency" name="details[agency_name]" class="sc-input" maxlength="150"
+                    :placeholder="t('specialist-cabinet.realtor.agency_placeholder')"
+                    :value="$rd['agency_name'] ?? ''" />
+      </x-cabinet.field>
+      <x-cabinet.field :label="t('specialist-cabinet.realtor.license')" for="sc-license">
+        <x-ui.input variant="b2b" id="sc-license" name="details[license_no]" class="sc-input" maxlength="60"
+                    :value="$rd['license_no'] ?? ''" />
+      </x-cabinet.field>
+    </div>
+
+    <x-cabinet.field full :label="t('specialist-cabinet.realtor.deal_types').' *'" tag="p">
+      <div class="sc-opts" data-multi="deal_types">
+        @foreach ($dealTypeOptions as $value => $label)
+          <label class="sc-opt">
+            <input type="checkbox" value="{{ $value }}" @checked(in_array($value, $rd['deal_types'], true))>
+            <span>{{ $label }}</span>
+          </label>
+        @endforeach
+      </div>
+    </x-cabinet.field>
+
+    <x-cabinet.field full :label="t('specialist-cabinet.realtor.property_types')" tag="p">
+      <div class="sc-opts" data-multi="property_types">
+        @foreach ($propertyTypeOptions as $value => $label)
+          <label class="sc-opt">
+            <input type="checkbox" value="{{ $value }}" @checked(in_array($value, $rd['property_types'], true))>
+            <span>{{ $label }}</span>
+          </label>
+        @endforeach
+      </div>
+    </x-cabinet.field>
+
+    <x-cabinet.field full :label="t('specialist-cabinet.realtor.service_areas')" for="sc-areas">
+      <x-ui.input variant="b2b" id="sc-areas" name="details[service_areas]" class="sc-input" maxlength="300"
+                  :placeholder="t('specialist-cabinet.realtor.service_areas_placeholder')"
+                  :value="$rd['service_areas'] ?? ''" />
+    </x-cabinet.field>
+
+  </x-cabinet.card>
+
   {{-- skills --}}
   <x-cabinet.card gap="gap-[18px]"
       :title="t('specialist-cabinet.skills.heading')"

@@ -28,6 +28,9 @@ class SpecialistProfile extends Model
     {
         return [
             'skills' => 'array',
+            // Kind-specific block (Briqadir crew / Makler agency) — shape owned by
+            // App\Support\SpecialistDetails, null for every other specialist.
+            'details' => 'array',
             'is_on_vacation' => 'boolean',
             'is_featured' => 'boolean',
             'is_verified' => 'boolean',

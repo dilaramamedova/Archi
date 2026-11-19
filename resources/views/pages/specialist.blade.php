@@ -139,6 +139,105 @@
     </aside>
   </div>
 
+  {{-- Briqadir / Makler block (specialist_profiles.details, App\Support\SpecialistDetails).
+       Rendered only when the profile has something in it — an empty «Briqada» heading
+       would read as "no crew". --}}
+  @php
+      $kind = \App\Support\SpecialistDetails::kindOf($specialist);
+      $details = \App\Support\SpecialistDetails::of($specialist, $kind);
+  @endphp
+  @if ($kind === \App\Enums\SpecialistCategory::Foreman
+      && (($details['crew_size'] ?? 0) > 0 || $details['crew_trades'] !== [] || $details['crew_members'] !== [] || $details['takes_full_projects']))
+    @php
+        $tradeNames = \App\Models\SpecialistSpecialty::query()
+            ->whereIn('id', array_merge($details['crew_trades'], array_filter(array_column($details['crew_members'], 'specialty_id'))))
+            ->get()
+            ->mapWithKeys(fn ($s) => [$s->id => $s->name]);
+    @endphp
+    <section class="pp-sec pp-kind" data-kind="foreman">
+      <div class="pp-sechead">
+        <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3 max-[640px]:gap-2" :label="t('specialist.crew.eyebrow')" />
+        <h2>{{ t('specialist.crew.title') }}</h2>
+      </div>
+      <div class="pp-kind-facts">
+        @if (($details['crew_size'] ?? 0) > 0)
+          <div class="pp-kind-fact"><span class="k">{{ t('specialist.crew.size_label') }}</span><span class="v">{{ t('specialist.crew.size_value', ['count' => $details['crew_size']]) }}</span></div>
+        @endif
+        @if ($details['takes_full_projects'])
+          <div class="pp-kind-fact"><span class="pp-kind-flag"><img src="/assets/icon-check-green.svg" alt="">{{ t('specialist.crew.full_projects') }}</span></div>
+        @endif
+      </div>
+      @if ($details['crew_trades'] !== [])
+        <div class="pp-kind-row">
+          <span class="k">{{ t('specialist.crew.trades_label') }}</span>
+          <div class="pp-tags">
+            @foreach ($details['crew_trades'] as $tradeId)
+              @if ($tradeNames->has($tradeId))<span class="pp-tag">{{ $tradeNames[$tradeId] }}</span>@endif
+            @endforeach
+          </div>
+        </div>
+      @endif
+      @if ($details['crew_members'] !== [])
+        <div class="pp-kind-row">
+          <span class="k">{{ t('specialist.crew.members_label') }}</span>
+          <ul class="pp-crew">
+            @foreach ($details['crew_members'] as $member)
+              <li class="pp-crew-m">
+                <span class="av">{{ mb_strtoupper(mb_substr($member['name'], 0, 1)) }}</span>
+                <span class="n">{{ $member['name'] }}</span>
+                @php
+                    $memberLine = collect([
+                        $member['specialty_id'] ? ($tradeNames[$member['specialty_id']] ?? null) : null,
+                        $member['experience_years'] !== null ? t('specialist.crew.member_years', ['years' => $member['experience_years']]) : null,
+                    ])->filter()->implode(' · ');
+                @endphp
+                <span class="s">{{ $memberLine }}</span>
+              </li>
+            @endforeach
+          </ul>
+        </div>
+      @endif
+    </section>
+  @elseif ($kind === \App\Enums\SpecialistCategory::Realtor
+      && (filled($details['agency_name']) || $details['deal_types'] !== [] || $details['property_types'] !== [] || filled($details['service_areas']) || filled($details['license_no'])))
+    @php
+        $dealLabels = \App\Support\SpecialistDetails::dealTypeOptions();
+        $propertyLabels = \App\Support\SpecialistDetails::propertyTypeOptions();
+    @endphp
+    <section class="pp-sec pp-kind" data-kind="realtor">
+      <div class="pp-sechead">
+        <x-ui.eyebrow variant="flat" class="pp-eyebrow gap-3 max-[640px]:gap-2" :label="t('specialist.realtor.eyebrow')" />
+        <h2>{{ t('specialist.realtor.title') }}</h2>
+      </div>
+      <div class="pp-kind-facts">
+        @if (filled($details['agency_name']))
+          <div class="pp-kind-fact"><span class="k">{{ t('specialist.realtor.agency') }}</span><span class="v">{{ $details['agency_name'] }}</span></div>
+        @endif
+        @if (filled($details['license_no']))
+          <div class="pp-kind-fact"><span class="k">{{ t('specialist.realtor.license') }}</span><span class="v">{{ $details['license_no'] }}</span></div>
+        @endif
+      </div>
+      @if ($details['deal_types'] !== [])
+        <div class="pp-kind-row">
+          <span class="k">{{ t('specialist.realtor.deal_types') }}</span>
+          <div class="pp-tags">@foreach ($details['deal_types'] as $v)<span class="pp-tag">{{ $dealLabels[$v] ?? $v }}</span>@endforeach</div>
+        </div>
+      @endif
+      @if ($details['property_types'] !== [])
+        <div class="pp-kind-row">
+          <span class="k">{{ t('specialist.realtor.property_types') }}</span>
+          <div class="pp-tags">@foreach ($details['property_types'] as $v)<span class="pp-tag">{{ $propertyLabels[$v] ?? $v }}</span>@endforeach</div>
+        </div>
+      @endif
+      @if (filled($details['service_areas']))
+        <div class="pp-kind-row">
+          <span class="k">{{ t('specialist.realtor.service_areas') }}</span>
+          <p class="txt">{{ $details['service_areas'] }}</p>
+        </div>
+      @endif
+    </section>
+  @endif
+
   {{-- portfolio --}}
   @if ($portfolioItems->isNotEmpty())
     <section class="pp-sec">

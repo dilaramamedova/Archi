@@ -57,7 +57,12 @@
     // Logistics, the final cleaning and the services outside both stages — whatever
     // of the base is not a stage's works or materials, so the rows add up exactly.
     $otherBase = $stages ? round(($totals['baseSubtotal'] ?? 0) - $stageSum($wb) - $stageSum($fin), 2) : 0;
-    $validDays = $snapshot->expires_at ? (int) round($snapshot->created_at->diffInDays($snapshot->expires_at)) : 0;
+    // Baku time for every date and time the client reads (TZ №2 §40); the database is UTC.
+    // The validity runs to the end of a Baku day, so the whole days are counted down.
+    $tz = \App\Services\Calculator\CalculatorConfig::TIMEZONE;
+    $createdAt = $snapshot->created_at->copy()->timezone($tz);
+    $expiresAt = $snapshot->expires_at?->copy()->timezone($tz);
+    $validDays = $expiresAt ? (int) floor($createdAt->diffInDays($expiresAt)) : 0;
 @endphp
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}">
@@ -104,11 +109,11 @@
     <div class="brand"><img src="{{ public_path('assets/logo-archi-192.png') }}" alt=""><span>ARCHİ</span></div>
     <div class="title">{{ $tt('summary.h', ':area m² üçün təmir smetası', ['area' => $az($area)]) }}</div>
     <div class="meta">
-        {{ $snapshot->created_at->format('d.m.Y H:i') }}
+        {{ $createdAt->format('d.m.Y H:i') }} ({{ $tt('notice.baku_time', 'Bakı vaxtı') }})
         · v{{ $snapshot->version }}
         · {{ $level === 'WHITE_BOX' ? $tt('levels.white_box', 'White Box') : $tt('levels.full', 'Tam təmir') }}
-        @if ($snapshot->expires_at)
-            · {{ $tt('notice.valid_until', 'Qiymətlər :date tarixinədək qüvvədədir', ['date' => $snapshot->expires_at->format('d.m.Y')]) }}
+        @if ($expiresAt)
+            · {{ $tt('notice.valid_until', 'Qiymətlər :date tarixinədək qüvvədədir', ['date' => $expiresAt->format('d.m.Y')]) }}
         @endif
     </div>
 </div>

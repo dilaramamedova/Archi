@@ -7,7 +7,7 @@ namespace App\Enums;
 use App\Enums\Concerns\TranslatesLabels;
 
 /**
- * How the four specialist categories are grouped into the sections of the public
+ * How the specialist categories are grouped into the sections of the public
  * directory (/specialists).
  *
  * The directory used to be one undifferentiated wall of cards: an architect, a tiler
@@ -25,7 +25,14 @@ enum SpecialistCategoryGroup: string
 
     case Design = 'design';
     case Master = 'master';
+
+    /** Foremen with their crews — one call hires a whole team, not one trade. */
+    case Foreman = 'foreman';
+
     case Company = 'company';
+
+    /** Real-estate agents: a different visitor question, so a section of its own. */
+    case Realtor = 'realtor';
 
     /**
      * Profiles whose specialty row was deleted (the FK is nullOnDelete) still have to
@@ -36,7 +43,7 @@ enum SpecialistCategoryGroup: string
     /** Display order of the sections, top to bottom. */
     public static function ordered(): array
     {
-        return [self::Design, self::Master, self::Company, self::Other];
+        return [self::Design, self::Master, self::Foreman, self::Company, self::Realtor, self::Other];
     }
 
     public function rank(): int
@@ -44,8 +51,10 @@ enum SpecialistCategoryGroup: string
         return match ($this) {
             self::Design => 1,
             self::Master => 2,
-            self::Company => 3,
-            self::Other => 4,
+            self::Foreman => 3,
+            self::Company => 4,
+            self::Realtor => 5,
+            self::Other => 6,
         };
     }
 
@@ -82,7 +91,9 @@ enum SpecialistCategoryGroup: string
         return match ($this) {
             self::Design => [SpecialistCategory::Architect, SpecialistCategory::Designer],
             self::Master => [SpecialistCategory::Master],
+            self::Foreman => [SpecialistCategory::Foreman],
             self::Company => [SpecialistCategory::Company],
+            self::Realtor => [SpecialistCategory::Realtor],
             self::Other => [],
         };
     }
@@ -108,7 +119,9 @@ enum SpecialistCategoryGroup: string
         return match ($this) {
             self::Design => 'Memarlar və dizaynerlər',
             self::Master => 'Ustalar',
+            self::Foreman => 'Briqadirlər',
             self::Company => 'Tikinti şirkətləri',
+            self::Realtor => 'Maklerlər',
             self::Other => 'Digər mütəxəssislər',
         };
     }
@@ -118,7 +131,9 @@ enum SpecialistCategoryGroup: string
         return match ($this) {
             self::Design => 'Layihə, planlaşdırma və interyer həlləri',
             self::Master => 'Təmir və quraşdırma işlərini görən peşəkarlar',
+            self::Foreman => 'Öz usta dəstəsi ilə işi bütövlükdə götürən briqadirlər',
             self::Company => 'Tam dövrlü tikinti və təmir şirkətləri',
+            self::Realtor => 'Mənzil, ev və obyektlərin alqı-satqısı və kirayəsi',
             self::Other => 'İxtisası hələ təyin olunmamış mütəxəssislər',
         };
     }

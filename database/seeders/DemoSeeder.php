@@ -67,6 +67,10 @@ class DemoSeeder extends Seeder
             ['slug' => 'kondisioner-ventilyasiya-ustasi', 'category' => SpecialistCategory::Master, 'name' => ['az' => 'Kondisioner & ventilyasiya ustası', 'ru' => 'Мастер по кондиционерам и вентиляции', 'en' => 'HVAC technician']],
             ['slug' => 'hovuz-ustasi', 'category' => SpecialistCategory::Master, 'name' => ['az' => 'Hovuz ustası', 'ru' => 'Мастер по бассейнам', 'en' => 'Pool installer']],
             ['slug' => 'landsaft-ustasi', 'category' => SpecialistCategory::Master, 'name' => ['az' => 'Landşaft ustası', 'ru' => 'Ландшафтный мастер', 'en' => 'Landscaper']],
+            // The two own kinds (docs/specialist-kinds.md): one row each, resolved from
+            // the registration card rather than picked from the master select.
+            ['slug' => 'briqadir', 'category' => SpecialistCategory::Foreman, 'name' => ['az' => 'Briqadir (usta dəstəsi)', 'ru' => 'Бригадир (бригада мастеров)', 'en' => 'Foreman (crew of craftsmen)']],
+            ['slug' => 'makler', 'category' => SpecialistCategory::Realtor, 'name' => ['az' => 'Makler (əmlak agenti)', 'ru' => 'Риелтор (агент по недвижимости)', 'en' => 'Realtor (real-estate agent)']],
         ];
 
         foreach ($specialties as $index => $data) {

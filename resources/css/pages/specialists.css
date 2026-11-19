@@ -174,6 +174,8 @@
   .sp-card .meta                 { @apply flex gap-2.5 text-[13px]; }
   .sp-card .meta .m              { @apply font-medium text-black/50; }
   .sp-card .meta .d              { @apply text-black/30; }
+  /* Briqadir / Makler summary («Briqada: 8 nəfər» / «Agentlik: X») under the meta line. */
+  .sp-card .kind                 { @apply -mt-1 truncate text-[13px] font-semibold text-ink/80; }
   /* `flex-wrap`: the ru pair ("≈ от 25 ₼/м²" + "Смотреть профиль") is ~35% wider than the
      az one and does not fit a 3/4-column card — the button then drops onto its own line
      instead of being clipped by the card's overflow-hidden. */
@@ -213,6 +215,7 @@
     .sp-card .rate .r    { @apply hidden; }
     .sp-card .name       { @apply text-[15px]; }
     .sp-card .meta       { @apply flex-wrap gap-1.5 text-xs; }
+    .sp-card .kind       { @apply mt-0 text-xs; }
     .sp-card .foot .ui-btn { @apply h-9 w-full justify-center px-2; }
     /* the city checkboxes and specialisation rows are the sheet's main controls */
     .sp-cat              { @apply min-h-10 py-2; }

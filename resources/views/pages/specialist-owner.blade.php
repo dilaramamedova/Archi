@@ -133,8 +133,11 @@
       </div>
 
       <p class="spo-meta">
-        {{ $profile?->experience_years ?? 0 }} {{ t('specialist-owner.id.years') }}
+        {{-- hidden when empty — a new Briqadir / Makler never entered experience --}}
+        @if ($profile?->experience_years)
+        {{ $profile->experience_years }} {{ t('specialist-owner.id.years') }}
         <span class="dot">·</span>
+        @endif
         {{ $portfolioItems->count() }} {{ t('specialist-owner.id.projects') }}
         <span class="dot">·</span>
         {{ $profile?->city ?? t('specialist-owner.id.meta_city') }}

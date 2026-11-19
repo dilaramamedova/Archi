@@ -150,6 +150,14 @@
   .dc-sum .rows .r.total    { @apply mt-1 border-t border-black/10 pt-2.5 text-[15px] font-semibold text-ink; }
   .dc-sum .rows .r.total b  { @apply text-[15px]; }
   .dc-nav             { @apply flex gap-3; }
+  /* A sidebar taller than the viewport (1024×768 with the cart banner) used to push
+     «Geri» / «Növbəti» below the fold until the page was scrolled to its end: on
+     desktop the panel is capped at the viewport and scrolls inside, and the buttons
+     stay pinned to its bottom edge. */
+  @media (min-width: 901px) {
+    .dc-side          { @apply max-h-[calc(100vh-172px)] overflow-y-auto overscroll-contain; }
+    .dc-side .dc-nav  { @apply sticky bottom-0 bg-gray-soft2 pt-2 pb-1; }
+  }
   .dc-back            { @apply cursor-pointer rounded-ds border border-black/15 bg-white px-6 py-3.5 text-[15px] font-semibold text-ink [font-family:inherit]; }
   .dc-next            { @apply flex-1 cursor-pointer rounded-ds border-none bg-yellow p-3.5 text-[15px] font-semibold text-ink transition-[filter] duration-200 [font-family:inherit] hover:brightness-[.93]; }
 
@@ -210,6 +218,17 @@
   .dc-op-h .rm          { @apply cursor-pointer border-none text-[13px] font-medium text-[#c0392b] [background:none] [font-family:inherit]; }
   .dc-op-adds           { @apply flex flex-wrap gap-2; }
   .dc-op-add            { @apply cursor-pointer rounded-ds border border-dashed border-black/28 bg-transparent px-3 py-2 text-[13px] font-semibold text-black/60 [font-family:inherit] hover:border-ink hover:text-ink; }
+
+  /* ---- TZ №2 19.11.2026: lighting type, room variants, the PDF button ------------ */
+
+  /* «İşıqlandırma növü»: one select, never wider than its longest option needs */
+  .dc-lighting .dc-fields  { @apply max-w-[440px]; }
+  .dc-lighting .dc-fb .ip  { @apply p-0 border-none; }
+  /* «+ Balkon / lociya», «+ Qarderob» under «+ Otaq əlavə et» */
+  .dc-variants             { @apply mt-2.5; }
+  /* «PDF hazırlanır…» while the file is rendered and polled */
+  .dc-sec button.is-loading         { @apply cursor-progress text-black/60; }
+  .dc-sec button.is-loading::before { content: ''; @apply mr-2 inline-block size-3 animate-spin rounded-full border-2 border-black/15 border-t-ink align-[-2px]; }
 
   /* extra finish zones: finish select · m² · remove */
   .dc-zone              { @apply flex flex-wrap items-center gap-2; }

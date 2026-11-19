@@ -4,6 +4,7 @@ namespace App\Services\Calculator;
 
 use App\Enums\Calculator\FinishFamily;
 use App\Enums\Calculator\GeometryMode;
+use App\Enums\Calculator\LightingType;
 use App\Enums\Calculator\ObjectCondition;
 use App\Enums\Calculator\RoomType;
 use App\Enums\Calculator\SurfaceState;
@@ -26,8 +27,11 @@ use App\Enums\Calculator\WarmFloorType;
  */
 class GeometryEngine
 {
-    /** Old payloads sent one `lights` count; it is the ceiling light (TZ §11). */
-    private const LIGHT_KEYS = ['lights_spot', 'lights_pendant', 'lights_chandelier'];
+    /**
+     * The ceiling lights — one decision (TZ §11): a visitor who counts any of them has
+     * counted all of them. Old payloads sent one `lights` count; it is the chandelier.
+     */
+    private const LIGHT_KEYS = ['lights_spot', 'lights_pendant', 'lights_chandelier', 'lights_track'];
 
     public function __construct(private readonly CalculatorConfig $config) {}
 
@@ -44,16 +48,21 @@ class GeometryEngine
             ? (float) $object['ceilingHeightMm']
             : $this->config->float('DEFAULT_ROOM_HEIGHT_MM', 2800);
 
+        // The object's lighting type is the default of every room that does not state
+        // its own (TZ 19.11.2026 §43, the same rule as the ceiling height); AUTO or
+        // nothing means «follow the ceiling».
+        $objectLighting = LightingType::fromAny($object['lightingType'] ?? null);
+
         $built = [];
 
         foreach (array_values($rooms) as $index => $room) {
-            $built[] = $this->buildRoom(is_array($room) ? $room : [], $index, $condition, $defaultHeightMm);
+            $built[] = $this->buildRoom(is_array($room) ? $room : [], $index, $condition, $defaultHeightMm, $objectLighting);
         }
 
         return $built;
     }
 
-    private function buildRoom(array $input, int $index, ObjectCondition $condition, float $defaultHeightMm): RoomGeometry
+    private function buildRoom(array $input, int $index, ObjectCondition $condition, float $defaultHeightMm, ?LightingType $objectLighting = null): RoomGeometry
     {
         $warnings = [];
 
@@ -119,7 +128,18 @@ class GeometryEngine
             $warmFloorArea = $floorArea;
         }
 
-        [$points, $fixtures, $byNorm] = $this->pointsAndFixtures($input, $norm, $floorArea, $zones);
+        $suspended = (bool) array_filter(
+            $zones,
+            fn (SurfaceZone $z) => $z->surface === SurfaceType::Ceiling && $z->finish?->family === FinishFamily::Suspended,
+        );
+        // The room's own type; else the object's — unless the room explicitly says
+        // AUTO («Tavana görə»); else the ceiling decides (TZ №2 §43).
+        $roomChoice = $input['lightingType'] ?? null;
+        $lighting = LightingType::fromAny($roomChoice)
+            ?? (is_string($roomChoice) && strtoupper($roomChoice) === LightingType::AUTO ? null : $objectLighting)
+            ?? LightingType::forCeiling($suspended);
+
+        [$points, $fixtures, $byNorm] = $this->pointsAndFixtures($input, $norm, $floorArea, $lighting);
 
         return new RoomGeometry(
             id: $id,
@@ -147,6 +167,7 @@ class GeometryEngine
             pointsByNorm: $byNorm,
             passageArea: $passageArea,
             kitchenFurniture: $kitchenFurniture,
+            lightingType: $lighting,
         );
     }
 
@@ -163,29 +184,35 @@ class GeometryEngine
      * Old payloads carry no pointsTouched flag: a room that sends points counts as
      * edited, exactly as it did before the norms existed.
      *
-     * @param  array<int, SurfaceZone>  $zones
-     * @return array{0: array<string, int>, 1: array<string, int>, 2: bool}
+     * The lighting type decides the norm's ceiling lights (TZ 19.11.2026 §43), and the
+     * track rail decides its feed points in both modes: one per TRACK_RAIL_FEED_M of
+     * rail, at least one wherever there are track lights (`track_feed`, an electrical
+     * point like any other — the cable follows it).
+     *
+     * @return array{0: array<string, int|float>, 1: array<string, int>, 2: bool}
      */
-    private function pointsAndFixtures(array $input, RoomTypeNorm $norm, float $floorArea, array $zones): array
+    private function pointsAndFixtures(array $input, RoomTypeNorm $norm, float $floorArea, LightingType $lighting): array
     {
-        $suspended = (bool) array_filter(
-            $zones,
-            fn (SurfaceZone $z) => $z->surface === SurfaceType::Ceiling && $z->finish?->family === FinishFamily::Suspended,
-        );
-
-        $normPoints = $norm->points($floorArea, $suspended, $this->config->float('SPOT_AREA_M2', 2.7));
+        $normPoints = $norm->points($floorArea, $lighting, [
+            'spotAreaM2' => $this->config->float('SPOT_AREA_M2', 2.7),
+            'trackLightAreaM2' => $this->config->float('TRACK_LIGHT_AREA_M2', 1.4),
+            'trackRailMPerM2' => $this->config->float('TRACK_RAIL_M_PER_M2', 0.33),
+        ]);
         $normFixtures = $norm->defaultFixtures();
 
         // Water and sewer points of the norm always follow the fixtures.
         unset($normPoints['water_points'], $normPoints['sewer_points']);
 
         $sentPoints = is_array($input['points'] ?? null) ? $input['points'] : [];
+        // Derived, never typed: whatever a client sends here is recalculated.
+        unset($sentPoints['track_feed']);
+
         $touched = array_key_exists('pointsTouched', $input)
             ? (bool) $input['pointsTouched']
             : $sentPoints !== [];
 
         if (! $touched) {
-            return [$this->withPipePoints($normPoints, $normFixtures, []), $normFixtures, true];
+            return [$this->withTrackFeed($this->withPipePoints($normPoints, $normFixtures, [])), $normFixtures, true];
         }
 
         if (array_key_exists('lights', $sentPoints)) {
@@ -206,14 +233,48 @@ class GeometryEngine
         $points = $this->counts($sentPoints, $defaults);
         $fixtures = $this->counts($input['fixtures'] ?? null, $normFixtures);
 
-        return [$this->withPipePoints($points, $fixtures, $sentPoints), $fixtures, false];
+        // A rail without track lights is not a track system: the norm's rail goes
+        // when the visitor's own light count has no track lights in it.
+        if (! array_key_exists('track_rail_m', $sentPoints) && ($points['lights_track'] ?? 0) <= 0) {
+            unset($points['track_rail_m']);
+        }
+
+        return [$this->withTrackFeed($this->withPipePoints($points, $fixtures, $sentPoints)), $fixtures, false];
+    }
+
+    /**
+     * Track feed points: CEIL(rail / TRACK_RAIL_FEED_M), at least one wherever there
+     * are track lights or a rail (TZ 19.11.2026 §43).
+     *
+     * @param  array<string, int|float>  $points
+     * @return array<string, int|float>
+     */
+    private function withTrackFeed(array $points): array
+    {
+        unset($points['track_feed']);
+
+        $rail = (float) ($points['track_rail_m'] ?? 0);
+        $lights = (int) ($points['lights_track'] ?? 0);
+        $perFeed = $this->config->float('TRACK_RAIL_FEED_M', 3);
+
+        $feeds = $rail > 0 && $perFeed > 0 ? (int) ceil(round($rail / $perFeed, 2)) : 0;
+
+        if ($feeds === 0 && ($lights > 0 || $rail > 0)) {
+            $feeds = 1;
+        }
+
+        if ($feeds > 0) {
+            $points['track_feed'] = $feeds;
+        }
+
+        return $points;
     }
 
     /**
      * Water and sewer points: the visitor's own count when they gave one, otherwise
      * one per fixture that needs it.
      *
-     * @return array<string, int>
+     * @return array<string, int|float>
      */
     private function withPipePoints(array $points, array $fixtures, array $sent): array
     {
@@ -222,7 +283,7 @@ class GeometryEngine
         $points['water_points'] = array_key_exists('water_points', $sent) ? max(0, (int) $sent['water_points']) : $water;
         $points['sewer_points'] = array_key_exists('sewer_points', $sent) ? max(0, (int) $sent['sewer_points']) : $sewer;
 
-        return array_filter($points, fn (int $v) => $v > 0);
+        return array_filter($points, fn ($v) => $v > 0);
     }
 
     /**
@@ -460,15 +521,21 @@ class GeometryEngine
      * edits keep the estimate honest (master spec §11.1, §20). One edited key never
      * resets the others.
      *
-     * @param  array<string, int>  $defaults
-     * @return array<string, int>
+     * A length key (the track rail, metres) keeps one decimal; every other key is a
+     * whole count.
+     *
+     * @param  array<string, int|float>  $defaults
+     * @return array<string, int|float>
      */
     private function counts(mixed $input, array $defaults): array
     {
         $counts = $defaults;
 
         foreach (is_array($input) ? $input : [] as $key => $value) {
-            $counts[(string) $key] = max(0, (int) $value);
+            $key = (string) $key;
+            $counts[$key] = in_array($key, RoomTypeNorm::LENGTH_KEYS, true)
+                ? max(0.0, round(is_numeric($value) ? (float) $value : 0.0, 1))
+                : max(0, (int) $value);
         }
 
         return $counts;

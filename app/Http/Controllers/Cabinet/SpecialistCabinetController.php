@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SpecialistPortfolioItem;
 use App\Models\SpecialistProfile;
 use App\Models\SpecialistSpecialty;
+use App\Support\SpecialistDetails;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,17 +24,31 @@ final class SpecialistCabinetController extends Controller
     {
         $profile = $request->user()->specialistProfile;
 
+        // Deactivated specialties are hidden from everyone EXCEPT the master
+        // already assigned to one — otherwise the select would silently fall
+        // back to its first option and rewrite their trade on the next save.
+        $specialtyRows = SpecialistSpecialty::query()
+            ->where(fn ($q) => $q->where('is_active', true)
+                ->orWhere('id', $profile?->specialist_specialty_id))
+            ->orderBy('sort_order')
+            ->get();
+
+        $kind = SpecialistDetails::kindOf($profile);
+
         return view('pages.specialist-cabinet', [
             'user' => $request->user(),
             'profile' => $profile,
-            // Deactivated specialties are hidden from everyone EXCEPT the master
-            // already assigned to one — otherwise the select would silently fall
-            // back to its first option and rewrite their trade on the next save.
-            'specialties' => SpecialistSpecialty::query()
-                ->where(fn ($q) => $q->where('is_active', true)
-                    ->orWhere('id', $profile?->specialist_specialty_id))
-                ->orderBy('sort_order')
-                ->pluck('name', 'id'),
+            'specialties' => $specialtyRows->mapWithKeys(fn (SpecialistSpecialty $s): array => [$s->id => $s->name]),
+            // Briqadir / Makler block. The map lets specialist-cabinet.js swap the block
+            // when the specialty select changes kind, before the page is saved.
+            'kind' => $kind,
+            'details' => SpecialistDetails::of($profile, $kind),
+            'specialtyKinds' => $specialtyRows
+                ->filter(fn (SpecialistSpecialty $s): bool => $s->category?->hasOwnKind() ?? false)
+                ->mapWithKeys(fn (SpecialistSpecialty $s): array => [$s->id => $s->category->value]),
+            'tradeOptions' => SpecialistDetails::tradeOptions(),
+            'dealTypeOptions' => SpecialistDetails::dealTypeOptions(),
+            'propertyTypeOptions' => SpecialistDetails::propertyTypeOptions(),
         ]);
     }
 

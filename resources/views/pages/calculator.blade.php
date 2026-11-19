@@ -41,6 +41,10 @@
         'whatsapp' => t('calculator.messages.whatsapp', ['area' => '{area}', 'level' => '{level}', 'price' => '{price}']),
         'includes' => t('calculator.result.includes', ['level' => '{level}']),
         'saved' => t('calculator.messages.saved'),
+        // TZ №2 19.11.2026 — §47 the line under «Tam təmir», §39 the PDF button.
+        'designNote' => t('calculator.result.design_note'),
+        'pdfLoading' => t('calculator.actions.pdf_loading'),
+        'pdfFailed' => t('calculator.errors.pdf_failed'),
     ];
 @endphp
 <x-layout page="calculator" :title="t('calculator.title')">
@@ -55,7 +59,8 @@
     <div class="mx-auto flex max-w-[620px] flex-col gap-5 rounded-ds border border-black/10 bg-white p-7 max-[640px]:px-5 max-[640px]:py-6"
          id="qcCalc"
          data-quick="{{ json_encode($quick, JSON_UNESCAPED_UNICODE) }}"
-         data-labels="{{ json_encode($labels, JSON_UNESCAPED_UNICODE) }}">
+         data-labels="{{ json_encode($labels, JSON_UNESCAPED_UNICODE) }}"
+         data-url-pdf="{{ route('api.calculator.quick-pdf') }}">
 
       <div>
         <x-ui.eyebrow variant="b2b" class="[&_.rule]:w-7" :label="t('calculator.head.tag')" />
@@ -111,6 +116,9 @@
         {{-- What the per-m² price covers (TZ 17.11.2026 «Qiymətin izahı»). The level
              name is filled in by calculator.js, so it follows the chosen category. --}}
         <p class="mt-2 hidden text-[13px] leading-[1.45] text-black/60" id="qcIncludes"></p>
+        {{-- Under «Tam təmir» only (TZ №2 §47): why a designer flat lands above this
+             figure in the detailed calculator — not an error, its finishes. --}}
+        <p class="qc-design-note mt-2 hidden text-[12.5px] leading-[1.45] text-black/55" id="qcDesignNote"></p>
         {{-- Secondary breakdown: present, but never competing with the sum (TZ §18) --}}
         <dl class="mt-3 hidden grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-[12px] text-black/50" id="qcDetails"></dl>
       </div>

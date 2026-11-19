@@ -38,10 +38,17 @@ class CalculatorRoomTypeResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    /** Point key => what the admin calls it. Spots are not here: they follow the ceiling. */
+    /**
+     * Point key => what the admin calls it. Spots and track lights mostly follow the
+     * room's lighting type (SPOT_AREA_M2, TRACK_* in «Parametrlər»); the spot norm
+     * here is for the small rooms that have spots under any ceiling — a balcony, a
+     * wardrobe: «1 per 2 m²» is 0 + 0.5/m² (TZ №2 19.11.2026 §46). LED outputs are
+     * never a norm (only «Ətraflı» mode, §45).
+     */
     public const POINTS = [
         'sockets' => 'Rozetka',
         'switches' => 'Açar',
+        'lights_spot' => 'Spot (nöqtəvi işıq)',
         'lights_chandelier' => 'Çilçıraq',
         'lights_pendant' => 'Asma işıq',
         'wall_lights' => 'Bra (divar işığı)',
@@ -71,8 +78,9 @@ class CalculatorRoomTypeResource extends Resource
         return [
             'text' => 'Müştəri otaqda elektrik və santexnika nöqtələrini saymırsa («Sadə» rejim), kalkulyator onları buradakı '
                 .'<strong>normalarla</strong> özü hesablayır: <strong>baza + hər m²-ə düşən pay</strong>, yuxarı yuvarlaqlaşdırılır '
-                .'(məs. rozetka 3 + 0.25/m² → 16 m² yataq otağına 7). Spotlar alçıpan / dartma tavanlı otaqda «Parametrlər» '
-                .'bölməsindəki SPOT_AREA_M2-yə görə hesablanır. Su və kanalizasiya nöqtələri cihazlardan çıxır: unitaz, lavabo, duş, '
+                .'(məs. rozetka 3 + 0.25/m² → 16 m² yataq otağına 7). Spotlar və trek işıqları otağın <strong>işıqlandırma növünə</strong> görə '
+                .'«Parametrlər» bölməsindəki SPOT_AREA_M2 və TRACK_* normaları ilə hesablanır; buradakı spot norması balkon, qarderob kimi '
+                .'kiçik otaqlar üçündür («hər 2 m²-ə 1» = baza 0 + 0.5/m²). Su və kanalizasiya nöqtələri cihazlardan çıxır: unitaz, lavabo, duş, '
                 .'vanna, paltaryuyan və qabyuyan maşın, mətbəx yuyucusu — 1 su + 1 kanalizasiya, gigiyenik duş — yalnız su.',
             'shot' => null,
         ];
@@ -90,7 +98,8 @@ class CalculatorRoomTypeResource extends Resource
 
             $pointRows[] = Forms\Components\TextInput::make("point_norms.{$key}.per_m2")
                 ->label($label.' — hər m²-ə')
-                ->numeric()->minValue(0)->step(0.01)
+                // «1 per 1.5 m²» is 0.6667: any precision, not a 0.01 grid.
+                ->numeric()->minValue(0)->step('any')
                 ->placeholder('0');
         }
 
@@ -208,7 +217,7 @@ class CalculatorRoomTypeResource extends Resource
             }
 
             $parts[] = $label.' '.rtrim(rtrim(number_format($base, 2, '.', ''), '0'), '.')
-                .($perM2 > 0 ? ' + '.rtrim(rtrim(number_format($perM2, 2, '.', ''), '0'), '.').'/m²' : '');
+                .($perM2 > 0 ? ' + '.rtrim(rtrim(number_format($perM2, 4, '.', ''), '0'), '.').'/m²' : '');
         }
 
         return $parts === [] ? '—' : implode(', ', $parts);

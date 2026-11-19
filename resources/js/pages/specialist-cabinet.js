@@ -71,6 +71,150 @@ function initSkills(root, onChange) {
   input.addEventListener('blur', commit);
 }
 
+// Briqadir / Makler blocks (docs/specialist-kinds.md). The blade renders both; the one
+// matching the selected specialty's kind is shown, and switching the specialty select
+// swaps them live so the visitor sees what they are about to save.
+function initKindBlocks(root, onChange) {
+  const blocks = root.querySelectorAll('[data-kind-block]');
+  if (!blocks.length) return;
+
+  let kinds = {};
+  try {
+    kinds = JSON.parse(root.querySelector('[data-specialty-kinds]')?.dataset.specialtyKinds || '{}');
+  } catch {
+    kinds = {};
+  }
+
+  const select = root.querySelector('[name="specialist_specialty_id"]');
+  const sync = () => {
+    const kind = kinds[select?.value] || null;
+    blocks.forEach((b) => { b.hidden = b.dataset.kindBlock !== kind; });
+  };
+  select?.addEventListener('change', sync);
+
+  // Delegated, so crew rows added at runtime mark the page dirty too.
+  blocks.forEach((b) => {
+    b.addEventListener('input', onChange);
+    b.addEventListener('change', onChange);
+  });
+
+  const crew = root.querySelector('[data-crew]');
+  const addBtn = root.querySelector('[data-crew-add]');
+  const tpl = root.querySelector('[data-crew-template]');
+  if (!crew || !addBtn || !tpl) return;
+
+  const max = Number(crew.dataset.max) || 30;
+  const syncAdd = () => { addBtn.disabled = crew.querySelectorAll('[data-crew-row]').length >= max; };
+
+  addBtn.addEventListener('click', () => {
+    if (crew.querySelectorAll('[data-crew-row]').length >= max) return;
+    const row = tpl.content.firstElementChild.cloneNode(true);
+    crew.appendChild(row);
+    row.querySelector('[data-f="name"]')?.focus();
+    syncAdd();
+    onChange();
+  });
+
+  crew.addEventListener('click', (e) => {
+    const x = e.target.closest('[data-crew-remove]');
+    if (!x) return;
+    x.closest('[data-crew-row]')?.remove();
+    syncAdd();
+    onChange();
+  });
+
+  syncAdd();
+}
+
+// The visible kind block as the `details` payload; null when the profile has no kind.
+function collectDetails(root) {
+  const block = root.querySelector('[data-kind-block]:not([hidden])');
+  if (!block) return null;
+
+  const details = {};
+  block.querySelectorAll('[name^="details["]').forEach((el) => {
+    const key = el.name.slice(8, -1);
+    details[key] = el.type === 'checkbox' ? el.checked : el.value.trim();
+  });
+  block.querySelectorAll('[data-multi]').forEach((group) => {
+    details[group.dataset.multi] = Array.from(group.querySelectorAll('input:checked')).map((i) => i.value);
+  });
+
+  const crew = block.querySelector('[data-crew]');
+  const crewRows = [];
+  if (crew) {
+    details.crew_members = [];
+    crew.querySelectorAll('[data-crew-row]').forEach((row) => {
+      const val = (f) => row.querySelector(`[data-f="${f}"]`)?.value.trim() || '';
+      const member = {
+        name: val('name'),
+        specialty_id: val('specialty_id') || null,
+        experience_years: val('experience_years') || null,
+      };
+      // Only a row nobody touched is dropped. A row with a trade or years but no
+      // name is posted as it is, so the server rejects it with a message instead of
+      // the member silently vanishing on save.
+      if (member.name === '' && !member.specialty_id && !member.experience_years) return;
+      details.crew_members.push(member);
+      crewRows.push(row);
+    });
+  }
+
+  // Empty strings travel as null so "nullable|integer" accepts a cleared field.
+  Object.keys(details).forEach((k) => { if (details[k] === '') details[k] = null; });
+
+  // The posted rows, in order, so `details.crew_members.N.*` errors find their row.
+  Object.defineProperty(details, '__rows', { value: crewRows, enumerable: false });
+
+  return details;
+}
+
+function clearFieldErrors(root) {
+  root.querySelectorAll('.ui-control-error').forEach((el) => el.classList.remove('ui-control-error'));
+  root.querySelectorAll('.sc-opts-error').forEach((el) => el.classList.remove('sc-opts-error'));
+  root.querySelectorAll('.field-error[data-js]').forEach((el) => el.remove());
+}
+
+// Inline highlight + message under the control for each 422 key the page can place.
+function showFieldErrors(root, errors, details) {
+  const rows = details?.__rows || [];
+  const placed = new Set();
+
+  Object.entries(errors).forEach(([key, messages]) => {
+    let control = null;
+    let anchor = null;
+    let m;
+
+    if ((m = key.match(/^details\.crew_members\.(\d+)\.(\w+)$/))) {
+      const row = rows[Number(m[1])];
+      control = row?.querySelector(`[data-f="${m[2]}"]`) || null;
+      anchor = row;
+    } else if ((m = key.match(/^details\.(deal_types|property_types|crew_trades)(\.\d+)?$/))) {
+      const group = root.querySelector(`[data-multi="${m[1]}"]`);
+      group?.classList.add('sc-opts-error');
+      anchor = group;
+    } else if ((m = key.match(/^details\.(\w+)$/))) {
+      control = root.querySelector(`[name="details[${m[1]}]"]`);
+      anchor = control?.closest('.cab-field') ? control : null;
+    } else {
+      control = root.querySelector(`[name="${key}"]`);
+      anchor = control;
+    }
+
+    control?.classList.add('ui-control-error');
+    if (!anchor || placed.has(anchor)) return;
+    placed.add(anchor);
+
+    const p = document.createElement('p');
+    p.className = 'field-error';
+    p.dataset.js = '';
+    p.textContent = messages[0];
+    // A select sits inside .sc-select; put the message under the wrapper, not inside it.
+    const target = anchor.closest('.sc-select') || anchor;
+    target.insertAdjacentElement('afterend', p);
+  });
+}
+
 export default function init() {
   const root = document.querySelector('.sc-page');
   if (!root) return;
@@ -92,6 +236,7 @@ export default function init() {
 
   initCounter(root, markDirty);
   initSkills(root, markDirty);
+  initKindBlocks(root, markDirty);
 
   const avatar = root.querySelector('[data-avatar]');
   const avatarPicker = root.querySelector('[data-avatar-picker]');
@@ -151,6 +296,9 @@ export default function init() {
       const saveBtn = bar.querySelector('[data-save]');
       if (saveBtn) saveBtn.disabled = true;
 
+      clearFieldErrors(root);
+      const details = collectDetails(root);
+
       try {
         const res = await fetch('/specialist/cabinet', {
           method: 'PUT',
@@ -169,6 +317,7 @@ export default function init() {
             whatsapp: root.querySelector('[name="whatsapp"]')?.value || '',
             about: root.querySelector('[name="about"]')?.value || '',
             skills,
+            details,
           }),
         });
 
@@ -178,8 +327,10 @@ export default function init() {
           success(data.message);
           setSaved(true);
         } else {
+          if (data.errors) showFieldErrors(root, data.errors, details);
+          // De-duplicated: three nameless crew rows are one message, not three.
           const msgs = data.errors
-            ? Object.values(data.errors).flat().join('. ')
+            ? [...new Set(Object.values(data.errors).flat().map((m) => m.replace(/\.\s*$/, '')))].join('. ')
             : data.message || document.body.dataset.errGeneric;
           error(msgs);
         }

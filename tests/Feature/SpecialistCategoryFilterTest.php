@@ -40,9 +40,10 @@ final class SpecialistCategoryFilterTest extends TestCase
 
     public function test_every_menu_category_is_a_valid_type(): void
     {
-        // The four values are a contract with the seeded menu items; a rename on
-        // either side must fail here rather than silently stop filtering.
-        foreach (['architect', 'designer', 'master', 'company'] as $value) {
+        // The values are a contract with the seeded menu items; a rename on either side
+        // must fail here rather than silently stop filtering. foreman / realtor are the
+        // Briqadirlər / Maklerlər cards added on 2026-11-19 (docs/specialist-kinds.md).
+        foreach (['architect', 'designer', 'master', 'company', 'foreman', 'realtor'] as $value) {
             $this->assertNotNull(SpecialistCategory::tryFrom($value), "menu ?type={$value} has no enum case");
             $this->get('/specialists?type='.$value)->assertOk();
         }

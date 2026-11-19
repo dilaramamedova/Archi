@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Cabinet;
 
 use App\Enums\City;
 use App\Http\Controllers\Controller;
+use App\Support\SpecialistDetails;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +19,10 @@ class SpecialistProfileController extends Controller
         // must still be able to save the rest of the form without being forced
         // (or silently pushed) onto a different trade.
         $currentSpecialtyId = $request->user()->specialistProfile?->specialist_specialty_id;
+
+        // Briqadir / Makler details are validated against the kind of the specialty being
+        // SAVED, not the one on file — switching kind in the same request is allowed.
+        $kind = SpecialistDetails::kindOfSpecialtyId($request->input('specialist_specialty_id'));
 
         $request->validate([
             'first_name' => ['required', 'string', 'max:100'],
@@ -37,22 +42,34 @@ class SpecialistProfileController extends Controller
             'about' => ['nullable', 'string', 'max:400'],
             'skills' => ['nullable', 'array', 'max:20'],
             'skills.*' => ['string', 'max:32'],
-        ]);
+            'details' => ['nullable', 'array'],
+            ...SpecialistDetails::rules($kind, 'details.', $request->exists('details')),
+        ], SpecialistDetails::messages($kind), SpecialistDetails::attributes($kind));
 
-        DB::transaction(function () use ($request): void {
+        DB::transaction(function () use ($request, $kind): void {
             $user = $request->user();
             $user->update([
                 ...$request->only(['first_name', 'last_name']),
                 'name' => trim($request->string('first_name').' '.$request->string('last_name')),
             ]);
 
-            $user->specialistProfile()->updateOrCreate([], [
+            $attributes = [
                 ...$request->only([
                     'specialist_specialty_id', 'experience_years', 'phone', 'whatsapp', 'about', 'skills',
                 ]),
                 // Store the canonical Azerbaijani label whatever form was submitted.
                 'city' => City::canonical($request->input('city')),
-            ]);
+            ];
+
+            // Only the keys of the saved kind are stored. A request without `details`
+            // leaves a foreman's crew alone; a change to a kind-less trade clears it.
+            if ($kind === null) {
+                $attributes['details'] = null;
+            } elseif ($request->exists('details')) {
+                $attributes['details'] = SpecialistDetails::normalize($kind, $request->input('details'));
+            }
+
+            $user->specialistProfile()->updateOrCreate([], $attributes);
         });
 
         return response()->json([

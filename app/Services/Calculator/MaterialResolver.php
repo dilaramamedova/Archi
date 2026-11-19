@@ -89,6 +89,11 @@ class MaterialResolver
         'LIGHT_PENDANT_INSTALL' => [['category' => 'MAT_LIGHT_PENDANT', 'unit' => 'əd', 'waste' => null]],
         'LIGHT_CHANDELIER_INSTALL' => [['category' => 'MAT_LIGHT_CHANDELIER', 'unit' => 'əd', 'waste' => null]],
         'LIGHT_WALL_INSTALL' => [['category' => 'MAT_LIGHT_WALL', 'unit' => 'əd', 'waste' => null]],
+        // The track system (TZ 19.11.2026 §44): rail with its connectors and feed
+        // block by the metre, the track lights each. The feed point and the LED
+        // output have no face part — nothing is bought for them.
+        'LIGHT_TRACK_RAIL_INSTALL' => [['category' => 'MAT_TRACK_RAIL', 'unit' => 'p.m', 'waste' => null]],
+        'LIGHT_TRACK_INSTALL' => [['category' => 'MAT_LIGHT_TRACK', 'unit' => 'əd', 'waste' => null]],
         // The old single fitting, should Archi switch it back on.
         'LIGHT_FIXTURE_INSTALL' => [['category' => 'MAT_LIGHTING_BASIC', 'unit' => 'əd', 'waste' => null]],
         'FLOOR_HEAT_ELECTRIC' => [['category' => 'MAT_WARM_FLOOR', 'unit' => 'm²', 'waste' => null]],

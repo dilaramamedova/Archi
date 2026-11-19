@@ -27,6 +27,62 @@ deploy tələb etmədən dəyişdirilir (TZ §30/§34, Master Spec §21/§24).
 | Şəhər əmsalları | `calculator_cities` | Şəhər üzrə əmək əmsalı; Bakı = 1.00 baza |
 | **Otaq növləri** | `calculator_room_types` | «Sadə» rejim normaları: nöqtələr (baza + m²-ə pay), cihazlar, su xətti, hidroizolyasiya |
 
+## TZ 19.11.2026 (TT №2) — işıqlandırma növü, trek, LED, balkon/qarderob, PDF
+
+Mənbə: «Texniki tapşırıq №2 — Ətraflı kalkulyator» (bəndlər 39–47). İkinci qəbul obyekti «Leyla Loft»
+`tests/Fixtures/calculator/leyla_loft.php`-dədir, qəbul testləri `tests/Feature/CalculatorTz2Test.php`.
+
+- **İşıqlandırma növü** (`App\Enums\Calculator\LightingType`: SPOT / TRACK / CHANDELIER). Otaqda `lightingType`,
+  obyektdə `object.lightingType` (+ `AUTO`). Effektiv növ (`GeometryEngine`): otağın öz növü → otaq açıq `AUTO`
+  deyirsə tavan → obyektin növü → tavan (asma tavan → SPOT, rənglənmiş → CHANDELIER = TT №1 davranışı).
+  JS-də obyektin seçimi `lightingTouched` olmayan otaqlara köçür (`ceilingHeightMm` ilə eyni məntiq).
+  Cavabda `rooms[].lightingType` effektiv növdür.
+- **«Sadə» normaları** (`RoomTypeNorm::points($area, LightingType, $lightNorms)`): SPOT — `ceil(sahə / SPOT_AREA_M2)`
+  (otaq növünün öz spot normasından az deyil); TRACK — `lights_track = ceil(sahə / TRACK_LIGHT_AREA_M2)`,
+  `track_rail_m = round(sahə × TRACK_RAIL_M_PER_M2, 1)`; çilçıraq/asma/bra normaları hər rejimdə otaq növündən.
+  Hər iki rejimdə `track_feed = ceil(şina / TRACK_RAIL_FEED_M)`, trek olan otaqda ən azı 1 — törəmə nöqtədir,
+  müştəri yazmır; elektrik nöqtələrinin cəminə (kabel, demontaj) daxildir. Parametrlər «Elektrik və santexnika
+  normaları» bölməsindədir (1.4 / 0.33 / 3, Leyla Loft-a görə kalibr).
+- **Yeni nöqtə açarları** (`RoomTypeNorm::POINT_KEYS`): `lights_track` (əd), `track_rail_m` (x.m, `LENGTH_KEYS` —
+  0.1 dəqiqliklə, qalanları tam), `led_output` (`DETAILED_ONLY_KEYS` — «Sadə» rejimdə həmişə 0).
+  Trek işığının öz elektrik nöqtəsi yoxdur (şinaya taxılır) — `ELEC_LIGHT_POINT` saymır.
+- **Yeni işlər / materiallar** (`database/seeders/data/calculator_tz_2026_11_19.php`, DRAFT): `ELEC_TRACK_FEED_POINT`
+  (WB, `TrackFeedPointCount`), `ELEC_LED_OUTPUT_POINT` (WB, `LedOutputPointCount`, materialı yoxdur),
+  `LIGHT_TRACK_RAIL_INSTALL` → `MAT_TRACK_RAIL` (FINISH, x.m), `LIGHT_TRACK_INSTALL` → `MAT_LIGHT_TRACK` (FINISH, əd).
+  `above` açarı: yeni trek qiyməti Archi-nin spot qiymətindən aşağı/bərabər düşərsə, spot × 1.5 yazılır.
+- **BALCONY / WARDROBE**: enum + `calculator_room_types` sətirləri (rozetka 1, açar 1, spot 0 + 0.5/m² və
+  0 + 0.6667/m²; 4.8 m² → 1/1/3, 2.4 m² → 1/1/2). `RoomType::defaultOpenings()` (qarderob — qapı, balkon — şüşələmə),
+  `ObjectType::optionalRoomTypes()` — mənzil/evdə 2-ci addımda «+ Balkon / lociya», «+ Qarderob» düymələri.
+  Seeder `after` açarı ilə sıralamada dəhlizdən sonra yerləşdirir.
+- **PDF (§39)** — `App\Services\Calculator\EstimatePdf`. Əvvəl hər sorğuda dompdf-lə yenidən render olunurdu
+  (Leyla Loft, 10 səhifə: soyuq worker-də 2.3 s, ≈ 100 MB, 1.3 MB fayl); səhifə URL-ə kor-koranə keçirdi.
+  İndi: snapshot + dil üzrə **bir dəfə** render, `storage/app/private/calculator-pdf/`-da saxlanır; font subset
+  (73 KB); render zamanı ikinci sorğu `202` + `Retry-After: 2`, render xətası `503` + `Retry-After`.
+  Brauzer (`resources/js/shared/calculator-pdf.js`) faylı `fetch` ilə alır, düymədə «PDF hazırlanır…», 202/503/429/502/504
+  və şəbəkə xətasında 2 s-dən bir, 15 s-ə qədər təkrar, sonra «PDF hazırlanmadı, yenidən cəhd edin».
+  Sürətli kalkulyatorun «PDF yüklə»si artıq `window.print()` deyil: `GET /api/calculator/quick-pdf` (`pdf/calculator-quick`).
+- **Bakı vaxtı (§40)**: `CalculatorConfig::TIMEZONE = 'Asia/Baku'`. Baza UTC-dir; PDF başlığı, fayl adı,
+  «Kalkulyator müraciətləri» siyahısı/səhifəsi Bakı vaxtı ilə. `expires_at` = Bakı günü + N gün, günün sonu (UTC-də saxlanır).
+- **Təkrar müraciət (§41)**: `calculator_requests.visitor_key` (`u:{id}` / `s:{session}`), `estimate_hash`
+  (normallaşdırılmış giriş + `configVersion`), `events` [{type, at}]. Eyni ziyarətçi + eyni smeta 30 dəqiqə ərzində →
+  yeni sətir/snapshot yox, hadisə əlavə olunur («PDF + WhatsApp»); «Açar təslim» mövcud müraciəti lead-ə çevirir.
+- **3-cü addım (§42)**: ayrıca «Əlavə xidmətlər — Yekun təmizlik» açarı silindi; təmizlik «Əlavə xidmətlər» qrupunda
+  iş sətri kimi qalır və orada söndürülür (köhnə `finalCleaning: false` → `works.LOG_FINAL_CLEANING.selected = false`).
+- **Sürətli kalkulyator (§47)**: «Tam təmir» seçiləndə məbləğin altında `calculator.result.design_note` (AZ/RU/EN).
+- **Versiyalar**: payload v4 (`Units::upgradePayload`: v3 → `object.lightingType = AUTO`), JS `STATE_VERSION = 5`
+  (`upgradeTo5`), `CALCULATOR_VERSION = 2.2`. Mətnlər `calculator_translations.php` + miqrasiya `2026_11_19_110200`.
+- **Ölçülər (Archi-nin qiymətləri, 19.11)**: Sea Breeze WB 479.3 / tam 671.4 AZN/m² (dəyişməyib), «Sadə»–«Ətraflı» 0.4%.
+  Leyla Loft WB 409.6 / 420.4, tam 820.3 / 828.4 AZN/m² («Sadə» / «Ətraflı», fərq 2.6% / 1.0%); 45 trek işığı, 20.0 x.m şina,
+  9 qidalanma nöqtəsi; LED çıxışı yalnız «Ətraflı»da (9).
+
+- **QA düzəlişləri (19.11)**: snapshot/müraciət səbətin sətirlərini itirirdi — düymə sorğusunda `basket` yoxdur,
+  indi `build()` sessiyanın saxlanmış `basket.items`-ini götürür (xəta TT №2-dən əvvəl də var idi); sürətli PDF
+  keşlənmir (`EstimatePdf::download(keep: false)`) — başlıqdakı vaxt yükləmə vaxtıdır; seçilməmiş «Yekun təmizlik»
+  sətrində `LAST` → səviyyəyə görə WB / Bitirmə; otaqda «İsti döşəmə sahəsi, m²» (boş = bütün döşəmə; mühərrik
+  `warmFloor.area`-nı həmişə oxuyurdu); balkon susmaya görə kafel (`RoomType::defaultFloorFamily()`); RU/EN-də
+  vahidlər tərcümə olunur (`calculator-detailed.units.*`, JS `unitLabel`); desktopda yan panel ekrana sığır,
+  «Geri / Növbəti» onun altına yapışıqdır. Mətnlər: miqrasiya `2026_11_19_110300`.
+
 ## TZ 17.11.2026 — mərhələlər, podratçı əlavəsi, normalar
 
 Mənbə: «Texniki_tapsiriq_kalkulyator_Archi_AZ.docx» (L. Abdullayeva). Qəbul obyekti «Sea Breeze»
@@ -196,7 +252,8 @@ santexnikanın miqdar mənbəyi deyil (§11.1).
 | `PUT` | `/api/calculator/sessions/{uuid}` | Sessiyanı yenilə |
 | `POST` | `/api/calculator/sessions/{uuid}/snapshot` | Smetanı dondur |
 | `GET` | `/api/calculator/snapshots/{uuid}` | Dondurulmuş versiyanı oxu (yenidən hesablanmır) |
-| `GET` | `/api/calculator/snapshots/{uuid}/pdf` | Smetanı PDF kimi yüklə (dompdf, snapshot-dan render olunur — yenidən hesablanmır) |
+| `GET` | `/api/calculator/snapshots/{uuid}/pdf` | Smetanı PDF kimi yüklə (dompdf, snapshot-dan bir dəfə render olunur, sonra diskdən; render gedirsə `202` + `Retry-After`) |
+| `GET` | `/api/calculator/quick-pdf?area&renovationType&segment` | Sürətli kalkulyatorun PDF-i (TT №2 §39) |
 
 Snapshot = giriş məlumatları + hesablanmış kəmiyyətlər + sətirlər + istifadə olunmuş
 qiymətlər + konfiqurasiya versiyası. Tarif sonradan dəyişsə belə snapshot dəyişmir —
@@ -316,6 +373,8 @@ Tag manager qoşulmayıbsa heç nə pozulmur: hadisələr sadəcə heç yerə ge
 - `tests/Feature/EstimateEngineTest.php` — Master Spec §23 ssenariləri A–J + waste/contingency ayrılığı, snapshot sabitliyi, silikon/minimum sifariş/kafel əmsalı düzəlişləri
 - `tests/Feature/AdminCalculatorResourcesTest.php` — admin ekranları və qiymət dəyişikliyinin storefront-a çatması
 - `tests/Feature/CalculatorPagesTest.php` — səhifələrdə qiymətin hardcode olunmaması
+- `tests/Feature/CalculatorTzTest.php` — TT №1 (17.11.2026), «Sea Breeze»
+- `tests/Feature/CalculatorTz2Test.php` — TT №2 (19.11.2026), «Leyla Loft»: trek, LED, balkon/qarderob, PDF, Bakı vaxtı, təkrar müraciət
 
 ## Seed
 

@@ -74,6 +74,25 @@
   .sc-skill-add[hidden],
   .sc-skill-input[hidden] { @apply hidden; }
 
+  /* ---- Briqadir / Makler blocks (docs/specialist-kinds.md) ----
+     Multiselects are checkbox pills: the native box stays for keyboard + screen readers
+     but is visually replaced by the pill's own selected state. */
+  .sc-hint             { @apply text-xs leading-[1.4] text-black/50; }
+  .sc-opts             { @apply flex w-full flex-wrap gap-2; }
+  .sc-opt              { @apply relative flex min-h-9 cursor-pointer items-center rounded-ds border border-black/14 bg-white px-3 text-[13px] font-medium text-black/75 transition-colors duration-150 select-none hover:border-black/40; }
+  .sc-opt input        { @apply absolute size-px opacity-0; }
+  .sc-opt:has(input:checked)       { @apply border-yellow bg-[#fffbe0] text-ink; }
+  .sc-opt:has(input:focus-visible) { @apply outline-2 outline-offset-2 outline-ink; }
+  .sc-opt-wide         { @apply h-11 w-full; }
+  .sc-opt-wide input   { @apply static mr-2.5 size-4 opacity-100 accent-[var(--color-yellow)]; }
+  .sc-crew             { @apply flex w-full flex-col gap-2 empty:hidden; }
+  .sc-crew-row         { @apply grid w-full grid-cols-[minmax(0,1.4fr)_minmax(0,1.2fr)_120px_36px] items-center gap-2; }
+  .sc-crew-x           { @apply grid size-9 cursor-pointer place-items-center rounded-ds text-sm text-black/40 transition-colors duration-150 hover:bg-gray-soft2 hover:text-danger; }
+  .sc-kind .sc-skill-add { @apply self-start; }
+  /* 422 on a multiselect (e.g. no deal type for a Makler): the pills get a red frame */
+  .sc-opts-error       { @apply rounded-ds outline-1 outline-offset-4 outline-red; }
+  .sc-kind .sc-skill-add[disabled] { @apply cursor-not-allowed opacity-40; }
+
   /* The .cab-main collapse below 1100px is now fixed at source in app.css, so the
      local override that used to live here is gone. */
 
@@ -95,5 +114,8 @@
        app.css is sized for a mouse. Scoped here because app.css is not this task's
        file; the sibling "Dəyişdir" button already clears 44. */
     .sc-page .cab-btn-del { @apply min-h-11 px-4; }
+    /* crew row: name on its own line, trade + years + remove under it */
+    .sc-crew-row       { @apply grid-cols-[minmax(0,1fr)_104px_36px] border-b border-black/8 pb-2.5; }
+    .sc-crew-row > :first-child { @apply col-span-3; }
   }
 }

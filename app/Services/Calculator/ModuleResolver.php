@@ -32,6 +32,12 @@ class ModuleResolver
         'intercom' => 'ELEC_INTERCOM_POINT',
         'ac_power' => 'ELEC_AC_POINT',
         'appliance' => 'ELEC_APPLIANCE_POINT',
+        // A track light clips onto the rail and has no point of its own; the rail is
+        // fed at `track_feed` points (one per TRACK_RAIL_FEED_M, TZ 19.11.2026 §43).
+        'track_feed' => 'ELEC_TRACK_FEED_POINT',
+        // A 220 V output for LED strip in furniture and niches — White Box, no face
+        // plate («Ətraflı» mode only, TZ 19.11.2026 §45).
+        'led_output' => 'ELEC_LED_OUTPUT_POINT',
     ];
 
     /** Rough plumbing, per point. */
@@ -61,6 +67,9 @@ class ModuleResolver
         'lights_pendant' => 'LIGHT_PENDANT_INSTALL',
         'lights_chandelier' => 'LIGHT_CHANDELIER_INSTALL',
         'wall_lights' => 'LIGHT_WALL_INSTALL',
+        // The track system (TZ 19.11.2026 §44): the rail by the metre, the lights each.
+        'track_rail_m' => 'LIGHT_TRACK_RAIL_INSTALL',
+        'lights_track' => 'LIGHT_TRACK_INSTALL',
     ];
 
     public function __construct(private readonly CalculatorConfig $config) {}
@@ -228,7 +237,10 @@ class ModuleResolver
 
         foreach ($rooms as $room) {
             foreach (self::LIGHT_FITTINGS as $key => $workId) {
-                $count = (int) ($room->points[$key] ?? 0);
+                // The rail is metres (one decimal); everything else is a whole count.
+                $count = in_array($key, RoomTypeNorm::LENGTH_KEYS, true)
+                    ? round((float) ($room->points[$key] ?? 0), 1)
+                    : (int) ($room->points[$key] ?? 0);
 
                 if ($count > 0) {
                     $requests[] = new WorkRequest($workId, $count, $room->id, $room->name);

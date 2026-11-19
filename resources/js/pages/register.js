@@ -9,12 +9,23 @@ export default function init() {
   const fields = form.querySelectorAll('[data-for]');
   const roleInput = form.querySelector('[name=role]');
 
+  // Briqadir and Makler are specialist cards: the account role is `master` and the
+  // server resolves the specialty from `kind` (see RegisterController).
+  const KINDS = ['foreman', 'realtor'];
+
   const pick = (role) => {
     roles.forEach((r) => {
       r.dataset.sel = String(r.dataset.role === role);
     });
+    // data-for is a comma list ("seller,master,foreman,realtor"); comparing the whole
+    // string used to hide the shared info note after the first click.
     fields.forEach((el) => {
-      el.hidden = el.dataset.for !== role;
+      el.hidden = !el.dataset.for.split(',').map((s) => s.trim()).includes(role);
+    });
+    // `required` only on the selects the visitor can actually see (city for every
+    // specialist card, the specialty for «Usta / Mütəxəssis»).
+    form.querySelectorAll('[data-req]').forEach((el) => {
+      el.required = !el.closest('[hidden]');
     });
     if (roleInput) roleInput.value = role;
   };
@@ -46,6 +57,12 @@ export default function init() {
     if (role === 'master') {
       const specialtyId = form.querySelector('[name=specialist_specialty_id]')?.value ?? '';
       data.specialist_specialty_id = specialtyId === '' ? null : Number(specialtyId);
+    }
+    if (KINDS.includes(role)) {
+      data.role = 'master';
+      data.kind = role;
+    }
+    if (role === 'master' || KINDS.includes(role)) {
       data.city = form.querySelector('[name=city]')?.value ?? '';
     }
 
