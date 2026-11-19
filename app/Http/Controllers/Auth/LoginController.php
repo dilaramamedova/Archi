@@ -54,7 +54,9 @@ class LoginController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'redirect' => $this->redirectTo($user),
+                // The page that sent the visitor to sign in («Tender yarat» → /tenders/create)
+                // wins over the role's home, as redirect()->intended() does below.
+                'redirect' => $this->intended($request) ?? $this->redirectTo($user),
             ]);
         }
 
@@ -72,6 +74,14 @@ class LoginController extends Controller
         }
 
         return redirect()->route('home');
+    }
+
+    /** The URL the auth middleware remembered, if it is one of ours. */
+    private function intended(Request $request): ?string
+    {
+        $url = $request->session()->pull('url.intended');
+
+        return is_string($url) && parse_url($url, PHP_URL_HOST) === $request->getHost() ? $url : null;
     }
 
     private function redirectTo(User $user): string

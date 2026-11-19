@@ -32,6 +32,7 @@ use App\Http\Controllers\SellController;
 use App\Http\Controllers\SpecialistController;
 use App\Http\Controllers\StoreController;
 use App\Http\Controllers\TenderController;
+use App\Http\Controllers\TenderSubmissionController;
 use App\Http\Controllers\WishlistController;
 use App\Models\BlogPost;
 use App\Models\Product;
@@ -75,6 +76,14 @@ Route::get('/tenders', [TenderController::class, 'index'])->name('tenders.index'
 Route::post('/tenders/access-request', [TenderController::class, 'requestAccess'])
     ->middleware(['auth', 'throttle:5,1'])
     ->name('tenders.access-request');
+// «Tender yarat»: a signed-in user sends a tender to the admin (TenderSubmissionResource).
+// Before /tenders/{slug}, which would otherwise take "create" as a slug.
+Route::get('/tenders/create', [TenderSubmissionController::class, 'create'])
+    ->middleware('auth')
+    ->name('tenders.create');
+Route::post('/tenders/create', [TenderSubmissionController::class, 'store'])
+    ->middleware(['auth', 'throttle:5,10'])
+    ->name('tenders.submit');
 Route::get('/tenders/{slug}', [TenderController::class, 'show'])->name('tenders.show');
 Route::get('/tenders/{slug}/files/{index}', [TenderController::class, 'file'])
     ->whereNumber('index')

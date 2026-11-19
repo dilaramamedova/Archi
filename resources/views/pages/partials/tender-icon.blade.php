@@ -34,6 +34,7 @@
         'alert' => '<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5M12 16.2v.3"/>',
         'reset' => '<path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5"/><path d="M4 4v4.5h4.5"/>',
         'x' => '<path d="M18 6 6 18M6 6l12 12"/>',
+        'plus' => '<path d="M12 5v14M5 12h14"/>',
     ];
 @endphp
 <svg class="td-ic {{ $class ?? '' }}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ $stroke ?? '1.8' }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">{!! $paths[$name] ?? '' !!}</svg>

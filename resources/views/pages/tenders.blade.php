@@ -73,9 +73,16 @@
       </div>
     @endif
 
-    <div class="td-heading">
-      <h1>{{ $tOr('tenders.heading.title', 'Tenderlər') }}</h1>
-      <p>{{ $tOr('tenders.heading.subtitle', 'Layihənizə uyğun tenderi tapın və sifarişçi ilə əlaqə saxlayın.') }}</p>
+    <div class="td-heading-row">
+      <div class="td-heading">
+        <h1>{{ $tOr('tenders.heading.title', 'Tenderlər') }}</h1>
+        <p>{{ $tOr('tenders.heading.subtitle', 'Layihənizə uyğun tenderi tapın və sifarişçi ilə əlaqə saxlayın.') }}</p>
+      </div>
+      {{-- «Tender yarat»: guests sign in first (auth middleware), then land on the form. --}}
+      <a class="td-btn td-btn-primary td-create-btn" href="{{ route('tenders.create') }}">
+        @include('pages.partials.tender-icon', ['name' => 'plus', 'stroke' => '2'])
+        {{ $tOr('tenders.heading.create', 'Tender yarat') }}
+      </a>
     </div>
 
     <form class="td-form" id="tdForm" method="get" action="{{ route('tenders.index') }}" role="search">
