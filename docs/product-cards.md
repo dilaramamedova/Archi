@@ -88,6 +88,38 @@ Qərarlar:
 - Excel-in «eyni məhsul həm divar, həm döşəmə üçün → bir qeyd, uyğun kateqoriyalarda
   göstərilir» qaydası hələ yoxdur: məhsulun bir sinfi var. Bu, kataloq işidir (növbəti mərhələ).
 
+## Santexnika ağacı (20.11.2026)
+
+`Archi_AZ_Santexnika_Kataloq_AZ.xlsx`: 46 kart, fayl `santexnika.php`.
+- 27 santexnika kartı (S01_1–S10_3), 6 aksesuar kartı (S11_1–S11_6) və 13 komplektləşdirici kartı (S12_1–S12_13).
+- Bölmə «Santexnika, su təchizatı və kanalizasiya».
+- Qruplar Excel-in öz «Kateqoriyalar» vərəqindəki 12 kateqoriyadır. S11 və S12-nin «Alt qrup» sütunu ayrıca qrup olmur: aksesuarlar bir qrupda (6), komplektləşdiricilər bir qrupda (13). Menyu Excel-dəki kimi 12 bənd olaraq qalır.
+- Excel-ə daxil olmayan qruplar sadə formla qalır: borular, armatur, nasos, su qızdırıcıları, kanalizasiya. Su sayğacı «Bağlayıcı və tənzimləyici armatur»a keçib.
+- Köhnə siniflər slug-ları saxlanılaraq kartlara çevrilib:
+
+  | Köhnə slug | Kart |
+  |---|---|
+  | `unitazlar` | S01_1 |
+  | `canaqlar-eluzyuyanlar` | S02 |
+  | `qarisdiricilar` | S04_1 |
+  | `vannalar` | S07 |
+  | `dus-kabinesi-dus-sistemi` | S08_1 |
+  | `unitaz-ucun-instalyasiya` | S09_1 |
+  | `traplar-ve-drenajlar` | S10_1 |
+  | `elastik-slanqlar-qosulma-slanqlari` | S12_4 |
+
+- Köhnə «Qarışdırıcılar və duş sistemləri», «Sanitar keramika» və «Santexnika aksesuarları» qrupları bağlanıb.
+
+Qərarlar:
+- Satış: hamısı `sale: unit`. Əksəriyyəti ədəd / dəst; S05_4, S10_3 yalnız ədəd; S11_6, S12_8 yalnız dəst.
+- «Qabarit ölçülər — 3 rəqəm»: en, dərinlik, hündürlük üç ayrı rəqəm sahəsidir (`kart-san-en/derinlik/hundurluk`).
+- «Rəng və səth — iki seçim»: iki ayrı seçim (`kart-san-reng`, `kart-san-seth`).
+- «Zəmanət — seçim və rəqəm»: ortaq `kart-zemanet` + «Var» olanda `kart-zemanet-muddeti` (ay).
+- «Komplektə daxildir»: hər kartın öz siyahısı, «Daxil deyil» başqa seçimlə birlikdə olmur.
+- «Seçim və kod» (gizli gövdə): «Ayrıca alınır» seçiləndə kod məcburidir. «Seçim və rəqəmlər» (elektrik): «Tələb olunur» seçiləndə V və W sahələri açılır.
+- «Rəqəm aralığı» (təzyiq, montaj eni, dərinlik, bərkitmə məsafəsi): min / maks (`lte`). Qənaətli su buraxma həcmi tam həcmdən böyük ola bilməz.
+- «Axtarışlı siyahı və ya kod» (uyğun model / sistem): mətn sahəsi. Hər fərqli ad öz slug-unu alır.
+
 ## Agent yoxlaması (18.11.2026)
 
 Üç Excel üzrə 6 agent (3 admin, 3 satıcı+alıcı) lokal saytda məhsul əlavə etdi. Düzəlişlər
