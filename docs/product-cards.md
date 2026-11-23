@@ -120,6 +120,52 @@ Qərarlar:
 - «Rəqəm aralığı» (təzyiq, montaj eni, dərinlik, bərkitmə məsafəsi): min / maks (`lte`). Qənaətli su buraxma həcmi tam həcmdən böyük ola bilməz.
 - «Axtarışlı siyahı və ya kod» (uyğun model / sistem): mətn sahəsi. Hər fərqli ad öz slug-unu alır.
 
+## Elektrik ağacı (23.11.2026)
+
+`Archi_AZ_Elektrik_Kataloq_AZ.xlsx`: 43 kart, fayl `elektrik.php`.
+- Bölmə «Elektrik, işıqlandırma, zəif cərəyan sistemləri və ağıllı ev».
+- Qruplar Excel-in 4 blokudur:
+  - «Elektrik quraşdırma məhsulları» (E01_01–E01_06);
+  - «İşıqlandırma» (E02_01–E02_14);
+  - «İnternet, rabitə və təhlükəsizlik» (E03_01–E03_16);
+  - «Ağıllı ev və avtomatlaşdırma» (E04_01–E04_07).
+- «Alt qrup» sütunu ayrıca qrup olmur.
+- «Güc elektrik sistemləri» qrupu Excel-də yoxdur. Onun 9 sinfi (avtomat, lövhə, kabel …) sadə formla, sonuncu qrup kimi qalır.
+- Köhnə siniflər slug-ları saxlanılaraq kartlara çevrilib:
+
+  | Köhnə slug | Kart |
+  |---|---|
+  | `rozetkalar-ve-acarlar` | E01_01 Elektrik rozetkaları |
+  | `isiqlandirma-cihazi-led-…` | E02_02 Tavan işıqlandırıcıları |
+  | `videomusahide-cctv` | E03_06 Müşahidə kameraları |
+  | `domofon-sistemi-sks-siqnalizasiya` | E03_09 Domofonlar |
+  | `agilli-ev-sistemi` | E04_01 Ağıllı ev kontrollerləri |
+
+- Köhnə «Rozetkalar və açarlar» və «Zəif cərəyan sistemləri və ağıllı ev» qrupları bağlanıb.
+
+Qərarlar:
+- **Satış.** Hamısı `sale: unit`:
+  - əksəriyyəti ədəd / dəst;
+  - E01_05, E01_06, E02_07, E02_08, E02_12 yalnız ədəd;
+  - trek rels: ədəd / xətti metr;
+  - LED lent: xətti metr / rulon / dəst;
+  - lampalar: ədəd / paket;
+  - profillər: xətti metr / ədəd / dəst;
+  - komplektləşdiricilər: ədəd / dəst / paket;
+  - E03_08, E03_13, E04_07 yalnız dəst.
+- **Brend və ölkə** bütün kartlarda məcburidir (mühərrikin default davranışı).
+- **Ortaq bloklar.** Hər biri bir dəfə yazılıb, bütün kartlarda eyni slug-la işlənir:
+  - «Nominal gərginlik»: `kart-el-gerginlik` (min) ≤ `kart-el-gerginlik-maks` + `kart-el-cereyan-novu`;
+  - «Ağıllı ev uyğunluğu»: «Var» seçiləndə sistemin adı məcburi olur, Matter və qoşulma yolu açılır;
+  - «Rabitə və qoşulma»: «Yoxdur» başqa seçimlə birlikdə olmur; Wi-Fi və radio seçiləndə tezlik yazılır;
+  - «Əlavə idarəetmə cihazı»: model və komplektdə olub-olmaması;
+  - «Qidalanma»: batareya / akkumulyator seçiləndə tip və say məcburidir;
+  - «PoE», «IP qorunma», «Rəng» + «Səth».
+- **İşıq kartlarının nüvəsi.** «İşıq mənbəyi» (daxili LED / dəyişən lampa), güc, gərginlik, ölçü, material, IP, lm / K / CRI, dimm və ağıllı ev bloku. «Dəyişən lampa» seçiləndə soket və lampa sayı məcburi olur. Gömülən spot və tavan işığında «Montaj boşluğu» açılır.
+- **Zəmanət.** E03 və E04 kartlarında ortaq `kart-zemanet` + `kart-zemanet-muddeti` var.
+- **E03_15.** «Uyğunluq sənədi» `document` sahəsidir: fayl və ya link.
+- **Mətn sahələri.** Çox hissəli dəyərlər mətn sahəsində yazılır: portlar, giriş / çıxış, yük limiti, dəstin tərkibi.
+
 ## Agent yoxlaması (18.11.2026)
 
 Üç Excel üzrə 6 agent (3 admin, 3 satıcı+alıcı) lokal saytda məhsul əlavə etdi. Düzəlişlər
