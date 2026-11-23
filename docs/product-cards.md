@@ -166,6 +166,29 @@ Qərarlar:
 - **E03_15.** «Uyğunluq sənədi» `document` sahəsidir: fayl və ya link.
 - **Mətn sahələri.** Çox hissəli dəyərlər mətn sahəsində yazılır: portlar, giriş / çıxış, yük limiti, dəstin tərkibi.
 
+## Tekstil və Landşaft (23.11.2026)
+
+**Tekstil** (`Archi_AZ_Tekstil_Dekor_Kataloq_AZ.xlsx`, faylı `tekstil.php`) — 39 kart, kodları T01_1–T15_6.
+- **Slug-lar:** atribut slug-ları `kart-tx…` (ortaq) və `kart-txNN-N-…` (karta aid). Tavan faylı T01–T11 kodlarını tutur, ona görə prefiks ayrıdır.
+- **Qruplar** Excel-in 3 blokudur:
+  - Pərdələr və günəşdən mühafizə (16);
+  - Ev tekstili (13 kart və sadə formlu «Hamam xalatı»);
+  - İnteryer dekoru (10).
+- **Köhnə siniflər:** 23 köhnə sinif slug-ı saxlanaraq karta çevrilib, 2 sinif birləşdirilib. «Dekorativ işıqlandırma cihazı» bağlanıb: lampalar Elektrik bölməsindədir.
+- **Parça tərkibi:** liflərin çoxlu seçimi + «Tərkib, %» mətn sahəsi. 100%-in avtomatik yoxlaması yoxdur.
+- **Fərdi ölçü:** «Fərdi ölçü» seçiləndə mövcudluq yalnız «Sifarişlə» olur (`on_order_when`).
+
+**Landşaft** (`Archi_AZ_Landsaft_Kataloq_AZ.xlsx`, faylı `landsaft.php`) — 48 kart, kodları L01_1–L12_6.
+- **Slug-lar:** `kart-ls…` / `kart-lNN-N-…`.
+- **Qruplar:** Excel-in 12 alt bölməsidir, 3 naviqasiya bloku deyil. Bunun ardınca 4 sadə qrup gəlir: uşaq/idman, bağ tikililəri, landşaft işıqlandırması, drenaj.
+- **Köhnə qruplar:** təkrarlanan köhnə qruplar (drenaj, MAF, hovuz) bağlanıb.
+- **Vahidlər:** kq / l / m³ / ton mühərrikdə yoxdur. Torpaq, malç, toxum və çınqıl paketlə satılır, xalis miqdar «Qablaşdırma»da yazılır.
+- **Dəstin tərkibi:** satış vahidinə görə şərt qoymaq olmur. Bu sahə «Tip = dəst» olanda məcburidir.
+
+**Hər iki faylda:**
+- Hər kartda «Əlavə xidmətlər» (çatdırılma, montaj …) seçimləri var. Bunlar ayrıca `kart-tx-xidmet-*` və `kart-ls-xidmet-*` atributlarıdır.
+- Eyni məhsulun bir neçə bölmədə göstərilməsi (bağ mebeli ↔ mebel, terras ↔ döşəmə) hələ qurulmayıb.
+
 ## Tavanlar 38 → 20 (23.11.2026)
 
 Mənbə: müştərinin `Tavanlar_kartlar_38-20_AZ.xlsx` və `Tavanlar_audit_AZ.docx` faylları. Faylda ID-lər prod-dakı ID-lərdir.
