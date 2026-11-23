@@ -42,6 +42,12 @@ class CatalogController extends Controller
         $selectedGroup = null;   // child category (group)
         $selectedClass = null;   // SubCategory (product class)
 
+        // A class folded into another by a card import, or a group emptied by it:
+        // the old link moves permanently to where its products now live.
+        if ($moved = $this->mergedTarget($request)) {
+            return redirect()->route('catalog', array_merge($request->except(['class', 'group', 'page']), $moved), 301);
+        }
+
         if ($request->filled('class')) {
             $selectedClass = SubCategory::active()->where('slug', $request->input('class'))
                 ->with('category.parent')->first();
@@ -282,6 +288,40 @@ class CatalogController extends Controller
             'laminateFacets',
             'laminateActive',
         ));
+    }
+
+    /**
+     * Where an old ?class= / ?group= link now points, after a card import folded the
+     * class into another (`card_settings.merged_into`) or closed the group. Null when
+     * the link is still live or unknown.
+     *
+     * @return array{class?: string, group?: string}|null
+     */
+    private function mergedTarget(Request $request): ?array
+    {
+        $slug = $request->query('class');
+        if (is_string($slug) && $slug !== '') {
+            $class = SubCategory::query()->where('slug', $slug)->where('is_active', false)->first();
+            $into = $class?->card_settings['merged_into'] ?? null;
+
+            return is_string($into) && SubCategory::active()->where('slug', $into)->exists() ? ['class' => $into] : null;
+        }
+
+        $slug = $request->query('group');
+        if (is_string($slug) && $slug !== '') {
+            $group = Category::query()->where('slug', $slug)->whereNotNull('parent_id')->where('is_active', false)->first();
+            if (! $group) {
+                return null;
+            }
+            // The group its folded classes went to.
+            $into = SubCategory::query()->where('category_id', $group->id)->where('is_active', false)->get()
+                ->map(fn (SubCategory $c) => $c->card_settings['merged_into'] ?? null)->filter()->first();
+            $target = $into ? SubCategory::active()->where('slug', $into)->with('category')->first()?->category : null;
+
+            return $target && $target->is_active ? ['group' => $target->slug] : null;
+        }
+
+        return null;
     }
 
     /**

@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SubCategoryResource\Pages;
 use App\Filament\Resources\SubCategoryResource\RelationManagers\AttributesRelationManager;
+use App\Filament\Support\TranslatableSearch;
 use App\Models\Category;
 use App\Models\SubCategory;
 use Filament\Actions;
@@ -13,6 +14,7 @@ use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class SubCategoryResource extends Resource
 {
@@ -104,7 +106,11 @@ class SubCategoryResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->sortable()->width(60),
-                Tables\Columns\TextColumn::make('name')->label('Ad')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Ad')
+                    // Case-insensitive over the JSON translations (binary by default).
+                    ->searchable(query: fn (Builder $query, string $search): Builder => TranslatableSearch::apply($query, 'sub_categories.name', $search))
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('category.name')->label('Qrup'),
                 Tables\Columns\TextColumn::make('category.parent.name')->label('Bölmə')->placeholder('—'),
                 Tables\Columns\TextColumn::make('attributes_count')

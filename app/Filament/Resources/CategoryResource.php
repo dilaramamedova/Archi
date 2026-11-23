@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\CategoryResource\Pages;
+use App\Filament\Support\TranslatableSearch;
 use App\Models\Category;
 use Filament\Actions;
 use Filament\Forms;
@@ -11,6 +12,7 @@ use Filament\Schemas\Schema;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class CategoryResource extends Resource
 {
@@ -102,7 +104,8 @@ class CategoryResource extends Resource
                 Tables\Columns\ImageColumn::make('icon')->label('İkon')->width(40)->height(40),
                 Tables\Columns\TextColumn::make('name')
                     ->label('Ad')
-                    ->searchable()
+                    // JSON is compared in binary: «tavan» missed «Tavanlar».
+                    ->searchable(query: fn (Builder $query, string $search): Builder => TranslatableSearch::apply($query, 'categories.name', $search))
                     ->sortable()
                     // Legacy inactive categories stay listed, but visibly muted.
                     ->color(fn ($state, Category $record) => $record->is_active ? null : 'gray')

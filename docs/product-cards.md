@@ -166,6 +166,65 @@ Qərarlar:
 - **E03_15.** «Uyğunluq sənədi» `document` sahəsidir: fayl və ya link.
 - **Mətn sahələri.** Çox hissəli dəyərlər mətn sahəsində yazılır: portlar, giriş / çıxış, yük limiti, dəstin tərkibi.
 
+## Tavanlar 38 → 20 (23.11.2026)
+
+Mənbə: müştərinin `Tavanlar_kartlar_38-20_AZ.xlsx` və `Tavanlar_audit_AZ.docx` faylları. Faylda ID-lər prod-dakı ID-lərdir.
+
+**Qruplar (6):**
+- Tavan növləri (10 sinif);
+- Karkas (110-un yeni adı): Profillər, Birləşdiricilər;
+- Asqılar və bərkidicilər: Asqılar, Ankerlər, Vintlər, Klipslər;
+- Kənar profilləri (113-ün yeni adı): Kənar və künc profilləri;
+- Montaj hissələri (114-ün yeni adı): Montaj hissələri, Reviziya qapaqları;
+- yeni «Tavan dekoru»: Tavan plintusu və qaltel.
+
+Bağlananlar:
+- 112, 115, 116 qrupları;
+- 42-ci sinif (divar kağızı / boya). Onun məhsulları «Tətbiq sahəsi: Tavan» ilə göstərilməlidir, bu hələ qurulmayıb.
+
+**Birləşmə.** Əsas sinif ID-sini və slug-ını saxlayır, adı dəyişir:
+
+| Əsas slug | Yeni ad | İçinə birləşənlər |
+|---|---|---|
+| `dartma-tavan-ucun-profiller` | Profillər | 261–263 |
+| `bir-seviyyeli-birlesdiriciler` | Birləşdiricilər | 269, 271, 272 |
+| `birbasa-asqilar` | Asqılar | 265, 282–285 |
+| `divarboyu-kunc-profilleri` | Kənar və künc profilləri | 274–276 |
+| `montaj-platformalari` | Montaj hissələri | 278, 279 |
+| `boyana-bilen-reviziya-qapaqlari` | Reviziya qapaqları | 281 |
+
+**Kartların yığılması.** Köhnə K-kartları faylda `` olaraq olduğu kimi qalır. `` onları bir sinfə yığır:
+- **«Növ».** Birinci sahə «Növ»-dür: məcburi və filtrdir, seçimləri keçmiş siniflərdir.
+- **Görünmə.** Hər sahə yalnız gəldiyi növ(lər)də görünür.
+- **Öz şərti.** Sahənin öz şərti varsa (məs. «Forma»), «Növ» ilə AND olur.
+- **Məcburilik.** Sahə yalnız onu göstərən bütün növlərdə məcburi olubsa məcburidir. Məsələn, Montaj hissələrində «Material» yalnız platformada məcburi idi, indi ixtiyaridir.
+
+**Dublikatlar bir atributa birləşir** (`move_values` cavabları köçürür):
+- Material: `kart-k1/k2/k3/k4/k5-material`;
+- Qoruyucu örtük;
+- Birləşdirilən profil 1 / 2;
+- Bərkitmə / birləşmə üsulu;
+- Təchizat forması. Seçimləri «Növ»-ə görədir: tros seçimləri yalnız «Asqı trosu»nda;
+- Montaj üsulu (kənar);
+- Çərçivə materialı.
+
+«Tavan növü» (786, 820) və «Uyğun sistem» (760) əvəzinə ortaq `kart-tavan-uygun-tavan` gəlir. O, bütün komplektləşdiricilərdə birinci sahədir, ankerlərdə / vintlərdə / klipslərdə isə ixtiyaridir.
+
+**Vahidlər** (`unit_when` ilə növə bağlıdır):
+- Asqılar: lm və rulon yalnız tros üçün;
+- Kənar: rulon yalnız örtücü lent üçün, cüt yalnız uc qapağı üçün;
+- Tavan növlərinə (akustikdən başqa) m² əlavə olunub;
+- Kesson: ədəd / m²;
+- Plintus: ədəd / xətti metr.
+
+**Yeni sahələr:**
+- Yanğın təhlükəsizliyi sinfi (`kart-tavan-yangin`, Euroclass / KM) bütün tavan növlərində var;
+- RH %, NRC və αw Armstrong və akustik kartlardadır;
+- Kesson (T10) və plintus (T11) kartları;
+- uyğunluq sənədi (T02 / T08 / T09) artıq məcburi deyil (sahibkarın qərarı).
+
+**Filtr.** «Saytda filtr = bəli» olan sahələr `filter => true` ilə gəlir. Kataloqda kart parametrləri üzrə filtr hələ ayrıca mərhələdir.
+
 ## Agent yoxlaması (18.11.2026)
 
 Üç Excel üzrə 6 agent (3 admin, 3 satıcı+alıcı) lokal saytda məhsul əlavə etdi. Düzəlişlər
@@ -208,6 +267,12 @@ admin formasında şəkil məcburi deyil; kəsr stok (m² kəsim) üçün stok s
 // Fayl səviyyəsində: open_size_lists => true — fayldakı bütün siyahılı ölçülər açıqdır.
 // quote_when (bir şərt və ya şərtlər siyahısı — hər hansı biri), country_required.
 'merge' => ['köhnə' => 'yeni'],          // məhsullar köçür, köhnə sinif bağlanır
+// və ya 'köhnə' => ['into' => 'yeni', 'set' => [<atribut> => <seçim>]] — köçən məhsula
+// cavab yazılır («Növ» = köhnə sinif); köhnə ?class= / ?group= linkləri 301 ilə yeni
+// sinfə gedir (card_settings.merged_into → CatalogController::mergedTarget).
+'move_values' => ['köhnə-atribut' => 'yeni-atribut'], // dublikatların cavabları: seçim eyni
+                                         // mətnli seçimə, rəqəm / mətn olduğu kimi
+'retire_classes' => [...],               // məhsulu yoxdursa bağlanan siniflər
 'retire_groups' => [...],                // boş qalanda bağlanan qruplar
 ```
 
@@ -221,7 +286,8 @@ işlədilirsə **eyni olmalıdır** (importer fərqi görəndə dayanır). Sinf�
 | `required` | Dərc üçün məcburidir (qaralama boş saxlanıla bilər) |
 | `unit`, `hint` | Vahid və izah |
 | `presets` | Seçim siyahısı: rəqəmlər və ya `"600×600"`. Varsa sahə **select**-dir və yalnız siyahıdakı dəyər qəbul olunur (server də yoxlayır); ölçüdə bir «L × W» seçimi (`card[id][pair]`), qarışıq uzunluqda min/maks uzunluq və en siyahının hissələrindən seçilir. Admin: Məhsul sinifləri → Atributlar → «Seçim siyahısı». Ölçülən dəyərlərə (qablaşdırmanın sahəsi) siyahı qoyulmur |
-| `when` | `['attr' => <sahə slug>, 'in' => [<seçim slug>…]]` — sahə yalnız bu cavabda görünür |
+| `when` | `['attr' => <sahə slug>, 'in' => [<seçim slug>…]]` — sahə yalnız bu cavabda görünür. Şərtlər siyahısı = hər hansı biri (OR); `['all' => [şərt, şərt]]` = hamısı (AND), məs. «Növ = platforma» **və** «Forma = dairəvi» |
+| `filter` | Saytda filtr (`is_filterable`) |
 | `rules.lt` / `rules.lte` | Başqa rəqəm sahəsindən kiçik / böyük deyil |
 | `rules.only` | Yalnız bu seçimlərlə dərc olunur («Döşəmədə istifadə» → Bəli) |
 | `rules.mixed_when` | Ölçüdə min–maks uzunluq (qarışıq uzunluqlar) |

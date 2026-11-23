@@ -3,12 +3,16 @@
 namespace App\Filament\Resources;
 
 use App\Enums\AttributeFieldType;
+use App\Enums\UserRole;
 use App\Filament\Concerns\TranslatesAdminMessages;
 use App\Filament\Resources\ProductResource\CardForm;
 use App\Filament\Resources\ProductResource\Pages;
+use App\Filament\Support\TranslatableSearch;
 use App\Models\Attribute;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\SubCategory;
+use App\Models\User;
 use App\Services\Laminate\LaminateCatalog;
 use App\Services\Laminate\LaminateModeration;
 use App\Services\SearchService;
@@ -49,7 +53,7 @@ class ProductResource extends Resource
     {
         return $form->schema([
             Tabs::make('Tabs')->tabs([
-                Tabs\Tab::make('Əsas')->schema([
+                static::tab('Əsas')->schema([
                     Forms\Components\TextInput::make('name')
                         ->label('Ad')
                         // Required in Azerbaijani only; ru/en are optional and the site
@@ -77,16 +81,52 @@ class ProductResource extends Resource
 
                     Forms\Components\Select::make('user_id')
                         ->label('Satıcı')
-                        ->relationship('user', 'name')
+                        // Sellers, and admins for in-house products — not buyers or
+                        // specialists. A product already owned by someone else keeps
+                        // its owner selectable so the edit form still saves.
+                        ->relationship(
+                            'user',
+                            'name',
+                            modifyQueryUsing: fn (Builder $query, ?Product $record): Builder => $query
+                                ->where(fn (Builder $q) => $q
+                                    ->whereIn('users.role', [UserRole::Seller, UserRole::Admin])
+                                    ->when($record?->user_id, fn (Builder $q, $id) => $q->orWhere('users.id', $id)))
+                                ->orderBy('users.name'),
+                        )
+                        ->getOptionLabelFromRecordUsing(fn (User $record): string => $record->name.match ($record->role) {
+                            UserRole::Seller => '',
+                            UserRole::Admin => ' (admin)',
+                            default => $record->role ? ' ('.$record->role->label().')' : '',
+                        })
                         ->searchable()
                         ->preload()
                         ->required(),
 
                     Forms\Components\Select::make('category_id')
-                        ->label('Kateqoriya')
-                        ->relationship('category', 'name')
+                        ->label('Kateqoriya (qrup)')
+                        // Only active groups under an active section, labelled with
+                        // their path («Tavanlar › Tavan növləri»). Sections and the old
+                        // «Passiv» groups are not places a product goes; a product
+                        // already in one keeps it on edit.
+                        ->relationship(
+                            'category',
+                            'name',
+                            modifyQueryUsing: fn (Builder $query, ?Product $record): Builder => static::activeGroups($query, $record?->category_id),
+                        )
+                        ->getOptionLabelFromRecordUsing(fn (Category $record): string => static::groupLabel($record))
                         ->searchable()
+                        // Case-insensitive over the group's and its section's name
+                        // (the default LIKE on the JSON column is binary).
+                        ->getSearchResultsUsing(fn (string $search, ?Product $record): array => static::activeGroups(Category::query(), $record?->category_id)
+                            ->where(fn (Builder $q) => TranslatableSearch::apply($q, $q->qualifyColumn('name'), $search)
+                                ->orWhereHas('parent', fn (Builder $p) => TranslatableSearch::apply($p, $p->qualifyColumn('name'), $search)))
+                            ->limit(50)
+                            ->get()
+                            ->mapWithKeys(fn (Category $c) => [$c->getKey() => static::groupLabel($c)])
+                            ->all())
                         ->preload()
+                        // ~115 active groups: the default 50 cut the list off mid-way.
+                        ->optionsLimit(500)
                         ->live()
                         ->afterStateUpdated(fn (callable $set) => $set('sub_category_id', null))
                         ->nullable(),
@@ -101,12 +141,18 @@ class ProductResource extends Resource
                         ->relationship(
                             'subCategory',
                             'name',
-                            modifyQueryUsing: fn ($query, callable $get) => $query
-                                ->active()
-                                ->ordered()
-                                ->where('sub_categories.category_id', (int) $get('category_id'))
+                            // Active classes only; an existing product's current
+                            // (possibly retired) class stays listed so it still shows.
+                            modifyQueryUsing: fn (Builder $query, callable $get, ?Product $record): Builder => static::activeClasses($query, $get('category_id'), $record?->sub_category_id),
                         )
+                        ->getOptionLabelFromRecordUsing(fn (SubCategory $record): string => $record->name.($record->is_active ? '' : ' (passiv)'))
                         ->searchable()
+                        ->getSearchResultsUsing(fn (string $search, callable $get, ?Product $record): array => static::activeClasses(SubCategory::query(), $get('category_id'), $record?->sub_category_id)
+                            ->where(fn (Builder $q) => TranslatableSearch::apply($q, $q->qualifyColumn('name'), $search))
+                            ->limit(50)
+                            ->get()
+                            ->mapWithKeys(fn (SubCategory $s) => [$s->getKey() => $s->name.($s->is_active ? '' : ' (passiv)')])
+                            ->all())
                         ->preload()
                         ->helperText('Yalnız seçilmiş kateqoriyaya (qrupa) aid siniflər göstərilir.')
                         ->noOptionsMessage('Bu kateqoriya üçün aktiv məhsul sinfi yoxdur.')
@@ -144,11 +190,16 @@ class ProductResource extends Resource
                         ->visible(fn (callable $get) => (bool) $get('category_id')),
 
                     Forms\Components\Select::make('brand_id')
-                        // A category card needs a brand or «Brendsiz» (CardProduct::check).
-                        ->label(fn (callable $get): string => CardForm::isCard($get) ? 'Brend *' : 'Brend')
+                        ->label('Brend')
                         ->relationship('brand', 'name')
                         ->searchable()
                         ->preload()
+                        // A category card needs a brand or «Brendsiz» (CardProduct::check
+                        // enforces it), so the field is only marked, not validated here.
+                        // With «Brendsiz» on there is no brand: the field is disabled,
+                        // unmarked and not submitted (CardForm::beforeSave clears it).
+                        ->markAsRequired(fn (callable $get): bool => CardForm::isCard($get) && ! $get('is_unbranded'))
+                        ->disabled(fn (callable $get): bool => CardForm::isCard($get) && (bool) $get('is_unbranded'))
                         ->nullable(),
 
                     // Category card (docs/product-cards.md): brand-level fields, in
@@ -161,7 +212,7 @@ class ProductResource extends Resource
                         ->nullable(),
                 ]),
 
-                Tabs\Tab::make('Qiymət')->schema([
+                static::tab('Qiymət')->schema([
                     // Category card, board classes: the basis comes before the price.
                     CardForm::basisField(),
 
@@ -169,8 +220,10 @@ class ProductResource extends Resource
                         ->label('Qiymət (₼)')
                         ->numeric()
                         // A category card checks the price itself: a custom size priced
-                        // on request has none (CardProduct::check).
+                        // on request has none (CardProduct::check). The marker follows
+                        // the same rule, so a card product still shows the «*».
                         ->required(fn (callable $get): bool => ! CardForm::isCard($get))
+                        ->markAsRequired(fn (callable $get): bool => ! CardForm::isCard($get) || ! CardForm::quoteOnly($get))
                         ->prefix('₼'),
 
                     Forms\Components\TextInput::make('old_price')
@@ -212,10 +265,15 @@ class ProductResource extends Resource
                         ->minValue(0)
                         ->default(0),
 
+                    // Counted from orders (Product::applySale) — read-only here, and
+                    // never submitted, so a save cannot overwrite the real figure.
                     Forms\Components\TextInput::make('sold_count')
                         ->label('Satış sayı')
                         ->numeric()
-                        ->default(0),
+                        ->default(0)
+                        ->disabled()
+                        ->dehydrated(false)
+                        ->helperText('Sifarişlərdən avtomatik hesablanır.'),
 
                     Forms\Components\TextInput::make('min_order')
                         ->label('Minimum sifariş miqdarı')
@@ -259,7 +317,7 @@ class ProductResource extends Resource
                         ->nullable(),
                 ]),
 
-                Tabs\Tab::make('Statuslar')->schema([
+                static::tab('Statuslar')->schema([
                     Forms\Components\Toggle::make('is_visible')->label('Görünür')->default(true),
                     Forms\Components\Toggle::make('is_approved')->label('Təsdiqlənib'),
                     Forms\Components\Toggle::make('is_featured')->label('Seçilmiş məhsul'),
@@ -271,7 +329,7 @@ class ProductResource extends Resource
                     Forms\Components\Toggle::make('return_14_days')->label('14 gün qaytarma'),
                 ]),
 
-                Tabs\Tab::make('Şəkillər')->schema([
+                static::tab('Şəkillər')->schema([
                     Forms\Components\Repeater::make('images')
                         ->relationship()
                         ->schema([
@@ -293,7 +351,7 @@ class ProductResource extends Resource
                         ->label('Şəkillər'),
                 ]),
 
-                Tabs\Tab::make('Xüsusiyyətlər')->schema([
+                static::tab('Xüsusiyyətlər')->schema([
                     // Class-specific fields are switched off for now (config/catalog.php):
                     // the tags, the classifier attributes and the laminate card go with them.
                     Forms\Components\Select::make('applications')
@@ -345,7 +403,7 @@ class ProductResource extends Resource
                             && ! LaminateCatalog::isLaminateClass((int) $get('sub_category_id'))),
                 ]),
 
-                Tabs\Tab::make('Əlavə')->schema([
+                static::tab('Əlavə')->schema([
                     Forms\Components\RichEditor::make('features_text')
                         ->label('Özəlliklər')
                         ->translatable(),
@@ -383,7 +441,108 @@ class ProductResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['category', 'user']);
+        return parent::getEloquentQuery()->with(['category', 'subCategory', 'user']);
+    }
+
+    /**
+     * Groups a product can be placed in: active, under an active section, ordered
+     * section by section. $keep (the product's current group) stays in even when
+     * retired, so an existing product still shows and saves its value.
+     */
+    public static function activeGroups(Builder $query, mixed $keep = null): Builder
+    {
+        $keep = (int) $keep;
+
+        return $query
+            ->with('parent')
+            ->where(fn (Builder $q) => $q
+                ->where(fn (Builder $q) => $q
+                    ->whereNotNull($q->qualifyColumn('parent_id'))
+                    ->where($q->qualifyColumn('is_active'), true)
+                    ->whereHas('parent', fn (Builder $p) => $p->where($p->qualifyColumn('is_active'), true)))
+                ->when($keep > 0, fn (Builder $q) => $q->orWhere($q->qualifyColumn('id'), $keep)))
+            ->orderByRaw('(select p.sort_order from categories as p where p.id = categories.parent_id)')
+            ->orderBy('categories.sort_order');
+    }
+
+    /** «Section › Group»; a retired group (or one under a retired section) says so. */
+    public static function groupLabel(Category $group): string
+    {
+        $label = $group->parent ? $group->parent->name.' › '.$group->name : (string) $group->name;
+        $active = $group->is_active && $group->parent_id && ($group->parent?->is_active ?? false);
+
+        return $active ? $label : $label.' (passiv)';
+    }
+
+    /** Active classes of a group, plus the product's current class ($keep). */
+    public static function activeClasses(Builder $query, mixed $categoryId, mixed $keep = null): Builder
+    {
+        $keep = (int) $keep;
+
+        return $query
+            ->where($query->qualifyColumn('category_id'), (int) $categoryId)
+            ->where(fn (Builder $q) => $q
+                ->where($q->qualifyColumn('is_active'), true)
+                ->when($keep > 0, fn (Builder $q) => $q->orWhere($q->qualifyColumn('id'), $keep)))
+            ->orderBy($query->qualifyColumn('sort_order'));
+    }
+
+    /**
+     * Error count for a form tab: the validation errors whose state path sits under
+     * one of the tab's fields. Card errors are raised after «Create» on the
+     * «Xüsusiyyətlər» tab, so the tab header has to say where they are.
+     */
+    public static function tabErrorCount(Tabs\Tab $component, mixed $livewire): ?string
+    {
+        if (! is_object($livewire) || ! method_exists($livewire, 'getErrorBag')) {
+            return null;
+        }
+
+        $keys = array_keys($livewire->getErrorBag()->getMessages());
+
+        if ($keys === []) {
+            return null;
+        }
+
+        $paths = [];
+        foreach ($component->getChildSchemas(withHidden: true) as $schema) {
+            foreach ($schema->getFlatFields(withHidden: true) as $field) {
+                $paths[] = $field->getStatePath();
+            }
+        }
+
+        $count = collect($keys)
+            ->filter(fn (string $key): bool => collect($paths)->contains(fn (string $path): bool => $key === $path || str_starts_with($key, $path.'.')))
+            ->count();
+
+        return $count > 0 ? (string) $count : null;
+    }
+
+    /**
+     * Every class (retired ones marked), grouped by «Section › Group».
+     *
+     * @return array<string, array<int, string>>
+     */
+    public static function classFilterOptions(): array
+    {
+        return SubCategory::query()
+            ->with('category.parent')
+            ->orderBy('sort_order')
+            ->get()
+            ->sortBy(fn (SubCategory $s) => [$s->category?->parent?->sort_order ?? PHP_INT_MAX, $s->category?->sort_order ?? PHP_INT_MAX])
+            ->groupBy(fn (SubCategory $s): string => $s->category ? static::groupLabel($s->category) : '—')
+            ->map(fn ($classes) => $classes
+                ->mapWithKeys(fn (SubCategory $s) => [$s->getKey() => $s->name.($s->is_active ? '' : ' (passiv)')])
+                ->all())
+            ->all();
+    }
+
+    private static function tab(string $label): Tabs\Tab
+    {
+        return Tabs\Tab::make($label)
+            ->badge(fn (Tabs\Tab $component, $livewire): ?string => static::tabErrorCount($component, $livewire))
+            ->badgeColor('danger')
+            ->badgeTooltip('Bu tabda doldurulmalı və ya düzəldilməli sahələr var');
     }
 
     public static function table(Table $table): Table
@@ -404,6 +563,11 @@ class ProductResource extends Resource
                     ->sortable()
                     ->limit(40),
                 Tables\Columns\TextColumn::make('category.name')->label('Kateqoriya')->placeholder('—'),
+                Tables\Columns\TextColumn::make('subCategory.name')
+                    ->label('Məhsul sinfi')
+                    ->placeholder('—')
+                    ->limit(40)
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('user.name')->label('Satıcı'),
                 Tables\Columns\TextColumn::make('price')->label('Qiymət')->money('AZN')->sortable(),
                 Tables\Columns\TextColumn::make('stock')->label('Stok')->sortable(),
@@ -444,6 +608,13 @@ class ProductResource extends Resource
                     ->relationship('category', 'name')
                     ->searchable()
                     ->preload(),
+                // Classes grouped under «Section › Group» — class names repeat across
+                // groups. Plain options, so the search runs in the browser and is
+                // case-insensitive.
+                Tables\Filters\SelectFilter::make('sub_category_id')
+                    ->label('Məhsul sinfi')
+                    ->options(fn (): array => static::classFilterOptions())
+                    ->searchable(),
                 Tables\Filters\TernaryFilter::make('is_approved')->label('Təsdiqlənib'),
                 Tables\Filters\TernaryFilter::make('is_featured')->label('Seçilmiş'),
                 Tables\Filters\TernaryFilter::make('is_sale')->label('SALE'),

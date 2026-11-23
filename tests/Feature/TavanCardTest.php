@@ -110,13 +110,13 @@ class TavanCardTest extends TestCase
         ]);
     }
 
-    public function test_import_builds_eight_groups_and_thirty_five_cards(): void
+    public function test_import_builds_six_groups_and_twenty_cards(): void
     {
         $groups = Category::where('parent_id', $this->section->id)->where('is_active', true)->get();
 
-        $this->assertCount(8, $groups);
+        $this->assertCount(6, $groups);
         $this->assertSame('tavan-novleri', $groups->sortBy('sort_order')->first()->slug);
-        $this->assertSame(35, SubCategory::whereIn('category_id', $groups->pluck('id'))->where('card_enabled', true)->count());
+        $this->assertSame(20, SubCategory::whereIn('category_id', $groups->pluck('id'))->where('card_enabled', true)->count());
     }
 
     public function test_a_unit_class_sells_in_the_chosen_unit_and_shows_the_m2_price(): void
@@ -144,13 +144,14 @@ class TavanCardTest extends TestCase
             ->assertJsonValidationErrors(['price_basis']);
     }
 
-    public function test_the_document_is_required_and_may_be_a_file_or_an_https_link(): void
+    public function test_the_document_is_optional_and_may_be_a_file_or_an_https_link(): void
     {
         $schema = $this->schema('gipskarton-tavan-coxseviyyeli');
         $doc = 'card.'.$this->field($schema, 'kart-t02-sened')['id'];
 
-        $this->save($this->payload('gipskarton-tavan-coxseviyyeli', $this->plasterboard([]), ['price_basis' => 'piece']))
-            ->assertStatus(422)->assertJsonValidationErrors([$doc]);
+        // The owner's decision (23.11): no document, no block — the product saves.
+        $this->save($this->payload('gipskarton-tavan-coxseviyyeli', $this->plasterboard([]), ['price_basis' => 'piece']))->assertOk();
+        Product::query()->delete();
 
         $this->save($this->payload('gipskarton-tavan-coxseviyyeli', $this->plasterboard(['url' => 'http://example.com/a.pdf']), ['price_basis' => 'piece']))
             ->assertStatus(422)->assertJsonValidationErrors([$doc]);
@@ -189,20 +190,22 @@ class TavanCardTest extends TestCase
 
     public function test_accessories_leave_the_country_optional_and_counts_must_be_whole(): void
     {
-        $schema = $this->schema('boru-kecidi-elementleri');
+        // «Boru keçidi» is now a type of «Montaj hissələri».
+        $schema = $this->schema('montaj-platformalari');
         $card = fn (string $count) => $this->card($schema, [
+            'kart-k5-nov' => 'boru-kecidi', 'kart-tavan-uygun-tavan' => ['dartma'],
             'kart-k53-novu' => 'xarici-dekorativ-qapaq', 'kart-k53-say' => $count, 'kart-k53-boru' => '20, 20',
             'kart-k53-desik' => '21, 21', 'kart-k-forma' => 'dairevi', 'kart-tavan-diametr' => '90',
             'kart-tavan-qalinliq' => '2', 'kart-k-uygun-ortuk' => ['pvc'], 'kart-k53-montaj' => 'yapisdirma',
         ]);
         $extra = ['origin_country' => '', 'price_basis' => 'piece'];
 
-        $this->save($this->payload('boru-kecidi-elementleri', $card('1.5'), $extra))
+        $this->save($this->payload('montaj-platformalari', $card('1.5'), $extra))
             ->assertStatus(422)
             ->assertJsonValidationErrors(['card.'.$this->field($schema, 'kart-k53-say')['id']])
             ->assertJsonMissingValidationErrors(['origin_country']);
 
-        $this->save($this->payload('boru-kecidi-elementleri', $card('2'), $extra))->assertOk();
+        $this->save($this->payload('montaj-platformalari', $card('2'), $extra))->assertOk();
         $this->assertNull(Product::firstOrFail()->origin_country);
     }
 

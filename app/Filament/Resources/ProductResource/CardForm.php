@@ -57,6 +57,19 @@ final class CardForm
         return self::schema($get('sub_category_id')) !== null;
     }
 
+    /**
+     * Is the card priced on request for the current answers (a custom size)? Then
+     * CardProduct::check does not ask for a price — same condition, same answers.
+     */
+    public static function quoteOnly(callable $get): bool
+    {
+        $schema = self::schema($get('sub_category_id'));
+
+        return $schema !== null
+            && ! empty($schema['sale']['quote_when'])
+            && CardSchema::holds($schema['sale']['quote_when'], self::answers($schema, $get));
+    }
+
     /** The price basis of a board class — shown above the price. */
     public static function basisField(): Forms\Components\Select
     {
@@ -89,6 +102,9 @@ final class CardForm
             Forms\Components\Toggle::make('is_unbranded')
                 ->label('Brendsiz')
                 ->helperText('Kateqoriya kartı: brend seçilmədikdə «Brendsiz» qeyd edilir.')
+                // Live: the «Brend» field above disables and loses its «*» with it on.
+                ->live()
+                ->afterStateUpdated(fn ($state, callable $set) => $state ? $set('brand_id', null) : null)
                 ->visible(fn (callable $get): bool => self::isCard($get)),
 
             Forms\Components\Select::make('origin_country')
@@ -114,6 +130,8 @@ final class CardForm
                 ->label('Mövcudluq')
                 ->options([Product::IN_STOCK => 'Stokda', Product::ON_ORDER => 'Sifarişlə', Product::UNAVAILABLE => 'Mövcud deyil'])
                 ->default(Product::IN_STOCK)
+                // CardProduct::check refuses a card without one.
+                ->required(fn (callable $get): bool => self::isCard($get))
                 ->live()
                 ->visible(fn (callable $get): bool => self::isCard($get)),
 
@@ -245,15 +263,22 @@ final class CardForm
                     // beforeSave() folds the two into the stored value.
                     $components[] = Grid::make(2)
                         ->schema([
+                            // Either one satisfies the card (CardInput::document), so
+                            // both are only marked — while the other is still empty —
+                            // and CardProduct::check reports a missing one under the link.
                             Forms\Components\FileUpload::make("{$base}.file")
                                 ->label($label.' — fayl')
                                 ->disk('public')
                                 ->directory('product-docs')
                                 ->acceptedFileTypes(['application/pdf', 'image/jpeg', 'image/png', 'image/webp'])
-                                ->maxSize(10240),
+                                ->maxSize(10240)
+                                ->live()
+                                ->markAsRequired(fn (callable $get): bool => $required($get) && blank($get("{$base}.url"))),
                             Forms\Components\TextInput::make("{$base}.url")
                                 ->label('və ya link')
                                 ->url()
+                                ->live(onBlur: true)
+                                ->markAsRequired(fn (callable $get): bool => $required($get) && blank($get("{$base}.file")))
                                 ->helperText($f['required'] ? 'Fayl və ya link məcburidir.' : $f['hint']),
                         ])
                         ->visible($shown)

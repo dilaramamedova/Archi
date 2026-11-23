@@ -2,10 +2,12 @@
 
 /*
 |--------------------------------------------------------------------------
-| Tavanlar — 9 ceiling cards (T01–T09) and 26 ceiling-accessory cards (K1_1–K7_4)
+| Tavanlar — 11 ceiling cards (T01–T11) and 10 accessory classes (20 classes in all)
 |--------------------------------------------------------------------------
 |
-| Source: Archi_AZ_Tavan_Kataloq_AZ.xlsx (client, 16.11.2026). Format and decisions:
+| Source: Archi_AZ_Tavan_Kataloq_AZ.xlsx (client, 16.11.2026), restructured 38 → 20 by
+| Tavanlar_kartlar_38-20_AZ.xlsx (23.11.2026): the 26 accessory cards fold into 6 classes
+| with a «Növ» field (), plus kesson (T10) and cornice (T11). Format and decisions:
 | docs/product-cards.md. The workbook's 4th level (Komplektləşdiricilər → subgroup →
 | card) is folded into the 3-level tree: «Tavan növləri» plus one group per subgroup.
 |
@@ -67,7 +69,7 @@ $surfaceLook = ['slug' => 'kart-tavan-gorunus', 'name' => $n('Səth görünüş�
     $a('Mat', ['slug' => 'mat']), $a('Yarımmat', ['slug' => 'yarimmat']), $a('Parlaq', ['slug' => 'parlaq']),
     $a('Metal görünüş', ['slug' => 'metal-gorunus']), $a('Fırçalanmış', ['slug' => 'fircalanmis']), $other(), $ns,
 ]];
-$panelDoc = fn (string $slug, array $name) => ['slug' => $slug, 'name' => $name, 'type' => 'document', 'required' => true,
+$panelDoc = fn (string $slug, array $name) => ['slug' => $slug, 'name' => $name, 'type' => 'document', 'required' => false,
     'hint' => $n('İstehsalçının texniki sənədi: PDF/şəkil faylı və ya link.', 'Технический документ производителя: файл PDF/изображение или ссылка.', 'The maker’s technical document: a PDF/image file or a link.')];
 
 // Units a ceiling-accessory card sells in, per the workbook.
@@ -78,314 +80,9 @@ $k = fn (string $code, array $name, array $units, array $fields): array => [
     'code' => $code, 'name' => $name, 'sale' => 'unit', 'units' => $units, 'country_required' => false, 'fields' => $fields,
 ];
 
-return [
-    'section' => 'tavanlar',
-
-    // The workbook says «Hazır ölçü və ya rəqəmlər»: a listed size or a typed one («Başqa ölçü»).
-    'open_size_lists' => true,
-
-    'groups' => [
-        // ════════════════════════════════════════════════════════════════════
-        [
-            'slug' => 'tavan-novleri',
-            'name' => $n('Tavan növləri', 'Типы потолков', 'Ceiling types'),
-            'classes' => [
-                // ── T01 ─────────────────────────────────────────────────────
-                'dartma-tavan' => [
-                    'code' => 'T01',
-                    'name' => $n('Dartma tavan', 'Натяжной потолок', 'Stretch ceiling'),
-                    'sale' => 'area',
-                    'cut_unit' => 'm2',
-                    // A made-to-measure canvas or an offer with installation is priced per project.
-                    'quote_when' => [
-                        ['attr' => 'kart-t01-tedaruk', 'in' => ['layihe']],
-                        ['attr' => 'kart-t01-terkib', 'in' => ['montajla']],
-                    ],
-                    'fields' => [
-                        ['slug' => 'kart-t01-material', 'name' => $n('Örtük materialı', 'Материал полотна', 'Canvas material'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('PVC plyonka', ['slug' => 'pvc']), $a('Tekstil', ['slug' => 'tekstil'])]],
-                        ['slug' => 'kart-t01-terkib', 'name' => $n('Təklifin tərkibi', 'Состав предложения', 'Offer contents'), 'type' => 'dropdown', 'required' => true,
-                            'hint' => $n('Montajlı təklifin qiyməti layihəyə görə hesablanır.', 'Предложение с монтажом рассчитывается по проекту.', 'An offer with installation is priced per project.'),
-                            'options' => [$a('Yalnız örtük', ['slug' => 'ortuk']), $a('Örtük və komplektləşdiricilər', ['slug' => 'komplekt']), $a('Materiallar və montaj', ['slug' => 'montajla'])]],
-                        ['slug' => 'kart-t01-tedaruk', 'name' => $n('Tədarük forması', 'Форма поставки', 'Supply form'), 'type' => 'dropdown', 'required' => true,
-                            'hint' => $n('Rulon tam satılır; kəsim m² ilə; layihə ölçüsü sorğu ilədir.', 'Рулон продаётся целиком; отрез — по м²; по размеру проекта — по запросу.', 'A roll is sold whole; a cut by the m²; made to measure on request.'),
-                            'options' => [$a('Rulon', ['slug' => 'rulon']), $a('Rulondan kəsim', ['slug' => 'kesim']), $a('Layihə ölçüsünə hazırlanmış örtük', ['slug' => 'layihe'])]],
-                        ['slug' => 'kart-t01-seth', 'name' => $n('Səthin görünüşü', 'Вид поверхности', 'Surface'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Mat', ['slug' => 'mat']), $a('Satin', ['slug' => 'satin']), $a('Parlaq', ['slug' => 'parlaq']), $a('Güzgü effektli', ['slug' => 'guzgu']), $a('Fakturalı', ['slug' => 'fakturali']), $other()]],
-                        ['slug' => 'kart-t01-en', 'name' => $n('Gərilməmiş örtüyün eni', 'Ширина полотна до натяжения', 'Canvas width before stretching'), 'type' => 'decimal', 'required' => true, 'unit' => 'm',
-                            'presets' => [1.5, 2, 2.5, 3, 3.2, 3.6, 4, 5], 'maps_to' => 'roll_width'],
-                        ['slug' => 'kart-t01-rulon-uzunlugu', 'name' => $n('Rulonun uzunluğu', 'Длина рулона', 'Roll length'), 'type' => 'decimal', 'required' => true, 'unit' => 'm',
-                            'maps_to' => 'roll_length', 'when' => ['attr' => 'kart-t01-tedaruk', 'in' => ['rulon']],
-                            'hint' => $n('Rulonun sahəsi = en × uzunluq.', 'Площадь рулона = ширина × длина.', 'Roll area = width × length.')],
-                        $color,
-                        $colorCode,
-                        ['slug' => 'kart-t01-qalinliq', 'name' => $n('Örtüyün qalınlığı', 'Толщина полотна', 'Canvas thickness'), 'type' => 'decimal', 'unit' => 'mm',
-                            'hint' => $n('Konkret məhsul üzrə; tavanın ümumi hündürlüyü deyil.', 'Для конкретного товара; не общая высота потолка.', 'Of this product; not the ceiling build-up.')],
-                        ['slug' => 'kart-t01-berkitme', 'name' => $n('Bərkitmə sistemi', 'Система крепления', 'Fixing system'), 'type' => 'multiselect',
-                            'options' => [$a('Harpun', ['slug' => 'harpun']), $a('Klips', ['slug' => 'klips']), $a('Paz və ya ştapik', ['slug' => 'paz']), $other(), $nsX]],
-                        ['slug' => 'kart-t01-isiq', 'name' => $n('İşıqkeçirən örtük', 'Светопропускающее полотно', 'Translucent canvas'), 'type' => 'dropdown', 'options' => $ynn],
-                        ['slug' => 'kart-t01-akustik', 'name' => $n('Akustik təyinat', 'Акустическое назначение', 'Acoustic purpose'), 'type' => 'dropdown',
-                            'options' => [$yes + ['prompt' => $n('Sübutu və sistem məlumatını yazın', 'Укажите подтверждение и данные системы', 'Give the proof and system data')], $no, $ns]],
-                        $warranty,
-                    ],
-                ],
-
-                // ── T02 ─────────────────────────────────────────────────────
-                'gipskarton-tavan-coxseviyyeli' => [
-                    'code' => 'T02',
-                    'name' => $n('Alçıpan tavan', 'Гипсокартонный потолок', 'Plasterboard ceiling'),
-                    'sale' => 'unit', 'units' => ['piece', 'pack', 'set'],
-                    'fields' => [
-                        ['slug' => 'kart-t02-novu', 'name' => $n('Məhsul növü', 'Тип товара', 'Product type'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Alçıpan lövhə', ['slug' => 'lovhe']), $a('Komplekt tavan sistemi', ['slug' => 'sistem'])]],
-                        ['slug' => 'kart-t02-teyinat', 'name' => $n('Lövhənin təyinatı', 'Назначение листа', 'Board purpose'), 'type' => 'multiselect', 'required' => true,
-                            'hint' => $n('İstehsalçı təsnifatı əsasdır.', 'По классификации производителя.', 'Per the maker’s classification.'),
-                            'options' => [$a('Standart'), $a('Nəmə davamlı', ['slug' => 'neme-davamli']), $a('Yanğın göstəriciləri yaxşılaşdırılmış', ['slug' => 'yangina-davamli']),
-                                $a('Akustik perforasiyalı', ['slug' => 'akustik']), $a('Əyilən', ['slug' => 'eyilen']), $other()]],
-                        ['slug' => 'kart-t02-olcu', 'name' => $n('Lövhə ölçüləri', 'Размер листа', 'Board size'), 'type' => 'size', 'required' => true, 'unit' => 'mm',
-                            'presets' => ['2000×1200', '2500×1200', '2700×1200', '3000×1200']],
-                        ['slug' => 'kart-t02-qalinliq', 'name' => $n('Lövhənin qalınlığı', 'Толщина листа', 'Board thickness'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm',
-                            'presets' => [6.5, 8, 9.5, 12.5, 15]],
-                        ['slug' => 'kart-t02-kenar', 'name' => $n('Kənar profili', 'Профиль кромки', 'Edge profile'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Düz'), $a('Nazildilmiş'), $a('Yarımdairəvi'), $a('Yarımdairəvi nazildilmiş'), $a('Xüsusi akustik kənar'), $other()]],
-                        ['slug' => 'kart-t02-seth', 'name' => $n('Səthin vəziyyəti', 'Состояние поверхности', 'Surface state'), 'type' => 'dropdown',
-                            'options' => [$a('İşlənməmiş'), $a('Astarlanmış'), $a('Zavod boyalı'), $a('Örtüklü'), $other(), $ns]],
-                        ['slug' => 'kart-t02-perforasiya', 'name' => $n('Perforasiya', 'Перфорация', 'Perforation'), 'type' => 'dropdown',
-                            'options' => [$a('Yoxdur', ['slug' => 'yoxdur']), $a('Dairəvi'), $a('Kvadrat'), $a('Yarıq'), $a('Qarışıq'), $other(), $ns]],
-                        ['slug' => 'kart-t02-kutle', 'name' => $n('Vahid sahənin kütləsi', 'Масса единицы площади', 'Mass per area'), 'type' => 'decimal', 'unit' => 'kg/m²'],
-                        ['slug' => 'kart-t02-qurasdirma', 'name' => $n('Quraşdırma üsulu', 'Способ монтажа', 'Installation method'), 'type' => 'multiselect',
-                            'options' => [$a('Metal karkasa mexaniki'), $a('Taxta karkasa mexaniki'), $other($P_HOW, 'Digər təsdiqlənmiş üsul'), $nsX]],
-                        $panelDoc('kart-t02-sened', $n('Tavan üçün uyğunluq sənədi', 'Документ о пригодности для потолка', 'Ceiling suitability document')),
-                        $coverage,
-                        $warranty,
-                    ],
-                ],
-
-                // ── T03 ─────────────────────────────────────────────────────
-                'asma-tavan-reykalikasetliarmstrongxanalipanelli' => [
-                    'code' => 'T03',
-                    'name' => $n('Armstrong tipli asma tavan', 'Подвесной потолок типа Армстронг', 'Armstrong-type suspended ceiling'),
-                    'sale' => 'unit', 'units' => ['piece', 'pack', 'set'],
-                    'fields' => [
-                        ['slug' => 'kart-t03-novu', 'name' => $n('Məhsul növü', 'Тип товара', 'Product type'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Tavan plitəsi', ['slug' => 'plite']), $a('Komplekt tavan sistemi', ['slug' => 'sistem'])]],
-                        ['slug' => 'kart-t03-material', 'name' => $n('Plitənin materialı', 'Материал плиты', 'Tile material'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Mineral lif'), $a('Daş yunu'), $a('Şüşə lifi'), $other($P_NAME, 'Digər təsdiqlənmiş mineral əsas')]],
-                        ['slug' => 'kart-t03-modul', 'name' => $n('Modul ölçüsü', 'Размер модуля', 'Module size'), 'type' => 'size', 'required' => true, 'unit' => 'mm',
-                            'presets' => ['600×600', '600×1200', '1200×1200']],
-                        ['slug' => 'kart-t03-olcu', 'name' => $n('Faktiki plitə ölçüsü', 'Фактический размер плиты', 'Actual tile size'), 'type' => 'size', 'required' => true, 'unit' => 'mm',
-                            'presets' => ['595×595', '600×600', '1195×595', '1200×600', '1195×1195'],
-                            'hint' => $n('Modul ölçüsündən ayrı: 595 və 600 mm eyni deyil.', 'Отдельно от модуля: 595 и 600 мм — не одно и то же.', 'Separate from the module: 595 and 600 mm differ.')],
-                        ['slug' => 'kart-t03-qalinliq', 'name' => $n('Qalınlıq', 'Толщина', 'Thickness'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm',
-                            'presets' => [6, 8, 10, 12, 13, 15, 16, 18, 20]],
-                        ['slug' => 'kart-t03-kenar', 'name' => $n('Kənar forması', 'Форма кромки', 'Edge'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Düz oturan (Board)', ['slug' => 'duz']), $a('Pilləli (Tegular)', ['slug' => 'pilleli']), $a('Gizli sistem üçün', ['slug' => 'gizli']), $other()]],
-                        ['slug' => 'kart-t03-sistem', 'name' => $n('Daşıyıcı sistemə uyğunluq', 'Совместимость с несущей системой', 'Grid compatibility'), 'type' => 'multiselect', 'required' => true,
-                            'hint' => $n('Yalnız məhsulun sənədində olan uyğunluqlar.', 'Только совместимость из документов товара.', 'Only what the product documents state.'),
-                            'options' => [$a('T15', ['slug' => 't15']), $a('T24', ['slug' => 't24']), $a('Gizli sistem', ['slug' => 'gizli']), $a('Xüsusi sistem', ['slug' => 'xususi'])]],
-                        ['slug' => 'kart-t03-uz', 'name' => $n('Üz səthi', 'Лицевая поверхность', 'Face'), 'type' => 'dropdown',
-                            'options' => [$a('Hamar'), $a('Teksturalı'), $a('Çatvari naxışlı', ['slug' => 'catvari']), $a('Perforasiyalı'), $other(), $ns]],
-                        $color,
-                        $colorCode,
-                        ['slug' => 'kart-t03-ceki', 'name' => $n('Plitənin çəkisi', 'Вес плиты', 'Tile weight'), 'type' => 'decimal', 'unit' => 'kg'],
-                        ['slug' => 'kart-t03-ceki-vahidi', 'name' => $n('Çəkinin vahidi', 'Единица веса', 'Weight unit'), 'type' => 'dropdown',
-                            'options' => [$a('kg/ədəd', ['slug' => 'kg-eded']), $a('kg/m²', ['slug' => 'kg-m2'])]],
-                        $coverage,
-                        $warranty,
-                    ],
-                ],
-
-                // ── T04 ─────────────────────────────────────────────────────
-                'metal-kaset-tavan' => [
-                    'code' => 'T04',
-                    'name' => $n('Metal kaset tavan', 'Металлический кассетный потолок', 'Metal tile ceiling'),
-                    'sale' => 'unit', 'units' => ['piece', 'pack', 'set'],
-                    'fields' => [
-                        ['slug' => 'kart-t04-novu', 'name' => $n('Məhsul növü', 'Тип товара', 'Product type'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Kaset', ['slug' => 'kaset']), $a('Komplekt tavan sistemi', ['slug' => 'sistem'])]],
-                        ['slug' => 'kart-t04-metal', 'name' => $n('Metal', 'Металл', 'Metal'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Alüminium'), $a('Sinklənmiş polad'), $a('Paslanmayan polad'), $other()]],
-                        ['slug' => 'kart-t04-sistem', 'name' => $n('Sistem növü', 'Тип системы', 'System type'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Lay-in', ['slug' => 'lay-in']), $a('Clip-in', ['slug' => 'clip-in']), $a('Hook-on', ['slug' => 'hook-on']), $other()]],
-                        ['slug' => 'kart-t04-modul', 'name' => $n('Modul ölçüsü', 'Размер модуля', 'Module size'), 'type' => 'size', 'required' => true, 'unit' => 'mm',
-                            'presets' => ['300×300', '600×600', '600×1200']],
-                        ['slug' => 'kart-t04-olcu', 'name' => $n('Faktiki kaset ölçüsü', 'Фактический размер кассеты', 'Actual tile size'), 'type' => 'size', 'required' => true, 'unit' => 'mm'],
-                        ['slug' => 'kart-t04-metal-qalinliq', 'name' => $n('Metalın qalınlığı', 'Толщина металла', 'Metal thickness'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm',
-                            'hint' => $n('Kasetin ümumi hündürlüyü deyil.', 'Не общая высота кассеты.', 'Not the tile’s overall height.')],
-                        ['slug' => 'kart-t04-kenar', 'name' => $n('Kasetin kənar hündürlüyü', 'Высота борта кассеты', 'Tile edge height'), 'type' => 'decimal', 'unit' => 'mm'],
-                        ['slug' => 'kart-t04-ortuk', 'name' => $n('Səth örtüyü', 'Покрытие поверхности', 'Finish'), 'type' => 'dropdown',
-                            'options' => [$a('Toz boya'), $a('Rulon boyası'), $a('Anodlaşdırılmış'), $a('Örtüksüz'), $other(), $ns]],
-                        ['slug' => 'kart-t04-perforasiya', 'name' => $n('Perforasiya', 'Перфорация', 'Perforation'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Yoxdur', ['slug' => 'yoxdur']), $a('Dairəvi'), $a('Kvadrat'), $a('Yarıq'), $other()]],
-                        $color,
-                        ['required' => true] + $surfaceLook,
-                        $colorCode,
-                        $coverage,
-                        $warranty,
-                    ],
-                ],
-
-                // ── T05 ─────────────────────────────────────────────────────
-                'metal-reykali-tavan' => [
-                    'code' => 'T05',
-                    'name' => $n('Metal reykalı tavan', 'Металлический реечный потолок', 'Metal linear ceiling'),
-                    'sale' => 'unit', 'units' => ['piece', 'lm', 'pack', 'set'],
-                    'fields' => [
-                        ['slug' => 'kart-t05-novu', 'name' => $n('Məhsul növü', 'Тип товара', 'Product type'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Reyka', ['slug' => 'reyka']), $a('Komplekt tavan sistemi', ['slug' => 'sistem'])]],
-                        ['slug' => 'kart-t05-metal', 'name' => $n('Metal', 'Металл', 'Metal'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Alüminium'), $a('Sinklənmiş polad'), $a('Paslanmayan polad'), $other()]],
-                        ['slug' => 'kart-t05-qurulus', 'name' => $n('Sistemin quruluşu', 'Конструкция системы', 'System layout'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Açıq aralıqlı'), $a('Qapalı'), $a('Aralıq əlavəli'), $other()]],
-                        ['slug' => 'kart-t05-profil', 'name' => $n('Profil forması', 'Форма профиля', 'Profile shape'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Düz'), $a('Kənarları yumru'), $a('Qutu formalı'), $other()]],
-                        ['slug' => 'kart-t05-uzunluq-formati', 'name' => $n('Uzunluq formatı', 'Формат длины', 'Length format'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Sabit', ['slug' => 'sabit']), $a('Sifariş ölçüsünə', ['slug' => 'sifaris'])]],
-                        ['when' => ['attr' => 'kart-t05-uzunluq-formati', 'in' => ['sabit']]] + $length(),
-                        ['slug' => 'kart-t05-en', 'name' => $n('Reykanın görünən eni', 'Видимая ширина рейки', 'Visible slat width'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm'],
-                        ['slug' => 'kart-t05-hundurluk', 'name' => $n('Profilin hündürlüyü', 'Высота профиля', 'Profile height'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm'],
-                        $metalThick(true),
-                        ['slug' => 'kart-t05-addim', 'name' => $n('Montaj addımı', 'Шаг монтажа', 'Installation pitch'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm',
-                            'hint' => $n('Qonşu reykaların oxları arasındakı məsafə.', 'Расстояние между осями соседних реек.', 'Centre-to-centre distance of neighbouring slats.')],
-                        ['slug' => 'kart-t05-ortuk', 'name' => $n('Səth örtüyü', 'Покрытие поверхности', 'Finish'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Toz boya'), $a('Rulon boyası'), $a('Anodlaşdırma'), $other()]],
-                        $color,
-                        $colorCode,
-                        $coverage,
-                        $warranty,
-                    ],
-                ],
-
-                // ── T06 ─────────────────────────────────────────────────────
-                'grilyato' => [
-                    'code' => 'T06',
-                    'name' => $n('Qəfəs tipli tavan Grilyato', 'Потолок-решётка Грильято', 'Grid ceiling (Grilyato)'),
-                    'sale' => 'unit', 'units' => ['piece', 'set'],
-                    'fields' => [
-                        ['slug' => 'kart-t06-novu', 'name' => $n('Məhsul növü', 'Тип товара', 'Product type'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Yığılmış modul'), $a('Yığılmamış modul dəsti'), $a('Komplekt tavan sistemi', ['slug' => 'sistem'])]],
-                        ['slug' => 'kart-t06-metal', 'name' => $n('Metal', 'Металл', 'Metal'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Alüminium'), $a('Sinklənmiş polad'), $other()]],
-                        ['slug' => 'kart-t06-forma', 'name' => $n('Qəfəs forması', 'Форма решётки', 'Grid shape'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Kvadrat'), $a('Düzbucaqlı'), $a('Piramidal'), $a('Jalüz tipli'), $other()]],
-                        ['slug' => 'kart-t06-modul', 'name' => $n('Modul ölçüsü', 'Размер модуля', 'Module size'), 'type' => 'size', 'required' => true, 'unit' => 'mm',
-                            'presets' => ['600×600', '1200×600']],
-                        ['slug' => 'kart-t06-faktiki', 'name' => $n('Faktiki modul ölçüsü', 'Фактический размер модуля', 'Actual module size'), 'type' => 'size', 'unit' => 'mm',
-                            'hint' => $n('Nominal moduldan fərqlənirsə.', 'Если отличается от номинального.', 'If it differs from the nominal module.')],
-                        ['slug' => 'kart-t06-huceyre', 'name' => $n('Hüceyrənin açıq ölçüsü', 'Размер ячейки в свету', 'Clear cell size'), 'type' => 'size', 'required' => true, 'unit' => 'mm',
-                            'presets' => ['50×50', '75×75', '86×86', '100×100', '120×120', '150×150', '200×200']],
-                        ['slug' => 'kart-t06-en', 'name' => $n('Profilin görünən eni', 'Видимая ширина профиля', 'Visible profile width'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm'],
-                        ['slug' => 'kart-t06-hundurluk', 'name' => $n('Profilin hündürlüyü', 'Высота профиля', 'Profile height'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm'],
-                        $metalThick(true),
-                        $color,
-                        ['slug' => 'kart-t06-ortuk', 'name' => $n('Örtük', 'Покрытие', 'Finish'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Toz boya'), $a('Rulon boyası'), $other()]],
-                        $colorCode,
-                        $coverage,
-                        $warranty,
-                    ],
-                ],
-
-                // ── T07 ─────────────────────────────────────────────────────
-                'pvc-tavan-panelleri' => [
-                    'code' => 'T07',
-                    'name' => $n('PVC tavan panelləri', 'Потолочные ПВХ-панели', 'PVC ceiling panels'),
-                    'sale' => 'unit', 'units' => ['piece', 'pack'],
-                    'fields' => [
-                        ['slug' => 'kart-t07-forma', 'name' => $n('Məhsul forması', 'Форма товара', 'Product form'), 'type' => 'dropdown', 'required' => true,
-                            'hint' => $n('Material: PVC. WPC, SPC və digər kompozitlər bu kateqoriyaya aid deyil.', 'Материал: ПВХ. WPC, SPC и другие композиты — не в этой категории.', 'Material: PVC. WPC, SPC and other composites are not in this category.'),
-                            'options' => [$a('Uzun panel'), $a('Qısa klik panel'), $other()]],
-                        ['slug' => 'kart-t07-qurulus', 'name' => $n('Panelin quruluşu', 'Конструкция панели', 'Panel build'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Boşluqlu'), $a('Dolu'), $other()]],
-                        $length(),
-                        ['slug' => 'kart-t07-tam-en', 'name' => $n('Tam en', 'Полная ширина', 'Overall width'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm',
-                            'hint' => $n('Birləşmə hissəsi daxil.', 'Включая замок.', 'Including the joint.')],
-                        ['slug' => 'kart-t07-faydali-en', 'name' => $n('Faydalı örtmə eni', 'Полезная ширина', 'Effective width'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm',
-                            'rules' => ['lte' => 'kart-t07-tam-en']],
-                        $thick(),
-                        ['slug' => 'kart-t07-birlesme', 'name' => $n('Birləşmə növü', 'Тип соединения', 'Joint type'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Dil–yiv', ['slug' => 'dil-yiv']), $a('Klik'), $other()]],
-                        ['slug' => 'kart-t07-gorunus', 'name' => $n('Görünüş', 'Вид поверхности', 'Finish look'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Mat'), $a('Satin'), $a('Parlaq'), $a('Fakturalı')]],
-                        ['slug' => 'kart-t07-dekor', 'name' => $n('Dekor', 'Декор', 'Decor'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Birrəngli'), $a('Taxta'), $a('Daş'), $a('Mərmər'), $a('Naxışlı'), $other()]],
-                        $color,
-                        ['slug' => 'kart-t07-montaj', 'name' => $n('Tavan üçün montaj üsulu', 'Способ монтажа на потолок', 'Ceiling installation'), 'type' => 'multiselect', 'required' => true,
-                            'hint' => $n('Yalnız istehsalçının tavan üçün icazə verdiyi üsullar.', 'Только способы, разрешённые производителем для потолка.', 'Only methods the maker allows for ceilings.'),
-                            'options' => [$a('Mexaniki bərkitmə'), $a('Klips'), $a('Yapışdırma'), $other()]],
-                        $coverage,
-                        $warranty,
-                    ],
-                ],
-
-                // ── T08 ─────────────────────────────────────────────────────
-                'taxta-ve-mdf-tavanlar' => [
-                    'code' => 'T08',
-                    'name' => $n('Taxta və MDF tavanlar', 'Деревянные и МДФ-потолки', 'Wood and MDF ceilings'),
-                    'sale' => 'unit', 'units' => ['piece', 'lm', 'pack', 'set'],
-                    'fields' => [
-                        ['slug' => 'kart-t08-forma', 'name' => $n('Məhsul forması', 'Форма товара', 'Product form'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Panel'), $a('Reyka'), $a('Reykalı modul'), $a('Komplekt tavan sistemi', ['slug' => 'sistem'])]],
-                        ['slug' => 'kart-t08-material', 'name' => $n('Əsas material', 'Основной материал', 'Core material'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Massiv ağac'), $a('MDF', ['slug' => 'mdf']), $a('Faner əsaslı şponlu panel'), $other($P_NAME, 'Digər təsdiqlənmiş ağac əsaslı material')]],
-                        ['slug' => 'kart-t08-uz', 'name' => $n('Üz qatı', 'Лицевой слой', 'Face layer'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Massiv ağac'), $a('Təbii şpon'), $a('Laminat'), $a('Boya'), $a('Örtüksüz'), $other()]],
-                        ['slug' => 'kart-t08-uzunluq-formati', 'name' => $n('Uzunluq formatı', 'Формат длины', 'Length format'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Sabit', ['slug' => 'sabit']), $a('Qarışıq uzunluqlar', ['slug' => 'qarisiq']), $a('Sifariş ölçüsünə', ['slug' => 'sifaris'])]],
-                        ['when' => ['attr' => 'kart-t08-uzunluq-formati', 'in' => ['sabit', 'qarisiq']],
-                            'hint' => $n('Qarışıq uzunluqda — minimum uzunluq.', 'При разных длинах — минимальная.', 'With mixed lengths — the minimum.')] + $length(),
-                        ['slug' => 'kart-t08-maks-uzunluq', 'name' => $n('Maksimum uzunluq', 'Максимальная длина', 'Maximum length'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm',
-                            'when' => ['attr' => 'kart-t08-uzunluq-formati', 'in' => ['qarisiq']]],
-                        ['hint' => $n('Panel/reykada tam en, modulda modul eni.', 'Полная ширина панели/рейки, у модуля — ширина модуля.', 'Overall width of a panel/slat; module width for a module.')] + $width(),
-                        ['slug' => 'kart-t08-qalinliq', 'name' => $n('Qalınlıq və ya hündürlük', 'Толщина или высота', 'Thickness or height'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm',
-                            'hint' => $n('Panel qalınlığı və ya reykalı modulun ümumi hündürlüyü.', 'Толщина панели или общая высота реечного модуля.', 'Panel thickness or the overall height of a slatted module.')],
-                        ['slug' => 'kart-t08-son-ortuk', 'name' => $n('Son örtük', 'Финишное покрытие', 'Finish'), 'type' => 'dropdown',
-                            'options' => [$a('Lak'), $a('Yağ', ['slug' => 'yag']), $a('Boya'), $a('Zavod laminasiyası'), $a('Örtüksüz'), $other(), $ns]],
-                        array_merge($color, ['slug' => 'kart-t08-reng', 'name' => $n('Rəng və dekor', 'Цвет и декор', 'Colour and decor')]),
-                        $colorCode,
-                        ['slug' => 'kart-t08-montaj', 'name' => $n('Montaj üsulu', 'Способ монтажа', 'Installation method'), 'type' => 'multiselect', 'required' => true,
-                            'options' => [$a('Klips'), $a('Mexaniki bərkitmə'), $a('Asma sistem'), $other($P_HOW, 'Digər təsdiqlənmiş üsul')]],
-                        $panelDoc('kart-t08-sened', $n('Tavan tətbiqinin təsdiqi', 'Подтверждение применения на потолке', 'Ceiling use approval')),
-                        $coverage,
-                        $warranty,
-                    ],
-                ],
-
-                // ── T09 ─────────────────────────────────────────────────────
-                'akustik-tavan' => [
-                    'code' => 'T09',
-                    'name' => $n('Akustik tavan panelləri, adalar və baffllar', 'Акустические панели, острова и бафлы', 'Acoustic panels, islands and baffles'),
-                    'sale' => 'unit', 'units' => ['piece', 'set', 'pack'],
-                    'fields' => [
-                        ['slug' => 'kart-t09-novu', 'name' => $n('Element növü', 'Тип элемента', 'Element type'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Üfüqi ada'), $a('Şaquli baffl'), $a('Tavan səthinə quraşdırılan akustik panel', ['slug' => 'seth-paneli']), $other()]],
-                        ['slug' => 'kart-t09-material', 'name' => $n('Əsas material', 'Основной материал', 'Core material'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Daş yunu'), $a('Şüşə lifi'), $a('PET lifli material', ['slug' => 'pet']), $a('Ağac yunu kompoziti'), $other()]],
-                        ['slug' => 'kart-t09-uz', 'name' => $n('Üz örtüyü', 'Лицевое покрытие', 'Face finish'), 'type' => 'dropdown',
-                            'options' => [$a('Akustik boya'), $a('Parça'), $a('Keçə'), $a('Şpon'), $a('Örtüksüz'), $other(), $ns]],
-                        ['slug' => 'kart-t09-forma', 'name' => $n('Forma', 'Форма', 'Shape'), 'type' => 'dropdown', 'required' => true,
-                            'options' => [$a('Düzbucaqlı'), $a('Kvadrat'), $a('Dairə', ['slug' => 'daire']), $other($n('Formanı və ölçülü sxemi izah edin', 'Опишите форму и размерную схему', 'Describe the shape and its dimensions'))]],
-                        ['slug' => 'kart-t09-olcu', 'name' => $n('Ölçülər', 'Размеры', 'Dimensions'), 'type' => 'size', 'required' => true, 'unit' => 'mm',
-                            'when' => ['attr' => 'kart-t09-forma', 'in' => ['duzbucaqli', 'kvadrat', 'diger']],
-                            'hint' => $n('Uzunluq × en; bafflda uzunluq × şaquli hündürlük.', 'Длина × ширина; у бафла — длина × высота.', 'Length × width; for a baffle length × height.')],
-                        ['when' => ['attr' => 'kart-t09-forma', 'in' => ['daire']]] + $diameter(),
-                        $thick(),
-                        ['slug' => 'kart-t09-ceki', 'name' => $n('Elementin çəkisi', 'Вес элемента', 'Element weight'), 'type' => 'decimal', 'required' => true, 'unit' => 'kg'],
-                        ['slug' => 'kart-t09-asqi-daxil', 'name' => $n('Asma dəsti daxildir', 'Подвесной комплект в комплекте', 'Suspension kit included'), 'type' => 'dropdown', 'options' => $ynn],
-                        ['slug' => 'kart-t09-cerceve', 'name' => $n('Kənar və çərçivə', 'Кромка и рамка', 'Edge and frame'), 'type' => 'dropdown',
-                            'options' => [$a('Çərçivəsiz'), $a('Metal çərçivəli'), $other(), $ns]],
-                        $color,
-                        $colorCode,
-                        $panelDoc('kart-t09-sened', $n('Akustik məlumatın mənbəyi', 'Источник акустических данных', 'Source of acoustic data')),
-                        ['when' => ['attr' => 'kart-t09-novu', 'in' => ['seth-paneli']]] + $coverage,
-                        $warranty,
-                    ],
-                ],
-            ],
-            // Classes the workbook does not describe: kept with the plain form.
-            'plain' => ['kesson-tavan', 'divar-kagizlari-dekorativ-suvaq-boya-taxta-lambir-tavanlar-ucun'],
-        ],
-
+// The ceiling-accessory cards as the 16.11 workbook described them (K1_1–K7_4). The
+// 23.11 restructure folds them into one class per group with a «Növ» field ($fold).
+$legacy = [
         // ════════════════════════════════════════════════════════════════════
         [
             'slug' => 'tavan-profilleri-ve-yonlendiriciler',
@@ -929,8 +626,698 @@ return [
                 ]),
             ],
         ],
+];
+
+// ── 23.11.2026 restructure (Tavanlar_kartlar_38-20_AZ.xlsx) ────────────────
+$fire = ['slug' => 'kart-tavan-yangin', 'name' => $n('Yanğın təhlükəsizliyi sinfi', 'Класс пожарной безопасности', 'Fire safety class'), 'type' => 'dropdown', 'filter' => true,
+    'hint' => $n('İstehsalçının sənədinə görə: Euroclass və ya KM.', 'По документам производителя: Euroclass или КМ.', 'Per the maker’s documents: Euroclass or KM.'),
+    'options' => [
+        $a('A1', ['slug' => 'a1']), $a('A2-s1,d0', ['slug' => 'a2-s1-d0']), $a('B-s1,d0', ['slug' => 'b-s1-d0']), $a('C-s2,d0', ['slug' => 'c-s2-d0']),
+        $a('D-s2,d0', ['slug' => 'd-s2-d0']), $a('E', ['slug' => 'e']), $a('KM0', ['slug' => 'km0']), $a('KM1', ['slug' => 'km1']), $a('KM2', ['slug' => 'km2']),
+        $a('KM3', ['slug' => 'km3']), $a('KM4', ['slug' => 'km4']), $ns,
+    ]];
+$humidity = ['slug' => 'kart-tavan-rh', 'name' => $n('Nəmə davamlılıq, RH', 'Влагостойкость, RH', 'Humidity resistance, RH'), 'type' => 'decimal', 'unit' => '%', 'filter' => true,
+    'rules' => ['max' => 100], 'hint' => $n('Məsələn 70, 90, 95.', 'Например 70, 90, 95.', 'E.g. 70, 90, 95.')];
+$nrc = ['slug' => 'kart-tavan-nrc', 'name' => $n('Səs udma əmsalı, NRC', 'Коэффициент звукопоглощения, NRC', 'Sound absorption, NRC'), 'type' => 'decimal', 'filter' => true,
+    'rules' => ['max' => 1], 'hint' => $n('0,00–1,00.', '0,00–1,00.', '0.00–1.00.')];
+$alphaW = ['slug' => 'kart-tavan-aw', 'name' => $n('Səs udma əmsalı, αw', 'Коэффициент звукопоглощения, αw', 'Sound absorption, αw'), 'type' => 'decimal',
+    'rules' => ['max' => 1], 'hint' => $n('0,00–1,00.', '0,00–1,00.', '0.00–1.00.')];
+$compatLead = ['filter' => true] + $compat;
+
+// Attributes the restructure folds into one («Kartlar» sheet, «Dublikat»).
+$protect = ['slug' => 'kart-k-qoruyucu', 'name' => $n('Qoruyucu örtük', 'Защитное покрытие', 'Protective coating'), 'type' => 'dropdown',
+    'options' => [$a('Sink'), $a('Əlavə qoruyucu örtük'), $a('Boya'), $other(), $ns]];
+$material = fn (string $slug, array $list): array => ['slug' => $slug, 'name' => $n('Material', 'Материал', 'Material'), 'type' => 'dropdown',
+    'options' => [...array_map(fn ($v) => $a($v), $list), $other()]];
+
+/*
+| One class of several old ones: every old card's fields stay, each shown for the
+| «Növ» (product type) it came from. A field with its own condition (e.g. «Forma»)
+| keeps it AND the type. A field is required only where every type that shows it
+| required it. Shared fields come first, then the type-specific ones, warranty last.
+|
+| $parts: [option slug => [option text, old class slug]]
+| $replace: old attribute slug => the field that stands in for it (null keys inherit)
+*/
+$legacyCards = [];
+foreach ($legacy as $legacyGroup) {
+    $legacyCards += $legacyGroup['classes'];
+}
+$fold = function (string $code, array $name, array $units, array $nov, array $parts, array $lead = [], array $replace = [], array $drop = [], array $extra = []) use ($legacyCards): array {
+    $type = ['slug' => $nov['slug'], 'name' => $nov['name'], 'type' => 'dropdown', 'required' => true, 'filter' => true,
+        'hint' => $nov['hint'] ?? null,
+        'options' => array_map(fn ($slug, $part) => ['value' => ['az' => $part[0]], 'slug' => $slug], array_keys($parts), $parts)];
+    $skip = [...$drop, ...array_column($lead, 'slug')];
+
+    $seen = [];
+    foreach ($parts as $opt => [, $from]) {
+        foreach ($legacyCards[$from]['fields'] as $field) {
+            if (in_array($field['slug'], $skip, true)) {
+                continue;
+            }
+            $own = $field['when'] ?? null;
+            $required = (bool) ($field['required'] ?? false);
+            if (isset($replace[$field['slug']])) {
+                $stand = $replace[$field['slug']];
+                $required = array_key_exists('required', $stand) ? (bool) $stand['required'] : $required;
+                $field = $stand;
+            }
+            $seen[$field['slug']] ??= ['def' => $field, 'req' => [], 'when' => []];
+            $seen[$field['slug']]['req'][$opt] = $required;
+            $seen[$field['slug']]['when'][$opt] = $own;
+        }
+    }
+
+    [$common, $rest, $tail] = [[], [], []];
+    foreach ($seen as $slug => $x) {
+        $def = $x['def'];
+        unset($def['when']);
+        $def['required'] = ! in_array(false, $x['req'], true);
+
+        $byCondition = [];
+        foreach ($x['when'] as $opt => $own) {
+            $byCondition[json_encode($own)][] = $opt;
+        }
+        $everywhere = count($x['when']) === count($parts);
+        if ($everywhere && count($byCondition) === 1) {
+            if ($own = json_decode((string) array_key_first($byCondition), true)) {
+                $def['when'] = $own;
+            }
+        } else {
+            $conditions = [];
+            foreach ($byCondition as $json => $opts) {
+                $typeIs = ['attr' => $nov['slug'], 'in' => $opts];
+                $own = json_decode((string) $json, true);
+                $conditions[] = $own ? ['all' => [$typeIs, $own]] : $typeIs;
+            }
+            $def['when'] = count($conditions) === 1 ? $conditions[0] : $conditions;
+        }
+
+        if ($slug === 'kart-zemanet') {
+            $tail[] = $def;
+        } elseif ($everywhere) {
+            $common[] = $def;
+        } else {
+            $rest[] = $def;
+        }
+    }
+
+    return ['code' => $code, 'name' => $name, 'sale' => 'unit', 'units' => $units, 'country_required' => false,
+        'fields' => [$type, ...$lead, ...$common, ...$rest, ...$tail]] + $extra;
+};
+// Fasteners keep their card; «Uyğun tavan növləri» joins it, optional, before the warranty.
+$withCompat = function (array $card) use ($compat): array {
+    $last = array_pop($card['fields']);
+    $card['fields'] = [...$card['fields'], ['required' => false, 'filter' => true] + $compat, $last];
+
+    return $card;
+};
+// «Növ» = this type: a unit only some types are sold in.
+$forType = fn (string $novSlug, string ...$opts): array => ['attr' => $novSlug, 'in' => $opts];
+
+return [
+    'section' => 'tavanlar',
+
+    // The workbook says «Hazır ölçü və ya rəqəmlər»: a listed size or a typed one («Başqa ölçü»).
+    'open_size_lists' => true,
+
+    'groups' => [
+        // ════════════════════════════════════════════════════════════════════
+        [
+            'slug' => 'tavan-novleri',
+            'name' => $n('Tavan növləri', 'Типы потолков', 'Ceiling types'),
+            'classes' => [
+                // ── T01 ─────────────────────────────────────────────────────
+                'dartma-tavan' => [
+                    'code' => 'T01',
+                    'name' => $n('Dartma tavan', 'Натяжной потолок', 'Stretch ceiling'),
+                    'sale' => 'area',
+                    'cut_unit' => 'm2',
+                    // A made-to-measure canvas or an offer with installation is priced per project.
+                    'quote_when' => [
+                        ['attr' => 'kart-t01-tedaruk', 'in' => ['layihe']],
+                        ['attr' => 'kart-t01-terkib', 'in' => ['montajla']],
+                    ],
+                    'fields' => [
+                        ['slug' => 'kart-t01-material', 'name' => $n('Örtük materialı', 'Материал полотна', 'Canvas material'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('PVC plyonka', ['slug' => 'pvc']), $a('Tekstil', ['slug' => 'tekstil'])]],
+                        ['slug' => 'kart-t01-terkib', 'name' => $n('Təklifin tərkibi', 'Состав предложения', 'Offer contents'), 'type' => 'dropdown', 'required' => true,
+                            'hint' => $n('Montajlı təklifin qiyməti layihəyə görə hesablanır.', 'Предложение с монтажом рассчитывается по проекту.', 'An offer with installation is priced per project.'),
+                            'options' => [$a('Yalnız örtük', ['slug' => 'ortuk']), $a('Örtük və komplektləşdiricilər', ['slug' => 'komplekt']), $a('Materiallar və montaj', ['slug' => 'montajla'])]],
+                        ['slug' => 'kart-t01-tedaruk', 'name' => $n('Tədarük forması', 'Форма поставки', 'Supply form'), 'type' => 'dropdown', 'required' => true,
+                            'hint' => $n('Rulon tam satılır; kəsim m² ilə; layihə ölçüsü sorğu ilədir.', 'Рулон продаётся целиком; отрез — по м²; по размеру проекта — по запросу.', 'A roll is sold whole; a cut by the m²; made to measure on request.'),
+                            'options' => [$a('Rulon', ['slug' => 'rulon']), $a('Rulondan kəsim', ['slug' => 'kesim']), $a('Layihə ölçüsünə hazırlanmış örtük', ['slug' => 'layihe'])]],
+                        ['slug' => 'kart-t01-seth', 'name' => $n('Səthin görünüşü', 'Вид поверхности', 'Surface'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Mat', ['slug' => 'mat']), $a('Satin', ['slug' => 'satin']), $a('Parlaq', ['slug' => 'parlaq']), $a('Güzgü effektli', ['slug' => 'guzgu']), $a('Fakturalı', ['slug' => 'fakturali']), $other()]],
+                        ['slug' => 'kart-t01-en', 'name' => $n('Gərilməmiş örtüyün eni', 'Ширина полотна до натяжения', 'Canvas width before stretching'), 'type' => 'decimal', 'required' => true, 'unit' => 'm',
+                            'presets' => [1.5, 2, 2.5, 3, 3.2, 3.6, 4, 5], 'maps_to' => 'roll_width'],
+                        ['slug' => 'kart-t01-rulon-uzunlugu', 'name' => $n('Rulonun uzunluğu', 'Длина рулона', 'Roll length'), 'type' => 'decimal', 'required' => true, 'unit' => 'm',
+                            'maps_to' => 'roll_length', 'when' => ['attr' => 'kart-t01-tedaruk', 'in' => ['rulon']],
+                            'hint' => $n('Rulonun sahəsi = en × uzunluq.', 'Площадь рулона = ширина × длина.', 'Roll area = width × length.')],
+                        $color,
+                        $colorCode,
+                        ['slug' => 'kart-t01-qalinliq', 'name' => $n('Örtüyün qalınlığı', 'Толщина полотна', 'Canvas thickness'), 'type' => 'decimal', 'unit' => 'mm',
+                            'hint' => $n('Konkret məhsul üzrə; tavanın ümumi hündürlüyü deyil.', 'Для конкретного товара; не общая высота потолка.', 'Of this product; not the ceiling build-up.')],
+                        ['slug' => 'kart-t01-berkitme', 'name' => $n('Bərkitmə sistemi', 'Система крепления', 'Fixing system'), 'type' => 'multiselect',
+                            'options' => [$a('Harpun', ['slug' => 'harpun']), $a('Klips', ['slug' => 'klips']), $a('Paz və ya ştapik', ['slug' => 'paz']), $other(), $nsX]],
+                        ['slug' => 'kart-t01-isiq', 'name' => $n('İşıqkeçirən örtük', 'Светопропускающее полотно', 'Translucent canvas'), 'type' => 'dropdown', 'options' => $ynn],
+                        ['slug' => 'kart-t01-akustik', 'name' => $n('Akustik təyinat', 'Акустическое назначение', 'Acoustic purpose'), 'type' => 'dropdown',
+                            'options' => [$yes + ['prompt' => $n('Sübutu və sistem məlumatını yazın', 'Укажите подтверждение и данные системы', 'Give the proof and system data')], $no, $ns]],
+                        $fire,
+                        $warranty,
+                    ],
+                ],
+
+                // ── T02 ─────────────────────────────────────────────────────
+                'gipskarton-tavan-coxseviyyeli' => [
+                    'code' => 'T02',
+                    'name' => $n('Alçıpan tavan', 'Гипсокартонный потолок', 'Plasterboard ceiling'),
+                    'sale' => 'unit', 'units' => ['piece', 'pack', 'set', 'm2'],
+                    'fields' => [
+                        ['slug' => 'kart-t02-novu', 'name' => $n('Məhsul növü', 'Тип товара', 'Product type'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Alçıpan lövhə', ['slug' => 'lovhe']), $a('Komplekt tavan sistemi', ['slug' => 'sistem'])]],
+                        ['slug' => 'kart-t02-teyinat', 'name' => $n('Lövhənin təyinatı', 'Назначение листа', 'Board purpose'), 'type' => 'multiselect', 'required' => true,
+                            'hint' => $n('İstehsalçı təsnifatı əsasdır.', 'По классификации производителя.', 'Per the maker’s classification.'),
+                            'options' => [$a('Standart'), $a('Nəmə davamlı', ['slug' => 'neme-davamli']), $a('Yanğın göstəriciləri yaxşılaşdırılmış', ['slug' => 'yangina-davamli']),
+                                $a('Akustik perforasiyalı', ['slug' => 'akustik']), $a('Əyilən', ['slug' => 'eyilen']), $other()]],
+                        ['slug' => 'kart-t02-olcu', 'name' => $n('Lövhə ölçüləri', 'Размер листа', 'Board size'), 'type' => 'size', 'required' => true, 'unit' => 'mm',
+                            'presets' => ['2000×1200', '2500×1200', '2700×1200', '3000×1200']],
+                        ['slug' => 'kart-t02-qalinliq', 'name' => $n('Lövhənin qalınlığı', 'Толщина листа', 'Board thickness'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm',
+                            'presets' => [6.5, 8, 9.5, 12.5, 15]],
+                        ['slug' => 'kart-t02-kenar', 'name' => $n('Kənar profili', 'Профиль кромки', 'Edge profile'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Düz'), $a('Nazildilmiş'), $a('Yarımdairəvi'), $a('Yarımdairəvi nazildilmiş'), $a('Xüsusi akustik kənar'), $other()]],
+                        ['slug' => 'kart-t02-seth', 'name' => $n('Səthin vəziyyəti', 'Состояние поверхности', 'Surface state'), 'type' => 'dropdown',
+                            'options' => [$a('İşlənməmiş'), $a('Astarlanmış'), $a('Zavod boyalı'), $a('Örtüklü'), $other(), $ns]],
+                        ['slug' => 'kart-t02-perforasiya', 'name' => $n('Perforasiya', 'Перфорация', 'Perforation'), 'type' => 'dropdown',
+                            'options' => [$a('Yoxdur', ['slug' => 'yoxdur']), $a('Dairəvi'), $a('Kvadrat'), $a('Yarıq'), $a('Qarışıq'), $other(), $ns]],
+                        ['slug' => 'kart-t02-kutle', 'name' => $n('Vahid sahənin kütləsi', 'Масса единицы площади', 'Mass per area'), 'type' => 'decimal', 'unit' => 'kg/m²'],
+                        ['slug' => 'kart-t02-qurasdirma', 'name' => $n('Quraşdırma üsulu', 'Способ монтажа', 'Installation method'), 'type' => 'multiselect',
+                            'options' => [$a('Metal karkasa mexaniki'), $a('Taxta karkasa mexaniki'), $other($P_HOW, 'Digər təsdiqlənmiş üsul'), $nsX]],
+                        $panelDoc('kart-t02-sened', $n('Tavan üçün uyğunluq sənədi', 'Документ о пригодности для потолка', 'Ceiling suitability document')),
+                        $coverage,
+                        $fire,
+                        $warranty,
+                    ],
+                ],
+
+                // ── T03 ─────────────────────────────────────────────────────
+                'asma-tavan-reykalikasetliarmstrongxanalipanelli' => [
+                    'code' => 'T03',
+                    'name' => $n('Armstrong tipli asma tavan', 'Подвесной потолок типа Армстронг', 'Armstrong-type suspended ceiling'),
+                    'sale' => 'unit', 'units' => ['piece', 'pack', 'set', 'm2'],
+                    'fields' => [
+                        ['slug' => 'kart-t03-novu', 'name' => $n('Məhsul növü', 'Тип товара', 'Product type'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Tavan plitəsi', ['slug' => 'plite']), $a('Komplekt tavan sistemi', ['slug' => 'sistem'])]],
+                        ['slug' => 'kart-t03-material', 'name' => $n('Plitənin materialı', 'Материал плиты', 'Tile material'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Mineral lif'), $a('Daş yunu'), $a('Şüşə lifi'), $other($P_NAME, 'Digər təsdiqlənmiş mineral əsas')]],
+                        ['slug' => 'kart-t03-modul', 'name' => $n('Modul ölçüsü', 'Размер модуля', 'Module size'), 'type' => 'size', 'required' => true, 'unit' => 'mm',
+                            'presets' => ['600×600', '600×1200', '1200×1200']],
+                        ['slug' => 'kart-t03-olcu', 'name' => $n('Faktiki plitə ölçüsü', 'Фактический размер плиты', 'Actual tile size'), 'type' => 'size', 'required' => true, 'unit' => 'mm',
+                            'presets' => ['595×595', '600×600', '1195×595', '1200×600', '1195×1195'],
+                            'hint' => $n('Modul ölçüsündən ayrı: 595 və 600 mm eyni deyil.', 'Отдельно от модуля: 595 и 600 мм — не одно и то же.', 'Separate from the module: 595 and 600 mm differ.')],
+                        ['slug' => 'kart-t03-qalinliq', 'name' => $n('Qalınlıq', 'Толщина', 'Thickness'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm',
+                            'presets' => [6, 8, 10, 12, 13, 15, 16, 18, 20]],
+                        ['slug' => 'kart-t03-kenar', 'name' => $n('Kənar forması', 'Форма кромки', 'Edge'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Düz oturan (Board)', ['slug' => 'duz']), $a('Pilləli (Tegular)', ['slug' => 'pilleli']), $a('Gizli sistem üçün', ['slug' => 'gizli']), $other()]],
+                        ['slug' => 'kart-t03-sistem', 'name' => $n('Daşıyıcı sistemə uyğunluq', 'Совместимость с несущей системой', 'Grid compatibility'), 'type' => 'multiselect', 'required' => true,
+                            'hint' => $n('Yalnız məhsulun sənədində olan uyğunluqlar.', 'Только совместимость из документов товара.', 'Only what the product documents state.'),
+                            'options' => [$a('T15', ['slug' => 't15']), $a('T24', ['slug' => 't24']), $a('Gizli sistem', ['slug' => 'gizli']), $a('Xüsusi sistem', ['slug' => 'xususi'])]],
+                        ['slug' => 'kart-t03-uz', 'name' => $n('Üz səthi', 'Лицевая поверхность', 'Face'), 'type' => 'dropdown',
+                            'options' => [$a('Hamar'), $a('Teksturalı'), $a('Çatvari naxışlı', ['slug' => 'catvari']), $a('Perforasiyalı'), $other(), $ns]],
+                        $color,
+                        $colorCode,
+                        ['slug' => 'kart-t03-ceki', 'name' => $n('Plitənin çəkisi', 'Вес плиты', 'Tile weight'), 'type' => 'decimal', 'unit' => 'kg'],
+                        ['slug' => 'kart-t03-ceki-vahidi', 'name' => $n('Çəkinin vahidi', 'Единица веса', 'Weight unit'), 'type' => 'dropdown',
+                            'options' => [$a('kg/ədəd', ['slug' => 'kg-eded']), $a('kg/m²', ['slug' => 'kg-m2'])]],
+                        $humidity,
+                        $nrc,
+                        $alphaW,
+                        $coverage,
+                        $fire,
+                        $warranty,
+                    ],
+                ],
+
+                // ── T04 ─────────────────────────────────────────────────────
+                'metal-kaset-tavan' => [
+                    'code' => 'T04',
+                    'name' => $n('Metal kaset tavan', 'Металлический кассетный потолок', 'Metal tile ceiling'),
+                    'sale' => 'unit', 'units' => ['piece', 'pack', 'set', 'm2'],
+                    'fields' => [
+                        ['slug' => 'kart-t04-novu', 'name' => $n('Məhsul növü', 'Тип товара', 'Product type'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Kaset', ['slug' => 'kaset']), $a('Komplekt tavan sistemi', ['slug' => 'sistem'])]],
+                        ['slug' => 'kart-t04-metal', 'name' => $n('Metal', 'Металл', 'Metal'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Alüminium'), $a('Sinklənmiş polad'), $a('Paslanmayan polad'), $other()]],
+                        ['slug' => 'kart-t04-sistem', 'name' => $n('Sistem növü', 'Тип системы', 'System type'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Lay-in', ['slug' => 'lay-in']), $a('Clip-in', ['slug' => 'clip-in']), $a('Hook-on', ['slug' => 'hook-on']), $other()]],
+                        ['slug' => 'kart-t04-modul', 'name' => $n('Modul ölçüsü', 'Размер модуля', 'Module size'), 'type' => 'size', 'required' => true, 'unit' => 'mm',
+                            'presets' => ['300×300', '600×600', '600×1200']],
+                        ['slug' => 'kart-t04-olcu', 'name' => $n('Faktiki kaset ölçüsü', 'Фактический размер кассеты', 'Actual tile size'), 'type' => 'size', 'required' => true, 'unit' => 'mm'],
+                        ['slug' => 'kart-t04-metal-qalinliq', 'name' => $n('Metalın qalınlığı', 'Толщина металла', 'Metal thickness'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm',
+                            'hint' => $n('Kasetin ümumi hündürlüyü deyil.', 'Не общая высота кассеты.', 'Not the tile’s overall height.')],
+                        ['slug' => 'kart-t04-kenar', 'name' => $n('Kasetin kənar hündürlüyü', 'Высота борта кассеты', 'Tile edge height'), 'type' => 'decimal', 'unit' => 'mm'],
+                        ['slug' => 'kart-t04-ortuk', 'name' => $n('Səth örtüyü', 'Покрытие поверхности', 'Finish'), 'type' => 'dropdown',
+                            'options' => [$a('Toz boya'), $a('Rulon boyası'), $a('Anodlaşdırılmış'), $a('Örtüksüz'), $other(), $ns]],
+                        ['slug' => 'kart-t04-perforasiya', 'name' => $n('Perforasiya', 'Перфорация', 'Perforation'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Yoxdur', ['slug' => 'yoxdur']), $a('Dairəvi'), $a('Kvadrat'), $a('Yarıq'), $other()]],
+                        $color,
+                        ['required' => true] + $surfaceLook,
+                        $colorCode,
+                        $coverage,
+                        $fire,
+                        $warranty,
+                    ],
+                ],
+
+                // ── T05 ─────────────────────────────────────────────────────
+                'metal-reykali-tavan' => [
+                    'code' => 'T05',
+                    'name' => $n('Metal reykalı tavan', 'Металлический реечный потолок', 'Metal linear ceiling'),
+                    'sale' => 'unit', 'units' => ['piece', 'lm', 'pack', 'set', 'm2'],
+                    'fields' => [
+                        ['slug' => 'kart-t05-novu', 'name' => $n('Məhsul növü', 'Тип товара', 'Product type'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Reyka', ['slug' => 'reyka']), $a('Komplekt tavan sistemi', ['slug' => 'sistem'])]],
+                        ['slug' => 'kart-t05-metal', 'name' => $n('Metal', 'Металл', 'Metal'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Alüminium'), $a('Sinklənmiş polad'), $a('Paslanmayan polad'), $other()]],
+                        ['slug' => 'kart-t05-qurulus', 'name' => $n('Sistemin quruluşu', 'Конструкция системы', 'System layout'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Açıq aralıqlı'), $a('Qapalı'), $a('Aralıq əlavəli'), $other()]],
+                        ['slug' => 'kart-t05-profil', 'name' => $n('Profil forması', 'Форма профиля', 'Profile shape'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Düz'), $a('Kənarları yumru'), $a('Qutu formalı'), $other()]],
+                        ['slug' => 'kart-t05-uzunluq-formati', 'name' => $n('Uzunluq formatı', 'Формат длины', 'Length format'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Sabit', ['slug' => 'sabit']), $a('Sifariş ölçüsünə', ['slug' => 'sifaris'])]],
+                        ['when' => ['attr' => 'kart-t05-uzunluq-formati', 'in' => ['sabit']]] + $length(),
+                        ['slug' => 'kart-t05-en', 'name' => $n('Reykanın görünən eni', 'Видимая ширина рейки', 'Visible slat width'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm'],
+                        ['slug' => 'kart-t05-hundurluk', 'name' => $n('Profilin hündürlüyü', 'Высота профиля', 'Profile height'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm'],
+                        $metalThick(true),
+                        ['slug' => 'kart-t05-addim', 'name' => $n('Montaj addımı', 'Шаг монтажа', 'Installation pitch'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm',
+                            'hint' => $n('Qonşu reykaların oxları arasındakı məsafə.', 'Расстояние между осями соседних реек.', 'Centre-to-centre distance of neighbouring slats.')],
+                        ['slug' => 'kart-t05-ortuk', 'name' => $n('Səth örtüyü', 'Покрытие поверхности', 'Finish'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Toz boya'), $a('Rulon boyası'), $a('Anodlaşdırma'), $other()]],
+                        $color,
+                        $colorCode,
+                        $coverage,
+                        $fire,
+                        $warranty,
+                    ],
+                ],
+
+                // ── T06 ─────────────────────────────────────────────────────
+                'grilyato' => [
+                    'code' => 'T06',
+                    'name' => $n('Qəfəs tipli tavan Grilyato', 'Потолок-решётка Грильято', 'Grid ceiling (Grilyato)'),
+                    'sale' => 'unit', 'units' => ['piece', 'set', 'm2'],
+                    'fields' => [
+                        ['slug' => 'kart-t06-novu', 'name' => $n('Məhsul növü', 'Тип товара', 'Product type'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Yığılmış modul'), $a('Yığılmamış modul dəsti'), $a('Komplekt tavan sistemi', ['slug' => 'sistem'])]],
+                        ['slug' => 'kart-t06-metal', 'name' => $n('Metal', 'Металл', 'Metal'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Alüminium'), $a('Sinklənmiş polad'), $other()]],
+                        ['slug' => 'kart-t06-forma', 'name' => $n('Qəfəs forması', 'Форма решётки', 'Grid shape'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Kvadrat'), $a('Düzbucaqlı'), $a('Piramidal'), $a('Jalüz tipli'), $other()]],
+                        ['slug' => 'kart-t06-modul', 'name' => $n('Modul ölçüsü', 'Размер модуля', 'Module size'), 'type' => 'size', 'required' => true, 'unit' => 'mm',
+                            'presets' => ['600×600', '1200×600']],
+                        ['slug' => 'kart-t06-faktiki', 'name' => $n('Faktiki modul ölçüsü', 'Фактический размер модуля', 'Actual module size'), 'type' => 'size', 'unit' => 'mm',
+                            'hint' => $n('Nominal moduldan fərqlənirsə.', 'Если отличается от номинального.', 'If it differs from the nominal module.')],
+                        ['slug' => 'kart-t06-huceyre', 'name' => $n('Hüceyrənin açıq ölçüsü', 'Размер ячейки в свету', 'Clear cell size'), 'type' => 'size', 'required' => true, 'unit' => 'mm',
+                            'presets' => ['50×50', '75×75', '86×86', '100×100', '120×120', '150×150', '200×200']],
+                        ['slug' => 'kart-t06-en', 'name' => $n('Profilin görünən eni', 'Видимая ширина профиля', 'Visible profile width'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm'],
+                        ['slug' => 'kart-t06-hundurluk', 'name' => $n('Profilin hündürlüyü', 'Высота профиля', 'Profile height'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm'],
+                        $metalThick(true),
+                        $color,
+                        ['slug' => 'kart-t06-ortuk', 'name' => $n('Örtük', 'Покрытие', 'Finish'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Toz boya'), $a('Rulon boyası'), $other()]],
+                        $colorCode,
+                        $coverage,
+                        $fire,
+                        $warranty,
+                    ],
+                ],
+
+                // ── T07 ─────────────────────────────────────────────────────
+                'pvc-tavan-panelleri' => [
+                    'code' => 'T07',
+                    'name' => $n('PVC tavan panelləri', 'Потолочные ПВХ-панели', 'PVC ceiling panels'),
+                    'sale' => 'unit', 'units' => ['piece', 'pack', 'm2'],
+                    'fields' => [
+                        ['slug' => 'kart-t07-forma', 'name' => $n('Məhsul forması', 'Форма товара', 'Product form'), 'type' => 'dropdown', 'required' => true,
+                            'hint' => $n('Material: PVC. WPC, SPC və digər kompozitlər bu kateqoriyaya aid deyil.', 'Материал: ПВХ. WPC, SPC и другие композиты — не в этой категории.', 'Material: PVC. WPC, SPC and other composites are not in this category.'),
+                            'options' => [$a('Uzun panel'), $a('Qısa klik panel'), $other()]],
+                        ['slug' => 'kart-t07-qurulus', 'name' => $n('Panelin quruluşu', 'Конструкция панели', 'Panel build'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Boşluqlu'), $a('Dolu'), $other()]],
+                        $length(),
+                        ['slug' => 'kart-t07-tam-en', 'name' => $n('Tam en', 'Полная ширина', 'Overall width'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm',
+                            'hint' => $n('Birləşmə hissəsi daxil.', 'Включая замок.', 'Including the joint.')],
+                        ['slug' => 'kart-t07-faydali-en', 'name' => $n('Faydalı örtmə eni', 'Полезная ширина', 'Effective width'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm',
+                            'rules' => ['lte' => 'kart-t07-tam-en']],
+                        $thick(),
+                        ['slug' => 'kart-t07-birlesme', 'name' => $n('Birləşmə növü', 'Тип соединения', 'Joint type'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Dil–yiv', ['slug' => 'dil-yiv']), $a('Klik'), $other()]],
+                        ['slug' => 'kart-t07-gorunus', 'name' => $n('Görünüş', 'Вид поверхности', 'Finish look'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Mat'), $a('Satin'), $a('Parlaq'), $a('Fakturalı')]],
+                        ['slug' => 'kart-t07-dekor', 'name' => $n('Dekor', 'Декор', 'Decor'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Birrəngli'), $a('Taxta'), $a('Daş'), $a('Mərmər'), $a('Naxışlı'), $other()]],
+                        $color,
+                        ['slug' => 'kart-t07-montaj', 'name' => $n('Tavan üçün montaj üsulu', 'Способ монтажа на потолок', 'Ceiling installation'), 'type' => 'multiselect', 'required' => true,
+                            'hint' => $n('Yalnız istehsalçının tavan üçün icazə verdiyi üsullar.', 'Только способы, разрешённые производителем для потолка.', 'Only methods the maker allows for ceilings.'),
+                            'options' => [$a('Mexaniki bərkitmə'), $a('Klips'), $a('Yapışdırma'), $other()]],
+                        $coverage,
+                        $fire,
+                        $warranty,
+                    ],
+                ],
+
+                // ── T08 ─────────────────────────────────────────────────────
+                'taxta-ve-mdf-tavanlar' => [
+                    'code' => 'T08',
+                    'name' => $n('Taxta və MDF tavanlar', 'Деревянные и МДФ-потолки', 'Wood and MDF ceilings'),
+                    'sale' => 'unit', 'units' => ['piece', 'lm', 'pack', 'set', 'm2'],
+                    'fields' => [
+                        ['slug' => 'kart-t08-forma', 'name' => $n('Məhsul forması', 'Форма товара', 'Product form'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Panel'), $a('Reyka'), $a('Reykalı modul'), $a('Komplekt tavan sistemi', ['slug' => 'sistem'])]],
+                        ['slug' => 'kart-t08-material', 'name' => $n('Əsas material', 'Основной материал', 'Core material'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Massiv ağac'), $a('MDF', ['slug' => 'mdf']), $a('Faner əsaslı şponlu panel'), $other($P_NAME, 'Digər təsdiqlənmiş ağac əsaslı material')]],
+                        ['slug' => 'kart-t08-uz', 'name' => $n('Üz qatı', 'Лицевой слой', 'Face layer'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Massiv ağac'), $a('Təbii şpon'), $a('Laminat'), $a('Boya'), $a('Örtüksüz'), $other()]],
+                        ['slug' => 'kart-t08-uzunluq-formati', 'name' => $n('Uzunluq formatı', 'Формат длины', 'Length format'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Sabit', ['slug' => 'sabit']), $a('Qarışıq uzunluqlar', ['slug' => 'qarisiq']), $a('Sifariş ölçüsünə', ['slug' => 'sifaris'])]],
+                        ['when' => ['attr' => 'kart-t08-uzunluq-formati', 'in' => ['sabit', 'qarisiq']],
+                            'hint' => $n('Qarışıq uzunluqda — minimum uzunluq.', 'При разных длинах — минимальная.', 'With mixed lengths — the minimum.')] + $length(),
+                        ['slug' => 'kart-t08-maks-uzunluq', 'name' => $n('Maksimum uzunluq', 'Максимальная длина', 'Maximum length'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm',
+                            'when' => ['attr' => 'kart-t08-uzunluq-formati', 'in' => ['qarisiq']]],
+                        ['hint' => $n('Panel/reykada tam en, modulda modul eni.', 'Полная ширина панели/рейки, у модуля — ширина модуля.', 'Overall width of a panel/slat; module width for a module.')] + $width(),
+                        ['slug' => 'kart-t08-qalinliq', 'name' => $n('Qalınlıq və ya hündürlük', 'Толщина или высота', 'Thickness or height'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm',
+                            'hint' => $n('Panel qalınlığı və ya reykalı modulun ümumi hündürlüyü.', 'Толщина панели или общая высота реечного модуля.', 'Panel thickness or the overall height of a slatted module.')],
+                        ['slug' => 'kart-t08-son-ortuk', 'name' => $n('Son örtük', 'Финишное покрытие', 'Finish'), 'type' => 'dropdown',
+                            'options' => [$a('Lak'), $a('Yağ', ['slug' => 'yag']), $a('Boya'), $a('Zavod laminasiyası'), $a('Örtüksüz'), $other(), $ns]],
+                        array_merge($color, ['slug' => 'kart-t08-reng', 'name' => $n('Rəng və dekor', 'Цвет и декор', 'Colour and decor')]),
+                        $colorCode,
+                        ['slug' => 'kart-t08-montaj', 'name' => $n('Montaj üsulu', 'Способ монтажа', 'Installation method'), 'type' => 'multiselect', 'required' => true,
+                            'options' => [$a('Klips'), $a('Mexaniki bərkitmə'), $a('Asma sistem'), $other($P_HOW, 'Digər təsdiqlənmiş üsul')]],
+                        $panelDoc('kart-t08-sened', $n('Tavan tətbiqinin təsdiqi', 'Подтверждение применения на потолке', 'Ceiling use approval')),
+                        $coverage,
+                        $fire,
+                        $warranty,
+                    ],
+                ],
+
+                // ── T09 ─────────────────────────────────────────────────────
+                'akustik-tavan' => [
+                    'code' => 'T09',
+                    'name' => $n('Akustik tavan panelləri, adalar və baffllar', 'Акустические панели, острова и бафлы', 'Acoustic panels, islands and baffles'),
+                    'sale' => 'unit', 'units' => ['piece', 'set', 'pack'],
+                    'fields' => [
+                        ['slug' => 'kart-t09-novu', 'name' => $n('Element növü', 'Тип элемента', 'Element type'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Üfüqi ada'), $a('Şaquli baffl'), $a('Tavan səthinə quraşdırılan akustik panel', ['slug' => 'seth-paneli']), $other()]],
+                        ['slug' => 'kart-t09-material', 'name' => $n('Əsas material', 'Основной материал', 'Core material'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Daş yunu'), $a('Şüşə lifi'), $a('PET lifli material', ['slug' => 'pet']), $a('Ağac yunu kompoziti'), $other()]],
+                        ['slug' => 'kart-t09-uz', 'name' => $n('Üz örtüyü', 'Лицевое покрытие', 'Face finish'), 'type' => 'dropdown',
+                            'options' => [$a('Akustik boya'), $a('Parça'), $a('Keçə'), $a('Şpon'), $a('Örtüksüz'), $other(), $ns]],
+                        ['slug' => 'kart-t09-forma', 'name' => $n('Forma', 'Форма', 'Shape'), 'type' => 'dropdown', 'required' => true,
+                            'options' => [$a('Düzbucaqlı'), $a('Kvadrat'), $a('Dairə', ['slug' => 'daire']), $other($n('Formanı və ölçülü sxemi izah edin', 'Опишите форму и размерную схему', 'Describe the shape and its dimensions'))]],
+                        ['slug' => 'kart-t09-olcu', 'name' => $n('Ölçülər', 'Размеры', 'Dimensions'), 'type' => 'size', 'required' => true, 'unit' => 'mm',
+                            'when' => ['attr' => 'kart-t09-forma', 'in' => ['duzbucaqli', 'kvadrat', 'diger']],
+                            'hint' => $n('Uzunluq × en; bafflda uzunluq × şaquli hündürlük.', 'Длина × ширина; у бафла — длина × высота.', 'Length × width; for a baffle length × height.')],
+                        ['when' => ['attr' => 'kart-t09-forma', 'in' => ['daire']]] + $diameter(),
+                        $thick(),
+                        ['slug' => 'kart-t09-ceki', 'name' => $n('Elementin çəkisi', 'Вес элемента', 'Element weight'), 'type' => 'decimal', 'required' => true, 'unit' => 'kg'],
+                        ['slug' => 'kart-t09-asqi-daxil', 'name' => $n('Asma dəsti daxildir', 'Подвесной комплект в комплекте', 'Suspension kit included'), 'type' => 'dropdown', 'options' => $ynn],
+                        ['slug' => 'kart-t09-cerceve', 'name' => $n('Kənar və çərçivə', 'Кромка и рамка', 'Edge and frame'), 'type' => 'dropdown',
+                            'options' => [$a('Çərçivəsiz'), $a('Metal çərçivəli'), $other(), $ns]],
+                        $color,
+                        $colorCode,
+                        $panelDoc('kart-t09-sened', $n('Akustik məlumatın mənbəyi', 'Источник акустических данных', 'Source of acoustic data')),
+                        ['when' => ['attr' => 'kart-t09-novu', 'in' => ['seth-paneli']]] + $coverage,
+                        $nrc,
+                        $alphaW,
+                        $humidity,
+                        $fire,
+                        $warranty,
+                    ],
+                ],
+
+                // ── T10 ─────────────────────────────────────────────────────
+                'kesson-tavan' => [
+                    'code' => 'T10',
+                    'name' => $n('Kesson tavan', 'Кессонный потолок', 'Coffered ceiling'),
+                    'sale' => 'unit', 'units' => ['piece', 'm2'],
+                    'fields' => [
+                        ['slug' => 'kart-t10-material', 'name' => $n('Material', 'Материал', 'Material'), 'type' => 'dropdown', 'required' => true, 'filter' => true,
+                            'options' => [$a('Gips'), $a('Poliuretan'), $a('Ağac', ['slug' => 'agac']), $a('MDF', ['slug' => 'mdf']), $a('Metal'), $other()]],
+                        ['slug' => 'kart-t10-modul', 'name' => $n('Modul ölçüsü', 'Размер модуля', 'Module size'), 'type' => 'size', 'required' => true, 'unit' => 'mm'],
+                        ['slug' => 'kart-t10-derinlik', 'name' => $n('Kessonun dərinliyi', 'Глубина кессона', 'Coffer depth'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm'],
+                        ['slug' => 'kart-t10-seth', 'name' => $n('Səth', 'Поверхность', 'Surface'), 'type' => 'dropdown', 'filter' => true,
+                            'options' => [$a('Boyanmağa hazır', ['slug' => 'boyanmaga-hazir']), $a('Hazır örtüklü', ['slug' => 'hazir-ortuklu']), $other()]],
+                        ['filter' => true] + $colorOpt,
+                        $colorCode,
+                        $fire,
+                        $coverage,
+                        $warranty,
+                    ],
+                ],
+            ],
+        ],
+
+        // ════ Karkas: profiles and connectors ════════════════════════════════
+        [
+            'slug' => 'tavan-profilleri-ve-yonlendiriciler',
+            'name' => $n('Karkas', 'Каркас', 'Framing'),
+            'classes' => [
+                'dartma-tavan-ucun-profiller' => $fold('K1', $n('Profillər', 'Профили', 'Profiles'), ['piece', 'lm', 'pack'],
+                    ['slug' => 'kart-k1-nov', 'name' => $n('Növ', 'Тип', 'Type')],
+                    [
+                        'dartma-profili' => ['Dartma tavan profili', 'dartma-tavan-ucun-profiller'],
+                        'alcipan-profili' => ['Alçıpan profili (CD/UD)', 'alcipan-tavan-ucun-profiller'],
+                        'modul-dasiyici' => ['Modul tavan daşıyıcısı (T)', 'modul-tavan-dasiyici-profilleri'],
+                        'reyka-dasiyici' => ['Reyka daşıyıcısı', 'reykali-tavan-dasiyicilari'],
+                    ],
+                    lead: [$compatLead],
+                    replace: [
+                        'kart-k11-material' => $k1Material = $material('kart-k1-material', ['Alüminium', 'PVC', 'Sinklənmiş polad', 'Paslanmayan polad']),
+                        'kart-k-material-polad' => $k1Material,
+                        'kart-k-material-pa' => $k1Material,
+                        'kart-k-qoruyucu' => $protect,
+                        'kart-k-qoruyucu-2' => $protect,
+                        'kart-tavan-metal-qalinligi' => $metalThick(false),
+                    ],
+                ),
+                'bir-seviyyeli-birlesdiriciler' => $fold('K3', $n('Birləşdiricilər', 'Соединители', 'Connectors'), ['piece', 'pack'],
+                    ['slug' => 'kart-k3-nov', 'name' => $n('Növ', 'Тип', 'Type')],
+                    [
+                        'uzadici' => ['Profil uzadıcısı', 'profil-uzadicilari'],
+                        'bir-seviyyeli' => ['Bir səviyyəli birləşdirici', 'bir-seviyyeli-birlesdiriciler'],
+                        'iki-seviyyeli' => ['İki səviyyəli birləşdirici', 'iki-seviyyeli-birlesdiriciler'],
+                        'modul-reyka' => ['Modul / reyka birləşdiricisi', 'modul-ve-reykali-sistem-birlesdiricileri'],
+                    ],
+                    lead: [$compatLead],
+                    replace: [
+                        'kart-k-material-pp' => $k3Material = $material('kart-k3-material', ['Sinklənmiş polad', 'Paslanmayan polad', 'Alüminium']),
+                        'kart-k34-material' => $k3Material,
+                        'kart-k32-profil-1' => $part1 = ['slug' => 'kart-k3-hisse-1', 'name' => $n('Birləşdirilən profil 1', 'Соединяемый профиль 1', 'Joined profile 1'), 'type' => 'text',
+                            'hint' => $n('Profilin və ya hissənin modeli / kodu.', 'Модель / код профиля или детали.', 'Model / code of the profile or part.')],
+                        'kart-k33-ust' => $part1,
+                        'kart-k34-hisse-1' => $part1,
+                        'kart-k32-profil-2' => $part2 = ['slug' => 'kart-k3-hisse-2', 'name' => $n('Birləşdirilən profil 2', 'Соединяемый профиль 2', 'Joined profile 2'), 'type' => 'text',
+                            'hint' => $n('Profilin və ya hissənin modeli / kodu.', 'Модель / код профиля или детали.', 'Model / code of the profile or part.')],
+                        'kart-k33-alt' => $part2,
+                        'kart-k34-hisse-2' => $part2,
+                        'kart-k31-berkitme' => $joinBy = ['slug' => 'kart-k3-berkitme', 'name' => $n('Bərkitmə / birləşmə üsulu', 'Способ крепления / соединения', 'Fixing / joining method'), 'type' => 'dropdown',
+                            'options' => [$a('Keçirmə'), $a('Vint'), $a('Kilid'), $a('Bükülən dil'), $a('Kombinə'), $other()]],
+                        'kart-k32-berkitme' => $joinBy,
+                        'kart-k33-kilid' => $joinBy,
+                        'kart-k34-usul' => $joinBy,
+                        'kart-k-qoruyucu' => $protect,
+                    ],
+                ),
+            ],
+        ],
+
+        // ════ Asqılar və bərkidicilər ═══════════════════════════════════════
+        [
+            'slug' => 'tavan-asqilari-ve-berkidiciler',
+            'name' => $n('Asqılar və bərkidicilər', 'Подвесы и крепёж', 'Hangers and fasteners'),
+            'classes' => [
+                'birbasa-asqilar' => $fold('K2_1', $n('Asqılar', 'Подвесы', 'Hangers'), ['piece', 'set', 'pack', 'lm', 'roll'],
+                    ['slug' => 'kart-k2-nov', 'name' => $n('Növ', 'Тип', 'Type')],
+                    [
+                        'birbasa' => ['Birbaşa asqı', 'birbasa-asqilar'],
+                        'tenzimlenen' => ['Tənzimlənən asqı / çubuq', 'tenzimlenen-asqilar-ve-cubuqlar'],
+                        'hazir-dest' => ['Hazır asqı dəsti', 'hazir-asqi-destleri'],
+                        'tros' => ['Asqı trosu', 'asqi-troslari'],
+                        'tros-tutucusu' => ['Tros tutucusu', 'tenzimlenen-tros-tutuculari'],
+                        'panel-esas' => ['Panel / əsas bərkidicisi', 'panel-ve-esas-berkitme-elementleri'],
+                    ],
+                    lead: [$compatLead],
+                    replace: [
+                        'kart-k-material-pp' => $k2Material = $material('kart-k2-material', ['Sinklənmiş polad', 'Paslanmayan polad', 'Polad', 'Alüminium']),
+                        'kart-k74-material' => $k2Material,
+                        'kart-k22-techizat' => $supplyForm = ['slug' => 'kart-k2-techizat', 'name' => $n('Təchizat forması', 'Форма поставки', 'Supply form'), 'type' => 'dropdown',
+                            'options' => [
+                                $a('Tək hissə', ['when' => $forType('kart-k2-nov', 'tenzimlenen')]), $a('Tam asqı dəsti', ['when' => $forType('kart-k2-nov', 'tenzimlenen')]),
+                                $a('Kəsilmiş tros', ['when' => $forType('kart-k2-nov', 'tros')]), $a('Ucluqlu tros', ['when' => $forType('kart-k2-nov', 'tros')]),
+                                $a('Rulon', ['when' => $forType('kart-k2-nov', 'tros')]),
+                            ]],
+                        'kart-k72-techizat' => $supplyForm,
+                    ],
+                    // «Uyğun sistem» (760) gives way to «Uyğun tavan növləri».
+                    drop: ['kart-k22-sistem'],
+                    // Metres and rolls are for cable only.
+                    extra: ['unit_when' => ['lm' => $forType('kart-k2-nov', 'tros'), 'roll' => $forType('kart-k2-nov', 'tros')]],
+                ),
+                'ankerler-ve-dubeller' => $withCompat($legacyCards['ankerler-ve-dubeller']),
+                'ozukesen-vintler' => $withCompat($legacyCards['ozukesen-vintler']),
+                'berkidici-klipsler' => $withCompat($legacyCards['berkidici-klipsler']),
+            ],
+        ],
+
+        // ════ Kənar profilləri ═══════════════════════════════════════════════
+        [
+            'slug' => 'tavan-divarboyu-ve-dekorativ-elementler',
+            'name' => $n('Kənar profilləri', 'Пристенные и кромочные профили', 'Edge profiles'),
+            'classes' => [
+                'divarboyu-kunc-profilleri' => $fold('K4', $n('Kənar və künc profilləri', 'Кромочные и угловые профили', 'Edge and angle profiles'), ['piece', 'lm', 'pack', 'roll', 'pair'],
+                    ['slug' => 'kart-k4-nov', 'name' => $n('Növ', 'Тип', 'Type')],
+                    [
+                        'kunc' => ['Künc profili', 'divarboyu-kunc-profilleri'],
+                        'kenar' => ['Kənar profili', 'kenar-tamamlama-profilleri'],
+                        'ortucu' => ['Örtücü lent / içlik', 'ortucu-lentler-ve-dekorativ-iclikler'],
+                        'uc-qapagi' => ['Uc qapağı', 'uc-qapaqlari'],
+                    ],
+                    lead: [$compatLead],
+                    replace: [
+                        'kart-k41-material' => $k4Material = $material('kart-k4-material', ['Alüminium', 'Polad', 'PVC', 'Taxta', 'MDF', 'Elastomer', 'Polimer']),
+                        'kart-k42-material' => $k4Material,
+                        'kart-k43-material' => $k4Material,
+                        'kart-k44-material' => $k4Material,
+                        'kart-k41-montaj' => $k4Mount = ['slug' => 'kart-k4-montaj', 'name' => $n('Montaj üsulu', 'Способ монтажа', 'Installation method'), 'type' => 'dropdown',
+                            'options' => [$a('Mexaniki'), $a('Vint'), $a('Kilid'), $a('Keçirmə'), $a('Yuvaya keçirmə'), $a('Klips'), $a('Yapışdırma'), $other($P_HOW, 'Digər təsdiqlənmiş üsul')]],
+                        'kart-k43-montaj' => $k4Mount,
+                        'kart-k44-montaj' => $k4Mount,
+                        'kart-tavan-reng' => ['filter' => true] + $color,
+                        'kart-tavan-gorunus' => ['required' => true, 'filter' => true] + $surfaceLook,
+                    ],
+                    // «Tavan növü» (786, 820) gives way to «Uyğun tavan növləri».
+                    drop: ['kart-k-tavan-novu', 'kart-k42-tavan-novu'],
+                    extra: ['unit_when' => [
+                        'lm' => $forType('kart-k4-nov', 'kunc', 'kenar', 'ortucu'),
+                        'roll' => $forType('kart-k4-nov', 'ortucu'),
+                        'pair' => $forType('kart-k4-nov', 'uc-qapagi'),
+                    ]],
+                ),
+            ],
+        ],
+
+        // ════ Montaj hissələri ═══════════════════════════════════════════════
+        [
+            'slug' => 'tavan-isiq-ve-boru-montaj-hisseleri',
+            'name' => $n('Montaj hissələri', 'Закладные и люки', 'Mounting parts'),
+            'classes' => [
+                'montaj-platformalari' => $fold('K5', $n('Montaj hissələri', 'Закладные детали', 'Mounting parts'), ['piece', 'set', 'pack'],
+                    ['slug' => 'kart-k5-nov', 'name' => $n('Növ', 'Тип', 'Type')],
+                    [
+                        'platforma' => ['Montaj platforması', 'montaj-platformalari'],
+                        'termohalqa' => ['Termohalqa / gücləndirici halqa', 'termohalqalar'],
+                        'boru-kecidi' => ['Boru keçidi', 'boru-kecidi-elementleri'],
+                    ],
+                    lead: [$compatLead],
+                    replace: [
+                        'kart-k51-material' => $k5Material = $material('kart-k5-material', ['Polimer', 'Metal']),
+                        'kart-k52-material' => $k5Material,
+                        'kart-k53-material' => $k5Material,
+                        'kart-k-forma' => ['filter' => true, 'slug' => 'kart-k-forma', 'name' => $n('Forma', 'Форма', 'Shape'), 'type' => 'dropdown',
+                            'options' => [$a('Dairəvi', ['slug' => 'dairevi']), $a('Kvadrat'), $a('Düzbucaqlı'), $a('Xaçvari'), $other()]],
+                    ],
+                ),
+                'boyana-bilen-reviziya-qapaqlari' => $fold('K6', $n('Reviziya qapaqları', 'Ревизионные люки', 'Access panels'), ['piece', 'set'],
+                    ['slug' => 'kart-k6-nov', 'name' => $n('Növ', 'Тип', 'Type')],
+                    [
+                        'boyana-bilen' => ['Boyana bilən', 'boyana-bilen-reviziya-qapaqlari'],
+                        'hazir-sethli' => ['Hazır səthli', 'hazir-sethli-reviziya-qapaqlari'],
+                    ],
+                    lead: [$compatLead],
+                    replace: [
+                        'kart-k61-cerceve' => $frame = ['slug' => 'kart-k6-cerceve', 'name' => $n('Çərçivə materialı', 'Материал рамы', 'Frame material'), 'type' => 'dropdown',
+                            'options' => [$a('Alüminium'), $a('Polad'), $a('Paslanmayan polad'), $a('Polimer'), $other()]],
+                        'kart-k62-cerceve' => $frame,
+                        'kart-k6-acilma' => ['filter' => true, 'slug' => 'kart-k6-acilma', 'name' => $n('Açılma', 'Открывание', 'Opening'), 'type' => 'dropdown',
+                            'options' => [$a('Menteşəli'), $a('Çıxarılan'), $a('Hər ikisi')]],
+                        'kart-k6-kilid' => ['filter' => true, 'slug' => 'kart-k6-kilid', 'name' => $n('Kilid', 'Замок', 'Lock'), 'type' => 'dropdown',
+                            'options' => [$a('Basma'), $a('Açar'), $a('Vint'), $other()]],
+                        'kart-k6-tutucu' => ['filter' => true, 'slug' => 'kart-k6-tutucu', 'name' => $n('Düşməyə qarşı tutucu', 'Страховка от падения', 'Safety catch'), 'type' => 'dropdown',
+                            'options' => [$a('Var', ['slug' => 'var']), $a('Yoxdur', ['slug' => 'yoxdur'])]],
+                    ],
+                ),
+            ],
+        ],
+
+        // ════ Tavan dekoru ═══════════════════════════════════════════════════
+        [
+            'slug' => 'tavan-dekoru',
+            'name' => $n('Tavan dekoru', 'Потолочный декор', 'Ceiling decor'),
+            'classes' => [
+                'tavan-plintusu-qaltel' => [
+                    'code' => 'T11',
+                    'name' => $n('Tavan plintusu və qaltel', 'Потолочный плинтус и галтель', 'Ceiling cornice and coving'),
+                    'sale' => 'unit', 'units' => ['piece', 'lm'],
+                    'fields' => [
+                        ['slug' => 'kart-t11-material', 'name' => $n('Material', 'Материал', 'Material'), 'type' => 'dropdown', 'required' => true, 'filter' => true,
+                            'options' => [$a('Poliuretan'), $a('Polistirol'), $a('Gips'), $a('Ağac', ['slug' => 'agac']), $other()]],
+                        $height(),
+                        ['slug' => 'kart-t11-cixinti', 'name' => $n('Çıxıntı (tavan üzrə en)', 'Вынос (ширина по потолку)', 'Projection (width along the ceiling)'), 'type' => 'decimal', 'required' => true, 'unit' => 'mm'],
+                        ['hint' => $n('Bir plankanın uzunluğu.', 'Длина одной планки.', 'Length of one piece.')] + $length(),
+                        ['slug' => 'kart-t11-seth', 'name' => $n('Səth', 'Поверхность', 'Surface'), 'type' => 'dropdown', 'filter' => true,
+                            'options' => [$a('Boyanmağa hazır', ['slug' => 'boyanmaga-hazir']), $a('Hazır örtüklü', ['slug' => 'hazir-ortuklu'])]],
+                        ['filter' => true] + $colorOpt,
+                        ['slug' => 'kart-t11-montaj', 'name' => $n('Montaj üsulu', 'Способ монтажа', 'Installation method'), 'type' => 'dropdown',
+                            'options' => [$a('Yapışqan'), $a('Mexaniki'), $a('Kombinə')]],
+                        $warranty,
+                    ],
+                ],
+            ],
+        ],
     ],
 
-    // The old ceiling groups, closed once the move above has emptied them.
-    'retire_groups' => ['dartma-tavanlar', 'karkas-ve-asma-sistemler', 'tavanlarin-dekorativ-uzlenmesi', 'komplektlesdiriciler'],
+    // The folded classes: products move to the main class with «Növ» = the old class;
+    // the old slugs answer with a 301 to the new class (CatalogController).
+    'merge' => [
+        'alcipan-tavan-ucun-profiller' => ['into' => 'dartma-tavan-ucun-profiller', 'set' => ['kart-k1-nov' => 'alcipan-profili']],
+        'modul-tavan-dasiyici-profilleri' => ['into' => 'dartma-tavan-ucun-profiller', 'set' => ['kart-k1-nov' => 'modul-dasiyici']],
+        'reykali-tavan-dasiyicilari' => ['into' => 'dartma-tavan-ucun-profiller', 'set' => ['kart-k1-nov' => 'reyka-dasiyici']],
+        'profil-uzadicilari' => ['into' => 'bir-seviyyeli-birlesdiriciler', 'set' => ['kart-k3-nov' => 'uzadici']],
+        'iki-seviyyeli-birlesdiriciler' => ['into' => 'bir-seviyyeli-birlesdiriciler', 'set' => ['kart-k3-nov' => 'iki-seviyyeli']],
+        'modul-ve-reykali-sistem-birlesdiricileri' => ['into' => 'bir-seviyyeli-birlesdiriciler', 'set' => ['kart-k3-nov' => 'modul-reyka']],
+        'tenzimlenen-asqilar-ve-cubuqlar' => ['into' => 'birbasa-asqilar', 'set' => ['kart-k2-nov' => 'tenzimlenen']],
+        'hazir-asqi-destleri' => ['into' => 'birbasa-asqilar', 'set' => ['kart-k2-nov' => 'hazir-dest']],
+        'asqi-troslari' => ['into' => 'birbasa-asqilar', 'set' => ['kart-k2-nov' => 'tros']],
+        'tenzimlenen-tros-tutuculari' => ['into' => 'birbasa-asqilar', 'set' => ['kart-k2-nov' => 'tros-tutucusu']],
+        'panel-ve-esas-berkitme-elementleri' => ['into' => 'birbasa-asqilar', 'set' => ['kart-k2-nov' => 'panel-esas']],
+        'kenar-tamamlama-profilleri' => ['into' => 'divarboyu-kunc-profilleri', 'set' => ['kart-k4-nov' => 'kenar']],
+        'ortucu-lentler-ve-dekorativ-iclikler' => ['into' => 'divarboyu-kunc-profilleri', 'set' => ['kart-k4-nov' => 'ortucu']],
+        'uc-qapaqlari' => ['into' => 'divarboyu-kunc-profilleri', 'set' => ['kart-k4-nov' => 'uc-qapagi']],
+        'termohalqalar' => ['into' => 'montaj-platformalari', 'set' => ['kart-k5-nov' => 'termohalqa']],
+        'boru-kecidi-elementleri' => ['into' => 'montaj-platformalari', 'set' => ['kart-k5-nov' => 'boru-kecidi']],
+        'hazir-sethli-reviziya-qapaqlari' => ['into' => 'boyana-bilen-reviziya-qapaqlari', 'set' => ['kart-k6-nov' => 'hazir-sethli']],
+    ],
+
+    // Answers of the duplicate attributes folded into one.
+    'move_values' => [
+        'kart-k11-material' => 'kart-k1-material', 'kart-k-material-polad' => 'kart-k1-material', 'kart-k-material-pa' => 'kart-k1-material',
+        'kart-k-qoruyucu-2' => 'kart-k-qoruyucu',
+        'kart-k34-material' => 'kart-k3-material',
+        'kart-k32-profil-1' => 'kart-k3-hisse-1', 'kart-k33-ust' => 'kart-k3-hisse-1', 'kart-k34-hisse-1' => 'kart-k3-hisse-1',
+        'kart-k32-profil-2' => 'kart-k3-hisse-2', 'kart-k33-alt' => 'kart-k3-hisse-2', 'kart-k34-hisse-2' => 'kart-k3-hisse-2',
+        'kart-k31-berkitme' => 'kart-k3-berkitme', 'kart-k32-berkitme' => 'kart-k3-berkitme', 'kart-k33-kilid' => 'kart-k3-berkitme', 'kart-k34-usul' => 'kart-k3-berkitme',
+        'kart-k74-material' => 'kart-k2-material', 'kart-k22-techizat' => 'kart-k2-techizat', 'kart-k72-techizat' => 'kart-k2-techizat',
+        'kart-k41-material' => 'kart-k4-material', 'kart-k42-material' => 'kart-k4-material', 'kart-k43-material' => 'kart-k4-material', 'kart-k44-material' => 'kart-k4-material',
+        'kart-k41-montaj' => 'kart-k4-montaj', 'kart-k43-montaj' => 'kart-k4-montaj', 'kart-k44-montaj' => 'kart-k4-montaj',
+        'kart-k51-material' => 'kart-k5-material', 'kart-k52-material' => 'kart-k5-material', 'kart-k53-material' => 'kart-k5-material',
+        'kart-k61-cerceve' => 'kart-k6-cerceve', 'kart-k62-cerceve' => 'kart-k6-cerceve',
+    ],
+
+    // Class 42 belongs to the wall and paint sections (shown on ceilings later via «Tətbiq sahəsi»).
+    'retire_classes' => ['divar-kagizlari-dekorativ-suvaq-boya-taxta-lambir-tavanlar-ucun'],
+
+    // The old ceiling groups, closed once the moves above have emptied them.
+    'retire_groups' => [
+        'dartma-tavanlar', 'karkas-ve-asma-sistemler', 'tavanlarin-dekorativ-uzlenmesi', 'komplektlesdiriciler',
+        'tavan-profil-ve-karkas-birlesdiricileri', 'tavan-reviziya-qapaqlari', 'akustik-panel-asqi-destleri',
+    ],
 ];

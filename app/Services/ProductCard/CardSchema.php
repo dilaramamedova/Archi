@@ -206,6 +206,17 @@ final class CardSchema
             return false;
         }
 
+        // {all: [...]} holds when every condition in it does (e.g. «Növ» AND «Forma»).
+        if ($condition && isset($condition['all'])) {
+            foreach ((array) $condition['all'] as $one) {
+                if (! self::holds($one, $answers)) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
         if (! $condition || empty($condition['attr'])) {
             return true;
         }

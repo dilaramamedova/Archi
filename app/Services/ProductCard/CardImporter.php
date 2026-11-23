@@ -37,6 +37,9 @@ final class CardImporter
 
     private bool $openSizes = false;
 
+    /** @var list<string> attribute slugs whose answers `move_values` still has to fold over */
+    private array $moving = [];
+
     /** @return list<string> */
     public function importFile(string $name): array
     {
@@ -59,6 +62,7 @@ final class CardImporter
         $this->log = [];
         // «Hazır ölçü və ya rəqəmlər»: every listed size of the file also takes a typed one.
         $this->openSizes = (bool) ($data['open_size_lists'] ?? false);
+        $this->moving = array_keys($data['move_values'] ?? []);
 
         DB::transaction(function () use ($data): void {
             $section = Category::query()->where('slug', $data['section'])->whereNull('parent_id')->first()
@@ -85,8 +89,21 @@ final class CardImporter
                 }
             }
 
+            // 'old' => 'new', or 'old' => ['into' => 'new', 'set' => [attr => option]]:
+            // the moved products get the old class as an answer of the new card.
             foreach ($data['merge'] ?? [] as $from => $into) {
-                $this->merge($from, $into);
+                is_array($into)
+                    ? $this->merge($from, $into['into'], $into['set'] ?? [])
+                    : $this->merge($from, $into);
+            }
+
+            // Answers of attributes folded into one: 'old-attr' => 'new-attr'.
+            foreach ($data['move_values'] ?? [] as $from => $into) {
+                $this->moveValues($from, $into);
+            }
+
+            foreach ($data['retire_classes'] ?? [] as $slug) {
+                $this->retireClass($slug);
             }
 
             foreach ($data['retire_groups'] ?? [] as $slug) {
@@ -139,7 +156,7 @@ final class CardImporter
             }
             $pivot[$attribute->id] = [
                 'is_required' => (bool) ($field['required'] ?? false),
-                'is_filterable' => false,
+                'is_filterable' => (bool) ($field['filter'] ?? false),
                 'unit' => $field['unit'] ?? null,
                 'sort_order' => ($i + 1) * 10,
                 // Arrays, not JSON: the pivot model (SubCategoryAttribute) casts them.
@@ -160,6 +177,8 @@ final class CardImporter
         $removed = ProductAttributeValue::query()
             ->whereIn('product_id', Product::query()->where('sub_category_id', $class->id)->select('id'))
             ->whereNotIn('attribute_id', array_keys($pivot))
+            // …except answers that move_values folds into a new attribute below.
+            ->whereNotIn('attribute_id', Attribute::query()->whereIn('slug', $this->moving)->select('id'))
             ->delete();
 
         $this->log[] = sprintf('card %s %s #%d — %d fields%s', $def['code'] ?? '', $slug, $class->id, count($pivot), $removed ? ", {$removed} old values removed" : '');
@@ -196,7 +215,8 @@ final class CardImporter
         return $class;
     }
 
-    private function merge(string $from, string $into): void
+    /** @param array<string, string> $set attribute slug => option slug written on every moved product */
+    private function merge(string $from, string $into, array $set = []): void
     {
         $source = SubCategory::query()->where('slug', $from)->first();
         $target = SubCategory::query()->where('slug', $into)->first();
@@ -207,11 +227,94 @@ final class CardImporter
             return;
         }
 
-        $moved = Product::query()->where('sub_category_id', $source->id)
+        $ids = Product::query()->where('sub_category_id', $source->id)->pluck('id');
+        Product::query()->whereIn('id', $ids)
             ->update(['sub_category_id' => $target->id, 'category_id' => $target->category_id]);
 
-        $source->forceFill(['is_active' => false, 'card_enabled' => false])->save();
-        $this->log[] = "merge {$from} → {$into}: {$moved} products";
+        // «Növ» = the class the product came from.
+        foreach ($set as $attrSlug => $optionSlug) {
+            $attribute = Attribute::query()->where('slug', $attrSlug)->first();
+            $option = $attribute ? AttributeOption::query()->where('attribute_id', $attribute->id)->where('slug', $optionSlug)->first() : null;
+            if (! $option) {
+                throw new RuntimeException("merge {$from}: no option «{$optionSlug}» in «{$attrSlug}»");
+            }
+            foreach ($ids as $productId) {
+                ProductAttributeValue::query()->updateOrCreate(
+                    ['product_id' => $productId, 'attribute_id' => $attribute->id],
+                    ['attribute_option_id' => $option->id],
+                );
+            }
+        }
+
+        // The old slug stays known, so its links can be redirected (CatalogController).
+        $source->forceFill([
+            'is_active' => false,
+            'card_enabled' => false,
+            'card_settings' => ['merged_into' => $target->slug],
+        ])->save();
+        $this->log[] = "merge {$from} → {$into}: {$ids->count()} products";
+    }
+
+    /**
+     * Fold the answers of one attribute into another: an option goes to the option of
+     * the same Azerbaijani text (or slug), a number or text moves as it is. An answer
+     * that finds no home is left on the old attribute and reported.
+     */
+    private function moveValues(string $from, string $into): void
+    {
+        $old = Attribute::query()->where('slug', $from)->first();
+        $new = Attribute::query()->where('slug', $into)->first();
+        if (! $old || ! $new) {
+            $this->log[] = "move {$from} → {$into}: skipped";
+
+            return;
+        }
+
+        $targets = AttributeOption::query()->where('attribute_id', $new->id)->get();
+        $moved = 0;
+        $left = 0;
+        foreach (ProductAttributeValue::query()->where('attribute_id', $old->id)->with('option')->get() as $value) {
+            if (ProductAttributeValue::query()->where('product_id', $value->product_id)->where('attribute_id', $new->id)->exists()) {
+                $left++;
+
+                continue;
+            }
+
+            $optionId = null;
+            if ($value->option) {
+                $text = mb_strtolower((string) $value->option->getTranslation('value', 'az', false));
+                $optionId = $targets->first(fn ($o) => $o->slug === $value->option->slug
+                    || mb_strtolower((string) $o->getTranslation('value', 'az', false)) === $text)?->id;
+                if (! $optionId) {
+                    $left++;
+
+                    continue;
+                }
+            }
+
+            $value->forceFill(['attribute_id' => $new->id, 'attribute_option_id' => $optionId ?? $value->attribute_option_id])->save();
+            $moved++;
+        }
+
+        $this->log[] = "move {$from} → {$into}: {$moved} values".($left ? ", {$left} left" : '');
+    }
+
+    /** Switch a class off — only when nothing is filed under it. */
+    private function retireClass(string $slug): void
+    {
+        $class = SubCategory::query()->where('slug', $slug)->first();
+        if (! $class) {
+            return;
+        }
+
+        if (Product::query()->where('sub_category_id', $class->id)->exists()) {
+            $this->log[] = "class {$slug}: has products, kept";
+
+            return;
+        }
+
+        $class->forceFill(['is_active' => false, 'card_enabled' => false])->save();
+        $this->log[] = "class {$slug}: closed";
     }
 
     private function retireGroup(string $slug): void

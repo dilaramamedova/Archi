@@ -31,9 +31,11 @@ function setShown(node, shown) {
   });
 }
 
-// One {attr, in} condition, or a list of them where any one holding is enough.
+// One {attr, in} condition, a list of them where any one holding is enough, or
+// {all: [...]} where every one must hold.
 const holds = (cond, answers) => {
   if (Array.isArray(cond)) return cond.some((c) => holds(c, answers));
+  if (cond && cond.all) return cond.all.every((c) => holds(c, answers));
   return !cond || !cond.attr || (answers[cond.attr] || []).some((slug) => (cond.in || []).includes(slug));
 };
 
