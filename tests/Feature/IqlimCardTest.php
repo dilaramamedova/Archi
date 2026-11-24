@@ -92,8 +92,30 @@ class IqlimCardTest extends TestCase
             'kart-iq-daxili-model' => 'AS-09UW4', 'kart-iq-xarici-model' => 'AU-09UW4', 'kart-iq-soyutma-gucu' => '2.6', 'kart-iq-isitme-gucu' => '2.8',
             'kart-iq-giris-soyutma' => '0.75', 'kart-iq-giris-isitme' => '0.72', 'kart-iq-gerginlik' => '220', 'kart-iq-tezlik' => '50',
             'kart-iq-en' => '805', 'kart-iq-derinlik' => '200', 'kart-iq-hundurluk' => '285', 'kart-iq-xarici-blok-olculeri' => '720 × 270 × 495',
-            'kart-iq-ses' => '24', 'kart-iq-ses-mesafe' => '1', 'kart-iq-xarici-temp-soyutma' => '−15…+48', 'kart-iq-xarici-temp-isitme' => '−25…+24',
+            'kart-iq-ses' => '24', 'kart-iq-ses-mesafe' => '1',
+            'kart-iq-xarici-soyutma-min' => '−15', 'kart-iq-xarici-soyutma-maks' => '48',
+            'kart-iq-xarici-isitme-min' => '-25', 'kart-iq-xarici-isitme-maks' => '24',
         ], $override);
+    }
+
+    public function test_outdoor_temperatures_may_be_negative_within_the_card_limits(): void
+    {
+        $schema = $this->schema('kondisioner-split-sistem-multi-split-vrf');
+        $min = $this->field($schema, 'kart-iq-xarici-isitme-min')['id'];
+
+        // «−15» with a typographic minus and «-25» both store as negatives.
+        $this->save('kondisioner-split-sistem-multi-split-vrf', $this->card($schema, $this->split()))->assertOk();
+        $this->assertSame(-25.0, (float) Product::latest('id')->firstOrFail()->attributeValues()->where('attribute_id', $min)->value('value_numeric'));
+
+        // Below the card's floor (−60), or a minimum above the maximum, is refused.
+        $this->save('kondisioner-split-sistem-multi-split-vrf', $this->card($schema, $this->split(['kart-iq-xarici-isitme-min' => '-70'])))
+            ->assertStatus(422)->assertJsonValidationErrors(['card.'.$min]);
+        $this->save('kondisioner-split-sistem-multi-split-vrf', $this->card($schema, $this->split(['kart-iq-xarici-isitme-min' => '30'])))
+            ->assertStatus(422)->assertJsonValidationErrors(['card.'.$min]);
+
+        // A plain measure stays positive.
+        $this->save('kondisioner-split-sistem-multi-split-vrf', $this->card($schema, $this->split(['kart-iq-en' => '-805'])))
+            ->assertStatus(422)->assertJsonValidationErrors(['card.'.$this->field($schema, 'kart-iq-en')['id']]);
     }
 
     public function test_import_builds_four_blocks_with_thirty_seven_cards(): void

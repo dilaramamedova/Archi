@@ -157,6 +157,8 @@ final class CardImporter
             $pivot[$attribute->id] = [
                 'is_required' => (bool) ($field['required'] ?? false),
                 'is_filterable' => (bool) ($field['filter'] ?? false),
+                // A card filter is open on the class page; 'filter' => 'secondary' folds it.
+                'filter_priority' => ($field['filter'] ?? false) ? (is_string($field['filter']) ? $field['filter'] : 'top') : null,
                 'unit' => $field['unit'] ?? null,
                 'sort_order' => ($i + 1) * 10,
                 // Arrays, not JSON: the pivot model (SubCategoryAttribute) casts them.

@@ -138,6 +138,18 @@ class ElektrikCardTest extends TestCase
         $this->assertSame(43, SubCategory::where('card_enabled', true)->count());
     }
 
+    public function test_card_filters_are_open_on_the_class_page(): void
+    {
+        $socket = SubCategory::where('slug', 'rozetkalar-ve-acarlar')->firstOrFail();
+        $pivot = $socket->attributes()->where('slug', 'kart-e01-01-standart')->firstOrFail()->pivot;
+        $this->assertTrue((bool) $pivot->is_filterable);
+        $this->assertSame('top', $pivot->filter_priority?->value ?? $pivot->filter_priority);
+        $this->assertFalse((bool) $socket->attributes()->where('slug', 'kart-el-seriya')->firstOrFail()->pivot->is_filterable);
+
+        $this->get('/catalog?class=rozetkalar-ve-acarlar')->assertOk()->assertSee('data-attr="kart-e01-01-standart"', false);
+        $this->get('/catalog?class=rozetkalar-ve-acarlar&attr[kart-e01-01-standart]=schuko')->assertOk();
+    }
+
     public function test_a_socket_sells_by_the_piece_or_set_and_needs_its_series_colour_and_brand_country(): void
     {
         $this->save($this->payload('rozetkalar-ve-acarlar', $this->socket()))->assertOk();

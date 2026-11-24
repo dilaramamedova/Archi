@@ -193,7 +193,7 @@ Köhnə «Qazanlar» və «İstilik nasosları» qrupları bağlanıb.
 - **H06_2 kabel:** «Satış forması» vahidi təyin edir (`unit_when`): dəst və ya metr.
 - **H01 radiator:** «seksiya» vahidi yoxdur. Radiator ədədlə satılır, «Qiymət aiddir: bütöv / bir seksiya» sahəsi qiymətin nəyə aid olduğunu göstərir.
 
-**Mühərrik məhdudiyyəti.** Rəqəm sahəsi mənfi dəyər qəbul etmir (`CardInput::inBounds` `<= 0`). Ona görə xarici temperatur aralığı («−15…+48») mətn sahəsidir.
+**Mənfi rəqəm (24.11).** Rəqəm sahəsi adətən > 0 olmalıdır; kartda `rules.min` 0 və ya mənfi verilibsə, o həddə qədər mənfi dəyər qəbul olunur («−15» tipoqrafik mənfi ilə də). Xarici temperatur: 4 rəqəm (soyutma / isitmə, min ≤ maks, −60…+60 °C).
 
 ## Tekstil və Landşaft (23.11.2026)
 
@@ -339,14 +339,14 @@ işlədilirsə **eyni olmalıdır** (importer fərqi görəndə dayanır). Sinf�
 | `unit`, `hint` | Vahid və izah |
 | `presets` | Seçim siyahısı: rəqəmlər və ya `"600×600"`. Varsa sahə **select**-dir və yalnız siyahıdakı dəyər qəbul olunur (server də yoxlayır); ölçüdə bir «L × W» seçimi (`card[id][pair]`), qarışıq uzunluqda min/maks uzunluq və en siyahının hissələrindən seçilir. Admin: Məhsul sinifləri → Atributlar → «Seçim siyahısı». Ölçülən dəyərlərə (qablaşdırmanın sahəsi) siyahı qoyulmur |
 | `when` | `['attr' => <sahə slug>, 'in' => [<seçim slug>…]]` — sahə yalnız bu cavabda görünür. Şərtlər siyahısı = hər hansı biri (OR); `['all' => [şərt, şərt]]` = hamısı (AND), məs. «Növ = platforma» **və** «Forma = dairəvi» |
-| `filter` | Saytda filtr (`is_filterable`) |
+| `filter` | Kataloqda sinif səhifəsində filtr (`is_filterable`, `filter_priority = top` — açıq görünür; `'filter' => 'secondary'` yığılmış blokda). Seçim sahələri seçim kimi, rəqəm min–maks kimi süzülür (CatalogController::applyAttributeFilters). Bütün 8 faylda kart başına 1–6 filtr var (24.11) |
 | `rules.lt` / `rules.lte` | Başqa rəqəm sahəsindən kiçik / böyük deyil |
 | `rules.only` | Yalnız bu seçimlərlə dərc olunur («Döşəmədə istifadə» → Bəli) |
 | `rules.mixed_when` | Ölçüdə min–maks uzunluq (qarışıq uzunluqlar) |
 | `rules.square_when` | Kvadrat formada uzunluq = en |
 | `rules.integer` | Tam rəqəm (boru sayı, asqı nöqtəsi sayı) |
 | `rules.open` | Ölçü siyahısı açıqdır: siyahıdan seçim və ya «Başqa ölçü» (`__other__`) ilə yazılmış uzunluq × en |
-| `rules.min` / `rules.max` | Rəqəmin sərhədləri (səsudma əmsalı ≤ 1,5) |
+| `rules.min` / `rules.max` | Rəqəmin sərhədləri (səsudma əmsalı ≤ 1,5). `min` ≤ 0 mənfi dəyərləri açır |
 | `maps_to` | Məhsul hesabına gedir: `package_size`, `package_unit`, `roll_width`, `length_mm`, `width_mm` |
 
 Seçim: `value` (az/ru/en), `slug`, `prompt` (seçiləndə mətn soruşulur: «Digər» →

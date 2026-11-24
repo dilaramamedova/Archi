@@ -399,10 +399,13 @@ final class CardInput
     {
         $min = $field['rules']['min'] ?? null;
         $max = $field['rules']['max'] ?? 1000000;
+        // A measure is positive unless the card sets its own floor at or below zero
+        // (an outdoor temperature of −15 °C: `rules.min => -50`).
+        $signed = $min !== null && (float) $min <= 0;
 
-        if ($value <= 0 || ($min !== null && $value < (float) $min) || $value > (float) $max) {
+        if ((! $signed && $value <= 0) || ($min !== null && $value < (float) $min) || $value > (float) $max) {
             // A card's own limit (absorption ≤ 1,5) is named, not just «wrong».
-            $this->errors[$key] = isset($field['rules']['max'])
+            $this->errors[$key] = isset($field['rules']['max']) && ! $signed
                 ? CardText::get('out_of_range_max', ':name 0-dan böyük və :max-dan kiçik olmalıdır',['name' => $name, 'max' => str_replace('.', ',', (string) $max)])
                 : CardText::get('out_of_range', ':name üçün dəyər düzgün deyil', ['name' => $name]);
 
@@ -439,7 +442,8 @@ final class CardInput
     /** "2,131" and "2.131" alike; anything else is not a number. */
     private function decimal(mixed $raw): ?float
     {
-        $text = str_replace([',', ' '], ['.', ''], trim((string) $raw));
+        // «−15» (typographic minus) reads like «-15».
+        $text = str_replace([',', ' ', '−'], ['.', '', '-'], trim((string) $raw));
 
         return $text !== '' && is_numeric($text) ? round((float) $text, 4) : null;
     }

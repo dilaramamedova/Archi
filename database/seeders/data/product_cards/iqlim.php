@@ -193,12 +193,16 @@ $energy = [
     $climateZone,
 ];
 // «Xarici temperatur aralığı — soyutma və isitmə üçün minimum–maksimum °C».
-// Text, not two numbers: the engine's decimals are > 0 only, and these minimums are below zero.
+// Numbers that may go below zero: rules.min at -60 opens negative values (CardInput::inBounds).
+$tempPair = fn (string $mode, array $name) => [
+    ['slug' => "kart-iq-xarici-$mode-min", 'name' => $n($name[0].', min', $name[1].', мин.', $name[2].', min'), 'type' => 'decimal', 'unit' => '°C',
+        'rules' => ['min' => -60, 'max' => 60, 'lte' => "kart-iq-xarici-$mode-maks"]] + $hint('İstehsalçıya görə; mənfi ola bilər, məs. −15.', 'По данным производителя; может быть отрицательной, напр. −15.', 'Per the maker; may be negative, e.g. −15.'),
+    ['slug' => "kart-iq-xarici-$mode-maks", 'name' => $n($name[0].', maks', $name[1].', макс.', $name[2].', max'), 'type' => 'decimal', 'unit' => '°C',
+        'rules' => ['min' => -60, 'max' => 60]],
+];
 $outdoorTemp = [
-    ['slug' => 'kart-iq-xarici-temp-soyutma', 'name' => $n('Xarici temperatur aralığı, soyutma', 'Диапазон наружной температуры, охлаждение', 'Outdoor temperature range, cooling'), 'type' => 'text']
-        + $hint('Minimum–maksimum °C, istehsalçıya görə, məs. −15…+48.', 'Мин.–макс. °C по данным производителя, напр. −15…+48.', 'Min–max °C per the maker, e.g. −15…+48.'),
-    ['slug' => 'kart-iq-xarici-temp-isitme', 'name' => $n('Xarici temperatur aralığı, isitmə', 'Диапазон наружной температуры, обогрев', 'Outdoor temperature range, heating'), 'type' => 'text']
-        + $hint('Minimum–maksimum °C, istehsalçıya görə, məs. −25…+24.', 'Мин.–макс. °C по данным производителя, напр. −25…+24.', 'Min–max °C per the maker, e.g. −25…+24.'),
+    ...$tempPair('soyutma', ['Xarici temperatur, soyutma', 'Наружная температура, охлаждение', 'Outdoor temperature, cooling']),
+    ...$tempPair('isitme', ['Xarici temperatur, isitmə', 'Наружная температура, обогрев', 'Outdoor temperature, heating']),
 ];
 $indoorModel = ['slug' => 'kart-iq-daxili-model', 'name' => $n('Daxili blokun modeli', 'Модель внутреннего блока', 'Indoor unit model'), 'type' => 'text', 'required' => true];
 $outdoorModel = ['slug' => 'kart-iq-xarici-model', 'name' => $n('Xarici blokun modeli', 'Модель наружного блока', 'Outdoor unit model'), 'type' => 'text', 'required' => true];
