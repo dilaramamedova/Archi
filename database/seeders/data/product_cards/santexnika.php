@@ -952,7 +952,8 @@ return [
         [
             'slug' => 'su-qizdiricilari',
             'name' => $n('Su qızdırıcıları', 'Водонагреватели', 'Water heaters'),
-            'plain' => ['su-qizdiricisi-boyler', 'desmal-qurudan'],
+            // «Dəsmal quruducu» moved to the İqlim cards (H03, iqlim.php merges it).
+            'plain' => ['su-qizdiricisi-boyler'],
         ],
         [
             'slug' => 'kanalizasiya-borulari-ve-avadanligi',

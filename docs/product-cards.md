@@ -166,6 +166,35 @@ Qərarlar:
 - **E03_15.** «Uyğunluq sənədi» `document` sahəsidir: fayl və ya link.
 - **Mətn sahələri.** Çox hissəli dəyərlər mətn sahəsində yazılır: portlar, giriş / çıxış, yük limiti, dəstin tərkibi.
 
+## İqlim (24.11.2026)
+
+Mənbə: `Archi_AZ_Iqlim_Kataloq_AZ.xlsx`, faylı `iqlim.php`. 37 kart, kodları H01–H15_5. Atribut slug-ları `kart-iq-…` (ortaq) və `kart-hNN-N-…` (karta aid).
+
+**Qruplar.** Excel-in 4 blokudur, çünki Kateqoriyalar vərəqi «4 əsas blok» deyir:
+
+| Qrup | Kartlar |
+|---|---|
+| İsitmə | 11 |
+| Kondisionerləşdirmə | 7 |
+| Havalandırma | 7 + 3 sadə sinif (kanallar, damperlər, filtrlər) |
+| İdarəetmə və komplektləşdiricilər | 12 |
+
+Sadə formla qalan iki qrup da var:
+- Borular, armatur və kollektorlar;
+- Sənaye və mərkəzi kondisionerləşdirmə (çiller, sənaye nəmləndiricisi).
+
+**Köhnə ağac.** 11 köhnə sinif slug-ı saxlanaraq karta çevrilib. Birləşmələr:
+- «Kanal ventilyatorları» → H10, «Tip = Kanal üçün» yazılır;
+- Santexnikadakı «Dəsmal quruducu» (`desmal-qurudan`) → H03. Santexnika faylı onu artıq siyahıda saxlamır.
+
+Köhnə «Qazanlar» və «İstilik nasosları» qrupları bağlanıb.
+
+**Vahidlər.**
+- **H06_2 kabel:** «Satış forması» vahidi təyin edir (`unit_when`): dəst və ya metr.
+- **H01 radiator:** «seksiya» vahidi yoxdur. Radiator ədədlə satılır, «Qiymət aiddir: bütöv / bir seksiya» sahəsi qiymətin nəyə aid olduğunu göstərir.
+
+**Mühərrik məhdudiyyəti.** Rəqəm sahəsi mənfi dəyər qəbul etmir (`CardInput::inBounds` `<= 0`). Ona görə xarici temperatur aralığı («−15…+48») mətn sahəsidir.
+
 ## Tekstil və Landşaft (23.11.2026)
 
 **Tekstil** (`Archi_AZ_Tekstil_Dekor_Kataloq_AZ.xlsx`, faylı `tekstil.php`) — 39 kart, kodları T01_1–T15_6.
