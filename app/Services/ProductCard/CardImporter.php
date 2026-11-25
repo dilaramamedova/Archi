@@ -77,7 +77,9 @@ final class CardImporter
             ]];
 
             foreach (array_values($groups) as $i => $def) {
-                $group = $this->group($section, ['sort_order' => $i] + $def);
+                // A file's own `sort_order` wins: two files may share one section
+                // (mebel + mebel_furnitura) and must not both start at 0.
+                $group = $this->group($section, $def + ['sort_order' => $i]);
 
                 $sort = 1;
                 foreach ($def['classes'] ?? [] as $slug => $class) {

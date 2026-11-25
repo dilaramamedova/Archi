@@ -366,6 +366,28 @@ Excel-dəki 12 alt bölmə qrup deyil.
 - şüşə / şüşəpaket, profil;
 - sənədə əsaslanan siniflər: U / Rw / hava / su / külək / RC / EI. Sinif seçiləndə sənəd məcburidir.
 
+## Mebel və mebel furniturası (25.11.2026)
+
+Mənbə: `Archi_AZ_Mebel_Furnitura_Kataloq_AZ.xlsx`. Bir bölmədə 64 kart var, iki fayla bölünüb.
+
+**İki fayl:**
+- `mebel_furnitura.php`: F01_1–F12_4, 12 qrup, `sort_order` 15–26 faylın özündə yazılıb.
+- `mebel.php`: M01_1–M15_2, 15 qrup, `sort_order` 0–14.
+
+Qruplar Excel-in 27 alt bölməsidir. Fayl öz qrupuna `sort_order` yazırsa, o qalib gəlir (`CardImporter::import`: `$def + ['sort_order' => $i]`).
+
+**Import sırası.** Əvvəl `mebel_furnitura`, sonra `mebel`. Furnitura faylı köhnə 6 sinfi öz qruplarına aparır. Mebel faylı da köhnə boş qrupları bağlayır (`retire_groups` yalnız `mebel.php`-dədir).
+
+**Slug-lar.** Mebel `kart-mb-*` / `kart-mNN-*`, furnitura `kart-mf-*` / `kart-fNN-*`. İki fayl arasında ortaq atribut yoxdur, `kart-zemanet` istisnadır.
+
+**Kartsız qalanlar.** Mətbəx texnikası, moykalar və önlük «Mətbəx texnikası və moykalar» qrupunda kartsız qalır. Xam lövhə, kənar lenti və şpon «Mebel plitələri və materialları» qrupunda kartsız qalır. Hər iki qrup ən sondadır (27, 28), çünki Excel bunları kataloqdan çıxarır.
+
+**Yük.** Əvvəl «Yük nəyə aiddir» soruşulur (hissə / cüt / dəst / tam məhsul). Kq sahəsi yalnız bundan sonra açılır və məcburi olur.
+
+**Fərdi ölçü.** Mebeldə fərdi ölçü seçiləndə nümunə komplekti və qiymətin əsası yazılmalıdır. Furniturada fərdi ölçü (F12_1–F12_3) seçiləndə məhsul «Sifarişlə» olur.
+
+**Gözləyir.** Bağ mebeli (M15) Landşaftın L08 kartları ilə təkrarlanır. Excel bağ mebelinin burada qalmasını, Landşaftdan isə keçid verilməsini istəyir. Hansının saxlanacağına qərar verilməlidir.
+
 ## Agent yoxlaması (18.11.2026)
 
 Üç Excel üzrə 6 agent (3 admin, 3 satıcı+alıcı) lokal saytda məhsul əlavə etdi. Düzəlişlər
