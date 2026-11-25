@@ -3,7 +3,7 @@
 /*
 |--------------------------------------------------------------------------
 | Santexnika — 27 fixture cards (S01_1–S10_3), 6 accessory cards (S11_1–S11_6) and
-| 13 plumbing-component cards (S12_1–S12_13)
+| 13 plumbing-component cards (S12_1–S12_13); 12 engineering cards (S13_1–S17_2)
 |--------------------------------------------------------------------------
 |
 | Source: Archi_AZ_Santexnika_Kataloq_AZ.xlsx (client, 20.11.2026). Format and
@@ -11,7 +11,10 @@
 | the workbook's own 12 categories («Kateqoriyalar» sheet) are the 12 card groups; the
 | accessory and component subgroups (column «Alt qrup») stay inside their category,
 | which keeps the menu at the workbook's 12. The section's other groups (pipes, valves,
-| pumps, water heaters, sewerage) are not in the workbook and keep their plain form.
+| pumps, water heaters, sewerage) are not in the workbook: their 12 classes carry lean
+| cards from the client TZ's proposal (25.11.2026), S13 … S17 by group. Pipes: a rod
+| sells as `piece` (rod length required), a coil as `roll` (coil length), both by `lm`.
+| Group and class names follow the prod admin (client-edited RU/EN).
 |
 | Every card sells in the seller's unit («Ədəd / dəst. Bir seçim»), priced and stocked
 | in it. Option values are Azerbaijani only; attribute and class names carry ru / en.
@@ -166,6 +169,27 @@ $kit = fn (string $code, array $items): array => [
     'options' => [...$opts($items), $none()],
 ];
 $f = fn (string $code, string $key, array $name, string $type, array $extra = []): array => ['slug' => 'kart-'.strtolower(str_replace('_', '-', $code)).'-'.$key, 'name' => $name, 'type' => $type] + $extra;
+
+// Engineering (S13–S17): pipes, valves, filters, pumps, heaters, sewerage — the TZ's
+// proposal per class, no workbook.
+$diameter = fn (bool $req = true, ?array $hint = null): array => ['slug' => 'kart-san-diametr', 'name' => $n('Diametr', 'Диаметр', 'Diameter'), 'type' => 'decimal',
+    'filter' => true, 'required' => $req, 'unit' => 'mm'] + ($hint ? ['hint' => $hint] : []);
+$outerHint = $n('Xarici diametr.', 'Наружный диаметр.', 'Outside diameter.');
+$inch = fn (bool $req = true, ?array $hint = null): array => ['slug' => 'kart-san-qosulma-diametri', 'name' => $n('Qoşulma diametri, düym', 'Присоединительный диаметр, дюйм', 'Connection size, inch'),
+    'type' => 'dropdown', 'filter' => true, 'required' => $req, 'options' => [
+        $a('1/4″', ['slug' => '1-4']), $a('3/8″', ['slug' => '3-8']), $a('1/2″', ['slug' => '1-2']), $a('3/4″', ['slug' => '3-4']), $a('1″', ['slug' => '1']),
+        $a('1 1/4″', ['slug' => '1-1-4']), $a('1 1/2″', ['slug' => '1-1-2']), $a('2″', ['slug' => '2']), $other($P_SIZE, 'Digər ölçü'),
+    ]] + ($hint ? ['hint' => $hint] : []);
+$pn = fn (bool $req = true): array => ['slug' => 'kart-san-pn', 'name' => $n('Nominal təzyiq (PN)', 'Номинальное давление (PN)', 'Pressure rating (PN)'), 'type' => 'dropdown',
+    'filter' => true, 'required' => $req, 'options' => [...$opts([['PN10', 'pn10'], ['PN16', 'pn16'], ['PN20', 'pn20'], ['PN25', 'pn25'], ['PN40', 'pn40']]), $other()]];
+$wall = fn (bool $req = false): array => ['slug' => 'kart-san-divar-qalinligi', 'name' => $n('Divar qalınlığı', 'Толщина стенки', 'Wall thickness'), 'type' => 'decimal', 'required' => $req, 'unit' => 'mm'];
+$rodLength = ['slug' => 'kart-san-cubuq-uzunlugu', 'name' => $n('Çubuğun uzunluğu', 'Длина хлыста', 'Rod length'), 'type' => 'decimal', 'required' => true, 'unit' => 'm',
+    'hint' => $n('Ədədlə satışda bir çubuq; metrlə qiymətə keçid üçün.', 'При продаже штуками — один хлыст; для пересчёта в метры.', 'One rod when sold by the piece; lets buyers convert to metres.')];
+$coilLength = ['slug' => 'kart-san-bux-uzunlugu', 'name' => $n('Buxtanın uzunluğu', 'Длина бухты', 'Coil length'), 'type' => 'decimal', 'required' => true, 'unit' => 'm',
+    'hint' => $n('Rulonla (buxta) satışda bir buxtadakı metr.', 'Метров в одной бухте при продаже бухтами.', 'Metres in one coil when sold by the coil.')];
+$maxTemp = ['slug' => 'kart-san-maks-temperatur', 'name' => $n('Maksimal temperatur', 'Максимальная температура', 'Maximum temperature'), 'type' => 'decimal', 'unit' => '°C'];
+$maxPressure = $pressure[1];
+$powerPlain = ['slug' => 'kart-san-guc', 'name' => $n('Güc', 'Мощность', 'Power'), 'type' => 'decimal', 'unit' => 'W'];
 
 // Units («Satış vahidi»).
 $pieceOrSet = ['sale' => 'unit', 'units' => ['piece', 'set']];
@@ -933,32 +957,208 @@ return [
             ],
         ],
 
-        // ════ Not in the workbook — the section's other groups, plain form ════
+        // ════ 13. Borular və fitinqlər (TZ proposal, no workbook) ════════════
         [
             'slug' => 'borular-ve-fitinqler',
             'name' => $n('Borular və fitinqlər', 'Трубы и фитинги', 'Pipes and fittings'),
-            'plain' => ['polipropilen-borular', 'metal-plastik-mis-polad-borular', 'fitinqler'],
+            'classes' => [
+                // Always rods: sold by the rod (piece) or by the metre; the rod length converts.
+                'polipropilen-borular' => $card('S13_1', $n('Polipropilen borular', 'Полипропиленовые трубы', 'Polypropylene pipes'), ['sale' => 'unit', 'units' => ['lm', 'piece']], [
+                    $diameter(true, $outerHint),
+                    $f('S13_1', 'sdr', $n('SDR', 'SDR', 'SDR'), 'dropdown', ['filter' => true, 'required' => true, 'options' => [...$opts([
+                        ['SDR 6', 'sdr-6'], ['SDR 7,4', 'sdr-7-4'], ['SDR 9', 'sdr-9'], ['SDR 11', 'sdr-11'],
+                    ]), $other()], 'hint' => $n('Diametrin divar qalınlığına nisbəti.', 'Отношение диаметра к толщине стенки.', 'Diameter to wall-thickness ratio.')]),
+                    $wall(),
+                    $pn(),
+                    $f('S13_1', 'armirleme', $n('Armirləmə', 'Армирование', 'Reinforcement'), 'dropdown', ['filter' => true, 'required' => true, 'options' => $opts([
+                        ['Yoxdur', 'yoxdur'], ['Şüşə lif', 'suse-lif'], ['Alüminium', 'aluminium'],
+                    ])]),
+                    $f('S13_1', 'teyinat', $n('Təyinat', 'Назначение', 'Use'), 'multiselect', ['filter' => true, 'required' => true, 'options' => $opts([
+                        ['Soyuq su', 'soyuq-su'], ['İsti su', 'isti-su'], ['İstilik sistemi', 'istilik'],
+                    ])]),
+                    $rodLength,
+                    ...$guarantee,
+                ]),
+                // «Tədarük forması» sets the unit: coil → roll, rod → piece; metre always.
+                'metal-plastik-mis-polad-borular' => $card('S13_2', $n('Metal-plastik / mis / polad borular', 'Металлопластиковые, медные и стальные трубы', 'Metal-plastic, copper and steel pipes'), [
+                    'sale' => 'unit', 'units' => ['lm', 'roll', 'piece'],
+                    'unit_when' => ['roll' => $when('kart-s13-2-forma', 'bux'), 'piece' => $when('kart-s13-2-forma', 'cubuq')],
+                ], [
+                    $f('S13_2', 'material', $n('Material', 'Материал', 'Material'), 'dropdown', ['filter' => true, 'required' => true, 'options' => [...$opts([
+                        ['Metal-plastik', 'metal-plastik'], ['Mis', 'mis'], ['Qara polad', 'qara-polad'], ['Sinklənmiş polad', 'sinklenmis-polad'], ['Paslanmayan polad', 'paslanmayan-polad'],
+                    ]), $other()]]),
+                    $diameter(true, $outerHint),
+                    $wall(true),
+                    $maxTemp,
+                    $maxPressure,
+                    $f('S13_2', 'forma', $n('Tədarük forması', 'Форма поставки', 'Supplied as'), 'dropdown', ['filter' => true, 'required' => true, 'options' => $opts([
+                        ['Bux (buxta)', 'bux'], ['Çubuq', 'cubuq'],
+                    ])]),
+                    ['when' => $when('kart-s13-2-forma', 'bux')] + $coilLength,
+                    ['when' => $when('kart-s13-2-forma', 'cubuq')] + $rodLength,
+                    ...$guarantee,
+                ]),
+                'fitinqler' => $card('S13_3', $n('Fitinqlər', 'Фитинги', 'Fittings'), ['sale' => 'unit', 'units' => ['piece', 'pack']], [
+                    $f('S13_3', 'material', $n('Material', 'Материал', 'Material'), 'dropdown', ['filter' => true, 'required' => true, 'options' => [...$opts([
+                        ['Polipropilen', 'polipropilen'], ['Pirinç', 'pirinc'], ['Mis', 'mis'], ['Polad', 'polad'], ['Paslanmayan polad', 'paslanmayan-polad'], ['Plastik', 'plastik'],
+                    ]), $other()]]),
+                    $f('S13_3', 'birlesme', $n('Birləşmə növü', 'Тип соединения', 'Joint type'), 'dropdown', ['filter' => true, 'required' => true, 'options' => [...$opts([
+                        ['Lehim', 'lehim'], ['Press', 'press'], ['Yivli', 'yivli'], ['Sıxma', 'sixma'],
+                    ]), $other()]]),
+                    $f('S13_3', 'element', $n('Element növü', 'Тип элемента', 'Fitting type'), 'dropdown', ['filter' => true, 'required' => true, 'options' => [...$opts([
+                        ['Dirsək', 'dirsek'], ['Üçlük', 'ucluk'], ['Muft', 'muft'], ['Keçid', 'kecid'], ['Tıxac', 'tixac'],
+                    ]), $other()]]),
+                    $diameter(true, $n('Keçiddə böyük tərəf.', 'Для перехода — больший конец.', 'For a reducer, the larger end.')),
+                    $f('S13_3', 'diametr-2', $n('İkinci diametr', 'Второй диаметр', 'Second diameter'), 'decimal', ['required' => true, 'unit' => 'mm',
+                        'when' => $when('kart-s13-3-element', 'kecid')]),
+                    $f('S13_3', 'bucaq', $n('Bucaq', 'Угол', 'Angle'), 'dropdown', ['when' => $when('kart-s13-3-element', 'dirsek'), 'options' => [
+                        $a('45°', ['slug' => '45']), $a('90°', ['slug' => '90']), $other(),
+                    ]]),
+                    $f('S13_3', 'yiv', $n('Yiv', 'Резьба', 'Thread'), 'text', ['when' => $when('kart-s13-3-birlesme', 'yivli'),
+                        'hint' => $n('Ölçü və daxili/xarici yiv, məs. 1/2″ daxili.', 'Размер и внутр./наружн., напр. 1/2″ внутр.', 'Size and female/male, e.g. 1/2″ female.')]),
+                    $packCount,
+                ]),
+            ],
         ],
+
+        // ════ 14. Bağlayıcı və tənzimləyici armatur ═══════════════════════
         [
             'slug' => 'baglayici-ve-tenzimleyici-armatur',
             'name' => $n('Bağlayıcı və tənzimləyici armatur', 'Запорная и регулирующая арматура', 'Shut-off and control valves'),
-            'plain' => ['kurevi-kranlar', 'manjetler-ve-sizdirmazlasdiricilar', 'kobud-temizleme-filtrleri', 'ince-temizleme-filtrleri', 'su-saygaci'],
+            'classes' => [
+                'kurevi-kranlar' => $card('S14_1', $n('Kürəvi kranlar', 'Шаровые краны', 'Ball valves'), $pieceOnly, [
+                    $inch(),
+                    $f('S14_1', 'qosulma', $n('Qoşulma', 'Присоединение', 'Ends'), 'dropdown', ['filter' => true, 'required' => true, 'options' => [...$opts([
+                        ['Daxili – daxili yiv', 'daxili-daxili'], ['Daxili – xarici yiv', 'daxili-xarici'], ['Xarici – xarici yiv', 'xarici-xarici'],
+                    ]), $other()]]),
+                    $f('S14_1', 'material', $n('Gövdənin materialı', 'Материал корпуса', 'Body material'), 'dropdown', ['filter' => true, 'required' => true, 'options' => [...$opts([
+                        ['Pirinç', 'pirinc'], ['Nikelli pirinç', 'nikelli-pirinc'], ['Paslanmayan polad', 'paslanmayan-polad'], ['Polipropilen', 'polipropilen'],
+                    ]), $other()]]),
+                    $f('S14_1', 'tutacaq', $n('Tutacaq', 'Рукоятка', 'Handle'), 'dropdown', ['filter' => true, 'options' => $opts([['Kəpənək', 'kepenek'], ['Qol', 'qol']])]),
+                    $pn(false),
+                    ...$guarantee,
+                ]),
+                'manjetler-ve-sizdirmazlasdiricilar' => $card('S14_2', $n('Manjetlər və sızdırmazlaşdırıcılar', 'Манжеты и уплотнители', 'Cuffs and seals'), ['sale' => 'unit', 'units' => ['piece', 'pack']], [
+                    $f('S14_2', 'nov', $n('Növ', 'Тип', 'Type'), 'dropdown', ['filter' => true, 'required' => true, 'options' => [...$opts([
+                        ['Manjet', 'manjet'], ['Conta', 'conta'], ['O-halqa', 'o-halqa'], ['Sızdırmazlıq lenti', 'lent'],
+                    ]), $other()]]),
+                    ['when' => $when('kart-s14-2-nov', 'manjet', 'conta', 'o-halqa', 'diger')] + $diameter(),
+                    $f('S14_2', 'material', $n('Material', 'Материал', 'Material'), 'dropdown', ['filter' => true, 'required' => true, 'options' => [...$opts([
+                        ['Rezin', 'rezin'], ['Silikon', 'silikon'], ['PTFE', 'ptfe'],
+                    ]), $other()]]),
+                    $packCount,
+                ]),
+                'kobud-temizleme-filtrleri' => $card('S14_3', $n('Kobud təmizləmə filtrləri', 'Фильтры грубой очистки', 'Coarse water filters'), $pieceOnly, [
+                    $inch(),
+                    $f('S14_3', 'tor', $n('Torun ölçüsü', 'Размер ячейки сетки', 'Mesh size'), 'decimal', ['filter' => true, 'unit' => 'mkm']),
+                    $f('S14_3', 'yuyulma', $n('Yuyulma funksiyası', 'Функция промывки', 'Flushing'), 'dropdown', ['filter' => true, 'options' => $ynn]),
+                    $maxPressure,
+                    ...$guarantee,
+                ]),
+                'ince-temizleme-filtrleri' => $card('S14_4', $n('İncə təmizləmə filtrləri', 'Фильтры тонкой очистки', 'Fine water filters'), $pieceOnly, [
+                    $f('S14_4', 'nov', $n('Növ', 'Тип', 'Type'), 'dropdown', ['filter' => true, 'required' => true, 'options' => [...$opts([
+                        ['Kolba', 'kolba'], ['Kartric', 'kartric'], ['Tərs osmos', 'ters-osmos'],
+                    ]), $other()]]),
+                    $f('S14_4', 'derece', $n('Təmizləmə dərəcəsi', 'Степень очистки', 'Filtration rating'), 'decimal', ['filter' => true, 'unit' => 'mkm']),
+                    $f('S14_4', 'mehsuldarliq', $n('Məhsuldarlıq', 'Производительность', 'Flow rate'), 'decimal', ['unit' => 'l/saat']),
+                    $f('S14_4', 'merhele', $n('Mərhələlərin sayı', 'Число ступеней', 'Stages'), 'decimal', ['filter' => true, 'unit' => 'ədəd', 'rules' => ['integer' => true, 'min' => 1]]),
+                    ...$guarantee,
+                ]),
+                'su-saygaci' => $card('S14_5', $n('Su sayğacı', 'Водосчётчики', 'Water meters'), $pieceOnly, [
+                    $f('S14_5', 'su', $n('Su növü', 'Вода', 'Water'), 'dropdown', ['filter' => true, 'required' => true, 'options' => $opts([
+                        ['Soyuq su', 'soyuq'], ['İsti su', 'isti'], ['Universal', 'universal'],
+                    ])]),
+                    $f('S14_5', 'dn', $n('Diametr (DN)', 'Диаметр (DN)', 'Size (DN)'), 'dropdown', ['filter' => true, 'required' => true, 'options' => [...$opts([
+                        ['DN15', 'dn15'], ['DN20', 'dn20'], ['DN25', 'dn25'], ['DN32', 'dn32'], ['DN40', 'dn40'], ['DN50', 'dn50'],
+                    ]), $other($P_SIZE, 'Digər ölçü')]]),
+                    $f('S14_5', 'sinif', $n('Dəqiqlik sinfi', 'Класс точности', 'Accuracy class'), 'dropdown', ['filter' => true, 'options' => [...$opts([
+                        ['A', 'a'], ['B', 'b'], ['C', 'c'], ['R80', 'r80'], ['R100', 'r100'], ['R160', 'r160'],
+                    ]), $other()]]),
+                    $f('S14_5', 'uzaqdan', $n('Məsafədən oxuma', 'Дистанционное считывание', 'Remote reading'), 'dropdown', ['filter' => true, 'options' => $ynn]),
+                    ...$guarantee,
+                ]),
+            ],
         ],
+
+        // ════ 15. Nasos avadanlığı ════════════════════════════════════════
         [
             'slug' => 'nasos-avadanligi',
             'name' => $n('Nasos avadanlığı', 'Насосное оборудование', 'Pumps'),
-            'plain' => ['nasoslar-sirkulyasiya-drenaj-fekal'],
+            'classes' => [
+                'nasoslar-sirkulyasiya-drenaj-fekal' => $card('S15', $n('Nasoslar (sirkulyasiya / drenaj / fekal)', 'Насосы (циркуляционные / дренажные / фекальные)', 'Pumps (circulation / drainage / sewage)'), $pieceOnly, [
+                    $f('S15', 'nov', $n('Növ', 'Тип', 'Type'), 'dropdown', ['filter' => true, 'required' => true, 'options' => [...$opts([
+                        ['Sirkulyasiya', 'sirkulyasiya'], ['Drenaj', 'drenaj'], ['Fekal', 'fekal'], ['Təzyiq artırıcı', 'tezyiq-artirici'],
+                    ]), $other()]]),
+                    ['required' => true, 'filter' => true] + $powerPlain,
+                    $f('S15', 'mehsuldarliq', $n('Maksimal məhsuldarlıq', 'Максимальная производительность', 'Maximum flow'), 'decimal', ['filter' => true, 'unit' => 'm³/saat']),
+                    $f('S15', 'basqi', $n('Maksimal basqı', 'Максимальный напор', 'Maximum head'), 'decimal', ['filter' => true, 'unit' => 'm']),
+                    $inch(false, $n('Fekal nasosda mm ilə «Digər ölçü».', 'Для фекального насоса в мм — «Другой размер».', 'For a sewage pump in mm, use «Other size».')),
+                    ...$guarantee,
+                ]),
+            ],
         ],
+
+        // ════ 16. Su qızdırıcıları ════════════════════════════════════════
         [
             'slug' => 'su-qizdiricilari',
             'name' => $n('Su qızdırıcıları', 'Водонагреватели', 'Water heaters'),
             // «Dəsmal quruducu» moved to the İqlim cards (H03, iqlim.php merges it).
-            'plain' => ['su-qizdiricisi-boyler'],
+            'classes' => [
+                'su-qizdiricisi-boyler' => $card('S16', $n('Su qızdırıcısı / boyler', 'Водонагреватели / бойлеры', 'Water heaters / boilers'), $pieceOnly, [
+                    $f('S16', 'nov', $n('Növ', 'Тип', 'Type'), 'dropdown', ['filter' => true, 'required' => true, 'options' => $opts([
+                        ['Elektrik akkumulyativ', 'elektrik-akkumulyativ'], ['Elektrik axar', 'elektrik-axar'], ['Qaz akkumulyativ', 'qaz-akkumulyativ'],
+                        ['Qaz axar (kolonka)', 'qaz-axar'], ['Dolayı qızdırma', 'dolayi'],
+                    ])]),
+                    $f('S16', 'hecm', $n('Həcm', 'Объём', 'Capacity'), 'decimal', ['filter' => true, 'required' => true, 'unit' => 'l',
+                        'when' => $when('kart-s16-nov', 'elektrik-akkumulyativ', 'qaz-akkumulyativ', 'dolayi')]),
+                    ['filter' => true, 'unit' => 'kW', 'hint' => $n('Qazda istilik gücü; dolayı qızdırmada əlavə TEN varsa.', 'Для газового — тепловая мощность; для косвенного — при наличии ТЭНа.', 'Heat output for gas; for indirect, only with a backup element.')] + $powerPlain,
+                    $f('S16', 'qurasdirma', $n('Quraşdırma', 'Монтаж', 'Mounting'), 'dropdown', ['filter' => true, 'options' => $opts([
+                        ['Şaquli', 'saquli'], ['Üfüqi', 'ufuqi'], ['Universal', 'universal'],
+                    ])]),
+                    ...$guarantee,
+                ]),
+            ],
         ],
+
+        // ════ 17. Kanalizasiya boruları və avadanlığı ═════════════════════
         [
             'slug' => 'kanalizasiya-borulari-ve-avadanligi',
             'name' => $n('Kanalizasiya boruları və avadanlığı', 'Канализационные трубы и оборудование', 'Sewer pipes and equipment'),
-            'plain' => ['kanalizasiya-borulari-ve-fitinqleri-pvx', 'septik-lokal-temizleme-stansiyasi'],
+            'classes' => [
+                // A pipe sells by the piece or the metre; every other element by the piece.
+                'kanalizasiya-borulari-ve-fitinqleri-pvx' => $card('S17_1', $n('Kanalizasiya boruları və fitinqləri (PVC)', 'Канализационные трубы и фитинги (ПВХ)', 'Sewer pipes and fittings (PVC)'), [
+                    'sale' => 'unit', 'units' => ['piece', 'lm'], 'unit_when' => ['lm' => $when('kart-s17-1-element', 'boru')],
+                ], [
+                    $f('S17_1', 'element', $n('Element növü', 'Тип элемента', 'Element'), 'dropdown', ['filter' => true, 'required' => true, 'options' => [...$opts([
+                        ['Boru', 'boru'], ['Dirsək', 'dirsek'], ['Üçlük', 'ucluk'], ['Reviziya', 'reviziya'],
+                    ]), $other()]]),
+                    $f('S17_1', 'diametr', $n('Diametr', 'Диаметр', 'Diameter'), 'dropdown', ['filter' => true, 'required' => true, 'options' => [
+                        $a('32 mm', ['slug' => '32']), $a('40 mm', ['slug' => '40']), $a('50 mm', ['slug' => '50']), $a('75 mm', ['slug' => '75']),
+                        $a('110 mm', ['slug' => '110']), $a('160 mm', ['slug' => '160']), $a('200 mm', ['slug' => '200']), $other($P_SIZE, 'Digər ölçü'),
+                    ]]),
+                    $f('S17_1', 'uzunluq', $n('Borunun uzunluğu', 'Длина трубы', 'Pipe length'), 'decimal', ['required' => true, 'unit' => 'm',
+                        'when' => $when('kart-s17-1-element', 'boru')]),
+                    $f('S17_1', 'bucaq', $n('Bucaq', 'Угол', 'Angle'), 'dropdown', ['when' => $when('kart-s17-1-element', 'dirsek'), 'options' => [
+                        $a('15°', ['slug' => '15']), $a('30°', ['slug' => '30']), $a('45°', ['slug' => '45']), $a('67°', ['slug' => '67']), $a('87°', ['slug' => '87']), $other(),
+                    ]]),
+                    $f('S17_1', 'teyinat', $n('Təyinat', 'Назначение', 'Use'), 'dropdown', ['filter' => true, 'required' => true, 'options' => $opts([
+                        ['Daxili kanalizasiya', 'daxili'], ['Xarici kanalizasiya', 'xarici'],
+                    ])]),
+                ]),
+                'septik-lokal-temizleme-stansiyasi' => $card('S17_2', $n('Septik / lokal təmizləmə stansiyası', 'Септики / локальные очистные станции', 'Septic tanks / local treatment plants'), $pieceOnly, [
+                    $f('S17_2', 'hecm', $n('Həcm', 'Объём', 'Capacity'), 'decimal', ['filter' => true, 'required' => true, 'unit' => 'm³']),
+                    $f('S17_2', 'istifadeci', $n('İstifadəçilərin sayı', 'Число пользователей', 'Users'), 'decimal', ['filter' => true, 'required' => true, 'unit' => 'nəfər',
+                        'rules' => ['integer' => true, 'min' => 1]]),
+                    $f('S17_2', 'material', $n('Material', 'Материал', 'Material'), 'dropdown', ['filter' => true, 'required' => true, 'options' => [...$opts([
+                        ['Plastik', 'plastik'], ['Beton', 'beton'],
+                    ]), $other()]]),
+                    $f('S17_2', 'temizleme', $n('Təmizləmə növü', 'Тип очистки', 'Treatment'), 'dropdown', ['filter' => true, 'required' => true, 'options' => $opts([
+                        ['Anaerob (septik)', 'anaerob'], ['Bioloji (aerob stansiya)', 'bioloji'],
+                    ])]),
+                    ['when' => $when('kart-s17-2-temizleme', 'bioloji')] + $powerPlain,
+                    ...$guarantee,
+                ]),
+            ],
         ],
     ],
 

@@ -2,12 +2,17 @@
 
 /*
 |--------------------------------------------------------------------------
-| Divar üzlükləri — 21 wall-finish cards (W01_1–W12_2) and 16 accessory cards (WK01_1–WK08)
+| Divar üzlükləri — 21 wall-finish cards (W01_1–W12_2), 12 accessory cards (WK01–WK08; WK01 = the five
+| former adhesive cards) and 4 partition cards (W13_1–W13_4)
 |--------------------------------------------------------------------------
 |
 | Source: Archi_AZ_Divar_Kataloq_AZ.xlsx (client, 18.11.2026). Format and decisions:
-| docs/product-cards.md. Section «Divarlar və arakəsmələr»: one group per workbook
-| category (12) and one per accessory subgroup (7); «Arakəsmə sistemləri» stays.
+| docs/product-cards.md. Section «Divarlar və arakəsmələr».
+|
+| 24.11.2026 (TZ «Divarlar və arakəsmələr»): the client cut the tree to 7 groups in the
+| prod admin; groups, names and order here mirror prod (the importer writes them from
+| this file). The five adhesive cards are one class «Yapışqanlar» (WK01, «Təyinat»),
+| the four partition classes got cards W13_1–W13_4, and some classes sell by m² / lm.
 |
 | Option values are Azerbaijani only (the site falls back to az); attribute and
 | class names carry ru / en. Wall attributes are `kart-divar-*` (shared inside this
@@ -150,9 +155,21 @@ $madeToSize = fn (string $formatAttr, array $readyIn): array => [
     'on_order_when' => ['attr' => $formatAttr, 'in' => ['ferdi']],
 ];
 
+// «Yapışqanlar» (WK01): a field / option shown only for these adhesive kinds.
+$adh = fn (string ...$kinds): array => $when('kart-wk01-teyinat', ...$kinds);
+
+// ── Partition systems (W13) ─────────────────────────────────────────────────
+$rw = ['slug' => 'kart-divar-ses-izolyasiyasi', 'name' => $n('Səs izolyasiyası, Rw', 'Звукоизоляция, Rw', 'Sound insulation, Rw'), 'type' => 'decimal', 'filter' => true, 'unit' => 'dB',
+    'hint' => $n('Bütün sistemin göstəricisi, sınaq sənədinə görə.', 'Показатель всей системы, по протоколу испытаний.', 'For the whole system, per the test report.')];
+$maxHeight = ['slug' => 'kart-divar-maks-hundurluk', 'name' => $n('Maksimal hündürlük', 'Максимальная высота', 'Maximum height'), 'type' => 'decimal', 'unit' => 'mm'];
+// «m² və ya qiymət sorğu ilə»: a ready system is priced per m², a project only on request.
+$offer = ['slug' => 'kart-divar-teklif-novu', 'name' => $n('Təklif növü', 'Тип предложения', 'Offer type'), 'type' => 'dropdown', 'required' => true,
+    'options' => [$a('Hazır sistem, AZN/m²', ['slug' => 'm2']), $a('Layihə üzrə, qiymət sorğu ilə', ['slug' => 'layihe'])],
+    'hint' => $n('Layihə üzrə: qiymət yoxdur, alıcı «Hesablama tələb et» göndərir.', 'По проекту: цены нет, покупатель отправляет «Запросить расчёт».', 'Per project: no price, the buyer sends «Request an estimate».')];
+$byOffer = ['sale' => 'unit', 'units' => ['m2'], 'quote_when' => ['attr' => 'kart-divar-teklif-novu', 'in' => ['layihe']]];
+
 // Sold whole in the seller's unit.
 $pack = ['sale' => 'unit', 'units' => ['pack']];
-$pieceOrPack = ['sale' => 'unit', 'units' => ['piece', 'pack']];
 $piece = ['sale' => 'unit', 'units' => ['piece']];
 
 return [
@@ -244,10 +261,10 @@ return [
             ],
         ],
 
-        // ════ 2. Divar boyaları ════════════════════════════════════════════
+        // ════ 2. Boyalar və dekorativ örtüklər ═════════════════════════════════
         [
-            'slug' => 'divar-boyalari',
-            'name' => $n('Divar boyaları', 'Краски для стен', 'Wall paints'),
+            'slug' => 'dekorativ-suvaqlar-ve-ortukler',
+            'name' => $n('Boyalar və dekorativ örtüklər', 'Краски и декоративные покрытия', 'Paints and decorative coatings'),
             'classes' => [
                 // ── W02 ─────────────────────────────────────────────────────
                 'interyer-boyasi' => [
@@ -279,14 +296,7 @@ return [
                             'hint' => $n('İstehsalçının göstərdiyi şəraitdə.', 'При условиях, указанных производителем.', 'Under the maker’s stated conditions.')],
                     ],
                 ],
-            ],
-        ],
 
-        // ════ 3. Dekorativ suvaqlar və örtüklər ════════════════════════════
-        [
-            'slug' => 'dekorativ-suvaqlar-ve-ortukler',
-            'name' => $n('Dekorativ suvaqlar və örtüklər', 'Декоративные штукатурки и покрытия', 'Decorative plasters and coatings'),
-            'classes' => [
                 // ── W03_1 ───────────────────────────────────────────────────
                 'dekorativ-suvaq' => [
                     'code' => 'W03_1',
@@ -373,13 +383,41 @@ return [
                         ]],
                     ],
                 ],
+
+                // ── WK07 ────────────────────────────────────────────────────
+                'finis-qoruyucu-laklar-mumlar-hopdurucular' => [
+                    'code' => 'WK07',
+                    'name' => $n('Finiş qoruyucu laklar, mumlar və hopdurucular', 'Защитные лаки, воски и пропитки', 'Protective varnishes, waxes and sealers'),
+                    ...$pack,
+                    'fields' => [
+                        ['slug' => 'kart-wk07-novu', 'name' => $n('Növ', 'Тип', 'Type'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
+                            $a('Lak', ['slug' => 'lak']), $a('Mum', ['slug' => 'mum']), $a('Hopdurucu', ['slug' => 'hopdurucu']),
+                        ]],
+                        ['filter' => true] + $compatMat,
+                        ['slug' => 'kart-wk07-terkib', 'name' => $n('Tərkib', 'Состав', 'Composition'), 'type' => 'dropdown', 'filter' => true, 'options' => [
+                            $a('Su əsaslı', ['slug' => 'su']), $a('Həlledici əsaslı', ['slug' => 'helledici']), $other(), $ns,
+                        ]],
+                        ['slug' => 'kart-wk07-komponent', 'name' => $n('Komponent sayı', 'Число компонентов', 'Components'), 'type' => 'dropdown', 'options' => [
+                            $a('Bir', ['slug' => 'bir']), $a('İki', ['slug' => 'iki']),
+                        ]],
+                        $surface,
+                        ['slug' => 'kart-wk07-reng', 'name' => $n('Rəng', 'Цвет', 'Colour'), 'type' => 'dropdown', 'options' => [
+                            $a('Rəngsiz', ['slug' => 'rengsiz']), $a('Rəngli', ['slug' => 'rengli']),
+                        ]],
+                        $packQty,
+                        $packQtyUnit,
+                        ...$coverage,
+                        ['filter' => true] + $wet,
+                        $shelf,
+                    ],
+                ],
             ],
         ],
 
-        // ════ 4. Keramik plitələr ══════════════════════════════════════════
+        // ════ 3. Plitə və daş ══════════════════════════════════════════════════
         [
             'slug' => 'keramik-divar-pliteleri',
-            'name' => $n('Keramik plitələr', 'Керамическая плитка', 'Ceramic tiles'),
+            'name' => $n('Plitə və daş', 'Плитка и камень', 'Tiles and stone'),
             'classes' => [
                 // ── W04 ─────────────────────────────────────────────────────
                 'divar-keramik-plitesi' => [
@@ -405,14 +443,7 @@ return [
                         $packArea,
                     ],
                 ],
-            ],
-        ],
 
-        // ════ 5. Keramoqranit ══════════════════════════════════════════════
-        [
-            'slug' => 'divar-keramoqranit',
-            'name' => $n('Keramoqranit', 'Керамогранит', 'Porcelain stoneware'),
-            'classes' => [
                 // ── W05 ─────────────────────────────────────────────────────
                 'divar-ucun-keramoqranit' => [
                     'code' => 'W05',
@@ -422,14 +453,7 @@ return [
                     'fields' => array_replace($tileFields, [1 => $size(['100×300', '150×900', '200×1200', '300×300', '300×600', '600×600',
                         '600×1200', '800×800', '800×1600', '1000×1000', '1200×1200', '1200×2400', '1200×2600', '1600×3200'])]),
                 ],
-            ],
-        ],
 
-        // ════ 6. Mozaika ═══════════════════════════════════════════════════
-        [
-            'slug' => 'divar-mozaika',
-            'name' => $n('Mozaika', 'Мозаика', 'Mosaic'),
-            'classes' => [
                 // ── W06 ─────────────────────────────────────────────────────
                 'divar-mozaikasi' => [
                     'code' => 'W06',
@@ -456,14 +480,7 @@ return [
                         ['filter' => true, 'hint' => $n('Yalnız istehsalçı təsdiqi ilə.', 'Только с подтверждением производителя.', 'Only with the maker’s confirmation.')] + $zone,
                     ],
                 ],
-            ],
-        ],
 
-        // ════ 7. Təbii daş ═════════════════════════════════════════════════
-        [
-            'slug' => 'divar-tebii-das',
-            'name' => $n('Təbii daş', 'Натуральный камень', 'Natural stone'),
-            'classes' => [
                 // ── W07 ─────────────────────────────────────────────────────
                 'divar-ucun-tebii-das' => [
                     'code' => 'W07',
@@ -492,19 +509,13 @@ return [
                         ]],
                     ],
                 ],
-            ],
-        ],
 
-        // ════ 8. Dekorativ kərpic və süni daş ══════════════════════════════
-        [
-            'slug' => 'dekorativ-kerpic-ve-suni-das',
-            'name' => $n('Dekorativ kərpic və süni daş', 'Декоративный кирпич и искусственный камень', 'Decorative brick and faux stone'),
-            'classes' => [
                 // ── W08 ─────────────────────────────────────────────────────
                 'dekorativ-kerpic-klinker-interyer-ucun' => [
                     'code' => 'W08',
                     'name' => $n('Dekorativ kərpic və süni daş', 'Декоративный кирпич и искусственный камень', 'Decorative brick and faux stone'),
-                    ...$pack,
+                    // TZ 24.11: + m² — flat pieces only (corners are counted in running metres).
+                    'sale' => 'unit', 'units' => ['pack', 'm2'], 'unit_when' => ['m2' => $when('kart-w08-element', 'duz')],
                     'fields' => [
                         ['slug' => 'kart-w08-novu', 'name' => $n('Növ', 'Тип', 'Type'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
                             $a('Dekorativ kərpic', ['slug' => 'kerpic']), $a('Süni daş', ['slug' => 'suni-das']),
@@ -536,7 +547,7 @@ return [
             ],
         ],
 
-        // ════ 9. Divar panelləri və reykalar ═══════════════════════════════
+        // ════ 4. Divar panelləri və reykalar ═══════════════════════════════════
         [
             'slug' => 'divar-panelleri-ve-reykalar',
             'name' => $n('Divar panelləri və reykalar', 'Стеновые панели и рейки', 'Wall panels and slats'),
@@ -545,7 +556,7 @@ return [
                 'taxta-lambir-uzluk' => [
                     'code' => 'W09_1',
                     'name' => $n('Taxta və şponlu divar panelləri', 'Деревянные и шпонированные стеновые панели', 'Wood and veneered wall panels'),
-                    ...$pieceOrPack,
+                    'sale' => 'unit', 'units' => ['piece', 'pack', 'm2'], // + m² (TZ 24.11)
                     'fields' => [
                         ['slug' => 'kart-w09-1-konstruksiya', 'name' => $n('Konstruksiya', 'Конструкция', 'Construction'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
                             $a('Massiv ağac', ['slug' => 'massiv']), $a('Şponlu faner', ['slug' => 'sponlu-faner']), $a('Şponlu MDF', ['slug' => 'sponlu-mdf']), $other(),
@@ -571,7 +582,7 @@ return [
                 'dekorativ-paneller-mdfplastikagacmetalakril' => [
                     'code' => 'W09_2',
                     'name' => $n('MDF divar panelləri', 'Стеновые панели МДФ', 'MDF wall panels'),
-                    ...$pieceOrPack,
+                    'sale' => 'unit', 'units' => ['piece', 'pack', 'm2'], // + m² (TZ 24.11)
                     'fields' => [
                         ['slug' => 'kart-w09-2-ust-ortuk', 'name' => $n('Üst örtük', 'Лицевое покрытие', 'Face finish'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
                             $a('Laminasiya', ['slug' => 'laminasiya']), $a('PVC plyonka', ['slug' => 'pvc']), $a('Boya', ['slug' => 'boya']),
@@ -596,7 +607,7 @@ return [
                 'plastik-ve-polimer-divar-panelleri' => [
                     'code' => 'W09_3',
                     'name' => $n('Plastik və polimer divar panelləri', 'Пластиковые и полимерные стеновые панели', 'Plastic and polymer wall panels'),
-                    ...$pieceOrPack,
+                    'sale' => 'unit', 'units' => ['piece', 'pack', 'm2'], // + m² (TZ 24.11)
                     'fields' => [
                         ['slug' => 'kart-w09-3-material', 'name' => $n('Material', 'Материал', 'Material'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
                             $a('PVC', ['slug' => 'pvc']), $a('Polistirol', ['slug' => 'polistirol']), $a('Poliuretan', ['slug' => 'poliuretan']),
@@ -624,7 +635,7 @@ return [
                 'gips-divar-panelleri' => [
                     'code' => 'W09_4',
                     'name' => $n('Gips divar panelləri', 'Гипсовые стеновые панели', 'Gypsum wall panels'),
-                    ...$pieceOrPack,
+                    'sale' => 'unit', 'units' => ['piece', 'pack', 'm2'], // + m² (TZ 24.11)
                     'fields' => [
                         ['slug' => 'kart-w09-4-novu', 'name' => $n('Panel növü', 'Тип панели', 'Panel type'), 'type' => 'dropdown', 'filter' => true, 'required' => true,
                             'hint' => $n('Dekorativ finiş panelləri. Adi alçıpan lövhələr qaralama materiallar bölməsinə aiddir.', 'Декоративные финишные панели. Обычный гипсокартон — в разделе черновых материалов.', 'Decorative finish panels. Plain plasterboard belongs to rough materials.'),
@@ -646,7 +657,7 @@ return [
                 'dekorativ-divar-reykalari' => [
                     'code' => 'W09_5',
                     'name' => $n('Dekorativ divar reykaları', 'Декоративные стеновые рейки', 'Decorative wall slats'),
-                    ...$pieceOrPack,
+                    'sale' => 'unit', 'units' => ['piece', 'pack', 'lm'], // + xətti metr (TZ 24.11)
                     'fields' => [
                         ['slug' => 'kart-w09-5-material', 'name' => $n('Material', 'Материал', 'Material'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
                             $a('Massiv ağac', ['slug' => 'massiv']), $a('Şponlu MDF', ['slug' => 'sponlu-mdf']), $a('Örtüklü MDF', ['slug' => 'ortuklu-mdf']),
@@ -689,14 +700,7 @@ return [
                         ['hint' => $n('Etiketə əsasən, kəsim itkisi əlavə edilmədən. Rulonda rulonun sahəsi.', 'По этикетке, без запаса на подрезку. Для рулона — площадь рулона.', 'From the label, without cutting waste. For a roll, the roll area.')] + $packArea,
                     ],
                 ],
-            ],
-        ],
 
-        // ════ 10. Yumşaq divar panelləri ═══════════════════════════════════
-        [
-            'slug' => 'yumsaq-paneller',
-            'name' => $n('Yumşaq divar panelləri', 'Мягкие стеновые панели', 'Soft wall panels'),
-            'classes' => [
                 // ── W10 ─────────────────────────────────────────────────────
                 'yumsaq-divar-panelleri' => [
                     'code' => 'W10',
@@ -727,19 +731,12 @@ return [
                         $mount,
                     ],
                 ],
-            ],
-        ],
 
-        // ════ 11. Akustik divar panelləri ══════════════════════════════════
-        [
-            'slug' => 'akustik-divar-panelleri',
-            'name' => $n('Akustik divar panelləri', 'Акустические стеновые панели', 'Acoustic wall panels'),
-            'classes' => [
                 // ── W11 ─────────────────────────────────────────────────────
                 'akustik-paneller' => [
                     'code' => 'W11',
                     'name' => $n('Akustik divar panelləri', 'Акустические стеновые панели', 'Acoustic wall panels'),
-                    ...$pieceOrPack,
+                    'sale' => 'unit', 'units' => ['piece', 'pack', 'm2'], // + m² (TZ 24.11)
                     'fields' => [
                         ['slug' => 'kart-w11-novu', 'name' => $n('Növ', 'Тип', 'Type'), 'type' => 'dropdown', 'filter' => true, 'required' => true,
                             'hint' => $n('Səsudma təsdiqi olmayan dekorativ reykalar «Dekorativ divar reykaları» sinfinə aiddir.', 'Декоративные рейки без подтверждённого звукопоглощения — в классе «Декоративные рейки».', 'Decorative slats without proven absorption belong to «Decorative wall slats».'),
@@ -773,14 +770,7 @@ return [
                         $packCount,
                     ],
                 ],
-            ],
-        ],
 
-        // ════ 12. Şüşə və güzgü örtükləri ══════════════════════════════════
-        [
-            'slug' => 'suse-ve-guzgu-ortukleri',
-            'name' => $n('Şüşə və güzgü örtükləri', 'Стеклянные и зеркальные покрытия', 'Glass and mirror finishes'),
-            'classes' => [
                 // ── W12_1 ───────────────────────────────────────────────────
                 'suse-divar-panelleri' => [
                     'code' => 'W12_1',
@@ -836,27 +826,43 @@ return [
                     ],
                 ],
             ],
-            // Glass blocks are a masonry product, not a finish: they move to «Arakəsmə sistemləri».
         ],
 
-        // ════ K1. Yapışqanlar ══════════════════════════════════════════════
+        // ════ 5. Montaj materialları ═══════════════════════════════════════════
         [
             'slug' => 'divar-uzluk-yapisqanlari',
-            'name' => $n('Yapışqanlar', 'Клеи', 'Adhesives'),
+            'name' => $n('Montaj materialları', 'Монтажные материалы', 'Installation materials'),
             'classes' => [
-                // ── WK01_1 ──────────────────────────────────────────────────
+                // ── WK01: the five adhesive cards (WK01_1–WK01_5) in one class ───
+                // TZ 24.11 item 3: they differ only by purpose. «Təyinat» picks the kind;
+                // each kind still asks what its own card asked (`when`), shared fields once.
                 'divar-kagizi-yapisqani' => [
-                    'code' => 'WK01_1',
-                    'name' => $n('Divar kağızı yapışqanı', 'Клей для обоев', 'Wallpaper adhesive'),
+                    'code' => 'WK01',
+                    'name' => $n('Yapışqanlar', 'Клеи', 'Adhesives'),
                     ...$pack,
                     'fields' => [
-                        ['slug' => 'kart-wk01-1-teyinat', 'name' => $n('Təyinat', 'Назначение', 'Intended for'), 'type' => 'multiselect', 'filter' => true, 'required' => true, 'options' => [
-                            $a('Kağız', ['slug' => 'kagiz']), $a('Vinil', ['slug' => 'vinil']), $a('Flizelin', ['slug' => 'flizelin']),
-                            $a('Tekstil', ['slug' => 'tekstil']), $a('Şüşə lif', ['slug' => 'suse-lif']),
-                        ]],
-                        ['slug' => 'kart-wk01-1-terkib', 'name' => $n('Tərkib', 'Состав', 'Composition'), 'type' => 'dropdown', 'filter' => true, 'options' => [
-                            $a('Sellüloza', ['slug' => 'selluloza']), $a('Nişasta', ['slug' => 'nisasta']), $a('Dispersiya', ['slug' => 'dispersiya']),
-                            $a('Qarışıq', ['slug' => 'qarisiq']), $other(),
+                        ['slug' => 'kart-wk01-teyinat', 'name' => $n('Təyinat', 'Назначение', 'Intended for'), 'type' => 'dropdown', 'filter' => true, 'required' => true,
+                            'hint' => $n('Yapışqanın növü; aşağıdakı sahələr ona görə dəyişir.', 'Вид клея; поля ниже зависят от него.', 'The adhesive kind; the fields below follow it.'),
+                            'options' => [
+                                $a('Divar kağızı yapışqanı', ['slug' => 'divar-kagizi']),
+                                $a('Plitə, mozaika və daş yapışqanı', ['slug' => 'plite']),
+                                $a('Divar paneli montaj yapışqanı', ['slug' => 'panel']),
+                                $a('Şüşə və güzgü yapışqanı', ['slug' => 'suse-guzgu']),
+                                $a('Moldinq və dekor yapışqanı', ['slug' => 'moldinq']),
+                            ]],
+                        // WK01_1 / WK01_2 had their own «Tərkib»; folded here (move_values), each kind sees its own list.
+                        ['slug' => 'kart-divar-yap-terkib', 'name' => $n('Tərkib', 'Состав', 'Composition'), 'type' => 'dropdown', 'filter' => true, 'options' => [
+                            $a('Dispersiya', ['slug' => 'dispersiya']),
+                            $a('Poliuretan', ['slug' => 'poliuretan', 'when' => $adh('panel', 'suse-guzgu', 'moldinq')]),
+                            $a('MS-polimer', ['slug' => 'ms-polimer', 'when' => $adh('panel', 'suse-guzgu', 'moldinq')]),
+                            $a('Neytral silikon', ['slug' => 'silikon', 'when' => $adh('panel', 'suse-guzgu', 'moldinq')]),
+                            $a('Gips', ['slug' => 'gips', 'when' => $adh('panel', 'suse-guzgu', 'moldinq')]),
+                            $a('Sellüloza', ['slug' => 'selluloza', 'when' => $adh('divar-kagizi')]),
+                            $a('Nişasta', ['slug' => 'nisasta', 'when' => $adh('divar-kagizi')]),
+                            $a('Qarışıq', ['slug' => 'qarisiq', 'when' => $adh('divar-kagizi')]),
+                            $a('Sement', ['slug' => 'sement', 'when' => $adh('plite')]),
+                            $a('Epoksi', ['slug' => 'epoksi', 'when' => $adh('plite')]),
+                            $other(),
                         ]],
                         ['slug' => 'kart-divar-yap-techizat', 'name' => $n('Təchizat forması', 'Форма поставки', 'Supply form'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
                             $a('Quru qarışıq', ['slug' => 'quru']), $a('İstifadəyə hazır', ['slug' => 'hazir']), $a('Hazır pasta', ['slug' => 'pasta']),
@@ -865,139 +871,73 @@ return [
                         $substrates,
                         $packQty,
                         $packQtyUnit,
-                        ...$range('kart-divar-qab-ortme', $n('Bir qablaşdırmanın örtmə sahəsi', 'Площадь покрытия одной упаковки', 'Coverage of one pack'), 'm²',
-                            $n('Kağızın növünə görə istehsalçı aralığı.', 'Диапазон производителя по типу обоев.', 'The maker’s range by wallpaper type.')),
-                        $shelf,
-                    ],
-                ],
 
-                // ── WK01_2 ──────────────────────────────────────────────────
-                'plite-mozaika-ve-das-yapisqani' => [
-                    'code' => 'WK01_2',
-                    'name' => $n('Plitə, mozaika və daş yapışqanı', 'Клей для плитки, мозаики и камня', 'Tile, mosaic and stone adhesive'),
-                    ...$pack,
-                    'fields' => [
-                        ['slug' => 'kart-wk01-2-teyinat', 'name' => $n('Təyinat', 'Назначение', 'Intended for'), 'type' => 'multiselect', 'filter' => true, 'required' => true, 'options' => [
-                            $a('Keramik plitə', ['slug' => 'keramik']), $a('Keramoqranit', ['slug' => 'keramoqranit']), $a('Mozaika', ['slug' => 'mozaika']),
-                            $a('Təbii daş', ['slug' => 'tebii-das']), $a('Dekorativ daş', ['slug' => 'dekorativ-das']),
-                        ]],
-                        ['slug' => 'kart-wk01-2-terkib', 'name' => $n('Tərkib', 'Состав', 'Composition'), 'type' => 'dropdown', 'filter' => true, 'options' => [
-                            $a('Sement', ['slug' => 'sement']), $a('Dispersiya', ['slug' => 'dispersiya']), $a('Epoksi', ['slug' => 'epoksi']), $other(),
-                        ]],
-                        ['slug' => 'kart-divar-yap-techizat', 'name' => $n('Təchizat forması', 'Форма поставки', 'Supply form'), 'type' => 'dropdown', 'required' => true, 'options' => [
-                            $a('Quru qarışıq', ['slug' => 'quru']), $a('İstifadəyə hazır', ['slug' => 'hazir']), $a('Hazır pasta', ['slug' => 'pasta']),
-                            $a('Kartric', ['slug' => 'kartric']), $a('İkikomponentli dəst', ['slug' => 'iki']), $other(),
-                        ]],
-                        $substrates,
-                        $packQty,
-                        $packQtyUnit,
-                        ['slug' => 'kart-wk01-2-reng', 'name' => $n('Yapışqanın rəngi', 'Цвет клея', 'Adhesive colour'), 'type' => 'dropdown', 'filter' => true, 'options' => [
-                            $a('Ağ', ['slug' => 'ag']), $a('Boz', ['slug' => 'boz']), $other(),
-                        ]],
-                        $makerClass,
-                        ['filter' => true] + $zone,
-                        ...$consumption($n('Tətbiq qalınlığı və ya dişli malanın ölçüsü ilə birlikdə.', 'Вместе с толщиной нанесения или размером зубчатого шпателя.', 'Together with the layer thickness or the notched trowel size.')),
+                        // WK01_1 — wallpaper
+                        ['slug' => 'kart-wk01-1-teyinat', 'name' => $n('Divar kağızının növü', 'Тип обоев', 'Wallpaper type'), 'type' => 'multiselect', 'required' => true,
+                            'when' => $adh('divar-kagizi'), 'options' => [
+                                $a('Kağız', ['slug' => 'kagiz']), $a('Vinil', ['slug' => 'vinil']), $a('Flizelin', ['slug' => 'flizelin']),
+                                $a('Tekstil', ['slug' => 'tekstil']), $a('Şüşə lif', ['slug' => 'suse-lif']),
+                            ]],
+                        ...array_map(fn (array $f): array => $f + ['when' => $adh('divar-kagizi')],
+                            $range('kart-divar-qab-ortme', $n('Bir qablaşdırmanın örtmə sahəsi', 'Площадь покрытия одной упаковки', 'Coverage of one pack'), 'm²',
+                                $n('Kağızın növünə görə istehsalçı aralığı.', 'Диапазон производителя по типу обоев.', 'The maker’s range by wallpaper type.'))),
+
+                        // WK01_2 — tile, mosaic, stone
+                        ['slug' => 'kart-wk01-2-teyinat', 'name' => $n('Üzlük materialı', 'Облицовочный материал', 'Cladding material'), 'type' => 'multiselect', 'required' => true,
+                            'when' => $adh('plite'), 'options' => [
+                                $a('Keramik plitə', ['slug' => 'keramik']), $a('Keramoqranit', ['slug' => 'keramoqranit']), $a('Mozaika', ['slug' => 'mozaika']),
+                                $a('Təbii daş', ['slug' => 'tebii-das']), $a('Dekorativ daş', ['slug' => 'dekorativ-das']),
+                            ]],
+                        // WK01_2 / WK01_4 colour, folded (move_values).
+                        ['slug' => 'kart-divar-yap-reng', 'name' => $n('Yapışqanın rəngi', 'Цвет клея', 'Adhesive colour'), 'type' => 'dropdown',
+                            'when' => $adh('plite', 'suse-guzgu'), 'options' => [
+                                $a('Ağ', ['slug' => 'ag']), $a('Boz', ['slug' => 'boz', 'when' => $adh('plite')]),
+                                $a('Şəffaf', ['slug' => 'seffaf', 'when' => $adh('suse-guzgu')]), $other(),
+                            ]],
+                        ['when' => $adh('plite')] + $makerClass,
+                        ['when' => $adh('plite')] + $zone,
+                        ...array_map(fn (array $f): array => $f + ['when' => $adh('plite')],
+                            $consumption($n('Tətbiq qalınlığı və ya dişli malanın ölçüsü ilə birlikdə.', 'Вместе с толщиной нанесения или размером зубчатого шпателя.', 'Together with the layer thickness or the notched trowel size.'))),
                         ['slug' => 'kart-wk01-2-serfiyyat-serti', 'name' => $n('Sərfiyyatın şərti', 'Условие расхода', 'Consumption basis'), 'type' => 'text',
+                            'when' => $adh('plite'),
                             'hint' => $n('Məsələn: «dişli mala 8 mm» və ya «qat 5 mm».', 'Например: «зубчатый шпатель 8 мм» или «слой 5 мм».', 'E.g. «8 mm notched trowel» or «5 mm layer».')],
-                        $shelf,
-                    ],
-                ],
 
-                // ── WK01_3 ──────────────────────────────────────────────────
-                'divar-paneli-montaj-yapisqani' => [
-                    'code' => 'WK01_3',
-                    'name' => $n('Divar paneli montaj yapışqanı', 'Монтажный клей для стеновых панелей', 'Wall panel adhesive'),
-                    ...$pack,
-                    'fields' => [
-                        ['slug' => 'kart-wk01-3-teyinat', 'name' => $n('Təyinat', 'Назначение', 'Intended for'), 'type' => 'multiselect', 'filter' => true, 'required' => true, 'options' => [
-                            $a('Taxta', ['slug' => 'taxta']), $a('MDF', ['slug' => 'mdf']), $a('PVC', ['slug' => 'pvc']), $a('Polimer', ['slug' => 'polimer']),
-                            $a('Gips', ['slug' => 'gips']), $a('Mantar', ['slug' => 'mantar']), $a('Akustik panel', ['slug' => 'akustik']),
-                        ]],
-                        ['slug' => 'kart-divar-yap-terkib', 'name' => $n('Tərkib', 'Состав', 'Composition'), 'type' => 'dropdown', 'filter' => true, 'options' => [
-                            $a('Dispersiya', ['slug' => 'dispersiya']), $a('Poliuretan', ['slug' => 'poliuretan']), $a('MS-polimer', ['slug' => 'ms-polimer']),
-                            $a('Neytral silikon', ['slug' => 'silikon']), $a('Gips', ['slug' => 'gips']), $other(),
-                        ]],
-                        ['slug' => 'kart-divar-yap-techizat', 'name' => $n('Təchizat forması', 'Форма поставки', 'Supply form'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
-                            $a('Quru qarışıq', ['slug' => 'quru']), $a('İstifadəyə hazır', ['slug' => 'hazir']), $a('Hazır pasta', ['slug' => 'pasta']),
-                            $a('Kartric', ['slug' => 'kartric']), $a('İkikomponentli dəst', ['slug' => 'iki']), $other(),
-                        ]],
-                        $substrates,
-                        $packQty,
-                        $packQtyUnit,
-                        ['filter' => true] + $wet,
-                        ['slug' => 'kart-wk01-3-serfiyyat', 'name' => $n('Sərfiyyat', 'Расход', 'Consumption'), 'type' => 'decimal'],
-                        ['slug' => 'kart-wk01-3-serfiyyat-vahidi', 'name' => $n('Sərfiyyatın vahidi', 'Единица расхода', 'Consumption unit'), 'type' => 'dropdown', 'options' => [
-                            $a('q/m²', ['slug' => 'q-m2']), $a('ml/m²', ['slug' => 'ml-m2']),
-                        ]],
-                        $shelf,
-                    ],
-                ],
+                        // WK01_3 — wall panels
+                        ['slug' => 'kart-wk01-3-teyinat', 'name' => $n('Panelin materialı', 'Материал панели', 'Panel material'), 'type' => 'multiselect', 'required' => true,
+                            'when' => $adh('panel'), 'options' => [
+                                $a('Taxta', ['slug' => 'taxta']), $a('MDF', ['slug' => 'mdf']), $a('PVC', ['slug' => 'pvc']), $a('Polimer', ['slug' => 'polimer']),
+                                $a('Gips', ['slug' => 'gips']), $a('Mantar', ['slug' => 'mantar']), $a('Akustik panel', ['slug' => 'akustik']),
+                            ]],
+                        ['slug' => 'kart-wk01-3-serfiyyat', 'name' => $n('Sərfiyyat', 'Расход', 'Consumption'), 'type' => 'decimal', 'when' => $adh('panel')],
+                        ['slug' => 'kart-wk01-3-serfiyyat-vahidi', 'name' => $n('Sərfiyyatın vahidi', 'Единица расхода', 'Consumption unit'), 'type' => 'dropdown',
+                            'when' => $adh('panel'), 'options' => [
+                                $a('q/m²', ['slug' => 'q-m2']), $a('ml/m²', ['slug' => 'ml-m2']),
+                            ]],
+                        ['when' => $adh('panel', 'suse-guzgu')] + $wet,
 
-                // ── WK01_4 ──────────────────────────────────────────────────
-                'suse-ve-guzgu-yapisqani' => [
-                    'code' => 'WK01_4',
-                    'name' => $n('Şüşə və güzgü yapışqanı', 'Клей для стекла и зеркал', 'Glass and mirror adhesive'),
-                    ...$pack,
-                    'fields' => [
-                        ['slug' => 'kart-wk01-4-teyinat', 'name' => $n('Təyinat', 'Назначение', 'Intended for'), 'type' => 'multiselect', 'filter' => true, 'required' => true, 'options' => [
-                            $a('Şüşə', ['slug' => 'suse']), $a('Güzgü', ['slug' => 'guzgu']),
-                        ],
+                        // WK01_4 — glass and mirror
+                        ['slug' => 'kart-wk01-4-teyinat', 'name' => $n('Yapışdırılan material', 'Склеиваемый материал', 'Material bonded'), 'type' => 'multiselect', 'required' => true,
+                            'when' => $adh('suse-guzgu'), 'options' => [
+                                $a('Şüşə', ['slug' => 'suse']), $a('Güzgü', ['slug' => 'guzgu']),
+                            ],
                             'hint' => $n('Güzgünün arxa örtüyünə uyğunluq təsdiqlənməlidir.', 'Совместимость с тыльным покрытием зеркала должна быть подтверждена.', 'Compatibility with the mirror backing must be confirmed.')],
-                        ['slug' => 'kart-divar-yap-terkib', 'name' => $n('Tərkib', 'Состав', 'Composition'), 'type' => 'dropdown', 'filter' => true, 'options' => [
-                            $a('Dispersiya', ['slug' => 'dispersiya']), $a('Poliuretan', ['slug' => 'poliuretan']), $a('MS-polimer', ['slug' => 'ms-polimer']),
-                            $a('Neytral silikon', ['slug' => 'silikon']), $a('Gips', ['slug' => 'gips']), $other(),
-                        ]],
-                        ['slug' => 'kart-divar-yap-techizat', 'name' => $n('Təchizat forması', 'Форма поставки', 'Supply form'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
-                            $a('Quru qarışıq', ['slug' => 'quru']), $a('İstifadəyə hazır', ['slug' => 'hazir']), $a('Hazır pasta', ['slug' => 'pasta']),
-                            $a('Kartric', ['slug' => 'kartric']), $a('İkikomponentli dəst', ['slug' => 'iki']), $other(),
-                        ]],
-                        $substrates,
-                        $packQty,
-                        $packQtyUnit,
-                        $wet,
-                        ['slug' => 'kart-wk01-4-reng', 'name' => $n('Rəng', 'Цвет', 'Colour'), 'type' => 'dropdown', 'filter' => true, 'options' => [
-                            $a('Şəffaf', ['slug' => 'seffaf']), $a('Ağ', ['slug' => 'ag']), $other(),
-                        ]],
+
+                        // WK01_5 — mouldings and decor
+                        ['slug' => 'kart-wk01-5-teyinat', 'name' => $n('Tətbiq', 'Применение', 'Application'), 'type' => 'multiselect', 'required' => true,
+                            'when' => $adh('moldinq'), 'options' => [
+                                $a('Montaj', ['slug' => 'montaj']), $a('Elementlərin birləşmə yeri', ['slug' => 'birlesme']),
+                            ]],
+                        ['slug' => 'kart-wk01-5-dekor', 'name' => $n('Uyğun dekor materialı', 'Подходящий материал декора', 'Suitable decor material'), 'type' => 'multiselect',
+                            'when' => $adh('moldinq'), 'options' => [
+                                $a('Polistirol', ['slug' => 'polistirol']), $a('Poliuretan', ['slug' => 'poliuretan']), $a('Gips', ['slug' => 'gips']),
+                                $a('Ağac', ['slug' => 'agac']), $other(),
+                            ]],
+                        ['when' => $adh('moldinq')] + $paintable,
+
                         $shelf,
                     ],
                 ],
 
-                // ── WK01_5 ──────────────────────────────────────────────────
-                'moldinq-ve-dekor-yapisqani' => [
-                    'code' => 'WK01_5',
-                    'name' => $n('Moldinq və dekor yapışqanı', 'Клей для молдингов и декора', 'Moulding and decor adhesive'),
-                    ...$pack,
-                    'fields' => [
-                        ['slug' => 'kart-wk01-5-teyinat', 'name' => $n('Təyinat', 'Назначение', 'Intended for'), 'type' => 'multiselect', 'filter' => true, 'required' => true, 'options' => [
-                            $a('Montaj', ['slug' => 'montaj']), $a('Elementlərin birləşmə yeri', ['slug' => 'birlesme']),
-                        ]],
-                        ['slug' => 'kart-divar-yap-terkib', 'name' => $n('Tərkib', 'Состав', 'Composition'), 'type' => 'dropdown', 'filter' => true, 'options' => [
-                            $a('Dispersiya', ['slug' => 'dispersiya']), $a('Poliuretan', ['slug' => 'poliuretan']), $a('MS-polimer', ['slug' => 'ms-polimer']),
-                            $a('Neytral silikon', ['slug' => 'silikon']), $a('Gips', ['slug' => 'gips']), $other(),
-                        ]],
-                        ['slug' => 'kart-divar-yap-techizat', 'name' => $n('Təchizat forması', 'Форма поставки', 'Supply form'), 'type' => 'dropdown', 'required' => true, 'options' => [
-                            $a('Quru qarışıq', ['slug' => 'quru']), $a('İstifadəyə hazır', ['slug' => 'hazir']), $a('Hazır pasta', ['slug' => 'pasta']),
-                            $a('Kartric', ['slug' => 'kartric']), $a('İkikomponentli dəst', ['slug' => 'iki']), $other(),
-                        ]],
-                        $substrates,
-                        $packQty,
-                        $packQtyUnit,
-                        ['slug' => 'kart-wk01-5-dekor', 'name' => $n('Uyğun dekor materialı', 'Подходящий материал декора', 'Suitable decor material'), 'type' => 'multiselect', 'filter' => true, 'options' => [
-                            $a('Polistirol', ['slug' => 'polistirol']), $a('Poliuretan', ['slug' => 'poliuretan']), $a('Gips', ['slug' => 'gips']),
-                            $a('Ağac', ['slug' => 'agac']), $other(),
-                        ]],
-                        ['filter' => true] + $paintable,
-                        $shelf,
-                    ],
-                ],
-            ],
-        ],
-
-        // ════ K2. Tikiş doldurucuları və hermetiklər ═══════════════════════
-        [
-            'slug' => 'tikis-doldurucular-ve-hermetikler',
-            'name' => $n('Tikiş doldurucuları və hermetiklər', 'Затирки и герметики', 'Grouts and sealants'),
-            'classes' => [
                 // ── WK02 ────────────────────────────────────────────────────
                 'tikis-doldurucular' => [
                     'code' => 'WK02',
@@ -1045,14 +985,7 @@ return [
                         $shelf,
                     ],
                 ],
-            ],
-        ],
 
-        // ════ K3. Profillər və künclər ═════════════════════════════════════
-        [
-            'slug' => 'divar-uzluk-profilleri-ve-kuncler',
-            'name' => $n('Profillər və künclər', 'Профили и уголки', 'Profiles and corners'),
-            'classes' => [
                 // ── WK04_1 ──────────────────────────────────────────────────
                 'plite-kenar-ve-kunc-profilleri' => [
                     'code' => 'WK04_1',
@@ -1115,14 +1048,7 @@ return [
                         $packCount,
                     ],
                 ],
-            ],
-        ],
 
-        // ════ K4. Bərkidicilər ═════════════════════════════════════════════
-        [
-            'slug' => 'divar-uzluk-berkidicileri',
-            'name' => $n('Bərkidicilər', 'Крепёж', 'Fasteners'),
-            'classes' => [
                 // ── WK05_1 ──────────────────────────────────────────────────
                 'panel-klipsleri-ve-gizli-berkidiciler' => [
                     'code' => 'WK05_1',
@@ -1174,10 +1100,35 @@ return [
                         $packCount,
                     ],
                 ],
+
+                // ── WK08 ────────────────────────────────────────────────────
+                'plite-ara-mesafe-ve-seviyyeleme-elementleri' => [
+                    'code' => 'WK08',
+                    'name' => $n('Plitə ara məsafə və səviyyələmə elementləri', 'Крестики и элементы выравнивания плитки', 'Tile spacers and levelling parts'),
+                    ...$pack,
+                    'fields' => [
+                        ['slug' => 'kart-wk08-novu', 'name' => $n('Növ', 'Тип', 'Type'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
+                            $a('Xaç', ['slug' => 'xac']), $a('T-ara məsafə', ['slug' => 't']), $a('Səviyyələmə klipsi', ['slug' => 'klips']),
+                            $a('Paz', ['slug' => 'paz']), $a('Qapaq', ['slug' => 'qapaq']), $a('Dəst', ['slug' => 'dest']),
+                        ]],
+                        ['slug' => 'kart-wk08-tikis', 'name' => $n('Tikiş eni', 'Ширина шва', 'Joint width'), 'type' => 'decimal', 'filter' => true, 'required' => true, 'unit' => 'mm',
+                            'when' => $when('kart-wk08-novu', 'xac', 't', 'klips', 'dest'),
+                            'hint' => $n('Tikişi müəyyən edən elementdə.', 'Для элемента, задающего шов.', 'For the part that sets the joint.')],
+                        ['slug' => 'kart-wk08-plite-min', 'name' => $n('Uyğun plitə qalınlığı, min', 'Толщина плитки, мин.', 'Tile thickness, min'), 'type' => 'decimal', 'unit' => 'mm',
+                            'rules' => ['lte' => 'kart-wk08-plite-maks'], 'when' => $when('kart-wk08-novu', 'klips', 'paz', 'qapaq', 'dest'),
+                            'hint' => $n('Səviyyələmə sistemində.', 'Для системы выравнивания.', 'For a levelling system.')],
+                        ['slug' => 'kart-wk08-plite-maks', 'name' => $n('Uyğun plitə qalınlığı, maks', 'Толщина плитки, макс.', 'Tile thickness, max'), 'type' => 'decimal', 'unit' => 'mm',
+                            'when' => $when('kart-wk08-novu', 'klips', 'paz', 'qapaq', 'dest')],
+                        ['slug' => 'kart-wk08-sistem', 'name' => $n('Sistem uyğunluğu', 'Совместимость с системой', 'System compatibility'), 'type' => 'text',
+                            'hint' => $n('Seriya və ya uyğun klips / paz / qapaq.', 'Серия или подходящий клипс / клин / колпачок.', 'Series or matching clip / wedge / cap.')],
+                        $packCount,
+                        ['slug' => 'kart-wk08-tekrar', 'name' => $n('Təkrar istifadə olunur', 'Многоразовые', 'Reusable'), 'type' => 'dropdown', 'filter' => true, 'options' => $ynn],
+                    ],
+                ],
             ],
         ],
 
-        // ════ K5. Dekorativ elementlər ═════════════════════════════════════
+        // ════ 6. Dekorativ elementlər ══════════════════════════════════════════
         [
             'slug' => 'dekorativ-elementler',
             'name' => $n('Dekorativ elementlər', 'Декоративные элементы', 'Decorative elements'),
@@ -1186,7 +1137,7 @@ return [
                 'moldinqler-bagetler-karnizler-interyer-ucun' => [
                     'code' => 'WK06_1',
                     'name' => $n('Divar moldinqləri və bordürləri', 'Настенные молдинги и бордюры', 'Wall mouldings and borders'),
-                    ...$piece,
+                    'sale' => 'unit', 'units' => ['piece', 'lm'], // + xətti metr (TZ 24.11)
                     'fields' => [
                         ['slug' => 'kart-wk06-1-novu', 'name' => $n('Növ', 'Тип', 'Type'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
                             $a('Moldinq', ['slug' => 'moldinq']), $a('Bordür', ['slug' => 'bordur']), $a('Çərçivə profili', ['slug' => 'cercive']),
@@ -1231,85 +1182,120 @@ return [
             ],
         ],
 
-        // ════ K6. Qoruyucu finiş məhsulları ════════════════════════════════
-        [
-            'slug' => 'qoruyucu-finis-mehsullari',
-            'name' => $n('Qoruyucu finiş məhsulları', 'Защитные финишные составы', 'Protective finishes'),
-            'classes' => [
-                // ── WK07 ────────────────────────────────────────────────────
-                'finis-qoruyucu-laklar-mumlar-hopdurucular' => [
-                    'code' => 'WK07',
-                    'name' => $n('Finiş qoruyucu laklar, mumlar və hopdurucular', 'Защитные лаки, воски и пропитки', 'Protective varnishes, waxes and sealers'),
-                    ...$pack,
-                    'fields' => [
-                        ['slug' => 'kart-wk07-novu', 'name' => $n('Növ', 'Тип', 'Type'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
-                            $a('Lak', ['slug' => 'lak']), $a('Mum', ['slug' => 'mum']), $a('Hopdurucu', ['slug' => 'hopdurucu']),
-                        ]],
-                        ['filter' => true] + $compatMat,
-                        ['slug' => 'kart-wk07-terkib', 'name' => $n('Tərkib', 'Состав', 'Composition'), 'type' => 'dropdown', 'filter' => true, 'options' => [
-                            $a('Su əsaslı', ['slug' => 'su']), $a('Həlledici əsaslı', ['slug' => 'helledici']), $other(), $ns,
-                        ]],
-                        ['slug' => 'kart-wk07-komponent', 'name' => $n('Komponent sayı', 'Число компонентов', 'Components'), 'type' => 'dropdown', 'options' => [
-                            $a('Bir', ['slug' => 'bir']), $a('İki', ['slug' => 'iki']),
-                        ]],
-                        $surface,
-                        ['slug' => 'kart-wk07-reng', 'name' => $n('Rəng', 'Цвет', 'Colour'), 'type' => 'dropdown', 'options' => [
-                            $a('Rəngsiz', ['slug' => 'rengsiz']), $a('Rəngli', ['slug' => 'rengli']),
-                        ]],
-                        $packQty,
-                        $packQtyUnit,
-                        ...$coverage,
-                        ['filter' => true] + $wet,
-                        $shelf,
-                    ],
-                ],
-            ],
-        ],
-
-        // ════ K7. Plitə aralıqları və səviyyələmə ══════════════════════════
-        [
-            'slug' => 'plite-araliqlari-ve-seviyyeleme',
-            'name' => $n('Plitə aralıqları və səviyyələmə', 'Крестики и системы выравнивания плитки', 'Tile spacers and levelling'),
-            'classes' => [
-                // ── WK08 ────────────────────────────────────────────────────
-                'plite-ara-mesafe-ve-seviyyeleme-elementleri' => [
-                    'code' => 'WK08',
-                    'name' => $n('Plitə ara məsafə və səviyyələmə elementləri', 'Крестики и элементы выравнивания плитки', 'Tile spacers and levelling parts'),
-                    ...$pack,
-                    'fields' => [
-                        ['slug' => 'kart-wk08-novu', 'name' => $n('Növ', 'Тип', 'Type'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
-                            $a('Xaç', ['slug' => 'xac']), $a('T-ara məsafə', ['slug' => 't']), $a('Səviyyələmə klipsi', ['slug' => 'klips']),
-                            $a('Paz', ['slug' => 'paz']), $a('Qapaq', ['slug' => 'qapaq']), $a('Dəst', ['slug' => 'dest']),
-                        ]],
-                        ['slug' => 'kart-wk08-tikis', 'name' => $n('Tikiş eni', 'Ширина шва', 'Joint width'), 'type' => 'decimal', 'filter' => true, 'required' => true, 'unit' => 'mm',
-                            'when' => $when('kart-wk08-novu', 'xac', 't', 'klips', 'dest'),
-                            'hint' => $n('Tikişi müəyyən edən elementdə.', 'Для элемента, задающего шов.', 'For the part that sets the joint.')],
-                        ['slug' => 'kart-wk08-plite-min', 'name' => $n('Uyğun plitə qalınlığı, min', 'Толщина плитки, мин.', 'Tile thickness, min'), 'type' => 'decimal', 'unit' => 'mm',
-                            'rules' => ['lte' => 'kart-wk08-plite-maks'], 'when' => $when('kart-wk08-novu', 'klips', 'paz', 'qapaq', 'dest'),
-                            'hint' => $n('Səviyyələmə sistemində.', 'Для системы выравнивания.', 'For a levelling system.')],
-                        ['slug' => 'kart-wk08-plite-maks', 'name' => $n('Uyğun plitə qalınlığı, maks', 'Толщина плитки, макс.', 'Tile thickness, max'), 'type' => 'decimal', 'unit' => 'mm',
-                            'when' => $when('kart-wk08-novu', 'klips', 'paz', 'qapaq', 'dest')],
-                        ['slug' => 'kart-wk08-sistem', 'name' => $n('Sistem uyğunluğu', 'Совместимость с системой', 'System compatibility'), 'type' => 'text',
-                            'hint' => $n('Seriya və ya uyğun klips / paz / qapaq.', 'Серия или подходящий клипс / клин / колпачок.', 'Series or matching clip / wedge / cap.')],
-                        $packCount,
-                        ['slug' => 'kart-wk08-tekrar', 'name' => $n('Təkrar istifadə olunur', 'Многоразовые', 'Reusable'), 'type' => 'dropdown', 'filter' => true, 'options' => $ynn],
-                    ],
-                ],
-            ],
-        ],
-
-        // ════ Arakəsmə sistemləri — not in the workbook; glass blocks join it ═
+        // ════ 7. Arakəsmə sistemləri (TZ 24.11 item 1: W13_1–W13_4) ════════
         [
             'slug' => 'arakesme-sistemleri',
             'name' => $n('Arakəsmə sistemləri', 'Системы перегородок', 'Partition systems'),
-            'plain' => ['karkas-arakesme-metal-karkas-gkl', 'suse-arakesme', 'mobil-surusen-arakesme', 'suse-bloklar'],
+            'classes' => [
+                // ── W13_1 ───────────────────────────────────────────────────
+                'karkas-arakesme-metal-karkas-gkl' => [
+                    'code' => 'W13_1',
+                    'name' => $n('Karkas arakəsmə (metal karkas + gipskarton)', 'Каркасная перегородка (металлокаркас + гипсокартон)', 'Framed partition (metal frame + plasterboard)'),
+                    ...$byOffer,
+                    'fields' => [
+                        $offer,
+                        ['slug' => 'kart-w13-1-profil-eni', 'name' => $n('Profilin eni', 'Ширина профиля', 'Stud width'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
+                            $a('50 mm', ['slug' => '50']), $a('75 mm', ['slug' => '75']), $a('100 mm', ['slug' => '100']), $other(),
+                        ]],
+                        ['slug' => 'kart-w13-1-gipskarton', 'name' => $n('Gipskartonun növü', 'Тип гипсокартона', 'Plasterboard type'), 'type' => 'multiselect', 'filter' => true, 'required' => true, 'options' => [
+                            $a('Adi', ['slug' => 'adi']), $a('Nəmə davamlı', ['slug' => 'neme-davamli']), $a('Odadavamlı', ['slug' => 'odadavamli']), $other(),
+                        ]],
+                        ['slug' => 'kart-w13-1-qat-sayi', 'name' => $n('Gipskarton qatlarının sayı', 'Число слоёв гипсокартона', 'Plasterboard layers'), 'type' => 'decimal', 'required' => true, 'unit' => 'ədəd',
+                            'rules' => ['integer' => true],
+                            'hint' => $n('Hər tərəfdə.', 'С каждой стороны.', 'On each side.')],
+                        ['slug' => 'kart-w13-1-qalinliq', 'name' => $n('Ümumi qalınlıq', 'Общая толщина', 'Total thickness'), 'type' => 'decimal', 'filter' => true, 'required' => true, 'unit' => 'mm',
+                            'hint' => $n('Karkas və bütün gipskarton qatları ilə.', 'С каркасом и всеми слоями гипсокартона.', 'Frame plus all plasterboard layers.')],
+                        $rw,
+                        ['slug' => 'kart-w13-1-ei', 'name' => $n('Odadavamlılıq (EI sinfi)', 'Огнестойкость (класс EI)', 'Fire resistance (EI class)'), 'type' => 'dropdown', 'filter' => true, 'options' => [
+                            $a('EI 30', ['slug' => 'ei-30']), $a('EI 45', ['slug' => 'ei-45']), $a('EI 60', ['slug' => 'ei-60']),
+                            $a('EI 90', ['slug' => 'ei-90']), $a('EI 120', ['slug' => 'ei-120']), $ns,
+                        ],
+                            'hint' => $n('Sistemin sınaq sənədinə görə.', 'По протоколу испытаний системы.', 'Per the system’s test report.')],
+                    ],
+                ],
+
+                // ── W13_2 ───────────────────────────────────────────────────
+                'suse-arakesme' => [
+                    'code' => 'W13_2',
+                    'name' => $n('Şüşə arakəsmə', 'Стеклянная перегородка', 'Glass partition'),
+                    ...$byOffer,
+                    'fields' => [
+                        $offer,
+                        ['slug' => 'kart-w13-2-suse', 'name' => $n('Şüşənin növü', 'Тип стекла', 'Glass type'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
+                            $a('Temperli', ['slug' => 'temperli']), $a('Tripleks', ['slug' => 'tripleks']), $other(),
+                        ]],
+                        ['slug' => 'kart-w13-2-qalinliq', 'name' => $n('Şüşənin qalınlığı', 'Толщина стекла', 'Glass thickness'), 'type' => 'decimal', 'filter' => true, 'required' => true, 'unit' => 'mm'],
+                        ['slug' => 'kart-w13-2-profil', 'name' => $n('Profil', 'Профиль', 'Frame'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
+                            $a('Çərçivəsiz', ['slug' => 'cercivesiz']), $a('Alüminium profil', ['slug' => 'aluminium']), $other(),
+                        ]],
+                        ['slug' => 'kart-w13-2-qapi', 'name' => $n('Qapı daxildir', 'Дверь в комплекте', 'Door included'), 'type' => 'dropdown', 'filter' => true, 'required' => true,
+                            'options' => [$yes, $no]],
+                        $maxHeight,
+                    ],
+                ],
+
+                // ── W13_3 ───────────────────────────────────────────────────
+                'mobil-surusen-arakesme' => [
+                    'code' => 'W13_3',
+                    'name' => $n('Mobil / sürüşən arakəsmə', 'Мобильная / раздвижная перегородка', 'Mobile / sliding partition'),
+                    'sale' => 'unit', 'units' => ['m2', 'set'],
+                    'fields' => [
+                        ['slug' => 'kart-w13-3-mexanizm', 'name' => $n('Mexanizm', 'Механизм', 'Mechanism'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
+                            $a('Sürüşən', ['slug' => 'surusen']), $a('Qatlanan', ['slug' => 'qatlanan']), $a('Transformasiya olunan', ['slug' => 'transformasiya']), $other(),
+                        ]],
+                        ['slug' => 'kart-w13-3-material', 'name' => $n('Panelin materialı', 'Материал панели', 'Panel material'), 'type' => 'dropdown', 'filter' => true, 'required' => true, 'options' => [
+                            $a('Şüşə', ['slug' => 'suse']), $a('MDF', ['slug' => 'mdf']), $a('LDSP', ['slug' => 'ldsp']), $a('Ağac', ['slug' => 'agac']),
+                            $a('Alüminium', ['slug' => 'aluminium']), $a('Parça üzlü (akustik)', ['slug' => 'parca']), $other(),
+                        ]],
+                        $maxHeight,
+                        $rw,
+                    ],
+                ],
+
+                // ── W13_4 ───────────────────────────────────────────────────
+                'suse-bloklar' => [
+                    'code' => 'W13_4',
+                    'name' => $n('Şüşə bloklar', 'Стеклоблоки', 'Glass blocks'),
+                    'sale' => 'unit', 'units' => ['piece', 'm2'],
+                    'fields' => [
+                        $size(['190×190', '240×240', '190×90']),
+                        ['filter' => true] + $thick,
+                        ['slug' => 'kart-w13-4-seth', 'name' => $n('Səth', 'Поверхность', 'Surface'), 'type' => 'dropdown', 'filter' => true, 'options' => [
+                            $a('Hamar', ['slug' => 'hamar']), $a('Dalğalı', ['slug' => 'dalgali']), $a('Rəngli', ['slug' => 'rengli']), $other(),
+                        ]],
+                        $color,
+                        $colorCode,
+                    ],
+                ],
+            ],
         ],
     ],
 
-    // Workbook W04/W05/W06/W07 replace the old catch-all tile class; W09_4 replaces 3D panels.
+    // Old classes already folded earlier: W04–W07 replaced the catch-all tile class, W09_4 the 3D panels.
+    // TZ 24.11 item 3: four adhesive classes fold into «Yapışqanlar» (kept slug divar-kagizi-yapisqani);
+    // their products get «Təyinat» = the old class and the old URLs answer with a 301.
     'merge' => [
         'keramoqranit-keramik-plite-tebii-das-mozaika' => 'divar-keramik-plitesi',
         '3d-paneller' => 'gips-divar-panelleri',
+        'plite-mozaika-ve-das-yapisqani' => ['into' => 'divar-kagizi-yapisqani', 'set' => ['kart-wk01-teyinat' => 'plite']],
+        'divar-paneli-montaj-yapisqani' => ['into' => 'divar-kagizi-yapisqani', 'set' => ['kart-wk01-teyinat' => 'panel']],
+        'suse-ve-guzgu-yapisqani' => ['into' => 'divar-kagizi-yapisqani', 'set' => ['kart-wk01-teyinat' => 'suse-guzgu']],
+        'moldinq-ve-dekor-yapisqani' => ['into' => 'divar-kagizi-yapisqani', 'set' => ['kart-wk01-teyinat' => 'moldinq']],
     ],
-    'retire_groups' => ['divar-ve-tavan-uzluk-ortukleri'],
+
+    // The adhesive cards' own duplicates, folded into the shared attribute.
+    'move_values' => [
+        'kart-wk01-1-terkib' => 'kart-divar-yap-terkib',
+        'kart-wk01-2-terkib' => 'kart-divar-yap-terkib',
+        'kart-wk01-2-reng' => 'kart-divar-yap-reng',
+        'kart-wk01-4-reng' => 'kart-divar-yap-reng',
+    ],
+
+    // 24.11: the client cut 21 groups to 7 in the admin; every group switched off there.
+    'retire_groups' => [
+        'divar-ve-tavan-uzluk-ortukleri', 'divar-boyalari', 'divar-keramoqranit', 'divar-mozaika', 'divar-tebii-das',
+        'dekorativ-kerpic-ve-suni-das', 'yumsaq-paneller', 'akustik-divar-panelleri', 'suse-ve-guzgu-ortukleri',
+        'tikis-doldurucular-ve-hermetikler', 'divar-uzluk-profilleri-ve-kuncler', 'divar-uzluk-berkidicileri',
+        'qoruyucu-finis-mehsullari', 'plite-araliqlari-ve-seviyyeleme',
+    ],
 ];

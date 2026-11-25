@@ -10,6 +10,7 @@ use App\Models\Product;
 use App\Models\SubCategory;
 use App\Models\User;
 use App\Services\ProductCard\CardImporter;
+use App\Services\ProductCard\CardProduct;
 use App\Services\ProductCard\CardSchema;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -102,13 +103,14 @@ class SantexnikaCardTest extends TestCase
         ], $override));
     }
 
-    public function test_import_builds_the_twelve_categories_with_forty_six_cards(): void
+    public function test_import_builds_the_seventeen_groups_with_fifty_eight_cards(): void
     {
         $groups = Category::where('parent_id', $this->section->id)->where('is_active', true)->get();
         $cards = SubCategory::whereIn('category_id', $groups->pluck('id'))->where('card_enabled', true)->get();
 
-        $this->assertSame(46, $cards->count());
-        $this->assertSame(12, $groups->filter(fn ($g) => $cards->contains('category_id', $g->id))->count());
+        // 46 workbook cards in 12 groups + 12 engineering cards (S13_1–S17_2, TZ 24.11.2026) in 5 more.
+        $this->assertSame(58, $cards->count());
+        $this->assertSame(17, $groups->filter(fn ($g) => $cards->contains('category_id', $g->id))->count());
         $this->assertSame('unitazlar-ve-bideler', $groups->sortBy('sort_order')->first()->slug);
         $this->assertSame(['S01_1', 'S12_13'], [
             $cards->firstWhere('slug', 'unitazlar')->card_settings['code'],
@@ -117,7 +119,31 @@ class SantexnikaCardTest extends TestCase
 
         // Running it again changes nothing.
         app(CardImporter::class)->importFile('santexnika');
-        $this->assertSame(46, SubCategory::where('card_enabled', true)->count());
+        $this->assertSame(58, SubCategory::where('card_enabled', true)->count());
+    }
+
+    public function test_a_pipe_sells_by_the_metre_and_by_the_coil_or_rod_it_comes_as(): void
+    {
+        $schema = $this->schema('metal-plastik-mis-polad-borular');
+        $coil = $this->card($schema, [
+            'kart-s13-2-material' => 'metal-plastik', 'kart-san-diametr' => '16', 'kart-san-divar-qalinligi' => '2',
+            'kart-s13-2-forma' => 'bux', 'kart-san-bux-uzunlugu' => '100',
+        ]);
+        $base = ['brand_id' => $this->brand->id, 'origin_country' => 'DE', 'availability' => 'in_stock', 'price' => '2.5'];
+        $errors = fn (array $card, string $basis) => CardProduct::check($schema, $base + ['price_basis' => $basis], $card, true)['errors'];
+
+        $this->assertSame([], $errors($coil, 'lm'));
+        $this->assertSame([], $errors($coil, 'roll'));
+        $this->assertArrayHasKey('price_basis', $errors($coil, 'piece'));
+
+        $rod = $this->card($schema, [
+            'kart-s13-2-material' => 'mis', 'kart-san-diametr' => '22', 'kart-san-divar-qalinligi' => '1',
+            'kart-s13-2-forma' => 'cubuq',
+        ]);
+        $this->assertNotSame([], $errors($rod, 'piece'), 'a rod needs its length');
+        $rod += $this->card($schema, ['kart-san-cubuq-uzunlugu' => '5']);
+        $this->assertSame([], $errors($rod, 'piece'));
+        $this->assertArrayHasKey('price_basis', $errors($rod, 'roll'));
     }
 
     public function test_a_toilet_sells_by_the_piece_or_set_and_needs_its_size_colour_and_finish(): void

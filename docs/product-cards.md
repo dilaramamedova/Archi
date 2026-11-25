@@ -314,6 +314,25 @@ Kisə / vedrə `pack` olaraq satılır, növü «Qablaşdırma növü» sahəsin
 
 **Gözləyir.** Parket siniflərinin (19 / 20 / 254) birləşdirilməsi müştərinin qərarını gözləyir. Köhnə slug-lar dəyişməyib.
 
+## Santexnika S13–S17 və Divar 7 qrup (25.11.2026)
+
+Mənbə: `TZ_Santexnika_proqramci_AZ.docx`, `TZ_Divarlar_proqramci_AZ.docx`.
+
+**Santexnika.** 12 mühəndis sinfinə kart əlavə olundu (S13_1–S17_2): borular, fitinqlər, kranlar, sızdırmazlaşdırıcılar, filtrlər, sayğac, nasos, boyler, PVC kanalizasiya, septik. Satış vahidləri:
+- çubuq `piece` kimi satılır (çubuğun uzunluğu məcburidir);
+- bux `roll` kimi satılır (buxun uzunluğu məcburidir);
+- hər ikisi `lm` ilə də satıla bilər;
+- vahid «Tədarük forması» cavabına bağlıdır (`unit_when`).
+
+Ortaq sahələr `kart-san-*` adlıdır: diametr, qoşulma (düym), PN, divar qalınlığı, çubuq / bux uzunluğu, maks. temperatur.
+
+**Divar.** Fayl admin-dəki 7 qrupu izləyir; qalan 14 qrup `retire_groups`-dadır.
+- **Yapışqanlar.** 5 yapışqan sinfi `divar-kagizi-yapisqani` sinfinə («Yapışqanlar») birləşib. İlk sahə «Təyinat»dır (`kart-wk01-teyinat`, filtr). Köhnə linklər 301 ilə yeni sinfə gedir.
+- **Yeni vahidlər.** Panellərə, kərpicə və akustik panellərə m², reykalara və moldinqlərə xətti metr əlavə olunub.
+- **Arakəsmələr.** W13_1–W13_4 kartları əlavə olunub. Karkas və şüşə arakəsmədə «Təklif növü = Layihə üzrə» seçiləndə qiymət sorğu ilə verilir.
+
+**Gözləyir.** Köhnə slug-lar dəyişməyib (aşağı prioritet).
+
 ## Agent yoxlaması (18.11.2026)
 
 Üç Excel üzrə 6 agent (3 admin, 3 satıcı+alıcı) lokal saytda məhsul əlavə etdi. Düzəlişlər

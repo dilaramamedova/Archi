@@ -117,19 +117,63 @@ class DivarCardTest extends TestCase
         ]));
     }
 
-    public function test_import_builds_nineteen_groups_and_thirty_seven_cards(): void
+    public function test_import_builds_the_seven_admin_groups_and_thirty_seven_cards(): void
     {
         $groups = Category::where('parent_id', $this->section->id)->where('is_active', true)->get();
         $cards = SubCategory::whereIn('category_id', $groups->pluck('id'))->where('card_enabled', true)->get();
 
+        // TZ 24.11.2026: the 7 groups set up in the admin; 37 − 4 adhesives folded into
+        // «Yapışqanlar» + 4 partition cards (W13_1–W13_4).
         $this->assertSame(37, $cards->count());
-        $this->assertSame(19, $groups->filter(fn ($g) => $cards->contains('category_id', $g->id))->count());
+        $this->assertSame(7, $groups->count());
+        $this->assertSame(7, $groups->filter(fn ($g) => $cards->contains('category_id', $g->id))->count());
         $this->assertSame('divar-kagizi-novleri', $groups->sortBy('sort_order')->first()->slug);
         $this->assertSame(['W01_1', 'WK08'], [$cards->firstWhere('slug', 'divar-kagizlari')->card_settings['code'], $cards->firstWhere('slug', 'plite-ara-mesafe-ve-seviyyeleme-elementleri')->card_settings['code']]);
 
         // Running it again changes nothing.
         app(CardImporter::class)->importFile('divar');
         $this->assertSame(37, SubCategory::where('card_enabled', true)->count());
+    }
+
+    public function test_the_adhesives_are_one_class_and_their_old_links_redirect(): void
+    {
+        // On prod the four classes exist (with a product each); a fresh tree has none.
+        $adhesives = SubCategory::where('slug', 'divar-kagizi-yapisqani')->firstOrFail();
+        $tileGlue = SubCategory::create(['category_id' => $adhesives->category_id, 'slug' => 'plite-mozaika-ve-das-yapisqani', 'name' => ['az' => 'Plitə yapışqanı'], 'is_active' => true]);
+        $product = Product::create([
+            'user_id' => $this->seller->id, 'category_id' => $tileGlue->category_id, 'sub_category_id' => $tileGlue->id,
+            'name' => ['az' => 'TEST'], 'description' => ['az' => ''], 'slug' => 'test-yapisqan', 'price' => 10, 'stock' => 1,
+            'is_visible' => true, 'is_approved' => true,
+        ]);
+        foreach (['divar-paneli-montaj-yapisqani', 'suse-ve-guzgu-yapisqani', 'moldinq-ve-dekor-yapisqani'] as $old) {
+            SubCategory::create(['category_id' => $adhesives->category_id, 'slug' => $old, 'name' => ['az' => $old], 'is_active' => true]);
+        }
+        app(CardImporter::class)->importFile('divar');
+
+        $this->assertSame($adhesives->id, $product->fresh()->sub_category_id);
+        $adhesives->refresh();
+        $this->assertSame('Yapışqanlar', $adhesives->getTranslation('name', 'az'));
+        $teyinat = collect(CardSchema::for($adhesives->id)['fields'])->first();
+        $this->assertSame('kart-wk01-teyinat', $teyinat['slug']);
+        $this->assertTrue($adhesives->attributes()->where('slug', 'kart-wk01-teyinat')->wherePivot('is_filterable', true)->exists());
+
+        foreach (['plite-mozaika-ve-das-yapisqani', 'divar-paneli-montaj-yapisqani', 'suse-ve-guzgu-yapisqani', 'moldinq-ve-dekor-yapisqani'] as $old) {
+            $this->assertFalse((bool) SubCategory::where('slug', $old)->value('is_active'), $old);
+            $this->get('/catalog?class='.$old)->assertStatus(301)->assertRedirect(route('catalog', ['class' => 'divar-kagizi-yapisqani']));
+        }
+    }
+
+    public function test_panels_and_mouldings_sell_by_the_m2_and_the_metre_too(): void
+    {
+        foreach (['taxta-lambir-uzluk' => 'm2', 'dekorativ-paneller-mdfplastikagacmetalakril' => 'm2', 'plastik-ve-polimer-divar-panelleri' => 'm2',
+            'gips-divar-panelleri' => 'm2', 'akustik-paneller' => 'm2', 'dekorativ-kerpic-klinker-interyer-ucun' => 'm2',
+            'dekorativ-divar-reykalari' => 'lm', 'moldinqler-bagetler-karnizler-interyer-ucun' => 'lm'] as $class => $unit) {
+            $this->assertContains($unit, CardSchema::for(SubCategory::where('slug', $class)->firstOrFail()->id)['sale']['units'], $class);
+        }
+
+        foreach (['karkas-arakesme-metal-karkas-gkl', 'suse-arakesme', 'mobil-surusen-arakesme', 'suse-bloklar'] as $class) {
+            $this->assertTrue((bool) SubCategory::where('slug', $class)->value('card_enabled'), $class);
+        }
     }
 
     public function test_a_tile_size_is_picked_from_the_list_or_typed_as_another_size(): void
