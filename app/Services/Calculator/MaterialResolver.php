@@ -115,6 +115,7 @@ class MaterialResolver
         'set' => 'dəst',
         'roll' => 'rulon',
         'pack' => 'paket',
+        'sheet' => 'vərəq',
     ];
 
     public function __construct(private readonly CalculatorConfig $config) {}
@@ -468,7 +469,7 @@ class MaterialResolver
 
         // Sold by the metre / piece: the requirement is the quantity, rounded up to
         // whole units for a countable product — half a door does not exist.
-        $quantity = in_array($product->unit, ['piece', 'set', 'roll', 'pack', 'əd', 'ədəd', 'pcs', 'шт'], true)
+        $quantity = in_array($product->unit, ['piece', 'set', 'roll', 'pack', 'sheet', 'əd', 'ədəd', 'pcs', 'шт'], true)
             ? (float) ceil($requiredQty)
             : round($requiredQty, 2);
 

@@ -163,7 +163,9 @@ final class CardProduct
             $columns['unit'] = $unit;
             $columns['sale_unit'] = $unit;
             $columns['sale_factor'] = 1.0;
-            if ($coverage !== null && $coverage > 0) {
+            // Sold by the m² itself: the price is already per m², so a pack area must
+            // not turn the calculator's m² into packs at the m² price.
+            if ($coverage !== null && $coverage > 0 && $unit !== 'm2') {
                 $columns['package_size'] = $coverage;
                 $columns['package_unit'] = self::unitName($unit);
             }

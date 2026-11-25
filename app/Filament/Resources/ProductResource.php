@@ -54,21 +54,7 @@ class ProductResource extends Resource
         return $form->schema([
             Tabs::make('Tabs')->tabs([
                 static::tab('Əsas')->schema([
-                    Forms\Components\TextInput::make('name')
-                        ->label('Ad')
-                        // Required in Azerbaijani only; ru/en are optional and the site
-                        // falls back to az — sellers enter a single name as well.
-                        ->translatable(modifyLocalizedFieldUsing: fn (Forms\Components\TextInput $field, string $locale) => $field->required($locale === 'az'))
-                        ->live(onBlur: true)
-                        ->afterStateUpdated(function ($state, callable $set, $record) {
-                            if (! $record) {
-                                $value = $state;
-                                while (is_array($value)) {
-                                    $value = $value['az'] ?? reset($value) ?: '';
-                                }
-                                $set('slug', Str::slug((string) $value));
-                            }
-                        }),
+                    static::nameTabs(),
 
                     Forms\Components\RichEditor::make('description')
                         ->label('Təsvir')
@@ -254,6 +240,7 @@ class ProductResource extends Resource
                             'roll' => 'Rulon',
                             'pack' => 'Paket',
                             'pallet' => 'Palet',
+                            'sheet' => 'Vərəq',
                         ])
                         ->default('piece')
                         ->visible(fn (callable $get): bool => ! CardForm::isCard($get)),
@@ -319,7 +306,9 @@ class ProductResource extends Resource
 
                 static::tab('Statuslar')->schema([
                     Forms\Components\Toggle::make('is_visible')->label('Görünür')->default(true),
-                    Forms\Components\Toggle::make('is_approved')->label('Təsdiqlənib'),
+                    // A product the admin creates here is already moderated (TZ Döşəmələr
+                    // 24.11.2026); sellers' products still wait for approval.
+                    Forms\Components\Toggle::make('is_approved')->label('Təsdiqlənib')->default(true),
                     Forms\Components\Toggle::make('is_featured')->label('Seçilmiş məhsul'),
                     Forms\Components\Toggle::make('is_sale')->label('SALE məhsulu'),
                     Forms\Components\Toggle::make('show_on_homepage')
@@ -535,6 +524,41 @@ class ProductResource extends Resource
                 ->mapWithKeys(fn (SubCategory $s) => [$s->getKey() => $s->name.($s->is_active ? '' : ' (passiv)')])
                 ->all())
             ->all();
+    }
+
+    /**
+     * The product name per language. Required in Azerbaijani only: ru/en are optional
+     * and the site falls back to az (APP_FALLBACK_LOCALE) — sellers enter a single name
+     * as well. An empty ru/en tab carries a «boş» badge so the gap is visible.
+     */
+    public static function nameTabs(): Tabs
+    {
+        $locales = ['az' => 'Azərbaycan', 'ru' => 'Русский', 'en' => 'English'];
+
+        return Tabs::make('name_locales')
+            ->columnSpanFull()
+            ->tabs(collect($locales)->map(function (string $label, string $locale): Tabs\Tab {
+                $field = Forms\Components\TextInput::make("name.{$locale}")
+                    ->label('Ad')
+                    ->required($locale === 'az')
+                    ->live(onBlur: true);
+
+                if ($locale === 'az') {
+                    $field->afterStateUpdated(function ($state, callable $set, $record) {
+                        if (! $record) {
+                            $set('slug', Str::slug((string) $state));
+                        }
+                    });
+                } else {
+                    $field->helperText('Boş qalsa, saytda azərbaycanca ad göstərilir.');
+                }
+
+                return Tabs\Tab::make($label)
+                    ->key("name-{$locale}")
+                    ->badge(fn (callable $get): ?string => $locale !== 'az' && blank($get("name.{$locale}")) ? 'boş' : null)
+                    ->badgeColor('warning')
+                    ->schema([$field]);
+            })->values()->all());
     }
 
     private static function tab(string $label): Tabs\Tab

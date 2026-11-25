@@ -23,6 +23,17 @@ class SubCategory extends Model
         'card_settings' => 'array',
     ];
 
+    protected static function booted(): void
+    {
+        // A product's group (category_id) is its class's group: moving the class to
+        // another group in the admin moves its products with it.
+        static::updated(function (SubCategory $class): void {
+            if ($class->wasChanged('category_id') && $class->category_id) {
+                Product::query()->where('sub_category_id', $class->id)->update(['category_id' => $class->category_id]);
+            }
+        });
+    }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);

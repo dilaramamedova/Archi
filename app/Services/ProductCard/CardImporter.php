@@ -109,6 +109,16 @@ final class CardImporter
             foreach ($data['retire_groups'] ?? [] as $slug) {
                 $this->retireGroup($slug);
             }
+
+            // Classes an admin switched off: they keep their card and products but stay
+            // off the site — a re-import of the file must not turn them back on.
+            foreach ($data['hide_classes'] ?? [] as $slug) {
+                $hidden = SubCategory::query()->where('slug', $slug)->first();
+                if ($hidden) {
+                    $hidden->forceFill(['is_active' => false])->save();
+                    $this->log[] = "class {$slug}: hidden";
+                }
+            }
         });
 
         return $this->log;

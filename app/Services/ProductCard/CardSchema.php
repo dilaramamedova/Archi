@@ -31,7 +31,7 @@ final class CardSchema
     public const SALE_UNIT = 'unit';
 
     /** Every unit a SALE_UNIT class may offer. */
-    public const SALE_UNITS = ['piece', 'lm', 'pack', 'set', 'pair', 'roll', 'm2'];
+    public const SALE_UNITS = ['piece', 'lm', 'pack', 'set', 'pair', 'roll', 'm2', 'sheet', 'kg', 'litre'];
 
     /** The «Başqa ölçü» choice of an open size list (`rules.open`): the size is typed. */
     public const OTHER_SIZE = '__other__';

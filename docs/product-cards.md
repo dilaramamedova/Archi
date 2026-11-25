@@ -245,7 +245,7 @@ Bağlananlar:
 | `montaj-platformalari` | Montaj hissələri | 278, 279 |
 | `boyana-bilen-reviziya-qapaqlari` | Reviziya qapaqları | 281 |
 
-**Kartların yığılması.** Köhnə K-kartları faylda `` olaraq olduğu kimi qalır. `` onları bir sinfə yığır:
+**Kartların yığılması.** Köhnə K-kartları faylda `$legacy` olaraq olduğu kimi qalır. `$fold` onları bir sinfə yığır:
 - **«Növ».** Birinci sahə «Növ»-dür: məcburi və filtrdir, seçimləri keçmiş siniflərdir.
 - **Görünmə.** Hər sahə yalnız gəldiyi növ(lər)də görünür.
 - **Öz şərti.** Sahənin öz şərti varsa (məs. «Forma»), «Növ» ilə AND olur.
@@ -276,6 +276,43 @@ Bağlananlar:
 - uyğunluq sənədi (T02 / T08 / T09) artıq məcburi deyil (sahibkarın qərarı).
 
 **Filtr.** «Saytda filtr = bəli» olan sahələr `filter => true` ilə gəlir. Kataloqda kart parametrləri üzrə filtr hələ ayrıca mərhələdir.
+
+## Məhsul adı RU/EN və köhnə linklər (24.11.2026)
+
+Mənbə: `TZ_Tavanlar_RU-EN_nazvanie.docx`.
+
+- **Ad.** Yalnız AZ adı məcburidir. Boş RU/EN adı əvəzinə saytda AZ adı göstərilir (`APP_FALLBACK_LOCALE=az`; Spatie boş sətri də boş sayır).
+- **Formada nişan.** Admin formasında boş RU/EN tabında «boş» nişanı görünür (`ProductResource::nameTabs()`).
+- **Slug.** Slug yalnız AZ adından yaranır.
+- **Köhnə linklər.** Bağlı sinif və ya qrup üçün `merged_into` hədəfi yoxdursa, link ən yaxın aktiv yuxarı səviyyəyə 301 ilə gedir: əvvəl qrupa, sonra bölməyə (`CatalogController::liveParent`). Belə linklər əvvəllər süzgəcsiz bütün kataloqu açırdı. Bu, 42-ci sinfə (→ Tavan növləri) və 16.11-dən qalan boş 20–23 qruplarına (→ Tavanlar) aiddir.
+
+## Döşəmələr D13–D22 (24.11.2026)
+
+Mənbə: `TZ_Doshemeler_proqramci_AZ.docx`. Excel olmadığı üçün atributlar TZ-dəki təklifdən qurulub.
+
+**Qruplar.** `doseme.php` indi üç qrupludur:
+- `doseme-ortukleri`: D01–D16;
+- `texniki-doseme-ve-alt-sistemler`: D17 (qaldırılmış döşəmə), D19 (qara baza);
+- `altliqlar-ve-birlesdirici-elementler`: D18 (plintus), D20 (altlıq), D21 (keçid profilləri), D22 (dempfer lenti).
+
+**Adlar.** Faylda qrup və sinif adları prod admin-dəki adlardır. Importer adları fayldan yazır, ona görə admin-də ad dəyişəndə faylı da yeniləyin.
+
+**Yeni vahidlər.** `SALE_UNITS`-ə üç vahid əlavə olunub:
+- `sheet` (Vərəq): mozaika, qara baza;
+- `kg`: özüyayılan;
+- `litre`.
+
+Kisə / vedrə `pack` olaraq satılır, növü «Qablaşdırma növü» sahəsindədir. Panel `piece` olaraq satılır.
+
+**`hide_classes`.** Admin-də söndürülmüş sinif (`seki-pliteleri-ve-tamet`) kart olaraq qalır, amma import onu yenidən aktiv etmir.
+
+**Qiymət.** m² ilə satılan kartda paketin sahəsi `package_size`-a yazılmır. Əks halda kalkulyator m²-ni paketə çevirib m² qiymətinə vururdu.
+
+**Qrup sinxronu.** Sinfin qrupu admin-də dəyişəndə məhsulların `category_id`-si də dəyişir (`SubCategory::booted`).
+
+**Admin məhsulları.** Admin-də yaradılan məhsulda «Təsdiqlənib» default olaraq açıqdır.
+
+**Gözləyir.** Parket siniflərinin (19 / 20 / 254) birləşdirilməsi müştərinin qərarını gözləyir. Köhnə slug-lar dəyişməyib.
 
 ## Agent yoxlaması (18.11.2026)
 

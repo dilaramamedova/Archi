@@ -12,6 +12,7 @@ return [
     'business-product-edit' => [
         'pricing.units.pallet' => $r('Palet', 'Паллета', 'Pallet'),
         'pricing.units.pair' => $r('Cüt', 'Пара', 'Pair'),
+        'pricing.units.sheet' => $r('Vərəq', 'Лист', 'Sheet'),
     ],
 
     'product-card' => [

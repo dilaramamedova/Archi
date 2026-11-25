@@ -137,19 +137,20 @@ class ProductCardTest extends TestCase
 
     // ── import ──────────────────────────────────────────────────────────────
 
-    public function test_import_builds_the_twelve_cards_in_one_group_and_is_repeatable(): void
+    public function test_import_builds_the_floor_covering_cards_in_one_group_and_is_repeatable(): void
     {
         $group = Category::where('slug', 'doseme-ortukleri')->firstOrFail();
         $this->assertSame($this->section->id, $group->parent_id);
-        $this->assertSame(12, SubCategory::where('category_id', $group->id)->where('card_enabled', true)->count());
+        // D01–D12 and, since TZ 24.11.2026, mosaic, cork, self-levelling and sports floors (D13–D16).
+        $this->assertSame(16, SubCategory::where('category_id', $group->id)->where('card_enabled', true)->count());
         $this->assertSame(10, $this->class('laminat')->attributes()->count());
 
         $attributes = Attribute::count();
         app(CardImporter::class)->importFile('doseme');
 
         $this->assertSame($attributes, Attribute::count());
-        // One shared warranty attribute serves every card.
-        $this->assertSame(12, Attribute::where('slug', 'kart-zemanet')->firstOrFail()->subCategories()->count());
+        // One shared warranty attribute serves every card that has one (D01–D12, D14, D16, D17).
+        $this->assertSame(15, Attribute::where('slug', 'kart-zemanet')->firstOrFail()->subCategories()->count());
     }
 
     public function test_a_shared_attribute_may_not_be_defined_two_ways(): void

@@ -55,7 +55,7 @@ class BusinessProductController extends Controller
      * admin editing a label must not be able to widen what the API accepts.
      * Keep in step with the `business-product-edit.pricing.units` keys.
      */
-    public const UNITS = ['kg', 'litre', 'lm', 'm2', 'pack', 'piece', 'roll', 'set', 'pallet', 'pair'];
+    public const UNITS = ['kg', 'litre', 'lm', 'm2', 'pack', 'piece', 'roll', 'set', 'pallet', 'pair', 'sheet'];
 
     // ---------------------------------------------------------------- pages
 

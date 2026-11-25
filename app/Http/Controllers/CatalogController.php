@@ -45,7 +45,7 @@ class CatalogController extends Controller
         // A class folded into another by a card import, or a group emptied by it:
         // the old link moves permanently to where its products now live.
         if ($moved = $this->mergedTarget($request)) {
-            return redirect()->route('catalog', array_merge($request->except(['class', 'group', 'page']), $moved), 301);
+            return redirect()->route('catalog', array_merge($request->except(['class', 'group', 'section', 'page']), $moved), 301);
         }
 
         if ($request->filled('class')) {
@@ -292,24 +292,32 @@ class CatalogController extends Controller
 
     /**
      * Where an old ?class= / ?group= link now points, after a card import folded the
-     * class into another (`card_settings.merged_into`) or closed the group. Null when
-     * the link is still live or unknown.
+     * class into another (`card_settings.merged_into`) or closed the group. A closed
+     * class or group with no such target goes up to its nearest live parent (group,
+     * then section) — it used to render the unfiltered catalog. Null when the link is
+     * still live or unknown.
      *
-     * @return array{class?: string, group?: string}|null
+     * @return array{class?: string, group?: string, section?: string}|null
      */
     private function mergedTarget(Request $request): ?array
     {
         $slug = $request->query('class');
         if (is_string($slug) && $slug !== '') {
-            $class = SubCategory::query()->where('slug', $slug)->where('is_active', false)->first();
-            $into = $class?->card_settings['merged_into'] ?? null;
+            $class = SubCategory::query()->where('slug', $slug)->where('is_active', false)->with('category.parent')->first();
+            if (! $class) {
+                return null;
+            }
+            $into = $class->card_settings['merged_into'] ?? null;
+            if (is_string($into) && SubCategory::active()->where('slug', $into)->exists()) {
+                return ['class' => $into];
+            }
 
-            return is_string($into) && SubCategory::active()->where('slug', $into)->exists() ? ['class' => $into] : null;
+            return $this->liveParent($class->category);
         }
 
         $slug = $request->query('group');
         if (is_string($slug) && $slug !== '') {
-            $group = Category::query()->where('slug', $slug)->whereNotNull('parent_id')->where('is_active', false)->first();
+            $group = Category::query()->where('slug', $slug)->whereNotNull('parent_id')->where('is_active', false)->with('parent')->first();
             if (! $group) {
                 return null;
             }
@@ -317,11 +325,29 @@ class CatalogController extends Controller
             $into = SubCategory::query()->where('category_id', $group->id)->where('is_active', false)->get()
                 ->map(fn (SubCategory $c) => $c->card_settings['merged_into'] ?? null)->filter()->first();
             $target = $into ? SubCategory::active()->where('slug', $into)->with('category')->first()?->category : null;
+            if ($target && $target->is_active) {
+                return ['group' => $target->slug];
+            }
 
-            return $target && $target->is_active ? ['group' => $target->slug] : null;
+            return $this->liveParent($group->parent);
         }
 
         return null;
+    }
+
+    /**
+     * The nearest active level from a group upwards: the group itself, else its section.
+     *
+     * @return array{group?: string, section?: string}|null
+     */
+    private function liveParent(?Category $category): ?array
+    {
+        if ($category?->is_active) {
+            return $category->parent_id ? ['group' => $category->slug] : ['section' => $category->slug];
+        }
+        $section = $category?->parent;
+
+        return $section?->is_active && ! $section->parent_id ? ['section' => $section->slug] : null;
     }
 
     /**
