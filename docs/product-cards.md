@@ -333,6 +333,39 @@ Ortaq sahələr `kart-san-*` adlıdır: diametr, qoşulma (düym), PN, divar qal
 
 **Gözləyir.** Köhnə slug-lar dəyişməyib (aşağı prioritet).
 
+## Qapılar, pəncərələr və şüşələmə (25.11.2026)
+
+Mənbə: `Archi_AZ_Qapi_Pencere_Kataloq_AZ.xlsx`. Faylda 31 kart var (D01_1–D12), fayl adı `qapi.php`.
+
+**Kod və slug-lar.** Kart kodları Döşəmənin kodları ilə üst-üstə düşür. Kod yalnız məlumat üçündür, ona görə bu zərərsizdir. Atribut slug-ları isə ayrıdır:
+- ortaq sahələr: `kart-qp-*`;
+- karta xas sahələr: `kart-qdNN-*`.
+
+**Qruplar.** Excel-in 4 bloku 4 qrup olur:
+- `qapilar`: D01_1–D03_2;
+- `pencere-bloklari`: D04–D07;
+- `suseleme`: D08–D09;
+- `komplektlesdiriciler-ve-furnitura`: D10_1–D12.
+
+Excel-dəki 12 alt bölmə qrup deyil.
+
+**Köhnə siniflər:**
+- 6 sinif kart kimi saxlanılıb: daxili qapı, giriş qapısı, yanğına davamlı qapı, pəncərə bloku, pəncərəaltı, ağcaqanad toru.
+- Birləşənlər:
+  - gizli qapı → D01_1 («Qutu növü = gizli»);
+  - qapı furniturası → D10_1;
+  - şüşəpaket → D08.
+- Rolletlər/jalüzlər bağlanıb (tekstil bölməsinə aiddir).
+- 6 boş qrup bağlanıb.
+
+**Vahidlər.** Polotno `piece`, dəst/blok `set`, metr `lm`, m² `m2`, cüt `pair` kimi satılır. Pəncərəaltında «Sifariş ölçüsü» seçiləndə məhsul «Sifarişlə» olur (`on_order_when`).
+
+**Ortaq bloklar:**
+- material, açılma üsulu və istiqaməti, ölçülər;
+- rəng və örtük (iki tərəf fərqlidirsə, ikinci rəng və örtük);
+- şüşə / şüşəpaket, profil;
+- sənədə əsaslanan siniflər: U / Rw / hava / su / külək / RC / EI. Sinif seçiləndə sənəd məcburidir.
+
 ## Agent yoxlaması (18.11.2026)
 
 Üç Excel üzrə 6 agent (3 admin, 3 satıcı+alıcı) lokal saytda məhsul əlavə etdi. Düzəlişlər
